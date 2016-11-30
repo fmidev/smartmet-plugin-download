@@ -1,0 +1,4 @@
+#/bin/bash
+#
+
+grib_ls $(dirname $(readlink -f "$0"))/../$1 -wgribMasterTablesVersionNumber=13 | grep 20130917

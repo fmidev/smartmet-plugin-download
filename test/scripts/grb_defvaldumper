@@ -1,0 +1,10 @@
+#/bin/bash
+#
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+echo "ERROR: no implementation for default value based tests for GRIB1"
+exit 1

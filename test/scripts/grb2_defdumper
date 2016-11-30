@@ -1,0 +1,23 @@
+#/bin/bash
+#
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+if [ $# -eq 1 ]; then
+  wgrib2 -nxny -vt -ijlat 5 5 $1 | cut -d ":" -f3-
+else
+  grb=$1
+  shift
+
+  f=$(echo "$1" | egrep "\-f[[:digit:]]+[\-]$")
+
+  if [ "$f" != "" ]; then
+    shift
+    wgrib2 $* $grb | cut -d ":" $f
+  else
+    wgrib2 $* $grb
+  fi
+fi

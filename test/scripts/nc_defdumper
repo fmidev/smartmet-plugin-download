@@ -1,0 +1,16 @@
+#/bin/bash
+#
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+if [ $# -eq 1 ]; then
+  ncdump -c $1
+else
+  nc=$1
+  shift
+
+  ncdump $* $nc
+fi

@@ -1,0 +1,20 @@
+Kalasatama						60.19	24.98
+Koskenkylä_Pernaja						60.5	25.9333
+Kerava	KER					60.40	25.12	
+Kiikala	kiikkala					60.46	23.55	
+Kirkkonummi	Kyrkslätt	KIRKKON	Knummi			60.11	24.48	
+Kisko						60.26	23.48	
+Kouvola	KOU					60.87	26.71	
+Kuhmalahti	KUHMAL					61.51	24.68	
+Lahti	LAH					60.97	25.69	
+Lohja	LOH					60.26	24.07	
+Loppi						60.69	24.37	
+Myrskylä	MYRSKYLA	Mörskom				60.64	25.84	
+Mäntsälä	MÄNTS	MÄN	MANTSALA			60.67	25.29	
+Nastola						60.99	25.95	
+Orimattila	ORI	ORIM				60.80	25.77	
+Porvoo		Porvo				60.39	25.66	
+Sipoo	sibbo					60.33	25.31	
+Siuntio						60.17	24.19	
+Tammisaari	Ekenäs	Tammis	Ekenas			60.00	23.32	
+Vantaa		VAN				60.32	24.97	Uusimaa

@@ -1,0 +1,101 @@
+#/bin/bash
+#
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+defdumper=$(dirname $(readlink -f "$0"))/grb2_defdumper
+
+ok=0
+
+if [ $# -eq 1 ]; then
+  #
+  # If gridsize changes, it is assumed to grow (as in current test data); taking the (single/smallest)
+  # gridsize from 1'st message in order to keep the grid indexes (set to 'ijlat') within bounds
+  #
+  # Did not figure out how to simply get gridsize from 1'st record and the number of records with single
+  # wgrib scan (and without using any additional awk etc logic); scanning the grib twice
+  #
+  meta=$(wgrib2 -d 1 -nxny $1 | cut -d":" -f1,3)
+  nxny=$(echo $meta | cut -d":" -f2 | tr -c [:digit:] " ")
+  nx=$(echo $nxny | cut -d" " -f1)
+  ny=$(echo $nxny | cut -d" " -f2)
+  meta=$(wgrib2 -nxny $1 | tail -1 | cut -d":" -f1,3)
+  nr=$(echo $meta | cut -d":" -f1)
+
+  let dx=$nx/10
+  if [ $dx -eq 0 ]; then
+    dx=1
+  fi
+
+  let dy=$ny/10
+  if [ $dy -eq 0 ]; then
+    dy=1
+  fi
+
+  let dr=$nr/10
+  if [ $dr -eq 0 ]; then
+    dr=1
+  fi
+
+  set $1 $nx $dx $ny $dy $dr
+fi
+
+if [ $# -eq 6 ]; then
+  ok=1
+  grb=$1
+  shift
+
+  for arg in $*
+  do
+    narg=$(echo $arg | tr -d "[0-9]")
+
+    if [ \( "$arg" == "" \) -o \( "$narg" != "" \) ]; then
+      ok=0
+      break
+    fi
+
+    if [ "$arg" -lt 1 ]; then
+      ok=0
+      break
+    fi
+  done
+fi
+
+if [ $ok -eq 0 ]; then
+  echo $0: args: file nx dx ny dy dr expected
+  exit 1
+fi
+
+y=1
+x=1
+
+while [ $y -le $3 ]
+do
+
+  ijlat=""
+
+  if [ $x -gt $1 ]; then
+    x=1
+  fi
+
+  for i in 0 1 2 3 4 5 6 7 8 9
+  do
+    if [ $x -le $1 ]; then
+      ijlat+=" -ijlat $x $y"
+      let x+=$2
+    else
+      break
+    fi
+  done
+
+  if [ $x -gt $1 ]; then
+    let y+=$4
+  fi
+
+  if [ "$ijlat" != "" ]; then
+    $defdumper $grb -f3- -for_n 1::$5 -vt $ijlat
+  fi
+done

@@ -1,0 +1,25 @@
+Kalasatama						60.19	24.98
+Koskenkylä_Pernaja						60.5	25.9333
+Keitele						63.22	26.35
+Kemi	KEM					65.82	24.63
+Kemijärvi		KEMIJARVI				66.67	27.34	
+Keminmaa	KEMINM					65.87	24.83	
+Kemiö	KIMITO	KEMIO				60.16	22.66	
+Kempele						64.89	25.56	
+Kerava	KER					60.40	25.12	
+Kerimäki	KERIM	KERIMAKI				61.98	29.27	
+Kestilä	KESTILA					64.34	26.38	
+Kesälahti	KESÄL	KESALAHTI				61.93	29.75	
+Keuruu						62.27	24.55	
+Kihniö	KIHNIO					62.21	23.21	
+Kiihtelysvaara	KIIHTELYSV					62.49	30.31	
+Kiikala	kiikkala					60.46	23.55	
+Kiikoinen						61.47	22.59	
+Kiiminki						65.12	25.82	
+Kinnula						63.35	25.06	
+Kirkkonummi	Kyrkslätt	KIRKKON	Knummi			60.11	24.48	
+Kisko						60.26	23.48	
+Kitee						62.06	29.94	
+Kittilä	KITTILA					67.77	24.97	
+Kiukainen						61.25	22.03	
+Kiuruvesi	KIURUV					63.70	26.54	

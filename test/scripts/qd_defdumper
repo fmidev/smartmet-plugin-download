@@ -1,0 +1,18 @@
+#/bin/bash
+#
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+if [ $# -eq 1 ]; then
+  qdinfo -a -q $1
+else
+  qd=$1
+  dumper=$2
+  shift
+  shift
+
+  $dumper $* $qd
+fi

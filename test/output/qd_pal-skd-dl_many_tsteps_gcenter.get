@@ -1,0 +1,71 @@
+
+Info version = 	7
+
+
+The parameters stored in the querydata are:
+
+Number	Name					Description			Interpolation	Precision
+======	====					===========			=============	=========
+4	Temperature				Lämpötila			Linear		%.1f
+
+There are 1 stored parameters in total
+
+Information on the querydata producer:
+
+id	= 2001
+name	= Meteor
+
+
+Time information on the querydata:
+
+Origin time	= 2013092004 local time
+First time	= 2013091713 local time
+Last time	= 2013091716 local time
+Time step	= 60 minutes
+Timesteps	= 4
+
+Information on the querydata area:
+
+projection		= kNFmiStereographicArea
+top left lonlat		= 21.4041,61.7993
+top right lonlat	= 29.1223,61.461
+bottom left lonlat	= 21.2474,58.4246
+bottom right lonlat	= 28.1182,58.1283
+center lonlat	= 24.9762,60.005
+
+fmiarea	= stereographic,20,90,60:21.2474,58.4246,29.1223,61.461
+wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
+
+top	= 0
+left	= 0
+right	= 1
+bottom	= 1
+
+xnumber		= 28
+ynumber		= 26
+dx		= 14.5074 km
+dy		= 14.431 km
+
+xywidth		= 406.206 km
+xyheight	= 375.205 km
+aspectratio	= 1.08263
+
+central longitude	= 20
+central latitude	= 90
+true latitude		= 60
+
+Information on the locations:
+
+The querydata is in grid form and has no named locations
+
+Level information on the querydata:
+
+Value	TypeId	Type		Name
+=====	======	====		====
+
+0	5000	AnyLevelType	None
+
+There are 1 levels in total
+
+Metadata information:
+

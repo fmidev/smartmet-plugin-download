@@ -1,0 +1,12 @@
+
+25.6.2013
+
+The default test handling is based on coded test file names having underscores separating
+the file name parts/fields.
+
+Field 1: data format; 'grb', 'grb2', 'nc' or 'qd'.
+Field 2: 'val' denotes value (instead of metadata) based test.
+
+Field 'inherit' has special meaning for qd value tests; see scripts/qd_defvaldumper.
+
+Note: default value based test for grib1 is currently not implemented (see scripts/grb_defvaldumper).
