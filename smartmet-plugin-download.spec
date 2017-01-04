@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 16.11.30
+Version: 17.1.4
 Release: 1%{?dist}.fmi
 License: FMI
 Group: SmartMet/Plugins
@@ -14,19 +14,19 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: grib_api-devel >= 1.14.0
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 16.11.29
-BuildRequires: libsmartmet-macgyver-devel >= 16.9.30
-BuildRequires: libsmartmet-newbase-devel >= 16.11.18
+BuildRequires: smartmet-library-spine-devel >= 17.1.4
+BuildRequires: smartmet-library-macgyver-devel >= 16.12.20
+BuildRequires: smartmet-library-newbase-devel >= 16.12.19
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 16.11.30
+BuildRequires: smartmet-engine-querydata-devel >= 17.1.4
 Requires: gdal >= 1.11.4
 Requires: grib_api >= 1.14.0
 Requires: jsoncpp >= 0.10.5
-Requires: libsmartmet-macgyver >= 16.9.30
-Requires: smartmet-library-spine >= 16.11.29
-Requires: libsmartmet-newbase >= 16.11.18
-Requires: smartmet-engine-querydata >= 16.11.30
-Requires: smartmet-server >= 16.11.30
+Requires: smartmet-library-macgyver >= 16.12.20
+Requires: smartmet-library-spine >= 17.1.4
+Requires: smartmet-library-newbase >= 16.12.19
+Requires: smartmet-engine-querydata >= 17.1.4
+Requires: smartmet-server >= 17.1.4
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
@@ -61,6 +61,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Jan  4 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.1.4-1.fmi
+- Changed to use renamed SmartMet base libraries
+
 * Wed Nov 30 2016 Mika Heiskanen <mika.heiskanen@fmi.fi> - 16.11.30-1.fmi
 - Using test database in test configuration
 - No installation for configuration

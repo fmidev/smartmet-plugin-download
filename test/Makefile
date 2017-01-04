@@ -15,8 +15,8 @@ CFLAGS = -DUNIX -O0 -g $(MAINFLAGS)
 INCLUDES = -I ../include -I /usr/include/smartmet -I /usr/include/mysql
 
 LIBS =	-lsmartmet-spine \
-	-lsmartmet_newbase \
-	-lsmartmet_macgyver \
+	-lsmartmet-newbase \
+	-lsmartmet-macgyver \
 	-lboost_date_time \
 	-lboost_thread \
 	-lboost_filesystem \
