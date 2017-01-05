@@ -139,8 +139,7 @@ release: all
 profile: all
 
 configtest:
-	@echo Validating test/cnf/download.conf
-	@cfgvalidate -v test/cnf/download.conf
+	@if [ -x "$$(command -v cfgvalidate)" ]; then cfgvalidate -v test/cnf/download.conf; fi
 
 $(LIBFILE): $(OBJS)
 	$(CXX) $(CFLAGS) -shared -rdynamic -o $(LIBFILE) $(OBJS) $(LIBS)
