@@ -824,7 +824,9 @@ void DataStreamer::getRegLLBBox(SmartMet::Engine::Querydata::Q q)
 {
   try
   {
-    const checkedVector<NFmiPoint> &llc = q->latLonCache();
+    auto shared_latlons = q->latLonCache();
+    const auto &llc = *shared_latlons;
+
     double blLon = 0.0, blLat = 0.0, trLon = 0.0, trLat = 0.0;
     size_t gridSizeX = q->grid().XNumber(), gridSizeY = q->grid().YNumber();
 
