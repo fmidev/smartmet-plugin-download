@@ -12,7 +12,7 @@ DIFFICULTFLAGS = -Weffc++ -Wunreachable-code -Wredundant-decls
 
 CC = g++
 CFLAGS = -DUNIX -O0 -g $(MAINFLAGS)
-INCLUDES = -I ../include -I /usr/include/smartmet -I /usr/include/mysql
+INCLUDES = -I ../download -I /usr/include/smartmet -I /usr/include/mysql
 
 LIBS =	-lsmartmet-spine \
 	-lsmartmet-newbase \
