@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 17.1.27
+Version: 17.2.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -14,18 +14,18 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: grib_api-devel >= 1.14.0
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 17.1.24
+BuildRequires: smartmet-library-spine-devel >= 17.2.3
 BuildRequires: smartmet-library-macgyver-devel >= 17.1.18
-BuildRequires: smartmet-library-newbase-devel >= 17.1.26
+BuildRequires: smartmet-library-newbase-devel >= 17.2.10
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 17.1.26
+BuildRequires: smartmet-engine-querydata-devel >= 17.2.3
 Requires: gdal >= 1.11.4
 Requires: grib_api >= 1.14.0
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 17.1.18
-Requires: smartmet-library-spine >= 17.1.24
-Requires: smartmet-library-newbase >= 17.1.26
-Requires: smartmet-engine-querydata >= 17.1.26
+Requires: smartmet-library-spine >= 17.2.3
+Requires: smartmet-library-newbase >= 17.2.10
+Requires: smartmet-engine-querydata >= 17.2.3
 Requires: smartmet-server >= 17.1.25
 %if 0%{rhel} >= 7
 Requires: boost-date-time
@@ -61,6 +61,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Sat Feb 11 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.2.11-1.fmi
+- Repackaged due to newbase API change
+
 * Fri Jan 27 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.1.27-1.fmi
 - Recompiled due to NFmiQueryData object size change
 
