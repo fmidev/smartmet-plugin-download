@@ -6,7 +6,7 @@
 
 #include "NetCdfStreamer.h"
 
-#include <macgyver/String.h>
+#include <macgyver/StringConversion.h>
 
 #include <spine/Exception.h>
 

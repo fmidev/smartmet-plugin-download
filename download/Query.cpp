@@ -12,7 +12,7 @@
 #include <spine/OptionParsers.h>
 
 #include <newbase/NFmiPoint.h>
-#include <macgyver/String.h>
+#include <macgyver/StringConversion.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>

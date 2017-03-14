@@ -10,7 +10,7 @@
 
 #include <spine/Exception.h>
 #include <macgyver/HelmertTransformation.h>
-#include <macgyver/String.h>
+#include <macgyver/StringConversion.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>

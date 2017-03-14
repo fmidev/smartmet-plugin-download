@@ -18,7 +18,7 @@
 #include <spine/SmartMet.h>
 #include <spine/Reactor.h>
 
-#include <macgyver/String.h>
+#include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/TimeZoneFactory.h>
 

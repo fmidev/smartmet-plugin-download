@@ -9,7 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <spine/Exception.h>
-#include <macgyver/String.h>
+#include <macgyver/StringConversion.h>
 
 #include <fstream>
 
