@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 17.3.14
+Version: 17.3.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -14,19 +14,19 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: grib_api-devel >= 1.14.0
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 17.3.14
+BuildRequires: smartmet-library-spine-devel >= 17.3.15
 BuildRequires: smartmet-library-macgyver-devel >= 17.3.14
 BuildRequires: smartmet-library-newbase-devel >= 17.3.9
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 17.3.14
+BuildRequires: smartmet-engine-querydata-devel >= 17.3.15
 Requires: gdal >= 1.11.4
 Requires: grib_api >= 1.14.0
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 17.3.14
-Requires: smartmet-library-spine >= 17.3.14
+Requires: smartmet-library-spine >= 17.3.15
 Requires: smartmet-library-newbase >= 17.3.9
-Requires: smartmet-engine-querydata >= 17.3.14
-Requires: smartmet-server >= 17.3.14
+Requires: smartmet-engine-querydata >= 17.3.15
+Requires: smartmet-server >= 17.3.15
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
@@ -61,6 +61,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Mar 15 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.3.15-1.fmi
+- Recompiled since Spine::Exception changed
+
 * Tue Mar 14 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.3.14-1.fmi
 - Switched to use macgyver StringConversion tools 
 
