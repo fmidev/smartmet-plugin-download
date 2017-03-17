@@ -77,7 +77,7 @@ static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -96,7 +96,7 @@ bool parseDatumShift(const string& setting, DatumShift& datumShift)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -115,7 +115,7 @@ bool isDatumShiftToWGS84(DatumShift datumShift)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -142,7 +142,7 @@ void getHelmertTransformationParameters(DatumShift datumShift,
 
     double R0 = SRS.GetSemiMajor(&err);
     if (err != OGRERR_NONE)
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP,
           "getTransformationParameters: GetSemiMajor() error " + boost::lexical_cast<string>(err));
 
@@ -191,12 +191,12 @@ void getHelmertTransformationParameters(DatumShift datumShift,
           transformationParameters[i] = 0.0;
     }
 
-    throw SmartMet::Spine::Exception(
+    throw Spine::Exception(
         BCP, "getTransformationParameters: invalid '+towgs84' parameter '" + towgs84 + "'");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

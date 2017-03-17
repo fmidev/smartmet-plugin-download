@@ -19,14 +19,12 @@ namespace Download
 class NetCdfStreamer : public DataStreamer
 {
  public:
-  NetCdfStreamer(const SmartMet::Spine::HTTP::Request &req,
-                 const Config &config,
-                 const Producer &producer);
+  NetCdfStreamer(const Spine::HTTP::Request &req, const Config &config, const Producer &producer);
   virtual ~NetCdfStreamer();
 
   virtual std::string getChunk();
 
-  virtual void getDataChunk(SmartMet::Engine::Querydata::Q q,
+  virtual void getDataChunk(Engine::Querydata::Q q,
                             const NFmiArea *area,
                             NFmiGrid *grid,
                             int level,
@@ -76,7 +74,7 @@ class NetCdfStreamer : public DataStreamer
 
   void setLatLonGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
   void setStereographicGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
-  void setGeometry(SmartMet::Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
+  void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
   boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
   void addParameters();

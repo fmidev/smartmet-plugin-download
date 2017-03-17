@@ -34,11 +34,11 @@ static const char* defaultTimeZone = "utc";
  */
 // ----------------------------------------------------------------------
 
-Query::Query(const SmartMet::Spine::HTTP::Request& req,
+Query::Query(const Spine::HTTP::Request& req,
              const Config& /* config */,
-             SmartMet::Engine::Querydata::Engine* /* qEngine */)
-    : pOptions(SmartMet::Spine::OptionParsers::parseParameters(req)),
-      tOptions(SmartMet::Spine::OptionParsers::parseTimes(req))
+             Engine::Querydata::Engine* /* qEngine */)
+    : pOptions(Spine::OptionParsers::parseParameters(req)),
+      tOptions(Spine::OptionParsers::parseTimes(req))
 {
   try
   {
@@ -47,7 +47,7 @@ Query::Query(const SmartMet::Spine::HTTP::Request& req,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -57,16 +57,16 @@ Query::Query(const SmartMet::Spine::HTTP::Request& req,
  */
 // ----------------------------------------------------------------------
 
-void Query::parseTimeZone(const SmartMet::Spine::HTTP::Request& theReq)
+void Query::parseTimeZone(const Spine::HTTP::Request& theReq)
 {
   try
   {
     // Get the option string
-    timeZone = SmartMet::Spine::optional_string(theReq.getParameter("tz"), defaultTimeZone);
+    timeZone = Spine::optional_string(theReq.getParameter("tz"), defaultTimeZone);
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -78,20 +78,20 @@ void Query::parseTimeZone(const SmartMet::Spine::HTTP::Request& theReq)
  */
 // ----------------------------------------------------------------------
 
-void Query::parseLevels(const SmartMet::Spine::HTTP::Request& theReq)
+void Query::parseLevels(const Spine::HTTP::Request& theReq)
 {
   try
   {
     // Get the option string
 
-    string opt = SmartMet::Spine::optional_string(theReq.getParameter("level"), "");
+    string opt = Spine::optional_string(theReq.getParameter("level"), "");
     if (!opt.empty())
     {
       levels.insert(Fmi::stoi(opt));
     }
 
     // Allow also "levels"
-    opt = SmartMet::Spine::optional_string(theReq.getParameter("levels"), "");
+    opt = Spine::optional_string(theReq.getParameter("levels"), "");
     if (!opt.empty())
     {
       vector<string> parts;
@@ -102,7 +102,7 @@ void Query::parseLevels(const SmartMet::Spine::HTTP::Request& theReq)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

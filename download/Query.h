@@ -60,10 +60,10 @@ struct Producer
 
   bool verticalInterpolation;  // Set if vertical interpolation is allowed. Default: false
 
-  SmartMet::Plugin::Download::Datum::DatumShift datumShift;  // Datum handling. Default: native
-                                                             // datum (no
-                                                             // shift). See
-                                                             // Datum.h
+  Plugin::Download::Datum::DatumShift datumShift;  // Datum handling. Default: native
+                                                   // datum (no
+                                                   // shift). See
+                                                   // Datum.h
 
   Producer() {}
   bool disabledReqParam(std::string param) const
@@ -78,7 +78,7 @@ struct Producer
 
   NamedSettings::const_iterator namedSettingsBegin() const { return (namedSettings.begin()); }
   NamedSettings::const_iterator namedSettingsEnd() const { return (namedSettings.end()); }
-  boost::optional<const SmartMet::Engine::Querydata::ProducerConfig &> qEngineProducerConfig;
+  boost::optional<const Engine::Querydata::ProducerConfig &> qEngineProducerConfig;
 };
 
 typedef std::map<std::string, Producer> Producers;
@@ -208,9 +208,9 @@ struct ReqParams
   //
   // Datum handling. Default: native datum (no shift)
   //
-  std::string datum;                                         // DatumShift value; see Datum.h
-                                                             //
-  SmartMet::Plugin::Download::Datum::DatumShift datumShift;  // Derived; datum shift based on datum
+  std::string datum;                               // DatumShift value; see Datum.h
+                                                   //
+  Plugin::Download::Datum::DatumShift datumShift;  // Derived; datum shift based on datum
   //
   // Misc testing
   //
@@ -222,24 +222,22 @@ struct ReqParams
 class Query
 {
  public:
-  Query(const SmartMet::Spine::HTTP::Request &req,
-        const Config &config,
-        SmartMet::Engine::Querydata::Engine *qEngine);
+  Query(const Spine::HTTP::Request &req, const Config &config, Engine::Querydata::Engine *qEngine);
 
   typedef std::set<int> Levels;
   Levels levels;
 
   std::string timeZone;
 
-  SmartMet::Spine::OptionParsers::ParameterOptions pOptions;
-  SmartMet::Spine::TimeSeriesGeneratorOptions tOptions;
+  Spine::OptionParsers::ParameterOptions pOptions;
+  Spine::TimeSeriesGeneratorOptions tOptions;
 
  private:
   Query();
 
-  void parseTimeZone(const SmartMet::Spine::HTTP::Request &theReq);
-  void parseModel(const SmartMet::Spine::HTTP::Request &theReq);
-  void parseLevels(const SmartMet::Spine::HTTP::Request &theReq);
+  void parseTimeZone(const Spine::HTTP::Request &theReq);
+  void parseModel(const Spine::HTTP::Request &theReq);
+  void parseLevels(const Spine::HTTP::Request &theReq);
 };
 
 }  // namespace Download

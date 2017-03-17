@@ -21,7 +21,7 @@ namespace Download
 class GribStreamer : public DataStreamer
 {
  public:
-  GribStreamer(const SmartMet::Spine::HTTP::Request& req,
+  GribStreamer(const Spine::HTTP::Request& req,
                const Config& config,
                const Producer& producer,
                OutputFormat outputFormat,
@@ -30,7 +30,7 @@ class GribStreamer : public DataStreamer
 
   virtual std::string getChunk();
 
-  virtual void getDataChunk(SmartMet::Engine::Querydata::Q q,
+  virtual void getDataChunk(Engine::Querydata::Q q,
                             const NFmiArea* area,
                             NFmiGrid* grid,
                             int level,
@@ -62,13 +62,13 @@ class GribStreamer : public DataStreamer
                      size_t paramIdx,
                      bool setOriginTime,
                      const boost::posix_time::ptime& validTime);
-  void addValuesToGrib(SmartMet::Engine::Querydata::Q q,
+  void addValuesToGrib(Engine::Querydata::Q q,
                        const NFmiMetTime& vTime,
                        int level,
                        const NFmiDataMatrix<float>& dataValues,
                        float scale,
                        float offset);
-  std::string getGribMessage(SmartMet::Engine::Querydata::Q q,
+  std::string getGribMessage(Engine::Querydata::Q q,
                              int level,
                              const NFmiMetTime& mt,
                              const NFmiDataMatrix<float>& values,

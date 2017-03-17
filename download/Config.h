@@ -36,10 +36,9 @@ class Config : private boost::noncopyable
  public:
   Config(const std::string& configfile);
 
-  void init(SmartMet::Engine::Querydata::Engine* querydata);
+  void init(Engine::Querydata::Engine* querydata);
 
-  const Producer& getProducer(std::string& name,
-                              const SmartMet::Engine::Querydata::Engine& querydata);
+  const Producer& getProducer(std::string& name, const Engine::Querydata::Engine& querydata);
   const Producer& getProducer(const std::string& name) const;
 
   const std::string& defaultProducerName() const { return itsDefaultProducer->first; }
@@ -70,7 +69,7 @@ class Config : private boost::noncopyable
   unsigned int itsGrib2TablesVersionMin;
   unsigned int itsGrib2TablesVersionMax;
 
-  void parseConfigProducers(const SmartMet::Engine::Querydata::Engine& querydata);
+  void parseConfigProducers(const Engine::Querydata::Engine& querydata);
   void parseConfigProducer(const std::string& name, Producer& currentSettings);
 
   void setEnvSettings();

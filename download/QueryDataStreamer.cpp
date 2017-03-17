@@ -21,7 +21,7 @@ namespace Plugin
 {
 namespace Download
 {
-QDStreamer::QDStreamer(const SmartMet::Spine::HTTP::Request &req,
+QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Config &config,
                        const Producer &producer)
     : DataStreamer(req, config, producer), sendMeta(true), isLoaded(false), currentX(0), currentY(0)
@@ -154,7 +154,7 @@ std::string QDStreamer::getChunk()
     }
     catch (...)
     {
-      SmartMet::Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", NULL);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -169,7 +169,7 @@ std::string QDStreamer::getChunk()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -183,7 +183,7 @@ std::string QDStreamer::getChunk()
  */
 // ----------------------------------------------------------------------
 
-void QDStreamer::getDataChunk(SmartMet::Engine::Querydata::Q q,
+void QDStreamer::getDataChunk(Engine::Querydata::Q q,
                               const NFmiArea * /* area */,
                               NFmiGrid *grid,
                               int /* level */,
@@ -222,7 +222,7 @@ void QDStreamer::getDataChunk(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

@@ -38,7 +38,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
       libconfig::Setting& settings = itsConfig.lookup(optName);
 
       if (!settings.isGroup())
-        throw SmartMet::Spine::Exception(
+        throw Spine::Exception(
             BCP,
             "Producer settings for dls must be stored in groups delimited by {}: line " +
                 boost::lexical_cast<std::string>(settings.getSourceLine()));
@@ -54,10 +54,10 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
             libconfig::Setting& setting = settings[i];
 
             if (!setting.isArray())
-              throw SmartMet::Spine::Exception(
-                  BCP,
-                  optName + "." + paramName + " must be an array in dls configuration file line " +
-                      boost::lexical_cast<string>(setting.getSourceLine()));
+              throw Spine::Exception(BCP,
+                                     optName + "." + paramName +
+                                         " must be an array in dls configuration file line " +
+                                         boost::lexical_cast<string>(setting.getSourceLine()));
 
             if (paramName == "disabledReqParameters")
             {
@@ -90,7 +90,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
             libconfig::Setting& formatSettings = itsConfig.lookup(optName);
 
             if (!formatSettings.isGroup())
-              throw SmartMet::Spine::Exception(
+              throw Spine::Exception(
                   BCP,
                   optName + " must be an array in dls configuration file line " +
                       boost::lexical_cast<string>(formatSettings.getSourceLine()));
@@ -105,41 +105,39 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
           }
           else if (paramName == "datum")
           {
-            if (!SmartMet::Plugin::Download::Datum::parseDatumShift(settings[i],
-                                                                    currentSettings.datumShift))
-              throw SmartMet::Spine::Exception(
-                  BCP,
-                  "Invalid datum in dls configuration file line " +
-                      boost::lexical_cast<string>(settings.getSourceLine()));
+            if (!Plugin::Download::Datum::parseDatumShift(settings[i], currentSettings.datumShift))
+              throw Spine::Exception(BCP,
+                                     "Invalid datum in dls configuration file line " +
+                                         boost::lexical_cast<string>(settings.getSourceLine()));
           }
           else
           {
-            throw SmartMet::Spine::Exception(
-                BCP,
-                string("Unrecognized parameter '") + paramName + "' in dls configuration on line " +
-                    boost::lexical_cast<string>(settings[i].getSourceLine()));
+            throw Spine::Exception(BCP,
+                                   string("Unrecognized parameter '") + paramName +
+                                       "' in dls configuration on line " +
+                                       boost::lexical_cast<string>(settings[i].getSourceLine()));
           }
         }
         catch (libconfig::ParseException& e)
         {
-          throw SmartMet::Spine::Exception(BCP,
-                                           string("DLS configuration error ' ") + e.getError() +
-                                               "' with variable '" + paramName + "' on line " +
-                                               boost::lexical_cast<string>(e.getLine()));
+          throw Spine::Exception(BCP,
+                                 string("DLS configuration error ' ") + e.getError() +
+                                     "' with variable '" + paramName + "' on line " +
+                                     boost::lexical_cast<string>(e.getLine()));
         }
         catch (libconfig::ConfigException&)
         {
-          throw SmartMet::Spine::Exception(
-              BCP,
-              string("DLS configuration error with variable '") + paramName + "' on line " +
-                  boost::lexical_cast<string>(settings[i].getSourceLine()));
+          throw Spine::Exception(BCP,
+                                 string("DLS configuration error with variable '") + paramName +
+                                     "' on line " +
+                                     boost::lexical_cast<string>(settings[i].getSourceLine()));
         }
         catch (exception& e)
         {
-          throw SmartMet::Spine::Exception(
-              BCP,
-              e.what() + string(" (line number ") +
-                  boost::lexical_cast<string>(settings[i].getSourceLine()) + ")");
+          throw Spine::Exception(BCP,
+                                 e.what() + string(" (line number ") +
+                                     boost::lexical_cast<string>(settings[i].getSourceLine()) +
+                                     ")");
         }
       }
     }
@@ -157,7 +155,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -181,10 +179,9 @@ void Config::setEnvSettings()
       try
       {
         if (!settings.isGroup())
-          throw SmartMet::Spine::Exception(
-              BCP,
-              env + " must be an array in dls configuration file om line " +
-                  boost::lexical_cast<string>(settings.getSourceLine()));
+          throw Spine::Exception(BCP,
+                                 env + " must be an array in dls configuration file om line " +
+                                     boost::lexical_cast<string>(settings.getSourceLine()));
 
         for (; i < settings.getLength(); ++i)
         {
@@ -196,30 +193,29 @@ void Config::setEnvSettings()
       }
       catch (libconfig::ParseException& e)
       {
-        throw SmartMet::Spine::Exception(BCP,
-                                         string("DLS configuration error ' ") + e.getError() +
-                                             "' with variable '" + env + "' on line " +
-                                             boost::lexical_cast<string>(e.getLine()));
+        throw Spine::Exception(BCP,
+                               string("DLS configuration error ' ") + e.getError() +
+                                   "' with variable '" + env + "' on line " +
+                                   boost::lexical_cast<string>(e.getLine()));
       }
       catch (libconfig::ConfigException&)
       {
-        throw SmartMet::Spine::Exception(
-            BCP,
-            string("DLS configuration error with variable '") + env + "' on line " +
-                boost::lexical_cast<string>(settings[i].getSourceLine()));
+        throw Spine::Exception(BCP,
+                               string("DLS configuration error with variable '") + env +
+                                   "' on line " +
+                                   boost::lexical_cast<string>(settings[i].getSourceLine()));
       }
       catch (exception& e)
       {
-        throw SmartMet::Spine::Exception(
-            BCP,
-            e.what() + string(" (line number ") +
-                boost::lexical_cast<string>(settings[i].getSourceLine()) + ")");
+        throw Spine::Exception(BCP,
+                               e.what() + string(" (line number ") +
+                                   boost::lexical_cast<string>(settings[i].getSourceLine()) + ")");
       }
     }
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -229,7 +225,7 @@ void Config::setEnvSettings()
  */
 // ----------------------------------------------------------------------
 
-void Config::parseConfigProducers(const SmartMet::Engine::Querydata::Engine& querydata)
+void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
 {
   try
   {
@@ -242,17 +238,16 @@ void Config::parseConfigProducers(const SmartMet::Engine::Querydata::Engine& que
       libconfig::Setting& producers = itsConfig.lookup("producers");
 
       if (!producers.isGroup())
-        throw SmartMet::Spine::Exception(
-            BCP,
-            "producers must be a group in dls configuration file line " +
-                boost::lexical_cast<string>(producers.getSourceLine()));
+        throw Spine::Exception(BCP,
+                               "producers must be a group in dls configuration file line " +
+                                   boost::lexical_cast<string>(producers.getSourceLine()));
     }
 
     if (!itsConfig.exists("producers.enabled"))
     {
       // Get all querydata's producers
       //
-      const SmartMet::Engine::Querydata::ProducerList& prodList = querydata.producers();
+      const Engine::Querydata::ProducerList& prodList = querydata.producers();
       auto prBeg = prodList.begin(), prEnd = prodList.end();
       auto& enabled = itsConfig.lookup("producers").add("enabled", libconfig::Setting::TypeArray);
 
@@ -267,10 +262,9 @@ void Config::parseConfigProducers(const SmartMet::Engine::Querydata::Engine& que
     libconfig::Setting& enabled = itsConfig.lookup("producers.enabled");
 
     if (!enabled.isArray())
-      throw SmartMet::Spine::Exception(
-          BCP,
-          "producers.enabled must be an array in dls configuration file line " +
-              boost::lexical_cast<string>(enabled.getSourceLine()));
+      throw Spine::Exception(BCP,
+                             "producers.enabled must be an array in dls configuration file line " +
+                                 boost::lexical_cast<string>(enabled.getSourceLine()));
 
     // Default producer; if not set, using the first producer
 
@@ -284,7 +278,7 @@ void Config::parseConfigProducers(const SmartMet::Engine::Querydata::Engine& que
 
     Producer currentSettings;
     currentSettings.verticalInterpolation = false;
-    currentSettings.datumShift = SmartMet::Plugin::Download::Datum::None;
+    currentSettings.datumShift = Plugin::Download::Datum::None;
 
     itsConfig.lookupValue("verticalinterpolation", currentSettings.verticalInterpolation);
 
@@ -298,14 +292,14 @@ void Config::parseConfigProducers(const SmartMet::Engine::Querydata::Engine& que
     }
 
     if (itsProducers.empty())
-      throw SmartMet::Spine::Exception(BCP, "No producers defined/enabled: datablock!");
+      throw Spine::Exception(BCP, "No producers defined/enabled: datablock!");
 
     // Check the default producer exists
 
     itsDefaultProducer = itsProducers.find(defaultProducer);
 
     if (itsDefaultProducer == itsProducers.end())
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP, "Default producer '" + defaultProducer + "' not enabled in dls producers!");
 
     // Set given variables to environment
@@ -314,7 +308,7 @@ void Config::parseConfigProducers(const SmartMet::Engine::Querydata::Engine& que
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -334,7 +328,7 @@ Config::Config(const string& configfile)
   try
   {
     if (configfile.empty())
-      throw SmartMet::Spine::Exception(BCP, "DLS configuration file name is empty!");
+      throw Spine::Exception(BCP, "DLS configuration file name is empty!");
 
     itsConfig.readFile(configfile.c_str());
 
@@ -352,10 +346,10 @@ Config::Config(const string& configfile)
          hasMax = itsConfig.exists("grib2.tablesversion.max");
 
     if (hasMin != hasMax)
-      throw SmartMet::Spine::Exception(BCP,
-                                       "Neither or both grib2.tablesversion.min and "
-                                       "grib2.tablesversion.max must be given in DLS "
-                                       "configuration");
+      throw Spine::Exception(BCP,
+                             "Neither or both grib2.tablesversion.min and "
+                             "grib2.tablesversion.max must be given in DLS "
+                             "configuration");
 
     if (hasMin)
     {
@@ -363,7 +357,7 @@ Config::Config(const string& configfile)
       itsConfig.lookupValue("grib2.tablesversion.max", itsGrib2TablesVersionMax);
 
       if (itsGrib2TablesVersionMin > itsGrib2TablesVersionMax)
-        throw SmartMet::Spine::Exception(
+        throw Spine::Exception(
             BCP,
             "Invalid DLS configuration: grib2.tablesversion.min must be less than or equal to "
             "grib2.tablesversion.max");
@@ -371,7 +365,7 @@ Config::Config(const string& configfile)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -382,7 +376,7 @@ Config::Config(const string& configfile)
  */
 // ----------------------------------------------------------------------
 
-void Config::init(SmartMet::Engine::Querydata::Engine* querydata)
+void Config::init(Engine::Querydata::Engine* querydata)
 {
   try
   {
@@ -390,7 +384,7 @@ void Config::init(SmartMet::Engine::Querydata::Engine* querydata)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -414,16 +408,15 @@ const Producer& Config::getProducer(const string& name) const
     if (defaultProducerName() == "")
       return itsProducers.begin()->second;
 
-    throw SmartMet::Spine::Exception(BCP, "Unknown producer: " + name);
+    throw Spine::Exception(BCP, "Unknown producer: " + name);
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
-const Producer& Config::getProducer(string& name,
-                                    const SmartMet::Engine::Querydata::Engine& querydata)
+const Producer& Config::getProducer(string& name, const Engine::Querydata::Engine& querydata)
 {
   try
   {
@@ -444,7 +437,7 @@ const Producer& Config::getProducer(string& name,
         {
           // Using the first producer
           //
-          const SmartMet::Engine::Querydata::ProducerList& prodlist = querydata.producers();
+          const Engine::Querydata::ProducerList& prodlist = querydata.producers();
 
           if (!prodlist.empty())
             name = *prodlist.begin();
@@ -456,11 +449,11 @@ const Producer& Config::getProducer(string& name,
       return p->second;
     }
 
-    throw SmartMet::Spine::Exception(BCP, "Unknown producer: " + name);
+    throw Spine::Exception(BCP, "Unknown producer: " + name);
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

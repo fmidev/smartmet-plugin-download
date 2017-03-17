@@ -105,34 +105,27 @@ class ResMgr : private boost::noncopyable
 // Data streaming
 //
 
-class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
+class DataStreamer : public Spine::HTTP::ContentStreamer
 {
  public:
   static const long minutesInDay = 24 * 60;
   static const long minutesInMonth = 31 * minutesInDay;
   static const long minutesInYear = 365 * minutesInDay;
 
-  DataStreamer(const SmartMet::Spine::HTTP::Request &req,
-               const Config &config,
-               const Producer &producer);
+  DataStreamer(const Spine::HTTP::Request &req, const Config &config, const Producer &producer);
   virtual ~DataStreamer();
 
   void setRequestParams(const ReqParams &rp) { itsReqParams = rp; }
-  void generateValidTimeList(const SmartMet::Engine::Querydata::Q &q,
+  void generateValidTimeList(const Engine::Querydata::Q &q,
                              Query &query,
                              boost::posix_time::ptime &oTime,
                              boost::posix_time::ptime &sTime,
                              boost::posix_time::ptime &eTime);
 
   void setLevels(const Query &query);
-  void setParams(const SmartMet::Spine::OptionParsers::ParameterList &params,
-                 const Scaling &scaling);
+  void setParams(const Spine::OptionParsers::ParameterList &params, const Scaling &scaling);
 
-  void setGeonames(const SmartMet::Engine::Geonames::Engine *theGeoEngine)
-  {
-    itsGeoEngine = theGeoEngine;
-  }
-
+  void setGeonames(const Engine::Geonames::Engine *theGeoEngine) { itsGeoEngine = theGeoEngine; }
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer);
 
@@ -149,7 +142,7 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
 
   virtual std::string getChunk() = 0;
 
-  virtual void getDataChunk(SmartMet::Engine::Querydata::Q q,
+  virtual void getDataChunk(Engine::Querydata::Q q,
                             const NFmiArea *area,
                             NFmiGrid *grid,
                             int level,
@@ -158,7 +151,7 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
                             std::string &chunk) = 0;
 
  protected:
-  const SmartMet::Spine::HTTP::Request &itsRequest;
+  const Spine::HTTP::Request &itsRequest;
 
   const Config &itsCfg;
   ReqParams itsReqParams;
@@ -208,9 +201,9 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
 
   void extractData(std::string &chunk);
 
-  SmartMet::Spine::OptionParsers::ParameterList::const_iterator itsParamIterator;
-  SmartMet::Spine::OptionParsers::ParameterList itsDataParams;
-  SmartMet::Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
+  Spine::OptionParsers::ParameterList::const_iterator itsParamIterator;
+  Spine::OptionParsers::ParameterList itsDataParams;
+  Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
 
   virtual void paramChanged() {}
@@ -218,7 +211,7 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
   size_t itsTimeIndex;
   size_t itsLevelIndex;
 
-  SmartMet::Engine::Querydata::Q itsQ;
+  Engine::Querydata::Q itsQ;
   boost::posix_time::ptime itsOriginTime;
   boost::posix_time::ptime itsFirstDataTime;
   boost::posix_time::ptime itsLastDataTime;
@@ -226,7 +219,7 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
  private:
   DataStreamer();
 
-  SmartMet::Spine::TimeSeriesGenerator::LocalTimeList::const_iterator itsTimeIterator;
+  Spine::TimeSeriesGenerator::LocalTimeList::const_iterator itsTimeIterator;
 
   Scaling itsValScaling;
 
@@ -243,15 +236,15 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
 
   Query::Levels::const_iterator itsLevelIterator;
 
-  const SmartMet::Engine::Geonames::Engine *itsGeoEngine;
+  const Engine::Geonames::Engine *itsGeoEngine;
   NFmiDataMatrix<float> itsDEMMatrix;
   NFmiDataMatrix<bool> itsWaterFlagMatrix;
 
   void checkDataTimeStep();
 
-  void getRegLLBBox(SmartMet::Engine::Querydata::Q q);
-  std::string getRegLLBBoxStr(SmartMet::Engine::Querydata::Q q);
-  void getLLBBox(SmartMet::Engine::Querydata::Q q);
+  void getRegLLBBox(Engine::Querydata::Q q);
+  std::string getRegLLBBoxStr(Engine::Querydata::Q q);
+  void getLLBBox(Engine::Querydata::Q q);
 
   void setSteppedGridSize();
   bool setRequestedGridSize(const NFmiArea &area, size_t nativeGridSizeX, size_t nativeGridSizeY);
@@ -260,23 +253,21 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
                                size_t nativeGridSizeY);
   void setCropping(const NFmiGrid &grid);
 
-  void setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, const NFmiArea *area);
-  void coordTransform(SmartMet::Engine::Querydata::Q q, const NFmiArea *area);
+  void setTransformedCoordinates(Engine::Querydata::Q q, const NFmiArea *area);
+  void coordTransform(Engine::Querydata::Q q, const NFmiArea *area);
 
   std::string getGridCenterBBoxStr(bool usenativeproj, const NFmiGrid &grid) const;
 
   NFmiDataMatrix<NFmiLocationCache> locCache;
-  void cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
+  void cachedProjGridValues(Engine::Querydata::Q q,
                             NFmiGrid &wantedGrid,
                             const NFmiMetTime *mt,
                             NFmiDataMatrix<float> *demValues = NULL,
                             NFmiDataMatrix<bool> *waterFlags = NULL);
 
-  bool isLevelAvailable(SmartMet::Engine::Querydata::Q q,
-                        int &requestedLevel,
-                        bool &exactLevel) const;
+  bool isLevelAvailable(Engine::Querydata::Q q, int &requestedLevel, bool &exactLevel) const;
 
-  void createArea(SmartMet::Engine::Querydata::Q q,
+  void createArea(Engine::Querydata::Q q,
                   const NFmiArea &nativeArea,
                   unsigned long nativeClassId,
                   size_t nativeGridSizeX,
@@ -285,17 +276,17 @@ class DataStreamer : public SmartMet::Spine::HTTP::ContentStreamer
                   size_t nativeGridSizeX,
                   size_t nativeGridSizeY,
                   bool interpolation);
-  bool getAreaAndGrid(SmartMet::Engine::Querydata::Q q,
+  bool getAreaAndGrid(Engine::Querydata::Q q,
                       bool interpolation,
                       bool landScaping,
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(SmartMet::Engine::Querydata::Q q) const;
-  NFmiParamDescriptor makeParamDescriptor(SmartMet::Engine::Querydata::Q q) const;
-  NFmiTimeDescriptor makeTimeDescriptor(SmartMet::Engine::Querydata::Q q);
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q) const;
+  NFmiParamDescriptor makeParamDescriptor(Engine::Querydata::Q q) const;
+  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q);
 
-  void nextParam(SmartMet::Engine::Querydata::Q q);
+  void nextParam(Engine::Querydata::Q q);
 };
 
 }  // namespace Download

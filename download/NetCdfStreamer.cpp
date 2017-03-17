@@ -30,7 +30,7 @@ namespace Plugin
 {
 namespace Download
 {
-NetCdfStreamer::NetCdfStreamer(const SmartMet::Spine::HTTP::Request &req,
+NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
                                const Producer &producer)
     : DataStreamer(req, config, producer),
@@ -53,7 +53,7 @@ NetCdfStreamer::~NetCdfStreamer()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -98,7 +98,7 @@ std::string NetCdfStreamer::getChunk()
           ioStream.open(file, ifstream::in | ifstream::binary);
 
           if (!ioStream)
-            throw SmartMet::Spine::Exception(BCP, "Unable to open file stream");
+            throw Spine::Exception(BCP, "Unable to open file stream");
         }
 
         if (!ioStream.eof())
@@ -123,7 +123,7 @@ std::string NetCdfStreamer::getChunk()
     }
     catch (...)
     {
-      SmartMet::Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", NULL);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -136,7 +136,7 @@ std::string NetCdfStreamer::getChunk()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -161,11 +161,11 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
     if (dim)
       return dim;
 
-    throw SmartMet::Spine::Exception(BCP, "Failed to add dimension ('" + dimName + "')");
+    throw Spine::Exception(BCP, "Failed to add dimension ('" + dimName + "')");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -192,11 +192,11 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
     if (var)
       return var;
 
-    throw SmartMet::Spine::Exception(BCP, "Failed to add variable ('" + varName + "')");
+    throw Spine::Exception(BCP, "Failed to add variable ('" + varName + "')");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -230,7 +230,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(string dimName,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -247,11 +247,11 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
   try
   {
     if (!((resource)->add_att(attrName.c_str(), attrValue)))
-      throw SmartMet::Spine::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
+      throw Spine::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -290,12 +290,12 @@ int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
       return t1.date().year() - t2.date().year();
     }
 
-    throw SmartMet::Spine::Exception(
-        BCP, "Invalid time step length " + boost::lexical_cast<string>(timeStep));
+    throw Spine::Exception(BCP,
+                           "Invalid time step length " + boost::lexical_cast<string>(timeStep));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -346,13 +346,11 @@ void NetCdfStreamer::addTimeDimension()
       timeStep = 1;
     }
     else
-      throw SmartMet::Spine::Exception(BCP,
-                                       "Invalid data timestep " +
-                                           boost::lexical_cast<string>(timeStep) +
-                                           " for producer '" + itsReqParams.producer + "'");
+      throw Spine::Exception(BCP,
+                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                 " for producer '" + itsReqParams.producer + "'");
 
-    SmartMet::Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter =
-        itsDataTimes.begin();
+    Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
     size_t timeSize = 0;
     int times[itsDataTimes.size()];
@@ -362,13 +360,12 @@ void NetCdfStreamer::addTimeDimension()
       long period = getTimeOffset(timeIter->utc_time(), startTime, timeStep);
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
-        throw SmartMet::Spine::Exception(
-            BCP,
-            "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                boost::lexical_cast<string>(times[timeSize - 1]) + " (validtime " +
-                Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
-                boost::lexical_cast<string>(timeStep) + ") for producer '" + itsReqParams.producer +
-                "'");
+        throw Spine::Exception(BCP,
+                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
+                                   boost::lexical_cast<string>(times[timeSize - 1]) +
+                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
+                                   " timestep " + boost::lexical_cast<string>(timeStep) +
+                                   ") for producer '" + itsReqParams.producer + "'");
 
       times[timeSize] = period;
     }
@@ -392,11 +389,11 @@ void NetCdfStreamer::addTimeDimension()
     addAttribute(timeVar, "units", timeUnitDef.c_str());
 
     if (!timeVar->put(times, timeSize))
-      throw SmartMet::Spine::Exception(BCP, "Failed to store validtimes");
+      throw Spine::Exception(BCP, "Failed to store validtimes");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -429,7 +426,7 @@ string getPeriodName(long periodLengthInMinutes)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -454,14 +451,14 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
     timeVar->get(times, timeDim->size());
 
     if (!tVar->put(times, timeDim->size()))
-      throw SmartMet::Spine::Exception(BCP, "Failed to store validtimes");
+      throw Spine::Exception(BCP, "Failed to store validtimes");
 
     addAttribute(tVar, "long_name", "time");
     addAttribute(tVar, "calendar", "gregorian");
 
     boost::shared_ptr<NcAtt> uAtt(timeVar->get_att("units"));
     if (!uAtt)
-      throw SmartMet::Spine::Exception(BCP, "Failed to get time unit attribute");
+      throw Spine::Exception(BCP, "Failed to get time unit attribute");
 
     boost::shared_ptr<NcValues> uVal(uAtt->values());
     char *u;
@@ -469,7 +466,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
 
     if ((!uVal) || (!(u = (char *)uVal->base())) ||
         ((uLen = (uVal->num() * uVal->bytes_for_one())) < 1))
-      throw SmartMet::Spine::Exception(BCP, "Failed to get time unit attribute value");
+      throw Spine::Exception(BCP, "Failed to get time unit attribute value");
 
     string unit(u, uLen);
     addAttribute(tVar, "units", unit.c_str());
@@ -478,7 +475,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -540,11 +537,11 @@ void NetCdfStreamer::addLevelDimension()
     }
 
     if (!levelVar->put(levels, itsDataLevels.size()))
-      throw SmartMet::Spine::Exception(BCP, "Failed to store levels");
+      throw Spine::Exception(BCP, "Failed to store levels");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -569,7 +566,7 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -610,7 +607,7 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -621,9 +618,7 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
-                                 const NFmiArea *area,
-                                 const NFmiGrid *grid)
+void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid)
 {
   try
   {
@@ -660,7 +655,7 @@ void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
         setStereographicGeometry(area, crsVar);
         break;
       default:
-        throw SmartMet::Spine::Exception(BCP, "Unsupported projection in input data");
+        throw Spine::Exception(BCP, "Unsupported projection in input data");
     }
 
     // Store y/x and/or lat/lon dimensions and coordinate variables, cropping the grid if manual
@@ -714,10 +709,10 @@ void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
       auto yVar = addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", yDim);
       auto xVar = addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", xDim);
 
-      NFmiPoint p0 = ((itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
-                          ? grid->GridToWorldXY(x0, y0)
-                          : tgtWorldXYs[x0][y0]);
-      NFmiPoint pN = ((itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
+      NFmiPoint p0 =
+          ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToWorldXY(x0, y0)
+                                                                      : tgtWorldXYs[x0][y0]);
+      NFmiPoint pN = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
                           : tgtWorldXYs[xN - 1][yN - 1]);
 
@@ -732,10 +727,10 @@ void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
         worldX[x] = wX;
 
       if (!yVar->put(worldY, itsNY))
-        throw SmartMet::Spine::Exception(BCP, "Failed to store y -coordinates");
+        throw Spine::Exception(BCP, "Failed to store y -coordinates");
 
       if (!xVar->put(worldX, itsNX))
-        throw SmartMet::Spine::Exception(BCP, "Failed to store x -coordinates");
+        throw Spine::Exception(BCP, "Failed to store x -coordinates");
 
       latVar = addVariable("lat", ncFloat, &(*yDim), &(*xDim));
       lonVar = addVariable("lon", ncFloat, &(*yDim), &(*xDim));
@@ -743,18 +738,18 @@ void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
       for (y = y0, n = 0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, n++)
         {
-          const NFmiPoint p = ((itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
-                                   ? grid->GridToLatLon(x, y)
-                                   : tgtLatLons[x][y]);
+          const NFmiPoint p =
+              ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToLatLon(x, y)
+                                                                          : tgtLatLons[x][y]);
 
           lat[n] = p.Y();
           lon[n] = p.X();
         }
 
       if (!latVar->put(lat, itsNY, itsNX))
-        throw SmartMet::Spine::Exception(BCP, "Failed to store latitude(y,x) coordinates");
+        throw Spine::Exception(BCP, "Failed to store latitude(y,x) coordinates");
       if (!lonVar->put(lon, itsNY, itsNX))
-        throw SmartMet::Spine::Exception(BCP, "Failed to store longitude(y,x) coordinates");
+        throw Spine::Exception(BCP, "Failed to store longitude(y,x) coordinates");
     }
     else
     {
@@ -764,20 +759,20 @@ void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
       lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "Lon", lonDim);
 
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
-        lat[n] = ((itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
+        lat[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
                       ? grid->GridToLatLon(0, y).Y()
                       : tgtLatLons[0][y].Y());
 
       for (x = x0, n = 0; (x < xN); x += xStep, n++)
-        lon[n] = ((itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
+        lon[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
                       ? grid->GridToLatLon(x, 0).X()
                       : tgtLatLons[x][0].X());
 
       if (!latVar->put(lat, itsNY))
-        throw SmartMet::Spine::Exception(BCP, "Failed to store latitude coordinates");
+        throw Spine::Exception(BCP, "Failed to store latitude coordinates");
 
       if (!lonVar->put(lon, itsNX))
-        throw SmartMet::Spine::Exception(BCP, "Failed to store longitude coordinates");
+        throw Spine::Exception(BCP, "Failed to store longitude coordinates");
     }
 
     addAttribute(latVar, "standard_name", "latitude");
@@ -787,21 +782,19 @@ void NetCdfStreamer::setGeometry(SmartMet::Engine::Querydata::Q q,
     addAttribute(lonVar, "long_name", "longitude");
     addAttribute(lonVar, "units", "degrees_east");
 
-    if (SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    if (Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
     {
-      addAttribute(
-          crsVar, "semi_major", SmartMet::Plugin::Download::Datum::Sphere::NetCdf::WGS84_semiMajor);
+      addAttribute(crsVar, "semi_major", Plugin::Download::Datum::Sphere::NetCdf::WGS84_semiMajor);
       addAttribute(crsVar,
                    "inverse_flattening",
-                   SmartMet::Plugin::Download::Datum::Sphere::NetCdf::WGS84_invFlattening);
+                   Plugin::Download::Datum::Sphere::NetCdf::WGS84_invFlattening);
     }
     else if (projected)
-      addAttribute(
-          crsVar, "earth_radius", SmartMet::Plugin::Download::Datum::Sphere::NetCdf::Fmi_6371220m);
+      addAttribute(crsVar, "earth_radius", Plugin::Download::Datum::Sphere::NetCdf::Fmi_6371220m);
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -852,12 +845,12 @@ ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
       return ptime(date(d.year(), 1, 1));
     }
 
-    throw SmartMet::Spine::Exception(
+    throw Spine::Exception(
         BCP, "Invalid time period length " + boost::lexical_cast<string>(periodLengthInMinutes));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -894,8 +887,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     // Determine and store time bounds
 
-    SmartMet::Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter =
-        itsDataTimes.begin();
+    Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time(), vt;
     int bounds[2 * timeDim->size()];
     size_t i = 0;
@@ -921,7 +913,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
     auto timeBoundsVar = addVariable(name, ncInt, &(*tDim), &(*timeBoundsDim));
 
     if (!timeBoundsVar->put(bounds, timeDim->size(), 2))
-      throw SmartMet::Spine::Exception(BCP, "Failed to store time bounds");
+      throw Spine::Exception(BCP, "Failed to store time bounds");
 
     // Connect the bounds to the time variable
 
@@ -931,7 +923,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1025,7 +1017,7 @@ void NetCdfStreamer::addParameters()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1078,7 +1070,7 @@ void NetCdfStreamer::storeParamValues()
         it_Var++;
 
     if (!(*it_Var)->set_cur(itsTimeIndex - 1, levelDim ? itsLevelIndex : -1))
-      throw SmartMet::Spine::Exception(BCP, "Failed to set active netcdf time/level");
+      throw Spine::Exception(BCP, "Failed to set active netcdf time/level");
 
     long edge1 = 1;                         // Time dimension, edge length 1
     long edge2 = levelDim ? 1 : itsNY;      // Level (edge length 1) or Y dimension
@@ -1086,11 +1078,11 @@ void NetCdfStreamer::storeParamValues()
     long edge4 = levelDim ? itsNX : -1;     // X dimension or n/a
 
     if (!(*it_Var)->put(values.get(), edge1, edge2, edge3, edge4))
-      throw SmartMet::Spine::Exception(BCP, "Failed to store netcdf variable values");
+      throw Spine::Exception(BCP, "Failed to store netcdf variable values");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1113,12 +1105,12 @@ void NetCdfStreamer::paramChanged()
         it_Var++;
 
       if ((it_Var == dataVars.end()) && (itsParamIterator != itsDataParams.end()))
-        throw SmartMet::Spine::Exception(BCP, "paramChanged: internal: No more netcdf variables");
+        throw Spine::Exception(BCP, "paramChanged: internal: No more netcdf variables");
     }
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1129,7 +1121,7 @@ void NetCdfStreamer::paramChanged()
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::getDataChunk(SmartMet::Engine::Querydata::Q q,
+void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
                                   const NFmiArea *area,
                                   NFmiGrid *grid,
                                   int /* level */,
@@ -1158,7 +1150,7 @@ void NetCdfStreamer::getDataChunk(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

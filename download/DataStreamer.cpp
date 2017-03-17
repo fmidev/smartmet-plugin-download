@@ -72,7 +72,7 @@ ResMgr::~ResMgr()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -89,11 +89,11 @@ void ResMgr::createArea(string &projection)
     area = NFmiAreaFactory::Create(projection);
 
     if (!area.get())
-      throw SmartMet::Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+      throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -111,7 +111,7 @@ const NFmiArea *ResMgr::getArea()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 // ----------------------------------------------------------------------
@@ -127,11 +127,11 @@ void ResMgr::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
     grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));
 
     if (!grid.get())
-      throw SmartMet::Spine::Exception(BCP, "Internal: could not create grid");
+      throw Spine::Exception(BCP, "Internal: could not create grid");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -158,7 +158,7 @@ bool ResMgr::hasGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -180,7 +180,7 @@ NFmiGrid *ResMgr::getGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -203,7 +203,7 @@ OGRSpatialReference *ResMgr::cloneCS(const OGRSpatialReference &SRS)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -226,7 +226,7 @@ OGRSpatialReference *ResMgr::cloneGeogCS(const OGRSpatialReference &SRS)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -251,8 +251,8 @@ OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialRefer
       if (isGeometrySRS)
       {
         if (!(geometrySRS = toSRS->Clone()))
-          throw SmartMet::Spine::Exception(
-              BCP, "getCoordinateTransformation: OGRSpatialReference cloning failed");
+          throw Spine::Exception(BCP,
+                                 "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
           spatialReferences.push_back(geometrySRS);
       }
@@ -264,7 +264,7 @@ OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialRefer
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -310,7 +310,7 @@ bool isDepthLevel(FmiLevelType levelType, int levelValue)
  */
 // ----------------------------------------------------------------------
 
-static FmiLevelType getLevelTypeFromData(SmartMet::Engine::Querydata::Q q,
+static FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
                                          const string &producer,
                                          FmiLevelType &nativeLevelType,
                                          bool &positiveLevels)
@@ -325,10 +325,10 @@ static FmiLevelType getLevelTypeFromData(SmartMet::Engine::Querydata::Q q,
     if ((!isSurfaceLevel(levelType)) && (!isHybridLevel(levelType)) &&
         (!isPressureLevel(levelType)) && (!isHeightOrDepthLevel(levelType)))
     {
-      throw SmartMet::Spine::Exception(BCP,
-                                       "Internal: Unrecognized level type '" +
-                                           boost::lexical_cast<string>(levelType) +
-                                           "' for producer '" + producer + "'");
+      throw Spine::Exception(BCP,
+                             "Internal: Unrecognized level type '" +
+                                 boost::lexical_cast<string>(levelType) + "' for producer '" +
+                                 producer + "'");
     }
 
     positiveLevels = true;
@@ -352,7 +352,7 @@ static FmiLevelType getLevelTypeFromData(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -362,7 +362,7 @@ static FmiLevelType getLevelTypeFromData(SmartMet::Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-static bool areLevelValuesInIncreasingOrder(SmartMet::Engine::Querydata::Q q)
+static bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
 {
   try
   {
@@ -384,7 +384,7 @@ static bool areLevelValuesInIncreasingOrder(SmartMet::Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -410,15 +410,14 @@ double getProjParam(const OGRSpatialReference &srs,
       if (ignoreErr)
         return defaultValue;
       else
-        throw SmartMet::Spine::Exception(
-            BCP, string("Getting projection parameter '") + param + "' failed");
+        throw Spine::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
     }
 
     return v;
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -428,10 +427,10 @@ double getProjParam(const OGRSpatialReference &srs,
  */
 // ----------------------------------------------------------------------
 
-DataStreamer::DataStreamer(const SmartMet::Spine::HTTP::Request &req,
+DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
                            const Producer &producer)
-    : SmartMet::Spine::HTTP::ContentStreamer(),
+    : Spine::HTTP::ContentStreamer(),
       itsRequest(req),
       itsCfg(config),
       itsProducer(producer),
@@ -449,7 +448,7 @@ DataStreamer::DataStreamer(const SmartMet::Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -503,14 +502,14 @@ void DataStreamer::checkDataTimeStep()
       // n minutes
       ;
     else
-      throw SmartMet::Spine::Exception(BCP,
-                                       "Invalid data timestep (" +
-                                           boost::lexical_cast<string>(itsDataTimeStep) +
-                                           ") for producer '" + itsReqParams.producer + "'");
+      throw Spine::Exception(BCP,
+                             "Invalid data timestep (" +
+                                 boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
+                                 itsReqParams.producer + "'");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -524,7 +523,7 @@ void DataStreamer::checkDataTimeStep()
 // ----------------------------------------------------------------------
 
 void DataStreamer::generateValidTimeList(
-    const SmartMet::Engine::Querydata::Q &q, Query &query, ptime &oTime, ptime &sTime, ptime &eTime)
+    const Engine::Querydata::Q &q, Query &query, ptime &oTime, ptime &sTime, ptime &eTime)
 {
   try
   {
@@ -562,23 +561,22 @@ void DataStreamer::generateValidTimeList(
 
     bool hasTimeStep = (query.tOptions.timeStep && (*query.tOptions.timeStep > 0));
 
-    if ((query.tOptions.mode == SmartMet::Spine::TimeSeriesGeneratorOptions::TimeSteps) &&
-        (!hasTimeStep))
-      query.tOptions.mode = SmartMet::Spine::TimeSeriesGeneratorOptions::DataTimes;
+    if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::TimeSteps) && (!hasTimeStep))
+      query.tOptions.mode = Spine::TimeSeriesGeneratorOptions::DataTimes;
 
-    if ((query.tOptions.mode == SmartMet::Spine::TimeSeriesGeneratorOptions::DataTimes) ||
+    if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::DataTimes) ||
         query.tOptions.startTimeData || query.tOptions.endTimeData)
       query.tOptions.setDataTimes(q->validTimes(), q->isClimatology());
 
     auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(query.timeZone);
-    itsDataTimes = SmartMet::Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
+    itsDataTimes = Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
 
     if (itsDataTimes.empty())
-      throw SmartMet::Spine::Exception(BCP, "generateTimes: No validtimes returned");
+      throw Spine::Exception(BCP, "generateTimes: No validtimes returned");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -642,7 +640,7 @@ void DataStreamer::setLevels(const Query &query)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -653,7 +651,7 @@ void DataStreamer::setLevels(const Query &query)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::setParams(const SmartMet::Spine::OptionParsers::ParameterList &params,
+void DataStreamer::setParams(const Spine::OptionParsers::ParameterList &params,
                              const Scaling &scaling)
 {
   try
@@ -679,7 +677,7 @@ void DataStreamer::setParams(const SmartMet::Spine::OptionParsers::ParameterList
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -700,8 +698,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
     // Get grid's origo
 
     if (!q->isGrid())
-      throw SmartMet::Spine::Exception(
-          BCP, "Nongrid data for producer + '" + itsReqParams.producer + "'");
+      throw Spine::Exception(BCP, "Nongrid data for producer + '" + itsReqParams.producer + "'");
 
     const NFmiGrid &grid = q->grid();
 
@@ -809,7 +806,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -820,7 +817,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getRegLLBBox(SmartMet::Engine::Querydata::Q q)
+void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 {
   try
   {
@@ -870,7 +867,7 @@ void DataStreamer::getRegLLBBox(SmartMet::Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -881,7 +878,7 @@ void DataStreamer::getRegLLBBox(SmartMet::Engine::Querydata::Q q)
  */
 // ----------------------------------------------------------------------
 
-string DataStreamer::getRegLLBBoxStr(SmartMet::Engine::Querydata::Q q)
+string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q)
 {
   try
   {
@@ -897,7 +894,7 @@ string DataStreamer::getRegLLBBoxStr(SmartMet::Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -908,7 +905,7 @@ string DataStreamer::getRegLLBBoxStr(SmartMet::Engine::Querydata::Q q)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getLLBBox(SmartMet::Engine::Querydata::Q q)
+void DataStreamer::getLLBBox(Engine::Querydata::Q q)
 {
   try
   {
@@ -920,7 +917,7 @@ void DataStreamer::getLLBBox(SmartMet::Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -971,7 +968,7 @@ void DataStreamer::setSteppedGridSize()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1003,8 +1000,8 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
           fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second * 1000))));
 
       if ((gridSizeX <= 1) || (gridSizeY <= 1))
-        throw SmartMet::Spine::Exception(
-            BCP, "Invalid gridsize for producer '" + itsReqParams.producer + "'");
+        throw Spine::Exception(BCP,
+                               "Invalid gridsize for producer '" + itsReqParams.producer + "'");
 
       // Must use constant grid size for querydata output; set calculated absolute gridsize
 
@@ -1039,7 +1036,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1065,7 +1062,7 @@ std::string DataStreamer::getGridCenterBBoxStr(bool useNativeProj, const NFmiGri
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1093,7 +1090,7 @@ void DataStreamer::setNativeGridResolution(const NFmiArea &nativeArea,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1128,7 +1125,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       boost::shared_ptr<NFmiArea> a = NFmiAreaFactory::Create(projection);
       NFmiArea *area = a.get();
       if (!area)
-        throw SmartMet::Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+        throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
 
       NFmiPoint bl(area->BottomLeftLatLon());
       NFmiPoint tr(area->TopRightLatLon());
@@ -1165,7 +1162,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
 
     if ((cropping.bottomLeftX >= cropping.topRightX) ||
         (cropping.bottomLeftY >= cropping.topRightY))
-      throw SmartMet::Spine::Exception(BCP, "Bounding box does not intersect the grid");
+      throw Spine::Exception(BCP, "Bounding box does not intersect the grid");
 
     cropping.gridSizeX = ((cropping.topRightX - cropping.bottomLeftX) + 1);
     cropping.gridSizeY = ((cropping.topRightY - cropping.bottomLeftY) + 1);
@@ -1187,7 +1184,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1222,7 +1219,7 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
         {NULL, A_Native, false, false, false}};
 
     if (!projection)
-      throw SmartMet::Spine::Exception(BCP, "Projection name is undefined");
+      throw Spine::Exception(BCP, "Projection name is undefined");
 
     string proj(projection);
 
@@ -1237,11 +1234,11 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
         break;
       }
 
-    throw SmartMet::Spine::Exception(BCP, "Unsupported projection '" + proj + "'");
+    throw Spine::Exception(BCP, "Unsupported projection '" + proj + "'");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1261,7 +1258,7 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, const NFmiArea *area)
+void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiArea *area)
 {
   try
   {
@@ -1271,22 +1268,21 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
     // qd projected (or latlon/geographic) cs
 
     if ((err = qdProjectedSrs.SetFromUserInput(area->WKT().c_str())) != OGRERR_NONE)
-      throw SmartMet::Spine::Exception(
-          BCP, "transform: srs.Set(WKT) error " + boost::lexical_cast<string>(err));
+      throw Spine::Exception(BCP,
+                             "transform: srs.Set(WKT) error " + boost::lexical_cast<string>(err));
 
     // qd geographic cs
 
     qdLLSrsPtr = itsResMgr.cloneGeogCS(qdProjectedSrs);
     if (!qdLLSrsPtr)
-      throw SmartMet::Spine::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
+      throw Spine::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
 
     // Helmert transformation parameters for wgs84 output
 
-    if (SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
     {
       double htp[7];
-      SmartMet::Plugin::Download::Datum::getHelmertTransformationParameters(
-          itsReqParams.datumShift, area, qdProjectedSrs, htp);
+      Datum::getHelmertTransformationParameters(itsReqParams.datumShift, area, qdProjectedSrs, htp);
 
       qdLLSrsPtr->SetTOWGS84(htp[0], htp[1], htp[2], htp[3], htp[4], htp[5], htp[6]);
     }
@@ -1302,29 +1298,28 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
       // Epsg projection
       //
       if ((err = wgs84PrSrsPtr->importFromEPSG(itsReqParams.epsgCode)) != OGRERR_NONE)
-        throw SmartMet::Spine::Exception(BCP,
-                                         "transform: srs.importFromEPSG(" +
-                                             boost::lexical_cast<string>(itsReqParams.epsgCode) +
-                                             ") error " + boost::lexical_cast<string>(err));
+        throw Spine::Exception(BCP,
+                               "transform: srs.importFromEPSG(" +
+                                   boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
+                                   boost::lexical_cast<string>(err));
     }
-    else if ((!SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift)) ||
+    else if ((!Datum::isDatumShiftToWGS84(itsReqParams.datumShift)) ||
              ((itsReqParams.projType != P_LatLon) && (itsReqParams.projType != P_RotLatLon) &&
               ((itsReqParams.projType != P_Native) || (!qdProjLL))))
     {
       // qd projection
       //
-      if (!(wgs84PrSrsPtr =
-                (SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
-                     ? itsResMgr.cloneCS(qdProjectedSrs)
-                     : itsResMgr.cloneGeogCS(qdProjectedSrs))))
-        throw SmartMet::Spine::Exception(BCP, "transform: qdsrs.clone() failed");
+      if (!(wgs84PrSrsPtr = (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
+                                 ? itsResMgr.cloneCS(qdProjectedSrs)
+                                 : itsResMgr.cloneGeogCS(qdProjectedSrs))))
+        throw Spine::Exception(BCP, "transform: qdsrs.clone() failed");
     }
 
     // If selected set wgs84 geographic output cs
 
-    if (SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
       if ((err = wgs84PrSrsPtr->SetWellKnownGeogCS("WGS84")) != OGRERR_NONE)
-        throw SmartMet::Spine::Exception(
+        throw Spine::Exception(
             BCP, "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
 
     // If projected output cs, get geographic output cs
@@ -1336,7 +1331,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
             getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
 
       if (!(wgs84LLSrsPtr = itsResMgr.cloneGeogCS(*wgs84PrSrsPtr)))
-        throw SmartMet::Spine::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
+        throw Spine::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
     }
     else if (itsReqParams.projType == P_Epsg)
     {
@@ -1362,8 +1357,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
     OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResMgr.getCoordinateTransformation(
         qdLLSrsPtr, wgs84PrSrsPtr, ((itsReqParams.projType == P_Epsg) && (!wgs84ProjLL)));
     if (!qdLL2Wgs84Prct)
-      throw SmartMet::Spine::Exception(
-          BCP, "transform: OGRCreateCoordinateTransformation(qd,wgs84) failed");
+      throw Spine::Exception(BCP, "transform: OGRCreateCoordinateTransformation(qd,wgs84) failed");
 
     typedef NFmiDataMatrix<float>::size_type sz_t;
     double xc, yc;
@@ -1378,7 +1372,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
         yc = p.Y();
 
         if (!(qdLL2Wgs84Prct->Transform(1, &xc, &yc)))
-          throw SmartMet::Spine::Exception(BCP, "transform: Transform(qd,wgs84) failed");
+          throw Spine::Exception(BCP, "transform: Transform(qd,wgs84) failed");
 
         p = NFmiPoint(xc, yc);
       }
@@ -1395,14 +1389,13 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
     OGRCoordinateTransformation *wgs84Pr2QDLLct =
         itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, qdLLSrsPtr);
     if (!wgs84Pr2QDLLct)
-      throw SmartMet::Spine::Exception(
-          BCP, "transform: OGRCreateCoordinateTransformation(wgs84,qd) failed");
+      throw Spine::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,qd) failed");
 
     OGRCoordinateTransformation *wgs84Pr2LLct = NULL;
     if ((!wgs84ProjLL) &&
         (!(wgs84Pr2LLct = itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
-      throw SmartMet::Spine::Exception(
-          BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
+      throw Spine::Exception(BCP,
+                             "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
     srcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
     const sz_t xs = srcLatLons.NX(), ys = srcLatLons.NY();
@@ -1437,7 +1430,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
         double tyc = yc;
 
         if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
-          throw SmartMet::Spine::Exception(BCP, "transform: Transform(wgs84,qd) failed");
+          throw Spine::Exception(BCP, "transform: Transform(wgs84,qd) failed");
 
         srcLatLons[x][y] = NFmiPoint(txc, tyc);
 
@@ -1451,7 +1444,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
             tyc = yc;
 
             if (!(wgs84Pr2LLct->Transform(1, &txc, &tyc)))
-              throw SmartMet::Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
+              throw Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
             if (y == 0)
               itsBoundingBox.bottomLeft = NFmiPoint(txc, tyc);
@@ -1475,7 +1468,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
           tyc = yc;
 
           if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
-            throw SmartMet::Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
+            throw Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
           tgtLatLons[x][y] = NFmiPoint(txc, tyc);
         }
@@ -1487,7 +1480,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1498,7 +1491,7 @@ void DataStreamer::setTransformedCoordinates(SmartMet::Engine::Querydata::Q q, c
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::coordTransform(SmartMet::Engine::Querydata::Q q, const NFmiArea *area)
+void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
 {
   try
   {
@@ -1508,8 +1501,7 @@ void DataStreamer::coordTransform(SmartMet::Engine::Querydata::Q q, const NFmiAr
       //
       NFmiPoint bl, tr;
 
-      if (((!cropping.cropped) &&
-           (itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)) ||
+      if (((!cropping.cropped) && (itsReqParams.datumShift == Datum::None)) ||
           (!itsReqParams.bboxRect))
       {
         // Using the native or projected area's corners
@@ -1528,7 +1520,7 @@ void DataStreamer::coordTransform(SmartMet::Engine::Querydata::Q q, const NFmiAr
       itsBoundingBox.bottomLeft = bl;
       itsBoundingBox.topRight = tr;
 
-      if (itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
+      if (itsReqParams.datumShift == Datum::None)
       {
         itsDX = area->WorldXYWidth() / (itsReqGridSizeX - 1);
         itsDY = area->WorldXYHeight() / (itsReqGridSizeY - 1);
@@ -1549,7 +1541,7 @@ void DataStreamer::coordTransform(SmartMet::Engine::Querydata::Q q, const NFmiAr
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1560,7 +1552,7 @@ void DataStreamer::coordTransform(SmartMet::Engine::Querydata::Q q, const NFmiAr
  */
 // ----------------------------------------------------------------------
 
-NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(SmartMet::Engine::Querydata::Q q) const
+NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q) const
 {
   try
   {
@@ -1589,7 +1581,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(SmartMet::Engine::Queryd
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1600,7 +1592,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(SmartMet::Engine::Queryd
  */
 // ----------------------------------------------------------------------
 
-NFmiParamDescriptor DataStreamer::makeParamDescriptor(SmartMet::Engine::Querydata::Q q) const
+NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q) const
 {
   try
   {
@@ -1631,7 +1623,7 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(SmartMet::Engine::Querydat
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1642,7 +1634,7 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(SmartMet::Engine::Querydat
  */
 // ----------------------------------------------------------------------
 
-NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(SmartMet::Engine::Querydata::Q q)
+NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q)
 {
   try
   {
@@ -1651,8 +1643,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(SmartMet::Engine::Querydata:
     //		 possibly Time(itsDataTimes.begin()) (by extractData()) has been called for q.
 
     NFmiMetTime ot = q->originTime();
-    SmartMet::Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter =
-        itsDataTimes.begin();
+    Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     NFmiTimeList dataTimes;
 
     for (; (timeIter != itsDataTimes.end()); timeIter++)
@@ -1670,7 +1661,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(SmartMet::Engine::Querydata:
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1695,7 +1686,7 @@ void DataStreamer::createQD(const NFmiGrid &g)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1714,7 +1705,7 @@ const NFmiArea &getGridArea(const NFmiGrid &grid)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1734,11 +1725,11 @@ static void valBufDeleter(float *ptr)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
-void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
+void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
                                         NFmiGrid &wantedGrid,
                                         const NFmiMetTime *mt,
                                         NFmiDataMatrix<float> *demValues,
@@ -1798,9 +1789,9 @@ void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
       bool isSubParamUsed = q->isSubParamUsed();
 
       if (!q->param(kFmiWindUMS))
-        throw SmartMet::Spine::Exception(BCP, "Data does not contain Wind U-component");
+        throw Spine::Exception(BCP, "Data does not contain Wind U-component");
       if (!q->param(kFmiWindVMS))
-        throw SmartMet::Spine::Exception(BCP, "Data does not contain Wind V-component");
+        throw Spine::Exception(BCP, "Data does not contain Wind V-component");
 
       q->setIsSubParamUsed(isSubParamUsed);
 
@@ -1822,7 +1813,7 @@ void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
       // Get U values
 
       if (!q->param(kFmiWindUMS))
-        throw SmartMet::Spine::Exception(BCP, "Internal error: could not switch to parameter U");
+        throw Spine::Exception(BCP, "Internal error: could not switch to parameter U");
       q->setIsSubParamUsed(isSubParamUsed);
 
       valBuf uValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
@@ -1850,7 +1841,7 @@ void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
           if ((*uPtr != kFloatMissing) && (*vPtr != kFloatMissing))
           {
             if (!wantedGrid.Index(wantedGrid.Index(x, y)))
-              throw SmartMet::Spine::Exception(BCP, "Internal error: could not set grid index");
+              throw Spine::Exception(BCP, "Internal error: could not set grid index");
 
             double azimuth1 = sourceArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
             double azimuth2 = targetArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
@@ -1866,9 +1857,9 @@ void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
         }
 
       if (!q->param(id))
-        throw SmartMet::Spine::Exception(BCP,
-                                         "Internal error: could not switch to parameter " +
-                                             boost::lexical_cast<std::string>(id));
+        throw Spine::Exception(BCP,
+                               "Internal error: could not switch to parameter " +
+                                   boost::lexical_cast<std::string>(id));
       q->setIsSubParamUsed(isSubParamUsed);
     }
     else if (demValues && waterFlags)
@@ -1921,7 +1912,7 @@ void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1935,7 +1926,7 @@ void DataStreamer::cachedProjGridValues(SmartMet::Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::isLevelAvailable(SmartMet::Engine::Querydata::Q q,
+bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
                                     int &requestedLevel,
                                     bool &exactLevel) const
 {
@@ -1946,7 +1937,7 @@ bool DataStreamer::isLevelAvailable(SmartMet::Engine::Querydata::Q q,
     bool hasNextLevel = q->nextLevel();
 
     if (!hasNextLevel)
-      throw SmartMet::Spine::Exception(BCP, "isLevelAvailable: internal: no levels in data");
+      throw Spine::Exception(BCP, "isLevelAvailable: internal: no levels in data");
 
     if (isSurfaceLevel(levelType))
     {
@@ -1991,7 +1982,7 @@ bool DataStreamer::isLevelAvailable(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -2004,7 +1995,7 @@ bool DataStreamer::isLevelAvailable(SmartMet::Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::createArea(SmartMet::Engine::Querydata::Q q,
+void DataStreamer::createArea(Engine::Querydata::Q q,
                               const NFmiArea &nativeArea,
                               unsigned long nativeClassId,
                               size_t nativeGridSizeX,
@@ -2015,7 +2006,7 @@ void DataStreamer::createArea(SmartMet::Engine::Querydata::Q q,
     itsUseNativeProj = itsUseNativeBBox = true;
     itsRetainNativeGridResolution = cropping.crop = false;
 
-    if (itsReqParams.datumShift != SmartMet::Plugin::Download::Datum::None)
+    if (itsReqParams.datumShift != Datum::None)
     {
       // With datum shift the data is read using transformed coordinates and native projected data.
       //
@@ -2026,12 +2017,10 @@ void DataStreamer::createArea(SmartMet::Engine::Querydata::Q q,
       //
       if ((itsReqParams.areaClassId == A_RotLatLon) ||
           ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiRotatedLatLonArea)))
-        throw SmartMet::Spine::Exception(
-            BCP, "Rotated latlon not supported when using gdal transformation");
+        throw Spine::Exception(BCP, "Rotated latlon not supported when using gdal transformation");
       else if ((itsReqParams.areaClassId == A_Mercator) ||
                ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
-        throw SmartMet::Spine::Exception(BCP,
-                                         "Mercator not supported when using gdal transformation");
+        throw Spine::Exception(BCP, "Mercator not supported when using gdal transformation");
 
       return;
     }
@@ -2123,15 +2112,15 @@ void DataStreamer::createArea(SmartMet::Engine::Querydata::Q q,
           cropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);
         }
         else
-          throw SmartMet::Spine::Exception(BCP,
-                                           "Unrecognized projection '" + projection +
-                                               "' for producer '" + itsReqParams.producer + "'");
+          throw Spine::Exception(BCP,
+                                 "Unrecognized projection '" + projection + "' for producer '" +
+                                     itsReqParams.producer + "'");
       }
     }
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -2173,7 +2162,7 @@ void DataStreamer::createGrid(const NFmiArea &area,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -2195,7 +2184,7 @@ void DataStreamer::createGrid(const NFmiArea &area,
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::getAreaAndGrid(SmartMet::Engine::Querydata::Q q,
+bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                                   bool interpolation,
                                   bool landscaping,
                                   const NFmiArea **area,
@@ -2245,8 +2234,7 @@ bool DataStreamer::getAreaAndGrid(SmartMet::Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      if ((itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None) &&
-          (nonNativeGrid || (!itsUseNativeBBox)))
+      if ((itsReqParams.datumShift == Datum::None) && (nonNativeGrid || (!itsUseNativeBBox)))
       {
         // Create grid if using nonnative grid size. Use the cropped size for cropped querydata.
         //
@@ -2299,7 +2287,7 @@ bool DataStreamer::getAreaAndGrid(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -2310,7 +2298,7 @@ bool DataStreamer::getAreaAndGrid(SmartMet::Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::nextParam(SmartMet::Engine::Querydata::Q q)
+void DataStreamer::nextParam(Engine::Querydata::Q q)
 {
   try
   {
@@ -2323,7 +2311,7 @@ void DataStreamer::nextParam(SmartMet::Engine::Querydata::Q q)
         itsScalingIterator++;
 
         if (itsScalingIterator == itsValScaling.end())
-          throw SmartMet::Spine::Exception(BCP, "nextParam: internal: No more scaling data");
+          throw Spine::Exception(BCP, "nextParam: internal: No more scaling data");
       }
 
       if (q->param(itsParamIterator->number()))
@@ -2334,7 +2322,7 @@ void DataStreamer::nextParam(SmartMet::Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -2451,7 +2439,7 @@ void DataStreamer::extractData(string &chunk)
 
         coordTransform(q, area);
 
-        if (itsReqParams.datumShift == SmartMet::Plugin::Download::Datum::None)
+        if (itsReqParams.datumShift == Datum::None)
         {
           // Using newbase projection.
           //
@@ -2507,10 +2495,9 @@ void DataStreamer::extractData(string &chunk)
         // instead of 'chunk' by the upper level (e.g. the format specific getChunk() method).
 
         if ((itsGridValues.NX() == 0) || (itsGridValues.NY() == 0))
-          throw SmartMet::Spine::Exception(
-              BCP,
-              "Extract data: internal: Query returned no data for producer '" +
-                  itsReqParams.producer + "'");
+          throw Spine::Exception(BCP,
+                                 "Extract data: internal: Query returned no data for producer '" +
+                                     itsReqParams.producer + "'");
 
         getDataChunk(q, area, grid, level, mt, itsGridValues, chunk);
 
@@ -2527,7 +2514,7 @@ void DataStreamer::extractData(string &chunk)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

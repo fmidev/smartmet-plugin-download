@@ -49,7 +49,7 @@ ParamChangeItem::~ParamChangeItem()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -93,7 +93,7 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -109,14 +109,14 @@ unsigned long asUInt64(const std::string& name, const Json::Value& json, uint ar
     if (json.isUInt64())
       return json.asUInt64();
 
-    throw SmartMet::Spine::Exception(BCP,
-                                     "'" + name + "': uint64 value expected at array index " +
-                                         Fmi::to_string(arrayIndex) + ", got value " +
-                                         json.asString() + " instead");
+    throw Spine::Exception(BCP,
+                           "'" + name + "': uint64 value expected at array index " +
+                               Fmi::to_string(arrayIndex) + ", got value " + json.asString() +
+                               " instead");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -127,12 +127,12 @@ unsigned int asUInt(const std::string& name, const Json::Value& json, uint array
     if (json.isUInt())
       return json.asUInt();
 
-    throw SmartMet::Spine::Exception(
+    throw Spine::Exception(
         BCP, "'" + name + "': uint value expected at array index " + Fmi::to_string(arrayIndex));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -143,12 +143,12 @@ float asFloat(const std::string& name, const Json::Value& json, uint arrayIndex)
     if (json.isDouble())
       return json.asFloat();
 
-    throw SmartMet::Spine::Exception(
+    throw Spine::Exception(
         BCP, "'" + name + "': float value expected at array index " + Fmi::to_string(arrayIndex));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -163,12 +163,12 @@ std::string asString(const std::string& name, const Json::Value& json, uint arra
     if (json.isString())
       return json.asString();
 
-    throw SmartMet::Spine::Exception(
+    throw Spine::Exception(
         BCP, "'" + name + "': string value expected at array index " + Fmi::to_string(arrayIndex));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -216,7 +216,7 @@ bool readGribParamConfigField(const std::string& name,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -248,7 +248,7 @@ bool readNetCdfParamConfigField(const std::string& name,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -270,20 +270,18 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
 
     std::ifstream in(configFilePath.c_str());
     if (!in)
-      throw SmartMet::Spine::Exception(
-          BCP, "Failed to open '" + configFilePath.string() + "' for reading");
+      throw Spine::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
 
     std::string content;
     content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 
     if (!reader.parse(content, theJson))
-      throw SmartMet::Spine::Exception(BCP,
-                                       "Failed to parse '" + configFilePath.string() + "': " +
-                                           reader.getFormattedErrorMessages());
+      throw Spine::Exception(BCP,
+                             "Failed to parse '" + configFilePath.string() + "': " +
+                                 reader.getFormattedErrorMessages());
 
     if (!theJson.isArray())
-      throw SmartMet::Spine::Exception(
-          BCP, "Parameter configuration must contain an array of JSON objects");
+      throw Spine::Exception(BCP, "Parameter configuration must contain an array of JSON objects");
 
     // Iterate through all the objects
 
@@ -294,8 +292,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
       const Json::Value& paramJson = theJson[i];
 
       if (!paramJson.isObject())
-        throw SmartMet::Spine::Exception(
-            BCP, "JSON object expected at array index " + Fmi::to_string(i));
+        throw Spine::Exception(BCP, "JSON object expected at array index " + Fmi::to_string(i));
 
       ParamChangeItem p;
       std::string paramName;
@@ -306,10 +303,9 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
       {
         const Json::Value& json = paramJson[name];
         if (json.isArray() || json.isObject())
-          throw SmartMet::Spine::Exception(
-              BCP,
-              name + ": value is neither a string nor a number at array index " +
-                  Fmi::to_string(i));
+          throw Spine::Exception(BCP,
+                                 name + ": value is neither a string nor a number at array index " +
+                                     Fmi::to_string(i));
 
         // Ignore null values
 
@@ -334,10 +330,10 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
         // Handle format specific settings
         //
         else if (!fmtConfigFunc(name, json, p, i))
-          throw SmartMet::Spine::Exception(
-              BCP,
-              std::string(grib ? "Grib" : "Netcdf") +
-                  " parameter configuration does not have a setting named '" + name + "'!");
+          throw Spine::Exception(BCP,
+                                 std::string(grib ? "Grib" : "Netcdf") +
+                                     " parameter configuration does not have a setting named '" +
+                                     name + "'!");
       }
 
       // Set parameter id and name
@@ -357,7 +353,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

@@ -17,14 +17,12 @@ namespace Download
 class QDStreamer : public DataStreamer
 {
  public:
-  QDStreamer(const SmartMet::Spine::HTTP::Request& req,
-             const Config& config,
-             const Producer& producer);
+  QDStreamer(const Spine::HTTP::Request& req, const Config& config, const Producer& producer);
   virtual ~QDStreamer();
 
   virtual std::string getChunk();
 
-  virtual void getDataChunk(SmartMet::Engine::Querydata::Q q,
+  virtual void getDataChunk(Engine::Querydata::Q q,
                             const NFmiArea* area,
                             NFmiGrid* grid,
                             int level,

@@ -44,7 +44,7 @@ namespace Download
 template <typename T>
 boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
 
-GribStreamer::GribStreamer(const SmartMet::Spine::HTTP::Request &req,
+GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
                            const Producer &producer,
                            OutputFormat outputFormat,
@@ -58,8 +58,7 @@ GribStreamer::GribStreamer(const SmartMet::Spine::HTTP::Request &req,
     grib_context *c = grib_context_get_default();
     gribHandle = grib_handle_new_from_samples(c, grib1 ? "GRIB1" : "GRIB2");
     if (!gribHandle)
-      throw SmartMet::Spine::Exception(
-          BCP, string("Could not get handle for grib") + (grib1 ? "1" : "2"));
+      throw Spine::Exception(BCP, string("Could not get handle for grib") + (grib1 ? "1" : "2"));
 
     // Set tables version for grib2
 
@@ -68,7 +67,7 @@ GribStreamer::GribStreamer(const SmartMet::Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -85,7 +84,7 @@ GribStreamer::~GribStreamer()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -154,12 +153,12 @@ void GribStreamer::scanningDirections(long &iNegative, long &jPositive) const
         break;
 
       default:
-        throw SmartMet::Spine::Exception(BCP, "Unknown grid scanning mode");
+        throw Spine::Exception(BCP, "Unknown grid scanning mode");
     }
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 #pragma clang diagnostic pop
 }
@@ -203,7 +202,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -219,8 +218,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
   try
   {
     if (itsResMgr.getGeometrySRS())
-      throw SmartMet::Spine::Exception(BCP,
-                                       "setRotatedLatlonGeometryToGrib: use of SRS not supported");
+      throw Spine::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
     const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
 
@@ -254,7 +252,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     gset(gribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
 
     if (a.SouthernPole().X() != 0)
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
 
     gset(gribHandle, "latitudeOfSouthernPoleInDegrees", a.SouthernPole().Y());
@@ -263,7 +261,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -347,24 +345,22 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
     if (!grib1)
       gset(gribHandle, "LaDInDegrees", lat_ts);
     else if (lat_ts != 60)
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP,
           "GRIB1 true latitude can only be 60 for polar stereographic projections with grib_api "
           "library");
 
     if (lat_0 != 90 && lat_0 != -90)
-      throw SmartMet::Spine::Exception(BCP,
-                                       "GRIB format supports only polar stereographic projections");
+      throw Spine::Exception(BCP, "GRIB format supports only polar stereographic projections");
 
     if (lat_0 != 90)
-      throw SmartMet::Spine::Exception(BCP,
-                                       "Only N-pole polar stereographic projections are supported");
+      throw Spine::Exception(BCP, "Only N-pole polar stereographic projections are supported");
 
     // DUMP(gribHandle,"geography");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -410,7 +406,7 @@ void GribStreamer::setMercatorGeometryToGrib() const
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -434,7 +430,7 @@ void GribStreamer::setNamedSettingsToGrib() const
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -471,17 +467,17 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area)
         setMercatorGeometryToGrib();
         break;
       case kNFmiEquiDistArea:
-        throw SmartMet::Spine::Exception(BCP, "Equidistant projection is not supported by GRIB");
+        throw Spine::Exception(BCP, "Equidistant projection is not supported by GRIB");
       case kNFmiGnomonicArea:
-        throw SmartMet::Spine::Exception(BCP, "Gnomonic projection is not supported by GRIB");
+        throw Spine::Exception(BCP, "Gnomonic projection is not supported by GRIB");
       case kNFmiPKJArea:
-        throw SmartMet::Spine::Exception(BCP, "PKJ projection is not supported by GRIB");
+        throw Spine::Exception(BCP, "PKJ projection is not supported by GRIB");
       case kNFmiYKJArea:
-        throw SmartMet::Spine::Exception(BCP, "YKJ projection is not supported by GRIB");
+        throw Spine::Exception(BCP, "YKJ projection is not supported by GRIB");
       case kNFmiKKJArea:
-        throw SmartMet::Spine::Exception(BCP, "KKJ projection is not supported by GRIB");
+        throw Spine::Exception(BCP, "KKJ projection is not supported by GRIB");
       default:
-        throw SmartMet::Spine::Exception(BCP, "Unsupported projection in input data");
+        throw Spine::Exception(BCP, "Unsupported projection in input data");
     }
 
     // Set packing type
@@ -495,19 +491,19 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area)
     {
       long resolAndCompFlags = get_long(gribHandle, "resolutionAndComponentFlags");
 
-      if (SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
-        resolAndCompFlags |= (1 << SmartMet::Plugin::Download::Datum::Sphere::Grib1::WGS84);
+      if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+        resolAndCompFlags |= (1 << Datum::Sphere::Grib1::WGS84);
       else
-        resolAndCompFlags &= ~(1 << SmartMet::Plugin::Download::Datum::Sphere::Grib1::WGS84);
+        resolAndCompFlags &= ~(1 << Datum::Sphere::Grib1::WGS84);
 
       gset(gribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
     }
     else
       gset(gribHandle,
            "shapeOfTheEarth",
-           (SmartMet::Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
-                ? SmartMet::Plugin::Download::Datum::Sphere::Grib2::WGS84
-                : SmartMet::Plugin::Download::Datum::Sphere::Grib2::Fmi_6371229m));
+           (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
+                ? Datum::Sphere::Grib2::WGS84
+                : Datum::Sphere::Grib2::Fmi_6371229m));
 
     // Bitmap to flag missing values
 
@@ -520,7 +516,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -609,7 +605,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     else if (isDepthLevel(levelType, level))
       levelTypeStr = DepthLevel;
     else
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(levelType));
 
     if (!centre.empty())
@@ -626,7 +622,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -666,10 +662,9 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
       long timeStep = ((itsReqParams.timeStep > 0) ? itsReqParams.timeStep : itsDataTimeStep);
 
       if (timeStep <= 0)
-        throw SmartMet::Spine::Exception(BCP,
-                                         "Invalid data timestep " +
-                                             boost::lexical_cast<string>(timeStep) +
-                                             " for producer '" + itsReqParams.producer + "'");
+        throw Spine::Exception(BCP,
+                               "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                   " for producer '" + itsReqParams.producer + "'");
 
       if (pTable[paramIdx].itsPeriodLengthMinutes > 0)
       {
@@ -677,7 +672,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
              (pTable[paramIdx].itsPeriodLengthMinutes % itsDataTimeStep)) ||
             ((timeStep >= minutesInDay) && (pTable[paramIdx].itsPeriodLengthMinutes != timeStep)) ||
             (timeStep > minutesInMonth))
-          throw SmartMet::Spine::Exception(
+          throw Spine::Exception(
               BCP,
               "Aggregate period length " +
                   boost::lexical_cast<string>(pTable[paramIdx].itsPeriodLengthMinutes) +
@@ -805,7 +800,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -821,9 +816,9 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   try
   {
     if (timeStepInMinutes <= 0)
-      throw SmartMet::Spine::Exception(BCP,
-                                       "adjustToTimeStep: Invalid data timestep " +
-                                           boost::lexical_cast<string>(timeStepInMinutes));
+      throw Spine::Exception(BCP,
+                             "adjustToTimeStep: Invalid data timestep " +
+                                 boost::lexical_cast<string>(timeStepInMinutes));
 
     if ((timeStepInMinutes == 60) || (timeStepInMinutes == 180) || (timeStepInMinutes == 360) ||
         (timeStepInMinutes == 720))
@@ -842,7 +837,7 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -853,7 +848,7 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::addValuesToGrib(SmartMet::Engine::Querydata::Q q,
+void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
                                    const NFmiMetTime &vTime,
                                    int level,
                                    const NFmiDataMatrix<float> &dataValues,
@@ -922,7 +917,7 @@ void GribStreamer::addValuesToGrib(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -932,7 +927,7 @@ void GribStreamer::addValuesToGrib(SmartMet::Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-string GribStreamer::getGribMessage(SmartMet::Engine::Querydata::Q q,
+string GribStreamer::getGribMessage(Engine::Querydata::Q q,
                                     int level,
                                     const NFmiMetTime &mt,
                                     const NFmiDataMatrix<float> &values,
@@ -948,13 +943,13 @@ string GribStreamer::getGribMessage(SmartMet::Engine::Querydata::Q q,
     grib_get_message(gribHandle, &mesg, &mesg_len);
 
     if (mesg_len == 0)
-      throw SmartMet::Spine::Exception(BCP, "Empty grib message returned");
+      throw Spine::Exception(BCP, "Empty grib message returned");
 
     return string((const char *)mesg, mesg_len);
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1012,7 +1007,7 @@ std::string GribStreamer::getChunk()
     }
     catch (...)
     {
-      SmartMet::Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", NULL);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -1025,7 +1020,7 @@ std::string GribStreamer::getChunk()
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1036,7 +1031,7 @@ std::string GribStreamer::getChunk()
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::getDataChunk(SmartMet::Engine::Querydata::Q q,
+void GribStreamer::getDataChunk(Engine::Querydata::Q q,
                                 const NFmiArea *area,
                                 NFmiGrid * /* grid */,
                                 int level,
@@ -1061,7 +1056,7 @@ void GribStreamer::getDataChunk(SmartMet::Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 

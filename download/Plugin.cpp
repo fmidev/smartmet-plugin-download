@@ -63,17 +63,17 @@ namespace Download
  */
 // ----------------------------------------------------------------------
 
-bool special(const SmartMet::Spine::Parameter &theParam)
+bool special(const Spine::Parameter &theParam)
 {
   try
   {
     switch (theParam.type())
     {
-      case SmartMet::Spine::Parameter::Type::Data:
-      case SmartMet::Spine::Parameter::Type::Landscaped:
+      case Spine::Parameter::Type::Data:
+      case Spine::Parameter::Type::Landscaped:
         return false;
-      case SmartMet::Spine::Parameter::Type::DataDerived:
-      case SmartMet::Spine::Parameter::Type::DataIndependent:
+      case Spine::Parameter::Type::DataDerived:
+      case Spine::Parameter::Type::DataIndependent:
         return true;
     }
     // ** NOT REACHED **
@@ -81,7 +81,7 @@ bool special(const SmartMet::Spine::Parameter &theParam)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -109,7 +109,7 @@ boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *para
       size_t nValues = 2 * nPairs;
 
       if (flds.size() != nValues)
-        throw SmartMet::Spine::Exception(
+        throw Spine::Exception(
             BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
 
       size_t n;
@@ -119,7 +119,7 @@ boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *para
         boost::trim(flds[n]);
 
         if (flds[n].empty())
-          throw SmartMet::Spine::Exception(
+          throw Spine::Exception(
               BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
       }
 
@@ -138,12 +138,12 @@ boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *para
     {
     }
 
-    throw SmartMet::Spine::Exception(
-        BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
+    throw Spine::Exception(BCP,
+                           string("Invalid value for parameter '") + param + "': '" + pvs + "'");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -172,10 +172,10 @@ static ProjType getProjectionType(ReqParams &reqParams)
 
     // If request datum is 'epsg', check epsg projection for implied datum shift to wgs84.
 
-    bool checkDatum = (reqParams.datumShift == SmartMet::Plugin::Download::Datum::EPSG);
+    bool checkDatum = (reqParams.datumShift == Datum::EPSG);
 
     if (checkDatum)
-      reqParams.datumShift = SmartMet::Plugin::Download::Datum::None;
+      reqParams.datumShift = Datum::None;
 
     reqParams.areaClassId = A_Native;
 
@@ -204,18 +204,17 @@ static ProjType getProjectionType(ReqParams &reqParams)
                 boost::lexical_cast<EpsgCode>(proj.substr(strlen(projections[i].proj)));
 
             if ((err = srs.importFromEPSG(reqParams.epsgCode)) != OGRERR_NONE)
-              throw SmartMet::Spine::Exception(BCP,
-                                               "srs.importFromEPSG(" +
-                                                   boost::lexical_cast<string>(reqParams.epsgCode) +
-                                                   ") error " + boost::lexical_cast<string>(err));
+              throw Spine::Exception(BCP,
+                                     "srs.importFromEPSG(" +
+                                         boost::lexical_cast<string>(reqParams.epsgCode) +
+                                         ") error " + boost::lexical_cast<string>(err));
 
             if (checkDatum)
             {
               const char *datum = srs.GetAttrValue("DATUM");
 
-              if (Fmi::ascii_toupper_copy(string(datum ? datum : "")) ==
-                  SmartMet::Plugin::Download::Datum::epsgWGS84DatumName)
-                reqParams.datumShift = SmartMet::Plugin::Download::Datum::WGS84;
+              if (Fmi::ascii_toupper_copy(string(datum ? datum : "")) == Datum::epsgWGS84DatumName)
+                reqParams.datumShift = Datum::WGS84;
             }
 
             if (!srs.IsProjected())
@@ -238,11 +237,11 @@ static ProjType getProjectionType(ReqParams &reqParams)
         }
       }
 
-    throw SmartMet::Spine::Exception(BCP, "Unsupported projection '" + reqParams.projection + "'");
+    throw Spine::Exception(BCP, "Unsupported projection '" + reqParams.projection + "'");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -252,7 +251,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
  */
 // ----------------------------------------------------------------------
 
-string getRequestParam(const SmartMet::Spine::HTTP::Request &req,
+string getRequestParam(const Spine::HTTP::Request &req,
                        const Producer &producer,
                        const char *urlParam,
                        string defaultValue)
@@ -261,17 +260,17 @@ string getRequestParam(const SmartMet::Spine::HTTP::Request &req,
   {
     string str = (producer.disabledReqParam(urlParam)
                       ? defaultValue
-                      : SmartMet::Spine::optional_string(req.getParameter(urlParam), defaultValue));
+                      : Spine::optional_string(req.getParameter(urlParam), defaultValue));
     boost::trim(str);
     return str;
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
-int getRequestInt(const SmartMet::Spine::HTTP::Request &req,
+int getRequestInt(const Spine::HTTP::Request &req,
                   const Producer &producer,
                   const char *urlParam,
                   int defaultValue)
@@ -280,35 +279,35 @@ int getRequestInt(const SmartMet::Spine::HTTP::Request &req,
   {
     return (producer.disabledReqParam(urlParam)
                 ? defaultValue
-                : SmartMet::Spine::optional_int(req.getParameter(urlParam), defaultValue));
+                : Spine::optional_int(req.getParameter(urlParam), defaultValue));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
-unsigned long getRequestUInt(const SmartMet::Spine::HTTP::Request &req,
+unsigned long getRequestUInt(const Spine::HTTP::Request &req,
                              const Producer &producer,
                              const char *urlParam,
                              uint defaultValue)
 {
   try
   {
-    return (producer.disabledReqParam(urlParam) ? defaultValue
-                                                : SmartMet::Spine::optional_unsigned_long(
-                                                      req.getParameter(urlParam), defaultValue));
+    return (producer.disabledReqParam(urlParam)
+                ? defaultValue
+                : Spine::optional_unsigned_long(req.getParameter(urlParam), defaultValue));
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
-static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &req,
+static const Producer &getRequestParams(const Spine::HTTP::Request &req,
                                         ReqParams &reqParams,
                                         Config &config,
-                                        const SmartMet::Engine::Querydata::Engine &qEngine)
+                                        const Engine::Querydata::Engine &qEngine)
 {
   try
   {
@@ -320,7 +319,7 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
     if (!reqParams.producer.empty())
     {
       if ((!model.empty()) && (model != reqParams.producer))
-        throw SmartMet::Spine::Exception(BCP, "Cannot specify model and producer simultaneously");
+        throw Spine::Exception(BCP, "Cannot specify model and producer simultaneously");
     }
     else
       reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
@@ -328,7 +327,7 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
     const Producer &producer = config.getProducer(reqParams.producer, qEngine);
 
     if (reqParams.producer.empty())
-      throw SmartMet::Spine::Exception(BCP, "No producer");
+      throw Spine::Exception(BCP, "No producer");
 
     // Time related parameters. Detect special value 'data'.
 
@@ -362,19 +361,18 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
 
     reqParams.datum = getRequestParam(req, producer, "datum", "");
 
-    if (!SmartMet::Plugin::Download::Datum::parseDatumShift(reqParams.datum, reqParams.datumShift))
-      throw SmartMet::Spine::Exception(BCP, "Invalid datum selected");
+    if (!Datum::parseDatumShift(reqParams.datum, reqParams.datumShift))
+      throw Spine::Exception(BCP, "Invalid datum selected");
 
     // Projection, bounding and grid size/step
 
     reqParams.projection = getRequestParam(req, producer, "projection", "");
     reqParams.projType = getProjectionType(reqParams);
 
-    if ((reqParams.projType == P_Epsg) &&
-        (reqParams.datumShift == SmartMet::Plugin::Download::Datum::None))
+    if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::None))
       // gdal/proj4 needed for projection
       //
-      reqParams.datumShift = SmartMet::Plugin::Download::Datum::FMI;
+      reqParams.datumShift = Datum::FMI;
 
     reqParams.bbox = reqParams.origBBox = getRequestParam(req, producer, "bbox", "");
     reqParams.gridCenter = getRequestParam(req, producer, "gridcenter", "");
@@ -392,7 +390,7 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
       // Grid center lon,lat and width and height in km; lon,lat,width,height
       //
       if (reqParams.bboxRect)
-        throw SmartMet::Spine::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
+        throw Spine::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
 
       reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
     }
@@ -407,8 +405,7 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
       // Grid cell size; width,height in km
       //
       if (reqParams.gridSizeXY)
-        throw SmartMet::Spine::Exception(
-            BCP, "Cannot specify gridsize and gridresolution simultaneously");
+        throw Spine::Exception(BCP, "Cannot specify gridsize and gridresolution simultaneously");
 
       reqParams.gridResolutionXY =
           nPairsOfValues<double>(reqParams.gridResolution, "gridresolution", 1);
@@ -433,12 +430,12 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
     else if (reqParams.format == "QD")
       reqParams.outputFormat = QD;
     else if (reqParams.format.empty())
-      throw SmartMet::Spine::Exception(BCP, "No format selected");
+      throw Spine::Exception(BCP, "No format selected");
     else
-      throw SmartMet::Spine::Exception(BCP, "Invalid format selected");
+      throw Spine::Exception(BCP, "Invalid format selected");
 
     if ((reqParams.outputFormat == QD) && (!reqParams.gridStep.empty()))
-      throw SmartMet::Spine::Exception(BCP, "Cannot specify gridstep when using qd format");
+      throw Spine::Exception(BCP, "Cannot specify gridstep when using qd format");
 
     // Packing type for grib. Set to grib as given (converted to lowercase only)
 
@@ -447,7 +444,7 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
 
     if ((!reqParams.packing.empty()) && (reqParams.outputFormat != Grib1) &&
         (reqParams.outputFormat != Grib2))
-      throw SmartMet::Spine::Exception(BCP, "Packing can be specified with grib format only");
+      throw Spine::Exception(BCP, "Packing can be specified with grib format only");
 
     // Tables version for grib2
 
@@ -463,10 +460,10 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
 
       if ((grib2TablesVersionMax > 0) && ((reqParams.grib2TablesVersion < grib2TablesVersionMin) ||
                                           (reqParams.grib2TablesVersion > grib2TablesVersionMax)))
-        throw SmartMet::Spine::Exception(BCP,
-                                         "'tablesversion' must be between " +
-                                             Fmi::to_string(grib2TablesVersionMin) + " and " +
-                                             Fmi::to_string(grib2TablesVersionMax));
+        throw Spine::Exception(BCP,
+                               "'tablesversion' must be between " +
+                                   Fmi::to_string(grib2TablesVersionMin) + " and " +
+                                   Fmi::to_string(grib2TablesVersionMax));
     }
 
     // For misc testing
@@ -478,7 +475,7 @@ static const Producer &getRequestParams(const SmartMet::Spine::HTTP::Request &re
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -510,7 +507,7 @@ static bool getScaleFactorAndOffset(signed long id,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -527,8 +524,8 @@ static bool getScaleFactorAndOffset(signed long id,
 // ----------------------------------------------------------------------
 
 static bool getParamConfig(const ParamChangeTable &pTable,
-                           const SmartMet::Spine::OptionParsers::ParameterList &reqParams,
-                           SmartMet::Spine::OptionParsers::ParameterList &knownParams,
+                           const Spine::OptionParsers::ParameterList &reqParams,
+                           Spine::OptionParsers::ParameterList &knownParams,
                            Scaling &scaling)
 {
   try
@@ -543,7 +540,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     unsigned int i = 0;
     bool ok;
 
-    BOOST_FOREACH (SmartMet::Spine::Parameter param, reqParams)
+    BOOST_FOREACH (Spine::Parameter param, reqParams)
     {
       if ((ok = (!special(param))))
       {
@@ -567,7 +564,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     std::list<unsigned int>::const_iterator itm = missingParams.begin();
     i = 0;
 
-    BOOST_FOREACH (SmartMet::Spine::Parameter param, reqParams)
+    BOOST_FOREACH (Spine::Parameter param, reqParams)
     {
       if ((itm != missingParams.end()) && (i == *itm))
         itm++;
@@ -581,7 +578,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -629,7 +626,7 @@ static string getDownloadFileName(const string &producer,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -640,13 +637,12 @@ static string getDownloadFileName(const string &producer,
  */
 // ----------------------------------------------------------------------
 
-static boost::shared_ptr<DataStreamer> initializeStreamer(
-    const SmartMet::Spine::HTTP::Request &req,
-    const SmartMet::Engine::Querydata::Engine &qEngine,
-    const SmartMet::Engine::Geonames::Engine *geoEngine,
-    Query &query,
-    Config &config,
-    string &fileName)
+static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Request &req,
+                                                          const Engine::Querydata::Engine &qEngine,
+                                                          const Engine::Geonames::Engine *geoEngine,
+                                                          Query &query,
+                                                          Config &config,
+                                                          string &fileName)
 {
   try
   {
@@ -659,7 +655,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(
     // Unknown (and special) parameters are ignored.
 
     boost::shared_ptr<DataStreamer> ds;
-    SmartMet::Spine::OptionParsers::ParameterList knownParams;
+    Spine::OptionParsers::ParameterList knownParams;
     Scaling scaling;
 
     if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
@@ -679,20 +675,19 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(
     {
       ds = boost::shared_ptr<DataStreamer>(new QDStreamer(req, config, producer));
 
-      BOOST_FOREACH (SmartMet::Spine::Parameter param, query.pOptions.parameters())
+      BOOST_FOREACH (Spine::Parameter param, query.pOptions.parameters())
       {
         knownParams.push_back(param);
       }
     }
 
     if (knownParams.empty())
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP,
           "initStreamer: No known parameters available for producer '" + reqParams.producer + "'");
 
     if ((reqParams.outputFormat != QD) && (scaling.size() != knownParams.size()))
-      throw SmartMet::Spine::Exception(BCP,
-                                       "initStreamer: internal: Parameter/scaling data mismatch");
+      throw Spine::Exception(BCP, "initStreamer: internal: Parameter/scaling data mismatch");
 
     ds->setParams(knownParams, scaling);
 
@@ -708,7 +703,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(
 
     ptime originTime, startTime, endTime;
 
-    SmartMet::Engine::Querydata::Q q;
+    Engine::Querydata::Q q;
 
     if (!reqParams.originTime.empty())
     {
@@ -754,7 +749,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(
     // levels, parameters and time range
 
     if (!ds->hasRequestedData(producer))
-      throw SmartMet::Spine::Exception(
+      throw Spine::Exception(
           BCP, "initStreamer: No data available for producer '" + reqParams.producer + "'");
 
     // Download file name
@@ -774,7 +769,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -784,8 +779,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(
  */
 // ----------------------------------------------------------------------
 
-void Plugin::query(const SmartMet::Spine::HTTP::Request &req,
-                   SmartMet::Spine::HTTP::Response &response)
+void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &response)
 {
   try
   {
@@ -808,7 +802,7 @@ void Plugin::query(const SmartMet::Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -818,9 +812,9 @@ void Plugin::query(const SmartMet::Spine::HTTP::Request &req,
  */
 // ----------------------------------------------------------------------
 
-void Plugin::requestHandler(SmartMet::Spine::Reactor & /* theReactor */,
-                            const SmartMet::Spine::HTTP::Request &theRequest,
-                            SmartMet::Spine::HTTP::Response &theResponse)
+void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
+                            const Spine::HTTP::Request &theRequest,
+                            Spine::HTTP::Response &theResponse)
 {
   try
   {
@@ -834,7 +828,7 @@ void Plugin::requestHandler(SmartMet::Spine::Reactor & /* theReactor */,
       // Excecuting the query
 
       query(theRequest, theResponse);
-      theResponse.setStatus(SmartMet::Spine::HTTP::Status::ok);
+      theResponse.setStatus(Spine::HTTP::Status::ok);
 
       // Defining the response header information
 
@@ -864,7 +858,7 @@ void Plugin::requestHandler(SmartMet::Spine::Reactor & /* theReactor */,
     {
       // Catching all exceptions
 
-      SmartMet::Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", NULL);
       exception.addParameter("URI", theRequest.getURI());
 
       if (!exception.stackTraceDisabled())
@@ -877,11 +871,11 @@ void Plugin::requestHandler(SmartMet::Spine::Reactor & /* theReactor */,
         // Delivering the exception information as HTTP content
         std::string fullMessage = exception.getHtmlStackTrace();
         theResponse.setContent(fullMessage);
-        theResponse.setStatus(SmartMet::Spine::HTTP::Status::ok);
+        theResponse.setStatus(Spine::HTTP::Status::ok);
       }
       else
       {
-        theResponse.setStatus(SmartMet::Spine::HTTP::Status::bad_request);
+        theResponse.setStatus(Spine::HTTP::Status::bad_request);
       }
 
       // Adding the first exception information into the response header
@@ -894,7 +888,7 @@ void Plugin::requestHandler(SmartMet::Spine::Reactor & /* theReactor */,
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -904,7 +898,7 @@ void Plugin::requestHandler(SmartMet::Spine::Reactor & /* theReactor */,
  */
 // ----------------------------------------------------------------------
 
-Plugin::Plugin(SmartMet::Spine::Reactor *theReactor, const char *theConfig)
+Plugin::Plugin(Spine::Reactor *theReactor, const char *theConfig)
     : SmartMetPlugin(), itsModuleName("Download"), itsConfig(theConfig), itsReactor(theReactor)
 {
   try
@@ -917,7 +911,7 @@ Plugin::Plugin(SmartMet::Spine::Reactor *theReactor, const char *theConfig)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -934,25 +928,25 @@ void Plugin::init()
 
     auto *engine = itsReactor->getSingleton("Querydata", NULL);
     if (!engine)
-      throw SmartMet::Spine::Exception(BCP, "Querydata engine unavailable");
-    itsQEngine = reinterpret_cast<SmartMet::Engine::Querydata::Engine *>(engine);
+      throw Spine::Exception(BCP, "Querydata engine unavailable");
+    itsQEngine = reinterpret_cast<Engine::Querydata::Engine *>(engine);
 
     /* GeoEngine */
 
     engine = itsReactor->getSingleton("Geonames", NULL);
     if (!engine)
-      throw SmartMet::Spine::Exception(BCP, "Geonames engine unavailable");
-    itsGeoEngine = reinterpret_cast<SmartMet::Engine::Geonames::Engine *>(engine);
+      throw Spine::Exception(BCP, "Geonames engine unavailable");
+    itsGeoEngine = reinterpret_cast<Engine::Geonames::Engine *>(engine);
 
     itsConfig.init(itsQEngine);
 
     if (!itsReactor->addContentHandler(
             this, "/download", boost::bind(&Plugin::callRequestHandler, this, _1, _2, _3)))
-      throw SmartMet::Spine::Exception(BCP, "Failed to register download content handler");
+      throw Spine::Exception(BCP, "Failed to register download content handler");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
 }
 
@@ -1005,7 +999,7 @@ int Plugin::getRequiredAPIVersion() const
  */
 // ----------------------------------------------------------------------
 
-bool Plugin::queryIsFast(const SmartMet::Spine::HTTP::Request & /* theRequest */) const
+bool Plugin::queryIsFast(const Spine::HTTP::Request & /* theRequest */) const
 {
   return false;
 }
