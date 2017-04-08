@@ -12,32 +12,32 @@
 #include "NetCdfStreamer.h"
 #include "QueryDataStreamer.h"
 
-#include <spine/Exception.h>
 #include <spine/Convenience.h>
-#include <spine/Table.h>
-#include <spine/SmartMet.h>
+#include <spine/Exception.h>
 #include <spine/Reactor.h>
+#include <spine/SmartMet.h>
+#include <spine/Table.h>
 
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/TimeZoneFactory.h>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/trim.hpp>
 #include <boost/bind.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
+#include <boost/scoped_ptr.hpp>
 
-#include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiAreaFactory.h>
+#include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiRotatedLatLonArea.h>
 
-#include <macgyver/TimeParser.h>
 #include <macgyver/HelmertTransformation.h>
+#include <macgyver/TimeParser.h>
 
 #include <cmath>
 #include <iostream>
@@ -860,11 +860,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
       Spine::Exception exception(BCP, "Request processing exception!", NULL);
       exception.addParameter("URI", theRequest.getURI());
-
-      if (!exception.stackTraceDisabled())
-        std::cerr << exception.getStackTrace();
-      else if (!exception.loggingDisabled())
-        std::cerr << "Error: " << exception.what() << std::endl;
+      exception.printError();
 
       if (isdebug)
       {
