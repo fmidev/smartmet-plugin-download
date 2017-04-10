@@ -5,10 +5,10 @@
 // ======================================================================
 
 #include "Config.h"
-#include <stdexcept>
-#include <spine/Exception.h>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <spine/Exception.h>
+#include <stdexcept>
 
 using namespace std;
 
@@ -334,11 +334,25 @@ Config::Config(const string& configfile)
 
     itsConfig.lookupValue("gribconfig", itsGribConfig);
     if (!itsGribConfig.empty())
+    {
+      if (itsGribConfig[0] != '/')
+      {
+        boost::filesystem::path p(configfile);
+        itsGribConfig = p.parent_path().string() + "/" + itsGribConfig;
+      }
       itsGribPTable = readParamConfig(itsGribConfig);
+    }
 
     itsConfig.lookupValue("netcdfconfig", itsNetCdfConfig);
     if (!itsNetCdfConfig.empty())
+    {
+      if (itsNetCdfConfig[0] != '/')
+      {
+        boost::filesystem::path p(configfile);
+        itsNetCdfConfig = p.parent_path().string() + "/" + itsNetCdfConfig;
+      }
       itsNetCdfPTable = readParamConfig(itsNetCdfConfig, false);
+    }
 
     itsConfig.lookupValue("tempdirectory", itsTempDirectory);
 
