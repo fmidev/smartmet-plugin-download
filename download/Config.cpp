@@ -8,6 +8,7 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <spine/Exception.h>
+#include <prettyprint.hpp>
 #include <stdexcept>
 
 using namespace std;
@@ -376,6 +377,46 @@ Config::Config(const string& configfile)
             "Invalid DLS configuration: grib2.tablesversion.min must be less than or equal to "
             "grib2.tablesversion.max");
     }
+
+    // GRIB packing settings
+
+    itsPackingWarningMessage = "Selected packing type is not enabled in this server.";
+    itsPackingErrorMessage = "Selected packing type is disabled in this server.";
+
+    if (itsConfig.exists("packing"))
+    {
+      // Override error messages
+
+      itsConfig.lookupValue("packing.warning", itsPackingWarningMessage);
+      itsConfig.lookupValue("packing.error", itsPackingErrorMessage);
+
+      // Explicitly allowed packing types
+
+      if (itsConfig.exists("packing.enabled"))
+      {
+        libconfig::Setting& enabled = itsConfig.lookup("packing.enabled");
+        if (!enabled.isArray())
+          throw Spine::Exception(BCP, "packing.enabled must be an array");
+
+        if (enabled.getLength() == 0)
+          throw Spine::Exception(BCP, "packing.enabled must not be an empty array");
+
+        for (auto i = 0; i < enabled.getLength(); ++i)
+          itsEnabledPackingTypes.insert(enabled[i]);
+      }
+
+      // Explicitly disabled packing types
+
+      if (itsConfig.exists("packing.disabled"))
+      {
+        libconfig::Setting& disabled = itsConfig.lookup("packing.disabled");
+        if (!disabled.isArray())
+          throw Spine::Exception(BCP, "packing.disabled must be an array");
+
+        for (auto i = 0; i < disabled.getLength(); ++i)
+          itsDisabledPackingTypes.insert(disabled[i]);
+      }
+    }
   }
   catch (...)
   {
@@ -469,6 +510,29 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
   {
     throw Spine::Exception(BCP, "Operation failed!", NULL);
   }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Returns non-empty error message if the given packing type is not allowed
+ */
+// ----------------------------------------------------------------------
+
+std::string Config::packingErrorMessage(const std::string& thePackingType) const
+{
+  // Disabling overrides enabling
+  if (itsDisabledPackingTypes.find(thePackingType) != itsDisabledPackingTypes.end())
+    return itsPackingErrorMessage;
+
+  // Not having allowed types enables all but explicitly disabled types
+  if (itsEnabledPackingTypes.empty())
+    return {};
+
+  // Must be one of the explicity enabled then
+  if (itsEnabledPackingTypes.find(thePackingType) == itsEnabledPackingTypes.end())
+    return itsPackingWarningMessage;
+
+  return {};
 }
 
 }  // namespace Download

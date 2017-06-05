@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Query.h"
 #include "ParamConfig.h"
+#include "Query.h"
 
 #include <spine/Reactor.h>
 
@@ -55,6 +55,8 @@ class Config : private boost::noncopyable
     return std::make_pair(itsGrib2TablesVersionMin, itsGrib2TablesVersionMax);
   }
 
+  std::string packingErrorMessage(const std::string& thePackingType) const;
+
  private:
   libconfig::Config itsConfig;
 
@@ -73,6 +75,12 @@ class Config : private boost::noncopyable
   void parseConfigProducer(const std::string& name, Producer& currentSettings);
 
   void setEnvSettings();
+
+  // GRIB packing settings
+  std::set<std::string> itsEnabledPackingTypes;
+  std::set<std::string> itsDisabledPackingTypes;
+  std::string itsPackingWarningMessage;
+  std::string itsPackingErrorMessage;
 
 };  // class Config
 
