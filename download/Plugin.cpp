@@ -442,9 +442,16 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     reqParams.packing = getRequestParam(req, producer, "packing", "");
     Fmi::ascii_tolower(reqParams.packing);
 
-    if ((!reqParams.packing.empty()) && (reqParams.outputFormat != Grib1) &&
-        (reqParams.outputFormat != Grib2))
-      throw Spine::Exception(BCP, "Packing can be specified with grib format only");
+    if (!reqParams.packing.empty())
+    {
+      if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
+        throw Spine::Exception(BCP, "Packing can be specified with grib format only")
+            .addParameter("packing", reqParams.packing);
+
+      auto msg = config.packingErrorMessage(reqParams.packing);
+      if (!msg.empty())
+        throw Spine::Exception(BCP, msg).addParameter("packing", reqParams.packing);
+    }
 
     // Tables version for grib2
 
