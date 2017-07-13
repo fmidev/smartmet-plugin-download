@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 17.4.10
+Version: 17.7.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -61,7 +61,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
-* Upcoming
+* Thu Jul 13 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.7.13-1.fmi
 - Added possibility to configure enabled/disabled GRIB packing types
 
 * Mon Apr 10 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.4.10-1.fmi
