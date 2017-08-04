@@ -19,6 +19,8 @@ BuildRequires: smartmet-library-macgyver-devel >= 17.3.16
 BuildRequires: smartmet-library-newbase-devel >= 17.4.4
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 17.4.8
+BuildRequires: prettyprint
+BuildRequires: netcdf-cxx-devel
 Requires: gdal >= 1.11.4
 Requires: grib_api >= 1.14.0
 Requires: jsoncpp >= 0.10.5
