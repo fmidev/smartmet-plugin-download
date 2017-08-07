@@ -9,6 +9,8 @@ Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+BuildRequires: gcc-c++
+BuildRequires: make
 BuildRequires: boost-devel
 BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: grib_api-devel >= 1.14.0
@@ -19,6 +21,8 @@ BuildRequires: smartmet-library-macgyver-devel >= 17.3.16
 BuildRequires: smartmet-library-newbase-devel >= 17.4.4
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 17.4.8
+BuildRequires: prettyprint
+BuildRequires: netcdf-cxx-devel
 Requires: gdal >= 1.11.4
 Requires: grib_api >= 1.14.0
 Requires: jsoncpp >= 0.10.5
