@@ -8,7 +8,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <spine/Exception.h>
-#include <prettyprint.hpp>
 #include <stdexcept>
 
 using namespace std;
