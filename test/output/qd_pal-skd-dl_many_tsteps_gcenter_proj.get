@@ -31,10 +31,12 @@ top left lonlat		= 23.2014,61.7986
 top right lonlat	= 26.7986,61.7986
 bottom left lonlat	= 23.2014,58.2014
 bottom right lonlat	= 26.7986,58.2014
-center lonlat	= 25,60
+center lonlat		= 25,60
+bbox			= [2579967.06 2979971.26 6471923.88 6871928.08]
 
 fmiarea	= latlon:23.2014,58.2014,26.7986,61.7986
 wktarea	= GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]]
+proj4	= +proj=longlat +a=6371220 +b=6371220 +no_defs 
 
 top	= 0
 left	= 0
