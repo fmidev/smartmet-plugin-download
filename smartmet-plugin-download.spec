@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 17.7.13
+Version: 17.8.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -16,21 +16,21 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: grib_api-devel >= 1.14.0
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 17.4.8
-BuildRequires: smartmet-library-macgyver-devel >= 17.3.16
-BuildRequires: smartmet-library-newbase-devel >= 17.4.4
+BuildRequires: smartmet-library-spine-devel >= 17.8.28
+BuildRequires: smartmet-library-macgyver-devel >= 17.8.28
+BuildRequires: smartmet-library-newbase-devel >= 17.8.28
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 17.4.8
+BuildRequires: smartmet-engine-querydata-devel >= 17.8.28
 BuildRequires: prettyprint
 BuildRequires: netcdf-cxx-devel
 Requires: gdal >= 1.11.4
 Requires: grib_api >= 1.14.0
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 17.3.16
-Requires: smartmet-library-spine >= 17.4.8
-Requires: smartmet-library-newbase >= 17.4.4
-Requires: smartmet-engine-querydata >= 17.4.8
-Requires: smartmet-server >= 17.4.7
+Requires: smartmet-library-macgyver >= 17.8.28
+Requires: smartmet-library-spine >= 17.8.28
+Requires: smartmet-library-newbase >= 17.8.28
+Requires: smartmet-engine-querydata >= 17.8.28
+Requires: smartmet-server >= 17.8.28
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
@@ -65,6 +65,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Mon Aug 28 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.8.28-1.fmi
+- Upgrade to boost 1.65
+
 * Thu Jul 13 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.7.13-1.fmi
 - Added possibility to configure enabled/disabled GRIB packing types
 
