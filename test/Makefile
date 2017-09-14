@@ -1,6 +1,6 @@
 PROG = $(patsubst %.cpp,%,$(wildcard *Test.cpp))
 
-MAINFLAGS = -std=c++0x -Wall -W -Wno-unused-parameter
+MAINFLAGS = -std=c++11 -Wall -W -Wno-unused-parameter
 
 EXTRAFLAGS = -Werror -pedantic -Wpointer-arith -Wcast-qual \
 	-Wcast-align -Wwrite-strings -Wconversion -Winline \
