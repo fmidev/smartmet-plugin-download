@@ -5,24 +5,24 @@
 // ======================================================================
 
 #include "DataStreamer.h"
-#include "Plugin.h"
 #include "Datum.h"
+#include "Plugin.h"
 
-#include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiAreaFactory.h>
-#include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiEnumConverter.h>
-#include <newbase/NFmiTimeList.h>
+#include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
+#include <newbase/NFmiStereographicArea.h>
+#include <newbase/NFmiTimeList.h>
 
 #include <gis/DEM.h>
 #include <gis/LandCover.h>
 
-#include <spine/Exception.h>
-#include <string>
-#include <boost/foreach.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/foreach.hpp>
+#include <spine/Exception.h>
+#include <string>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -1055,7 +1055,7 @@ std::string DataStreamer::getGridCenterBBoxStr(bool useNativeProj, const NFmiGri
 
     os << fixed << setprecision(8) << (*itsReqParams.gridCenterLL)[0].first << ","
        << (*itsReqParams.gridCenterLL)[0].second << ",1/"
-       << (useNativeProj ? grid.Area()->WorldXYAspectRatio() : 1.0) << ":"
+       << (useNativeProj ? grid.Area()->WorldXYAspectRatio() : 1.0) << "|"
        << (*itsReqParams.gridCenterLL)[1].first << "," << (*itsReqParams.gridCenterLL)[1].second;
 
     return os.str();
@@ -1120,7 +1120,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       //
       string projection =
           boost::algorithm::replace_all_copy(itsReqParams.projection, "rotlatlon", "invrotlatlon") +
-          ":" + bboxStr;
+          "|" + bboxStr;
 
       boost::shared_ptr<NFmiArea> a = NFmiAreaFactory::Create(projection);
       NFmiArea *area = a.get();
@@ -2031,6 +2031,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
         (!itsReqParams.gridCenter.empty()) || (!itsUseNativeGridSize))
     {
       string projection = nativeArea.AreaStr(), projStr, bboxStr;
+      boost::replace_all(projection, ":", "|");
 
       if ((!itsReqParams.projection.empty()) && (projection.find(itsReqParams.projection) == 0))
         itsReqParams.projection.clear();
@@ -2038,24 +2039,23 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       if ((!itsReqParams.projection.empty()) || (!itsReqParams.bbox.empty()) ||
           (!itsReqParams.gridCenter.empty()))
       {
-        size_t bboxPos = projection.find(":");
+        size_t bboxPos = projection.find("|");
 
         if ((bboxPos != string::npos) && (bboxPos > 0) && (bboxPos < (projStr.length() - 1)))
         {
           projStr = projection.substr(0, bboxPos);
           bboxStr = projection.substr(bboxPos + 1);
 
-          if (!(itsUseNativeProj =
-                    (itsReqParams.projection.empty() || (itsReqParams.projection == projStr))))
-            // Creating nonnative projection
-            //
-            projStr = itsReqParams.projection;
+          itsUseNativeProj =
+              (itsReqParams.projection.empty() || (itsReqParams.projection == projStr));
 
-          if ((!(itsUseNativeBBox =
-                     ((itsReqParams.bbox.empty() || (itsReqParams.bbox == bboxStr)) &&
-                      itsReqParams.gridCenter.empty()))) &&
-              (((itsReqParams.outputFormat == QD) && (!itsUseNativeProj)) ||
-               (!itsUseNativeGridSize)))
+          if (!itsUseNativeProj)
+            projStr = itsReqParams.projection;  // Creating nonnative projection
+
+          itsUseNativeBBox = ((itsReqParams.bbox.empty() || (itsReqParams.bbox == bboxStr)) &&
+                              itsReqParams.gridCenter.empty());
+          if (!itsUseNativeBBox && (((itsReqParams.outputFormat == QD) && (!itsUseNativeProj)) ||
+                                    (!itsUseNativeGridSize)))
           {
             // Creating native or nonnative projection with given bounding to load data using
             // absolute
@@ -2105,7 +2105,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
               // Native area latlon bounding box from getRegLLBBoxStr()
             }
 
-            projection = projStr + ":" + bboxStr;
+            projection = projStr + "|" + bboxStr;
             itsResMgr.createArea(projection);
           }
 
