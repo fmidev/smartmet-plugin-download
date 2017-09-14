@@ -96,7 +96,7 @@ LIBS = -L$(libdir) \
 	-lboost_iostreams \
 	-lboost_system \
 	-lbz2 -lz \
-	-lgrib_api \
+	-leccodes \
 	-lgdal \
 	-lnetcdf_c++ \
 	`pkg-config --libs jsoncpp`

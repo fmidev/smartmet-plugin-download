@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 17.8.28
+Version: 17.9.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -13,7 +13,7 @@ BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost-devel
 BuildRequires: gdal-devel >= 1.11.4
-BuildRequires: grib_api-devel >= 1.14.0
+BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
 BuildRequires: smartmet-library-spine-devel >= 17.8.28
@@ -24,7 +24,7 @@ BuildRequires: smartmet-engine-querydata-devel >= 17.8.28
 BuildRequires: prettyprint
 BuildRequires: netcdf-cxx-devel
 Requires: gdal >= 1.11.4
-Requires: grib_api >= 1.14.0
+Requires: eccodes
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 17.8.28
 Requires: smartmet-library-spine >= 17.8.28
@@ -65,6 +65,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Thu Sep 14 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.9.14-1.fmi
+- Switched from grib_api to eccodes
+
 * Mon Aug 28 2017 Mika Heiskanen <mika.heiskanen@fmi.fi> - 17.8.28-1.fmi
 - Upgrade to boost 1.65
 

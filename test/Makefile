@@ -25,7 +25,7 @@ LIBS =	-lsmartmet-spine \
 	-lboost_system \
 	-lconfig++ \
 	-lbz2 -lz \
-	-lgrib_api \
+	-leccodes \
 	-lgdal \
 	-lpthread \
 	-L/usr/lib64/mysql -lmysqlclient_r
