@@ -5,26 +5,25 @@
 // ======================================================================
 
 #include "GribStreamer.h"
-#include "Plugin.h"
 #include "Datum.h"
+#include "Plugin.h"
 
 #include <spine/Exception.h>
 
-#include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiAreaFactory.h>
-#include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiEnumConverter.h>
-#include <newbase/NFmiTimeList.h>
+#include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
+#include <newbase/NFmiStereographicArea.h>
+#include <newbase/NFmiTimeList.h>
 
-#include <string>
 #include <boost/foreach.hpp>
+#include <string>
 
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include "boost/date_time/gregorian/gregorian.hpp"
 
