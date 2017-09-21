@@ -21,7 +21,6 @@ BuildRequires: smartmet-library-macgyver-devel >= 17.8.28
 BuildRequires: smartmet-library-newbase-devel >= 17.9.14
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 17.9.12
-BuildRequires: prettyprint
 BuildRequires: netcdf-cxx-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
