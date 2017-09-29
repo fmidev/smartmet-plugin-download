@@ -21,7 +21,9 @@ BuildRequires: smartmet-library-macgyver-devel >= 17.8.28
 BuildRequires: smartmet-library-newbase-devel >= 17.9.14
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 17.9.12
+BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
+BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
