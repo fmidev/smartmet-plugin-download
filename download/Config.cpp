@@ -12,7 +12,7 @@
 
 using namespace std;
 
-static const char* defaultTempDirectory = "/tmp";
+static const char* defaultTempDirectory = "/var/tmp";
 
 namespace SmartMet
 {
