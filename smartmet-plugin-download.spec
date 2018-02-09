@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.2.5
+Version: 18.2.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -16,22 +16,22 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 17.9.13
-BuildRequires: smartmet-library-macgyver-devel >= 17.8.28
-BuildRequires: smartmet-library-newbase-devel >= 17.9.14
+BuildRequires: smartmet-library-spine-devel >= 18.2.9
+BuildRequires: smartmet-library-macgyver-devel >= 18.2.9
+BuildRequires: smartmet-library-newbase-devel >= 18.2.8
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 17.9.12
+BuildRequires: smartmet-engine-querydata-devel >= 18.2.9
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 17.8.28
-Requires: smartmet-library-spine >= 17.9.13
-Requires: smartmet-library-newbase >= 17.9.14
-Requires: smartmet-engine-querydata >= 17.9.12
-Requires: smartmet-server >= 17.8.28
+Requires: smartmet-library-macgyver >= 18.2.9
+Requires: smartmet-library-spine >= 18.2.9
+Requires: smartmet-library-newbase >= 18.2.8
+Requires: smartmet-engine-querydata >= 18.2.9
+Requires: smartmet-server >= 17.11.10
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Fri Feb  9 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.2.9-1.fmi
+- Repackaged due to TimeZones API change
+
 * Mon Feb  5 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.2.5-1.fmi
 - Changed default download directory to be /var/tmp instead of /tmp
 
