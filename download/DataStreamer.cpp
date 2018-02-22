@@ -46,9 +46,7 @@ namespace Download
 template <typename T>
 boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
 
-ResMgr::ResMgr() : area(), grid(), spatialReferences(), transformations(), geometrySRS(NULL)
-{
-}
+ResMgr::ResMgr() : area(), grid(), spatialReferences(), transformations(), geometrySRS(NULL) {}
 
 ResMgr::~ResMgr()
 {
@@ -452,9 +450,7 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
   }
 }
 
-DataStreamer::~DataStreamer()
-{
-}
+DataStreamer::~DataStreamer() {}
 
 // ----------------------------------------------------------------------
 /*!
@@ -566,13 +562,16 @@ void DataStreamer::generateValidTimeList(
 
     if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::DataTimes) ||
         query.tOptions.startTimeData || query.tOptions.endTimeData)
+    {
       query.tOptions.setDataTimes(q->validTimes(), q->isClimatology());
+    }
 
     auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(query.timeZone);
     itsDataTimes = Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
 
     if (itsDataTimes.empty())
-      throw Spine::Exception(BCP, "generateTimes: No validtimes returned");
+      throw Spine::Exception(BCP, "No valid times in the requested time period")
+          .disableStackTrace();
   }
   catch (...)
   {
@@ -1162,7 +1161,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
 
     if ((cropping.bottomLeftX >= cropping.topRightX) ||
         (cropping.bottomLeftY >= cropping.topRightY))
-      throw Spine::Exception(BCP, "Bounding box does not intersect the grid");
+      throw Spine::Exception(BCP, "Bounding box does not intersect the grid").disableStackTrace();
 
     cropping.gridSizeX = ((cropping.topRightX - cropping.bottomLeftX) + 1);
     cropping.gridSizeY = ((cropping.topRightY - cropping.bottomLeftY) + 1);
