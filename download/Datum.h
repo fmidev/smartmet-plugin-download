@@ -59,7 +59,7 @@ typedef enum
   WGS84 = 6  // lsb0 bit position; unset for spherical (radius 6367.47), set for oblate spheroidal
              // (IAU in 1965 (6378.160 km, 6356.775 km, f = 1/297.0))
 } Sphere;
-}  // Grib1
+}  // namespace Grib1
 
 namespace Grib2
 {
@@ -70,7 +70,7 @@ typedef enum
   WGS84 = 5,        // WGS84; as used by ICAO since 1998
   Fmi_6371229m = 6  // Fmi; spherical with radius of 6,371,229.0 m
 } Sphere;
-}  // Grib2
+}  // namespace Grib2
 
 namespace NetCdf
 {

@@ -6,8 +6,8 @@
 
 #include "QueryDataStreamer.h"
 
-#include <spine/Exception.h>
 #include <newbase/NFmiQueryData.h>
+#include <spine/Exception.h>
 
 #include <string>
 
@@ -28,9 +28,7 @@ QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
 {
 }
 
-QDStreamer::~QDStreamer()
-{
-}
+QDStreamer::~QDStreamer() {}
 
 // ----------------------------------------------------------------------
 /*!

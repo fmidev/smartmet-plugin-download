@@ -5,8 +5,8 @@
 // ======================================================================
 
 #include "GribTools.h"
-#include <spine/Exception.h>
 #include <newbase/NFmiCommentStripper.h>
+#include <spine/Exception.h>
 
 #include <boost/lexical_cast.hpp>
 

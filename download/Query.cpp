@@ -7,12 +7,12 @@
 #include "Query.h"
 #include "Config.h"
 
-#include <spine/Exception.h>
 #include <spine/Convenience.h>
+#include <spine/Exception.h>
 #include <spine/OptionParsers.h>
 
-#include <newbase/NFmiPoint.h>
 #include <macgyver/StringConversion.h>
+#include <newbase/NFmiPoint.h>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>

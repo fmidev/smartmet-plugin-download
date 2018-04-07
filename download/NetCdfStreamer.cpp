@@ -10,9 +10,9 @@
 
 #include <spine/Exception.h>
 
+#include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiStereographicArea.h>
-#include <newbase/NFmiMetTime.h>
 
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -140,9 +140,7 @@ std::string NetCdfStreamer::getChunk()
   }
 }
 
-void dimDeleter(NcDim * /* dim */)
-{
-}
+void dimDeleter(NcDim * /* dim */) {}
 
 // ----------------------------------------------------------------------
 /*!
@@ -169,9 +167,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
   }
 }
 
-void varDeleter(NcVar * /* var */)
-{
-}
+void varDeleter(NcVar * /* var */) {}
 
 // ----------------------------------------------------------------------
 /*!

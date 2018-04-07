@@ -25,7 +25,7 @@ namespace Querydata
 {
 class Engine;
 }
-}
+}  // namespace Engine
 
 namespace Plugin
 {

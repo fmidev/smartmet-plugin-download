@@ -9,26 +9,26 @@
 
 #include "Datum.h"
 
-#include <spine/Location.h>
-#include <spine/Parameter.h>
-#include <spine/ValueFormatter.h>
-#include <spine/OptionParsers.h>
-#include <spine/TimeSeriesGeneratorOptions.h>
-#include <spine/HTTP.h>
 #include <engines/querydata/Engine.h>
+#include <spine/HTTP.h>
+#include <spine/Location.h>
+#include <spine/OptionParsers.h>
+#include <spine/Parameter.h>
+#include <spine/TimeSeriesGeneratorOptions.h>
+#include <spine/ValueFormatter.h>
 
-#include <newbase/NFmiPoint.h>
 #include <macgyver/TimeFormatter.h>
+#include <newbase/NFmiPoint.h>
 
-#include <boost/shared_ptr.hpp>
 #include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <list>
 #include <locale>
 #include <map>
 #include <set>
-#include <vector>
 #include <string>
+#include <vector>
 
 // Currently used only for storing configured value for originating centre (setting 'centre = 98;');
 // format (grib (for both 1 and 2), grib1, grib2 and netcdf) and value type (to be converted to) are

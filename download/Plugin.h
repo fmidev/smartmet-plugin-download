@@ -9,14 +9,14 @@
 #include "Config.h"
 #include "DataStreamer.h"
 
-#include <spine/SmartMetPlugin.h>
-#include <spine/Reactor.h>
-#include <spine/HTTP.h>
 #include <engines/geonames/Engine.h>
+#include <spine/HTTP.h>
+#include <spine/Reactor.h>
+#include <spine/SmartMetPlugin.h>
 
 #include <boost/shared_ptr.hpp>
-#include <boost/utility.hpp>
 #include <boost/thread.hpp>
+#include <boost/utility.hpp>
 
 #include <map>
 #include <string>

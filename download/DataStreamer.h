@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include "Query.h"
 #include "Config.h"
+#include "Query.h"
 
+#include <engines/geonames/Engine.h>
+#include <engines/querydata/Model.h>
 #include <spine/HTTP.h>
 #include <spine/TimeSeriesGenerator.h>
-#include <engines/querydata/Model.h>
-#include <engines/geonames/Engine.h>
 
-#include <newbase/NFmiRotatedLatLonArea.h>
 #include <newbase/NFmiGrid.h>
+#include <newbase/NFmiRotatedLatLonArea.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
@@ -91,6 +91,7 @@ class ResMgr : private boost::noncopyable
                                                            OGRSpatialReference *,
                                                            bool isGeometrySRS = false);
   OGRSpatialReference *getGeometrySRS() const { return geometrySRS; }
+
  private:
   boost::shared_ptr<NFmiArea> area;
   boost::shared_ptr<NFmiGrid> grid;

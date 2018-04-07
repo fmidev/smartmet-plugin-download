@@ -532,10 +532,10 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
                                               const ParamChangeTable &pTable,
                                               size_t &paramIdx)
 {
-// Get parameter id, and configured level type and value for surface data.
-//
-// Using hardcoded level types for pressure, hybrid and height/depth data and for
-// surface data if level configuration is missing.
+  // Get parameter id, and configured level type and value for surface data.
+  //
+  // Using hardcoded level types for pressure, hybrid and height/depth data and for
+  // surface data if level configuration is missing.
 
 #define PressureLevel "isobaricInhPa"
 #define HybridLevel "hybrid"

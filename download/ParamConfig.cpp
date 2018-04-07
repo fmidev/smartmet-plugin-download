@@ -8,8 +8,8 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
-#include <spine/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <spine/Exception.h>
 
 #include <fstream>
 
@@ -277,8 +277,8 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
 
     if (!reader.parse(content, theJson))
       throw Spine::Exception(BCP,
-                             "Failed to parse '" + configFilePath.string() + "': " +
-                                 reader.getFormattedErrorMessages());
+                             "Failed to parse '" + configFilePath.string() +
+                                 "': " + reader.getFormattedErrorMessages());
 
     if (!theJson.isArray())
       throw Spine::Exception(BCP, "Parameter configuration must contain an array of JSON objects");

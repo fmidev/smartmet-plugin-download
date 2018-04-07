@@ -8,14 +8,14 @@
 
 #include <newbase/NFmiArea.h>
 
-#include <spine/Exception.h>
 #include <macgyver/HelmertTransformation.h>
 #include <macgyver/StringConversion.h>
+#include <spine/Exception.h>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include <gdal/ogr_spatialref.h>
 
