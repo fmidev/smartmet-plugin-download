@@ -544,19 +544,17 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     std::list<unsigned int> missingParams;
     float scale = 1.0, offset = 0.0;
     unsigned int i = 0;
-    bool ok;
 
     BOOST_FOREACH (Spine::Parameter param, reqParams)
     {
-      if ((ok = (!special(param))))
+      // We allow special params too if they have a number (WindUMS and WindVMS)
+      bool ok = (param.number() > 0);
+
+      if (ok)
       {
         int id = param.number();
-
-        if (id >= 0)
-        {
-          unsigned long lid = boost::numeric_cast<unsigned long>(id);
-          ok = getScaleFactorAndOffset(lid, &scale, &offset, pTable);
-        }
+        unsigned long lid = boost::numeric_cast<unsigned long>(id);
+        ok = getScaleFactorAndOffset(lid, &scale, &offset, pTable);
       }
 
       if (!ok)
