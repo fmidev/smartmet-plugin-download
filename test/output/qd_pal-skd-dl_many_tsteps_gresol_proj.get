@@ -4,9 +4,9 @@ Info version = 	7
 
 The parameters stored in the querydata are:
 
-Number	Name					Description			Interpolation	Precision
-======	====					===========			=============	=========
-4	Temperature				Lämpötila			Linear		%.1f
+Number  Name                                    Description                             Interpolation      Precision  Lolimit  Hilimit
+======  ====                                    ===========                             =============      =========  =======  =======
+4       Temperature                             Lämpötila                               Linear                  %.1f   -1e+09    1e+09
 
 There are 1 stored parameters in total
 
