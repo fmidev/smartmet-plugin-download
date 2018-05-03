@@ -118,21 +118,21 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
                                        boost::lexical_cast<string>(settings[i].getSourceLine()));
           }
         }
-        catch (libconfig::ParseException& e)
+        catch (const libconfig::ParseException& e)
         {
           throw Spine::Exception(BCP,
                                  string("DLS configuration error ' ") + e.getError() +
                                      "' with variable '" + paramName + "' on line " +
                                      boost::lexical_cast<string>(e.getLine()));
         }
-        catch (libconfig::ConfigException&)
+        catch (const libconfig::ConfigException&)
         {
           throw Spine::Exception(BCP,
                                  string("DLS configuration error with variable '") + paramName +
                                      "' on line " +
                                      boost::lexical_cast<string>(settings[i].getSourceLine()));
         }
-        catch (exception& e)
+        catch (const exception& e)
         {
           throw Spine::Exception(BCP,
                                  e.what() + string(" (line number ") +
@@ -191,21 +191,21 @@ void Config::setEnvSettings()
           setenv(var.c_str(), val.c_str(), 1);
         }
       }
-      catch (libconfig::ParseException& e)
+      catch (const libconfig::ParseException& e)
       {
         throw Spine::Exception(BCP,
                                string("DLS configuration error ' ") + e.getError() +
                                    "' with variable '" + env + "' on line " +
                                    boost::lexical_cast<string>(e.getLine()));
       }
-      catch (libconfig::ConfigException&)
+      catch (const libconfig::ConfigException&)
       {
         throw Spine::Exception(BCP,
                                string("DLS configuration error with variable '") + env +
                                    "' on line " +
                                    boost::lexical_cast<string>(settings[i].getSourceLine()));
       }
-      catch (exception& e)
+      catch (const exception& e)
       {
         throw Spine::Exception(BCP,
                                e.what() + string(" (line number ") +
