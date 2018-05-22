@@ -47,6 +47,8 @@ struct ParamChangeItem
   std::string itsLongName;              // Long name for netcdf parameters
   std::string itsCentre;                // Originating centre for grib parameters
   unsigned int itsTemplateNumber;       // 'productDefinitionTemplateNumber' for grib parameters
+
+  boost::optional<bool> itsGridRelative;// Set for grid relative U and V
 };
 
 typedef std::vector<ParamChangeItem> ParamChangeTable;

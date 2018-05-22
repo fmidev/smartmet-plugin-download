@@ -77,7 +77,7 @@ class NetCdfStreamer : public DataStreamer
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
   boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
-  void addParameters();
+  void addParameters(bool relative_uv);
 
   void storeParamValues();
 

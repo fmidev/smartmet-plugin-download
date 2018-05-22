@@ -94,6 +94,17 @@
 	"longname" : "Eastward wind",
 	"unit" : "m s-1"
     },
+    // grid relative U-Component of Wind (u) m/s
+    // 	grib: 131;23;u
+    //
+    {
+	"newbaseid" : 23,
+	"name" : "grid_eastward_wind",
+	"standardname" : "grid_eastward_wind",
+	"longname" : "Grid eastward wind",
+	"unit" : "m s-1",
+	"gridrelative" : 1
+    },
     // V-Component of Wind (v) m/s
     // 	grib: 132;24;v
     //
@@ -103,6 +114,17 @@
 	"standardname" : "northward_wind",
 	"longname" : "Northward wind",
 	"unit" : "m s-1"
+    },
+    // grid relative V-Component of Wind (v) m/s
+    // 	grib: 132;24;v
+    //
+    {
+	"newbaseid" : 24,
+	"name" : "grid_northward_wind",
+	"standardname" : "grid_northward_wind",
+	"longname" : "Grid northward wind",
+	"unit" : "m s-1",
+	"gridrelative" : 1
     },
     // ??? wind_speed ???
     // ??? wind_speed_shear (no vertical component) ???
