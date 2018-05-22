@@ -36,7 +36,8 @@ ParamChangeItem::ParamChangeItem()
       itsConversionScale(1.0),
       itsLevel(NULL),
       itsPeriodLengthMinutes(0),
-      itsTemplateNumber(0)
+      itsTemplateNumber(0),
+      itsGridRelative(boost::optional<bool>())
 {
 }
 
@@ -65,7 +66,8 @@ ParamChangeItem::ParamChangeItem(const ParamChangeItem& theOther)
       itsStdName(theOther.itsStdName),
       itsLongName(theOther.itsLongName),
       itsCentre(theOther.itsCentre),
-      itsTemplateNumber(theOther.itsTemplateNumber)
+      itsTemplateNumber(theOther.itsTemplateNumber),
+      itsGridRelative(theOther.itsGridRelative)
 {
 }
 
@@ -87,6 +89,7 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
       itsLongName = theOther.itsLongName;
       itsCentre = theOther.itsCentre;
       itsTemplateNumber = theOther.itsTemplateNumber;
+      itsGridRelative = theOther.itsGridRelative;
     }
 
     return *this;
@@ -239,6 +242,9 @@ bool readNetCdfParamConfigField(const std::string& name,
       p.itsLongName = asString(name, json, arrayIndex);
     else if (name == "unit")
       p.itsUnit = asString(name, json, arrayIndex);
+    else if (name == "gridrelative")
+      // Nonzero (true) when U and V are relative to the grid
+      p.itsGridRelative = (asUInt(name, json, arrayIndex) > 0);
     else
       // Unknown setting
       //

@@ -930,7 +930,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::addParameters()
+void NetCdfStreamer::addParameters(bool relative_uv)
 {
   try
   {
@@ -949,15 +949,27 @@ void NetCdfStreamer::addParameters()
       NFmiParam theParam(it->number());
       const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
       string paramName, stdName, longName, unit, timeDimName = "time";
-      size_t i;
+      size_t i,j;
 
       dim1 = &(*timeDim);
 
       signed long usedParId = theParam.GetIdent();
 
-      for (i = 0; i < pTable.size(); ++i)
+      for (i = j = 0; i < pTable.size(); ++i)
         if (usedParId == pTable[i].itsWantedParam.GetIdent())
-          break;
+        {
+          if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
+            break;
+          else if (j == 0)
+            j = i + 1;
+          else
+            throw Spine::Exception(
+                BCP, "Missing gridrelative configuration for parameter " +
+                boost::lexical_cast<string>(usedParId));
+        }
+
+      if ((i >= pTable.size()) && (j > 0))
+        i = j - 1;
 
       if (i < pTable.size())
       {
@@ -1135,7 +1147,7 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 
       // Add parameters
 
-      addParameters();
+      addParameters(q->isRelativeUV());
 
       setMeta = false;
     }

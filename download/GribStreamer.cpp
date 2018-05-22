@@ -440,7 +440,7 @@ void GribStreamer::setNamedSettingsToGrib() const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setGeometryToGrib(const NFmiArea *area)
+void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
 {
   try
   {
@@ -486,16 +486,14 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area)
 
     // Set shape of the earth depending on the datum
 
+    long resolAndCompFlags = get_long(gribHandle, "resolutionAndComponentFlags");
+
     if (grib1)
     {
-      long resolAndCompFlags = get_long(gribHandle, "resolutionAndComponentFlags");
-
       if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
         resolAndCompFlags |= (1 << Datum::Sphere::Grib1::WGS84);
       else
         resolAndCompFlags &= ~(1 << Datum::Sphere::Grib1::WGS84);
-
-      gset(gribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
     }
     else
       gset(gribHandle,
@@ -503,6 +501,13 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area)
            (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
                 ? Datum::Sphere::Grib2::WGS84
                 : Datum::Sphere::Grib2::Fmi_6371229m));
+
+    if (relative_uv)
+      resolAndCompFlags |= (1 << 3);
+    else
+      resolAndCompFlags &= ~(1 << 3);
+
+    gset(gribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
 
     // Bitmap to flag missing values
 
@@ -1044,7 +1049,7 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
     {
       // Set geometry
       //
-      setGeometryToGrib(area);
+      setGeometryToGrib(area, q->isRelativeUV());
       setMeta = false;
     }
 

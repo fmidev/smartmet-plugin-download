@@ -1777,7 +1777,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
 
-    if ((id == kFmiWindUMS) || (id == kFmiWindVMS))
+    if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
     {
       // Wind components need to be rotated by the difference of the true north azimuthal angles.
       //
@@ -2478,7 +2478,7 @@ void DataStreamer::extractData(string &chunk)
             }
           }
           else if (nonNativeGrid)
-            q->pressureValues(itsGridValues, *grid, mt, level);
+            q->pressureValues(itsGridValues, *grid, mt, level, q->isRelativeUV());
           else
             q->pressureValues(itsGridValues, mt, level);
         }

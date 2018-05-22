@@ -53,7 +53,7 @@ class GribStreamer : public DataStreamer
   void setStereographicGeometryToGrib(const NFmiArea* Area) const;
   void setMercatorGeometryToGrib() const;
   void setNamedSettingsToGrib() const;
-  void setGeometryToGrib(const NFmiArea* area);
+  void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
   void setLevelAndParameterToGrib(int level,
                                   const NFmiParam& theParam,
                                   const ParamChangeTable& pTable,

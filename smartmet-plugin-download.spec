@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.4.11
+Version: 0
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -30,8 +30,8 @@ Requires: eccodes
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 18.4.7
 Requires: smartmet-library-spine >= 18.4.11
-Requires: smartmet-library-newbase >= 18.4.7
-Requires: smartmet-engine-querydata >= 18.4.10
+Requires: smartmet-library-newbase >= 18.5.22
+Requires: smartmet-engine-querydata >= 18.5.22
 Requires: smartmet-server >= 18.4.7
 %if 0%{rhel} >= 7
 Requires: boost-date-time
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Upcoming
+- Use model's U/V reference information to control whether U and V are rotated when reprojecting
+
 * Wed Apr 11 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.4.11-1.fmi
 - Allow any parseable parameter with a known newbase number even if marked to be a meta parameter
 
