@@ -751,8 +751,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     {
       // latlon, grid defined as cartesian product of latitude and longitude axes
       //
-      latVar = addCoordVariable("lat", itsNY, ncFloat, "latitude", "degrees_north", "Lat", latDim);
-      lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "Lon", lonDim);
+      latVar = addCoordVariable("lat", itsNY, ncFloat, "latitude", "degrees_north", "Y", latDim);
+      lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", lonDim);
 
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
         lat[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
