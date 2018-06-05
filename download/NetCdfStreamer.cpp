@@ -667,7 +667,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
     size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
            nLon = (projected ? (itsNY * itsNX) : itsNX);
-    double lat[nLat], lon[nLon];
+    std::unique_ptr<double[]>latPtr(new double[nLat]),lonPtr(new double[nLon]);
+    double *lat = latPtr.get(),*lon = lonPtr.get();
 
     boost::shared_ptr<NcVar> latVar, lonVar;
 
