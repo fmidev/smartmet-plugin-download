@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.5.23
+Version: 18.6.5
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,21 +17,21 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 18.5.23
-BuildRequires: smartmet-library-macgyver-devel >= 18.4.11
-BuildRequires: smartmet-library-newbase-devel >= 18.5.23
+BuildRequires: smartmet-library-spine-devel >= 18.5.27
+BuildRequires: smartmet-library-macgyver-devel >= 18.5.23
+BuildRequires: smartmet-library-newbase-devel >= 18.5.24
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 18.5.21
+BuildRequires: smartmet-engine-querydata-devel >= 18.5.23
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 18.4.11
-Requires: smartmet-library-spine >= 18.5.23
-Requires: smartmet-library-newbase >= 18.5.23
-Requires: smartmet-engine-querydata >= 18.5.21
+Requires: smartmet-library-macgyver >= 18.5.23
+Requires: smartmet-library-spine >= 18.5.27
+Requires: smartmet-library-newbase >= 18.5.24
+Requires: smartmet-engine-querydata >= 18.5.23
 Requires: smartmet-server >= 18.5.15
 %if 0%{rhel} >= 7
 Requires: boost-date-time
@@ -67,6 +67,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Tue Jun  5 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.6.5-1.fmi
+- netcdf: Use axis names 'X' and 'Y' for lon/lat coordinate axes too for CF-Convention Compliance (BS-970) 
+- netcdf: Allocate lat/lon arrays from heap (BS-517) 
+
 * Wed May 23 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.5.23-1.fmi
 - Use model's U/V reference information to control whether U and V are rotated when reprojecting
 
