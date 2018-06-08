@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.6.5
+Version: 18.6.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Fri Jun  8 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.6.8-1.fmi
+- Check result grid size at query initialization (BS-1157)
+
 * Tue Jun  5 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.6.5-1.fmi
 - netcdf: Use axis names 'X' and 'Y' for lon/lat coordinate axes too for CF-Convention Compliance (BS-970) 
 - netcdf: Allocate lat/lon arrays from heap (BS-517) 
