@@ -964,6 +964,9 @@ void DataStreamer::setSteppedGridSize()
         cropping.gridSizeY = ((cropping.topRightY - cropping.bottomLeftY) + 1);
       }
     }
+
+    if ((itsNX < 2) || (itsNY < 2))
+      throw Spine::Exception(BCP, "Minimum gridsize is 2x2, adjust bbox and/or gridstep");
   }
   catch (...)
   {
@@ -2336,6 +2339,16 @@ void DataStreamer::extractData(string &chunk)
 {
   try
   {
+    // First chunk is loaded at iniatialization
+
+    if (!itsDataChunk.empty())
+    {
+      chunk = itsDataChunk;
+      itsDataChunk.clear();
+
+      return;
+    }
+
     chunk.clear();
 
     auto theParamsEnd = itsDataParams.end();

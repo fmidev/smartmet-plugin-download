@@ -132,13 +132,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void resetDataSet()
   {
-    itsLevelIterator = itsDataLevels.begin();
-    itsParamIterator = itsDataParams.begin();
-    itsTimeIterator = itsDataTimes.begin();
-    itsScalingIterator = itsValScaling.begin();
-
-    itsTimeIndex = itsLevelIndex = 0;
-    itsQ->resetTime();
+    resetDataSet(true);
   }
 
   virtual std::string getChunk() = 0;
@@ -240,6 +234,26 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   const Engine::Geonames::Engine *itsGeoEngine;
   NFmiDataMatrix<float> itsDEMMatrix;
   NFmiDataMatrix<bool> itsWaterFlagMatrix;
+
+  std::string itsDataChunk;
+
+  void resetDataSet(bool getFirstChunk)
+  {
+    itsLevelIterator = itsDataLevels.begin();
+    itsParamIterator = itsDataParams.begin();
+    itsTimeIterator = itsDataTimes.begin();
+    itsScalingIterator = itsValScaling.begin();
+
+    itsTimeIndex = itsLevelIndex = 0;
+    itsQ->resetTime();
+
+    itsDataChunk.clear();
+
+    if (getFirstChunk)
+    {
+      extractData(itsDataChunk);
+    }
+  }
 
   void checkDataTimeStep();
 
