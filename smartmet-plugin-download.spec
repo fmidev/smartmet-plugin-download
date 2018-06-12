@@ -17,9 +17,9 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 18.5.27
-BuildRequires: smartmet-library-macgyver-devel >= 18.5.23
-BuildRequires: smartmet-library-newbase-devel >= 18.5.24
+BuildRequires: smartmet-library-spine-devel >= 18.6.6
+BuildRequires: smartmet-library-macgyver-devel >= 18.6.7
+BuildRequires: smartmet-library-newbase-devel >= 18.6.7
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 18.5.23
 BuildRequires: smartmet-engine-geonames-devel
@@ -28,11 +28,11 @@ BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 18.5.23
-Requires: smartmet-library-spine >= 18.5.27
-Requires: smartmet-library-newbase >= 18.5.24
+Requires: smartmet-library-macgyver >= 18.6.7
+Requires: smartmet-library-spine >= 18.6.6
+Requires: smartmet-library-newbase >= 18.6.7
 Requires: smartmet-engine-querydata >= 18.5.23
-Requires: smartmet-server >= 18.5.15
+Requires: smartmet-server >= 18.6.6
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
