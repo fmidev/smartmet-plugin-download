@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.6.8
+Version: 18.6.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Tue Jun 12 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.6.12-1.fmi
+- Limit number of data values for a single query (BS-1221). Default limit is 1G values
+
 * Fri Jun  8 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.6.8-1.fmi
 - Check result grid size at query initialization (BS-1157)
 

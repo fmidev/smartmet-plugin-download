@@ -416,6 +416,9 @@ Config::Config(const string& configfile)
           itsDisabledPackingTypes.insert(disabled[i]);
       }
     }
+
+    if (itsConfig.exists("maxrequestdatavalues"))
+      itsMaxRequestDataValues = itsConfig.lookup("maxrequestdatavalues");
   }
   catch (...)
   {

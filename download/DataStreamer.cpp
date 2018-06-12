@@ -21,6 +21,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
+#include <macgyver/StringConversion.h>
 #include <spine/Exception.h>
 #include <string>
 
@@ -2246,6 +2247,20 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                                                                             : itsReqGridSizeY;
 
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
+      }
+
+      auto gs = (cropping.crop ? cropping.gridSizeX * cropping.gridSizeY
+                               : itsReqGridSizeX * itsReqGridSizeY);
+      unsigned long numValues =
+          itsDataParams.size() * itsDataLevels.size() * itsDataTimes.size() * gs;
+
+      if (numValues > itsCfg.getMaxRequestDataValues())
+      {
+        throw Spine::Exception(
+            BCP,
+            "Too much data requested (" + Fmi::to_string(numValues) +
+                " values, max " + Fmi::to_string(itsCfg.getMaxRequestDataValues()) +
+                "); adjust area/grid and/or number of parameters, levels and times");
       }
 
       itsProjectionChecked = true;
