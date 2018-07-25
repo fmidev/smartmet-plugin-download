@@ -80,7 +80,7 @@ bool special(const Spine::Parameter &theParam)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -142,7 +142,7 @@ boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *para
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -167,7 +167,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
                                       {"rotlatlon", A_RotLatLon},
                                       {"stereographic", A_PolarStereoGraphic},
                                       {"mercator", A_Mercator},
-                                      {NULL, A_Native}};
+                                      {nullptr, A_Native}};
 
     // If request datum is 'epsg', check epsg projection for implied datum shift to wgs84.
 
@@ -240,7 +240,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -265,7 +265,7 @@ string getRequestParam(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -282,7 +282,7 @@ int getRequestInt(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -299,7 +299,7 @@ unsigned long getRequestUInt(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -481,7 +481,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -513,7 +513,7 @@ static bool getScaleFactorAndOffset(signed long id,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -582,7 +582,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -630,7 +630,7 @@ static string getDownloadFileName(const string &producer,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -773,7 +773,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -806,7 +806,7 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -862,7 +862,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
     {
       // Catching all exceptions
 
-      Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", theRequest.getURI());
       exception.printError();
 
@@ -888,7 +888,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -911,7 +911,7 @@ Plugin::Plugin(Spine::Reactor *theReactor, const char *theConfig)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -926,14 +926,14 @@ void Plugin::init()
   {
     /* QEngine */
 
-    auto *engine = itsReactor->getSingleton("Querydata", NULL);
+    auto *engine = itsReactor->getSingleton("Querydata", nullptr);
     if (!engine)
       throw Spine::Exception(BCP, "Querydata engine unavailable");
     itsQEngine = reinterpret_cast<Engine::Querydata::Engine *>(engine);
 
     /* GeoEngine */
 
-    engine = itsReactor->getSingleton("Geonames", NULL);
+    engine = itsReactor->getSingleton("Geonames", nullptr);
     if (!engine)
       throw Spine::Exception(BCP, "Geonames engine unavailable");
     itsGeoEngine = reinterpret_cast<Engine::Geonames::Engine *>(engine);
@@ -946,7 +946,7 @@ void Plugin::init()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

@@ -21,14 +21,14 @@ void DUMP(grib_handle *grib, const char *ns)
 {
   try
   {
-    if (ns == NULL)
+    if (ns == nullptr)
       std::cout << "\nValues in global namespace:" << std::endl;
     else
       std::cout << "\nValues for namespace " << ns << ":" << std::endl << std::endl;
 
     grib_keys_iterator *kiter;
-    if (ns == NULL)
-      kiter = grib_keys_iterator_new(grib, GRIB_KEYS_ITERATOR_ALL_KEYS, NULL);
+    if (ns == nullptr)
+      kiter = grib_keys_iterator_new(grib, GRIB_KEYS_ITERATOR_ALL_KEYS, nullptr);
     else
       kiter = grib_keys_iterator_new(grib, GRIB_KEYS_ITERATOR_ALL_KEYS, const_cast<char *>(ns));
 
@@ -83,7 +83,7 @@ void DUMP(grib_handle *grib, const char *ns)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -95,7 +95,7 @@ void DUMP(grib_handle *grib)
 {
   try
   {
-    DUMP(grib, NULL);
+    DUMP(grib, nullptr);
     DUMP(grib, "geography");
     DUMP(grib, "parameter");
     DUMP(grib, "time");
@@ -103,7 +103,7 @@ void DUMP(grib_handle *grib)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -123,7 +123,7 @@ long get_long(grib_handle *g, const char *name)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -148,7 +148,7 @@ void gset(grib_handle *g, const char *name, double value)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -163,7 +163,7 @@ void gset(grib_handle *g, const char *name, long value)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -178,7 +178,7 @@ void gset(grib_handle *g, const char *name, unsigned long value)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -193,7 +193,7 @@ void gset(grib_handle *g, const char *name, int value)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -208,7 +208,7 @@ void gset(grib_handle *g, const char *name, const char *value)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -223,6 +223,6 @@ void gset(grib_handle *g, const char *name, const std::string &value)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception(BCP, "Operation failed!", NULL);
+    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }

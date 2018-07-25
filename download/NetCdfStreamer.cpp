@@ -37,7 +37,7 @@ NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
       ncError(NcError::verbose_nonfatal),
       file(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) + "_" +
            boost::lexical_cast<string>(boost::this_thread::get_id())),
-      ncFile(file.c_str(), NcFile::Replace, NULL, 0, NcFile::Netcdf4Classic),
+      ncFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic),
       isLoaded(false)
 {
 }
@@ -53,7 +53,7 @@ NetCdfStreamer::~NetCdfStreamer()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -123,7 +123,7 @@ std::string NetCdfStreamer::getChunk()
     }
     catch (...)
     {
-      Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -136,7 +136,7 @@ std::string NetCdfStreamer::getChunk()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -163,7 +163,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -192,7 +192,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -226,7 +226,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(string dimName,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -247,7 +247,7 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -291,7 +291,7 @@ int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -389,7 +389,7 @@ void NetCdfStreamer::addTimeDimension()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -422,7 +422,7 @@ string getPeriodName(long periodLengthInMinutes)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -471,7 +471,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -537,7 +537,7 @@ void NetCdfStreamer::addLevelDimension()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -562,7 +562,7 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -603,7 +603,7 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -667,8 +667,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
     size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
            nLon = (projected ? (itsNY * itsNX) : itsNX);
-    std::unique_ptr<double[]>latPtr(new double[nLat]),lonPtr(new double[nLon]);
-    double *lat = latPtr.get(),*lon = lonPtr.get();
+    std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
+    double *lat = latPtr.get(), *lon = lonPtr.get();
 
     boost::shared_ptr<NcVar> latVar, lonVar;
 
@@ -791,7 +791,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -847,7 +847,7 @@ ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -920,7 +920,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -941,7 +941,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
     NcDim *dim1;                                      // Time dimension
     NcDim *dim2 = levelDim ? &(*levelDim) : &yOrLat;  // Level or Y/lat dimension
     NcDim *dim3 = levelDim ? &yOrLat : &xOrLon;       // Y/lat or X/lon dimension
-    NcDim *dim4 = levelDim ? &xOrLon : NULL;          // X dimension or n/a
+    NcDim *dim4 = levelDim ? &xOrLon : nullptr;       // X dimension or n/a
 
     boost::shared_ptr<NcDim> tDim;
 
@@ -950,7 +950,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
       NFmiParam theParam(it->number());
       const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
       string paramName, stdName, longName, unit, timeDimName = "time";
-      size_t i,j;
+      size_t i, j;
 
       dim1 = &(*timeDim);
 
@@ -964,9 +964,9 @@ void NetCdfStreamer::addParameters(bool relative_uv)
           else if (j == 0)
             j = i + 1;
           else
-            throw Spine::Exception(
-                BCP, "Missing gridrelative configuration for parameter " +
-                boost::lexical_cast<string>(usedParId));
+            throw Spine::Exception(BCP,
+                                   "Missing gridrelative configuration for parameter " +
+                                       boost::lexical_cast<string>(usedParId));
         }
 
       if ((i >= pTable.size()) && (j > 0))
@@ -1026,7 +1026,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1091,7 +1091,7 @@ void NetCdfStreamer::storeParamValues()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1119,7 +1119,7 @@ void NetCdfStreamer::paramChanged()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1159,7 +1159,7 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

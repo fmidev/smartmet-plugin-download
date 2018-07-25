@@ -34,7 +34,7 @@ ParamChangeItem::ParamChangeItem()
           0, "", kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly),
       itsConversionBase(0),
       itsConversionScale(1.0),
-      itsLevel(NULL),
+      itsLevel(nullptr),
       itsPeriodLengthMinutes(0),
       itsTemplateNumber(0),
       itsGridRelative(boost::optional<bool>())
@@ -50,7 +50,7 @@ ParamChangeItem::~ParamChangeItem()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -59,7 +59,7 @@ ParamChangeItem::ParamChangeItem(const ParamChangeItem& theOther)
       itsWantedParam(theOther.itsWantedParam),
       itsConversionBase(theOther.itsConversionBase),
       itsConversionScale(theOther.itsConversionScale),
-      itsLevel(theOther.itsLevel ? new NFmiLevel(*theOther.itsLevel) : NULL),
+      itsLevel(theOther.itsLevel ? new NFmiLevel(*theOther.itsLevel) : nullptr),
       itsStepType(theOther.itsStepType),
       itsPeriodLengthMinutes(theOther.itsPeriodLengthMinutes),
       itsUnit(theOther.itsUnit),
@@ -81,7 +81,7 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
       itsWantedParam = theOther.itsWantedParam;
       itsConversionBase = theOther.itsConversionBase;
       itsConversionScale = theOther.itsConversionScale;
-      itsLevel = theOther.itsLevel ? new NFmiLevel(*theOther.itsLevel) : NULL;
+      itsLevel = theOther.itsLevel ? new NFmiLevel(*theOther.itsLevel) : nullptr;
       itsStepType = theOther.itsStepType;
       itsPeriodLengthMinutes = theOther.itsPeriodLengthMinutes;
       itsUnit = theOther.itsUnit;
@@ -96,7 +96,7 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -119,7 +119,7 @@ unsigned long asUInt64(const std::string& name, const Json::Value& json, uint ar
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -135,7 +135,7 @@ unsigned int asUInt(const std::string& name, const Json::Value& json, uint array
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -151,7 +151,7 @@ float asFloat(const std::string& name, const Json::Value& json, uint arrayIndex)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -171,7 +171,7 @@ std::string asString(const std::string& name, const Json::Value& json, uint arra
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -219,7 +219,7 @@ bool readGribParamConfigField(const std::string& name,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -254,7 +254,7 @@ bool readNetCdfParamConfigField(const std::string& name,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -359,7 +359,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

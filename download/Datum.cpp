@@ -57,7 +57,7 @@ static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
                        {"HPPEWS", HPPreserveEWScale},
                        {"HPPreserveSNScale", HPPreserveSNScale},
                        {"HPPSNS", HPPreserveSNScale},
-                       {NULL, None}};
+                       {nullptr, None}};
 
     string s = boost::trim_copy(Fmi::ascii_tolower_copy(setting));
 
@@ -77,7 +77,7 @@ static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -96,7 +96,7 @@ bool parseDatumShift(const string& setting, DatumShift& datumShift)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -115,7 +115,7 @@ bool isDatumShiftToWGS84(DatumShift datumShift)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -196,7 +196,7 @@ void getHelmertTransformationParameters(DatumShift datumShift,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

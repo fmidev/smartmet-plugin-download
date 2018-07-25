@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.6.12
+Version: 18.7.25
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,21 +17,21 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 18.6.6
-BuildRequires: smartmet-library-macgyver-devel >= 18.6.7
-BuildRequires: smartmet-library-newbase-devel >= 18.6.7
+BuildRequires: smartmet-library-spine-devel >= 18.7.23
+BuildRequires: smartmet-library-macgyver-devel >= 18.7.25
+BuildRequires: smartmet-library-newbase-devel >= 18.7.23
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 18.5.23
+BuildRequires: smartmet-engine-querydata-devel >= 18.7.23
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 18.6.7
-Requires: smartmet-library-spine >= 18.6.6
-Requires: smartmet-library-newbase >= 18.6.7
-Requires: smartmet-engine-querydata >= 18.5.23
+Requires: smartmet-library-macgyver >= 18.7.25
+Requires: smartmet-library-spine >= 18.7.23
+Requires: smartmet-library-newbase >= 18.7.23
+Requires: smartmet-engine-querydata >= 18.7.23
 Requires: smartmet-server >= 18.6.6
 %if 0%{rhel} >= 7
 Requires: boost-date-time
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Jul 25 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.7.25-1.fmi
+- Prefer nullptr over NULL
+
 * Tue Jun 12 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.6.12-1.fmi
 - Limit number of data values for a single query (BS-1221). Default limit is 1G values
 

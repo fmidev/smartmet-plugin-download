@@ -130,10 +130,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer);
 
-  void resetDataSet()
-  {
-    resetDataSet(true);
-  }
+  void resetDataSet() { resetDataSet(true); }
 
   virtual std::string getChunk() = 0;
 
@@ -277,8 +274,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void cachedProjGridValues(Engine::Querydata::Q q,
                             NFmiGrid &wantedGrid,
                             const NFmiMetTime *mt,
-                            NFmiDataMatrix<float> *demValues = NULL,
-                            NFmiDataMatrix<bool> *waterFlags = NULL);
+                            NFmiDataMatrix<float> *demValues = nullptr,
+                            NFmiDataMatrix<bool> *waterFlags = nullptr);
 
   bool isLevelAvailable(Engine::Querydata::Q q, int &requestedLevel, bool &exactLevel) const;
 

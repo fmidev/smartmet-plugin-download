@@ -66,7 +66,7 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -83,7 +83,7 @@ GribStreamer::~GribStreamer()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -157,7 +157,7 @@ void GribStreamer::scanningDirections(long &iNegative, long &jPositive) const
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 #pragma clang diagnostic pop
 }
@@ -201,7 +201,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -260,7 +260,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -359,7 +359,7 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -405,7 +405,7 @@ void GribStreamer::setMercatorGeometryToGrib() const
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -429,7 +429,7 @@ void GribStreamer::setNamedSettingsToGrib() const
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -520,7 +520,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -552,7 +552,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
   {
     string centre;
     signed long usedParId = theParam.GetIdent();
-    NFmiLevel *cfgLevel = NULL;
+    NFmiLevel *cfgLevel = nullptr;
     string levelTypeStr;
     size_t i, j;
     long templateNumber = 0;
@@ -626,7 +626,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -804,7 +804,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -841,7 +841,7 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -921,7 +921,7 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -953,7 +953,7 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1011,7 +1011,7 @@ std::string GribStreamer::getChunk()
     }
     catch (...)
     {
-      Spine::Exception exception(BCP, "Request processing exception!", NULL);
+      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -1024,7 +1024,7 @@ std::string GribStreamer::getChunk()
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1060,7 +1060,7 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception(BCP, "Operation failed!", NULL);
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
