@@ -151,6 +151,8 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
     prod.verticalInterpolation = currentSettings.verticalInterpolation;
     prod.datumShift = currentSettings.datumShift;
 
+    currentSettings.namedSettings.clear();
+
     itsProducers.insert(Producers::value_type(name, prod));
   }
   catch (...)
