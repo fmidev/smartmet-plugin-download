@@ -423,9 +423,27 @@ void GribStreamer::setNamedSettingsToGrib() const
     const Producer &pr = itsCfg.getProducer(itsReqParams.producer);
     auto setBeg = pr.namedSettingsBegin();
     auto setEnd = pr.namedSettingsEnd();
+    const char *const centre = "centre";
+    bool hasCentre = false;
 
     for (auto it = setBeg; (it != setEnd); it++)
+    {
       gset(gribHandle, (it->first).c_str(), it->second);
+
+      if (it->first == centre)
+        hasCentre = true;
+    }
+
+    // Use default procuder's centre by default
+
+    if (!hasCentre)
+    {
+      const Producer &dpr = itsCfg.defaultProducer();
+      const auto dit = dpr.namedSettings.find(centre);
+
+      if (dit != dpr.namedSettingsEnd())
+        gset(gribHandle, (dit->first).c_str(), dit->second);
+    }
   }
   catch (...)
   {
@@ -513,10 +531,6 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
 
     gset(gribHandle, "bitmapPresent", 1);
     gset(gribHandle, "missingValue", gribMissingValue);
-
-    // Set named configuration settings
-
-    setNamedSettingsToGrib();
   }
   catch (...)
   {
@@ -861,6 +875,10 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 {
   try
   {
+    // Set named configuration settings
+
+    setNamedSettingsToGrib();
+
     // Use first validtime as origintime if it is earlier than the origintime.
     //
     // Note: originTime is unset (is_not_a_date_time()) when called for first time instant.
