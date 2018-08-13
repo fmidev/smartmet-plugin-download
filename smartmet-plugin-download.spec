@@ -67,8 +67,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+<<<<<<< HEAD
 * Mon Aug 13 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.8.13-1.fmi
 - Repackaged since Spine::Location size changed
+
+* Tue Aug  7 2018 Pertti Kinnia <pertti.kinnia@fmi.fi> - 18.8.7-1.fmi
+- Use default producer's originating centre if producer's centre has not been configured
 
 * Wed Jul 25 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.7.25-1.fmi
 - Prefer nullptr over NULL
