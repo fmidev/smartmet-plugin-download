@@ -718,7 +718,11 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
       // Count leading missing parameters and erase their scaling information
 
       nMissingParam++;
-      itsValScaling.pop_front();
+
+      if (!itsValScaling.empty())
+        itsValScaling.pop_front();
+      else
+        throw Spine::Exception(BCP, "Internal error in skipping missing parameters");
     }
 
     if (!hasData)
