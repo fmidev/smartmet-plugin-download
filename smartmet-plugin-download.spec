@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.8.13
+Version: 18.10.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Thu Oct 18 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.10.18-1.fmi
+- Disabled stack trace if the requested model is unknown to reduce log sizes
+
 * Mon Aug 13 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.8.13-1.fmi
 - Repackaged since Spine::Location size changed
 

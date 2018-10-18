@@ -508,7 +508,7 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
       return p->second;
     }
 
-    throw Spine::Exception(BCP, "Unknown producer: " + name);
+    throw Spine::Exception(BCP, "Unknown producer: " + name).disableStackTrace();
   }
   catch (...)
   {
