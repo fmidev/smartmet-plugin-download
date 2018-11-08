@@ -43,15 +43,8 @@ ParamChangeItem::ParamChangeItem()
 
 ParamChangeItem::~ParamChangeItem()
 {
-  try
-  {
-    if (itsLevel)
-      delete itsLevel;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
+  if (itsLevel)
+    delete itsLevel;
 }
 
 ParamChangeItem::ParamChangeItem(const ParamChangeItem& theOther)

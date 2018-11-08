@@ -72,19 +72,8 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
 
 GribStreamer::~GribStreamer()
 {
-  try
-  {
-    if (gribHandle)
-    {
-      // Delete grib handle
-      //
-      grib_handle_delete(gribHandle);
-    }
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
+  if (gribHandle)
+    grib_handle_delete(gribHandle);
 }
 
 // ----------------------------------------------------------------------

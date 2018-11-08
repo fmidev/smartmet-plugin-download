@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.11.1
+Version: 18.11.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Thu Nov  8 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.11.8-1.fmi
+- Do not throw in destructors in C++11
+
 * Thu Nov  1 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.11.1-1.fmi
 - Set ncopts=NC_VERBOSE, thus not letting the NetCDF library to call exit()
 

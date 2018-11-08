@@ -51,27 +51,20 @@ ResMgr::ResMgr() : area(), grid(), spatialReferences(), transformations(), geome
 
 ResMgr::~ResMgr()
 {
-  try
+  // Delete coordinate transformations
+  //
+  BOOST_FOREACH (OGRCoordinateTransformation *ct, transformations)
   {
-    // Delete coordinate transformations
-    //
-    BOOST_FOREACH (OGRCoordinateTransformation *ct, transformations)
-    {
-      OGRCoordinateTransformation::DestroyCT(ct);
-    }
-
-    // Delete cloned srs:s
-    //
-    // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
-    //
-    BOOST_FOREACH (OGRSpatialReference *srs, spatialReferences)
-    {
-      OGRSpatialReference::DestroySpatialReference(srs);
-    }
+    OGRCoordinateTransformation::DestroyCT(ct);
   }
-  catch (...)
+  
+  // Delete cloned srs:s
+  //
+  // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
+  //
+  BOOST_FOREACH (OGRSpatialReference *srs, spatialReferences)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    OGRSpatialReference::DestroySpatialReference(srs);
   }
 }
 

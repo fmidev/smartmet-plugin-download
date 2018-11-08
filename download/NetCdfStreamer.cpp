@@ -44,17 +44,10 @@ NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
 
 NetCdfStreamer::~NetCdfStreamer()
 {
-  try
-  {
-    if (ioStream.is_open())
-      ioStream.close();
-
-    unlink(file.c_str());
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
+  if (ioStream.is_open())
+    ioStream.close();
+  
+  unlink(file.c_str());
 }
 
 // ----------------------------------------------------------------------
