@@ -5,19 +5,15 @@
 // ======================================================================
 
 #include "NetCdfStreamer.h"
-
-#include <macgyver/StringConversion.h>
-
-#include <spine/Exception.h>
-
-#include <newbase/NFmiMetTime.h>
-#include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiStereographicArea.h>
-
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <macgyver/StringConversion.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiQueryData.h>
+#include <newbase/NFmiStereographicArea.h>
+#include <spine/Exception.h>
 
 using namespace std;
 
@@ -34,11 +30,9 @@ NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
                                const Producer &producer)
     : DataStreamer(req, config, producer),
-      ncError(NcError::verbose_nonfatal),
-      file(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) + "_" +
-           boost::lexical_cast<string>(boost::this_thread::get_id())),
-      ncFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic),
-      isLoaded(false)
+      file(config.getTempDirectory() + "/dls_" + Fmi::to_string(getpid()) + "_" +
+           Fmi::to_string(pthread_self())),
+      ncFile(file, netCDF::NcFile::replace, netCDF::NcFile::nc4classic)
 {
 }
 
@@ -46,7 +40,7 @@ NetCdfStreamer::~NetCdfStreamer()
 {
   if (ioStream.is_open())
     ioStream.close();
-  
+
   unlink(file.c_str());
 }
 
@@ -133,62 +127,6 @@ std::string NetCdfStreamer::getChunk()
   }
 }
 
-void dimDeleter(NcDim * /* dim */) {}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Add dimension.
- *
- *    Note: Dimensions are owned by the netcdf file object
- */
-// ----------------------------------------------------------------------
-
-boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSize)
-{
-  try
-  {
-    auto dim = boost::shared_ptr<NcDim>(ncFile.add_dim(dimName.c_str(), dimSize), dimDeleter);
-
-    if (dim)
-      return dim;
-
-    throw Spine::Exception(BCP, "Failed to add dimension ('" + dimName + "')");
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-void varDeleter(NcVar * /* var */) {}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Add variable
- *
- *    Note: Variables are owned by the netcdf file object
- */
-// ----------------------------------------------------------------------
-
-boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
-    string varName, NcType dataType, NcDim *dim1, NcDim *dim2, NcDim *dim3, NcDim *dim4)
-{
-  try
-  {
-    auto var = boost::shared_ptr<NcVar>(
-        ncFile.add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4), varDeleter);
-
-    if (var)
-      return var;
-
-    throw Spine::Exception(BCP, "Failed to add variable ('" + varName + "')");
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Add coordinate variable
@@ -196,47 +134,26 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(string dimName,
-                                                          long dimSize,
-                                                          NcType dataType,
-                                                          string stdName,
-                                                          string unit,
-                                                          string axisType,
-                                                          boost::shared_ptr<NcDim> &dim)
+netCDF::NcVar NetCdfStreamer::addCoordVariable(string dimName,
+                                               long dimSize,
+                                               netCDF::NcType dataType,
+                                               string stdName,
+                                               string unit,
+                                               string axisType,
+                                               netCDF::NcDim &dim)
 {
   try
   {
-    dim = addDimension(dimName, dimSize);
+    dim = ncFile.addDim(dimName, dimSize);
 
-    auto var = addVariable(dimName, dataType, &(*dim));
-    addAttribute(&(*var), "standard_name", stdName.c_str());
-    addAttribute(&(*var), "units", unit.c_str());
+    auto var = ncFile.addVar(dimName, dataType, dim);
+    var.putAtt("standard_name", stdName);
+    var.putAtt("units", unit);
 
     if (!axisType.empty())
-      addAttribute(&(*var), "axis", axisType.c_str());
+      var.putAtt("axis", axisType);
 
     return var;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Add attribute
- *
- */
-// ----------------------------------------------------------------------
-
-template <typename T1, typename T2>
-void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
-{
-  try
-  {
-    if (!((resource)->add_att(attrName.c_str(), attrValue)))
-      throw Spine::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
   }
   catch (...)
   {
@@ -251,7 +168,7 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
  */
 // ----------------------------------------------------------------------
 
-int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
+std::size_t getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
 {
   try
   {
@@ -279,8 +196,7 @@ int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
       return t1.date().year() - t2.date().year();
     }
 
-    throw Spine::Exception(BCP,
-                           "Invalid time step length " + boost::lexical_cast<string>(timeStep));
+    throw Spine::Exception(BCP, "Invalid time step length " + Fmi::to_string(timeStep));
   }
   catch (...)
   {
@@ -336,27 +252,27 @@ void NetCdfStreamer::addTimeDimension()
     }
     else
       throw Spine::Exception(BCP,
-                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                             "Invalid data timestep " + Fmi::to_string(timeStep) +
                                  " for producer '" + itsReqParams.producer + "'");
 
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
     size_t timeSize = 0;
-    int times[itsDataTimes.size()];
+    std::vector<std::size_t> times;
 
     for (; (timeIter != itsDataTimes.end()); timeIter++, timeSize++)
     {
-      long period = getTimeOffset(timeIter->utc_time(), startTime, timeStep);
+      std::size_t period = getTimeOffset(timeIter->utc_time(), startTime, timeStep);
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
         throw Spine::Exception(BCP,
-                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                                   boost::lexical_cast<string>(times[timeSize - 1]) +
-                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
-                                   " timestep " + boost::lexical_cast<string>(timeStep) +
-                                   ") for producer '" + itsReqParams.producer + "'");
+                               "Invalid time offset " + Fmi::to_string(period) + "/" +
+                                   Fmi::to_string(times[timeSize - 1]) + " (validtime " +
+                                   Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
+                                   Fmi::to_string(timeStep) + ") for producer '" +
+                                   itsReqParams.producer + "'");
 
-      times[timeSize] = period;
+      times.push_back(period);
     }
 
     date d(startTime.date());
@@ -370,14 +286,14 @@ void NetCdfStreamer::addTimeDimension()
 
     string timeUnitDef = timeUnit + " since " + os.str();
 
-    timeDim = addDimension("time", timeSize);
+    timeDim = ncFile.addDim("time", timeSize);
 
-    timeVar = addVariable("time", ncInt, &(*timeDim));
-    addAttribute(timeVar, "long_name", "time");
-    addAttribute(timeVar, "calendar", "gregorian");
-    addAttribute(timeVar, "units", timeUnitDef.c_str());
+    timeVar = ncFile.addVar("time", netCDF::ncInt, timeDim);
+    timeVar.putAtt("long_name", "time");
+    timeVar.putAtt("calendar", "gregorian");
+    timeVar.putAtt("units", timeUnitDef);
 
-    if (!timeVar->put(times, timeSize))
+    if (!timeVar.putVar(times))
       throw Spine::Exception(BCP, "Failed to store validtimes");
   }
   catch (...)
@@ -398,12 +314,12 @@ string getPeriodName(long periodLengthInMinutes)
   try
   {
     if (periodLengthInMinutes < 60)
-      return boost::lexical_cast<string>(periodLengthInMinutes) + "min";
+      return Fmi::to_string(periodLengthInMinutes) + "min";
     else if (periodLengthInMinutes == 60)
       return "h";
     else if ((periodLengthInMinutes < DataStreamer::minutesInDay) &&
              ((DataStreamer::minutesInDay % periodLengthInMinutes) == 0))
-      return boost::lexical_cast<string>(periodLengthInMinutes / 60) + "h";
+      return Fmi::to_string(periodLengthInMinutes / 60) + "h";
     else if (periodLengthInMinutes == DataStreamer::minutesInDay)
       return "d";
     else if (periodLengthInMinutes == DataStreamer::minutesInMonth)
@@ -411,7 +327,7 @@ string getPeriodName(long periodLengthInMinutes)
     else if (periodLengthInMinutes == DataStreamer::minutesInYear)
       return "y";
 
-    return boost::lexical_cast<string>(periodLengthInMinutes);
+    return Fmi::to_string(periodLengthInMinutes);
   }
   catch (...)
   {
@@ -426,30 +342,29 @@ string getPeriodName(long periodLengthInMinutes)
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
-                                                          boost::shared_ptr<NcVar> &tVar)
+netCDF::NcDim NetCdfStreamer::addTimeDimension(long periodLengthInMinutes, netCDF::NcVar &tVar)
 {
   try
   {
     string name("time_" + getPeriodName(periodLengthInMinutes));
 
-    auto tDim = addDimension(name, timeDim->size());
-    tVar = addVariable(name, ncInt, &(*tDim));
+    auto tDim = ncFile.addDim(name, timeDim.getSize());
+    tVar = ncFile.addVar(name, netCDF::ncInt, tDim);
 
-    int times[timeDim->size()];
-    timeVar->get(times, timeDim->size());
+    int times[timeDim.getSize()];
+    timeVar.get(times, timeDim.getSize());
 
-    if (!tVar->put(times, timeDim->size()))
+    if (!tVar.put(times, timeDim.getSize()))
       throw Spine::Exception(BCP, "Failed to store validtimes");
 
-    addAttribute(tVar, "long_name", "time");
-    addAttribute(tVar, "calendar", "gregorian");
+    tVar.putAtt("long_name", "time");
+    tVar.putAtt("calendar", "gregorian");
 
-    boost::shared_ptr<NcAtt> uAtt(timeVar->get_att("units"));
+    auto uAtt = timeVar.getAtt("units");
     if (!uAtt)
       throw Spine::Exception(BCP, "Failed to get time unit attribute");
 
-    boost::shared_ptr<NcValues> uVal(uAtt->values());
+    netCDF::NcValues uVal = uAtt.values();
     char *u;
     int uLen;
 
@@ -458,7 +373,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
       throw Spine::Exception(BCP, "Failed to get time unit attribute value");
 
     string unit(u, uLen);
-    addAttribute(tVar, "units", unit.c_str());
+    tVar.putAtt("units", unit);
 
     return tDim;
   }
@@ -511,13 +426,13 @@ void NetCdfStreamer::addLevelDimension()
         positive = (itsPositiveLevels ? "down" : "up");
     }
 
-    auto levelVar =
-        addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", "", "Z", levelDim);
+    auto levelVar = addCoordVariable(
+        name, itsDataLevels.getSize(), netCDF::ncFloat, "level", "", "Z", levelDim);
 
-    addAttribute(levelVar, "long_name", (string(levelVar->name()) + " level").c_str());
-    addAttribute(levelVar, "positive", positive.c_str());
+    levelVar.putAtt("long_name", string(levelVar->name()) + " level");
+    levelVar.putAtt("positive", positive);
 
-    float levels[itsDataLevels.size()];
+    float levels[itsDataLevels.getSize()];
     int i = 0;
 
     for (auto level = itsDataLevels.begin(); (level != itsDataLevels.end()); level++, i++)
@@ -525,7 +440,7 @@ void NetCdfStreamer::addLevelDimension()
       levels[i] = (float)*level;
     }
 
-    if (!levelVar->put(levels, itsDataLevels.size()))
+    if (!levelVar->put(levels, itsDataLevels.getSize()))
       throw Spine::Exception(BCP, "Failed to store levels");
   }
   catch (...)
@@ -541,12 +456,11 @@ void NetCdfStreamer::addLevelDimension()
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
-                                       const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */, const netCDF::NcVar &crsVar)
 {
   try
   {
-    addAttribute(crsVar, "grid_mapping_name", "latitude_longitude");
+    crsVar.putAtt("grid_mapping_name", "latitude_longitude");
 
     //	OGRSpatialReference * geometrySRS = itsResMgr.getGeometrySRS();
     //
@@ -566,8 +480,7 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
-                                              const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area, const netCDF::NcVar &crsVar)
 {
   try
   {
@@ -589,10 +502,10 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
       lat_0 = (lat_ts > 0) ? 90 : -90;
     }
 
-    addAttribute(crsVar, "grid_mapping_name", "polar_stereographic");
-    addAttribute(crsVar, "straight_vertical_longitude_from_pole", lon_0);
-    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
-    addAttribute(crsVar, "standard_parallel", lat_ts);
+    crsVar.putAtt("grid_mapping_name", "polar_stereographic");
+    crsVar.putAtt("straight_vertical_longitude_from_pole", lon_0);
+    crsVar.putAtt("latitude_of_projection_origin", lat_0);
+    crsVar.putAtt("standard_parallel", lat_ts);
   }
   catch (...)
   {
@@ -613,10 +526,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    addAttribute(&ncFile, "Conventions", "CF-1.6");
-    addAttribute(&ncFile, "title", "<title>");
-    addAttribute(&ncFile, "institution", "fmi.fi");
-    addAttribute(&ncFile, "source", "<producer>");
+    ncFile.addAtt("Conventions", "CF-1.6");
+    ncFile.addAtt("title", "<title>");
+    ncFile.addAtt("institution", "fmi.fi");
+    ncFile.addAtt("source", "<producer>");
 
     // Time dimension
 
@@ -628,7 +541,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     // Set projection
 
-    auto crsVar = addVariable("crs", ncShort);
+    auto crsVar = ncFile.addvar("crs", ncShort);
 
     auto classid = area->ClassId();
 
@@ -663,7 +576,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
     double *lat = latPtr.get(), *lon = lonPtr.get();
 
-    boost::shared_ptr<NcVar> latVar, lonVar;
+    netCDF::NcVar latVar, lonVar;
 
     if (!grid)
       grid = &q->grid();
@@ -722,8 +635,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       if (!xVar->put(worldX, itsNX))
         throw Spine::Exception(BCP, "Failed to store x -coordinates");
 
-      latVar = addVariable("lat", ncFloat, &(*yDim), &(*xDim));
-      lonVar = addVariable("lon", ncFloat, &(*yDim), &(*xDim));
+      latVar = ncFile.addVar("lat", ncFloat, &(*yDim), &(*xDim));
+      lonVar = ncFile.addVar("lon", ncFloat, &(*yDim), &(*xDim));
 
       for (y = y0, n = 0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, n++)
@@ -765,22 +678,21 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         throw Spine::Exception(BCP, "Failed to store longitude coordinates");
     }
 
-    addAttribute(latVar, "standard_name", "latitude");
-    addAttribute(latVar, "long_name", "latitude");
-    addAttribute(latVar, "units", "degrees_north");
-    addAttribute(lonVar, "standard_name", "longitude");
-    addAttribute(lonVar, "long_name", "longitude");
-    addAttribute(lonVar, "units", "degrees_east");
+    latVar.putAtt("standard_name", "latitude");
+    latVar.putAtt("long_name", "latitude");
+    latVar.putAtt("units", "degrees_north");
+    lonVar.putAtt("standard_name", "longitude");
+    lonVar.putAtt("long_name", "longitude");
+    lonVar.putAtt("units", "degrees_east");
 
     if (Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
     {
-      addAttribute(crsVar, "semi_major", Plugin::Download::Datum::Sphere::NetCdf::WGS84_semiMajor);
-      addAttribute(crsVar,
-                   "inverse_flattening",
-                   Plugin::Download::Datum::Sphere::NetCdf::WGS84_invFlattening);
+      crsVar.putAtt("semi_major", Plugin::Download::Datum::Sphere::NetCdf::WGS84_semiMajor);
+      crsVar.putAtt("inverse_flattening",
+                    Plugin::Download::Datum::Sphere::NetCdf::WGS84_invFlattening);
     }
     else if (projected)
-      addAttribute(crsVar, "earth_radius", Plugin::Download::Datum::Sphere::NetCdf::Fmi_6371220m);
+      crsVar.putAtt("earth_radius", Plugin::Download::Datum::Sphere::NetCdf::Fmi_6371220m);
   }
   catch (...)
   {
@@ -835,8 +747,8 @@ ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
       return ptime(date(d.year(), 1, 1));
     }
 
-    throw Spine::Exception(
-        BCP, "Invalid time period length " + boost::lexical_cast<string>(periodLengthInMinutes));
+    throw Spine::Exception(BCP,
+                           "Invalid time period length " + Fmi::to_string(periodLengthInMinutes));
   }
   catch (...)
   {
@@ -851,8 +763,7 @@ ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
-                                                       string &timeDimName)
+netCDF::NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes, string &timeDimName)
 {
   try
   {
@@ -860,20 +771,20 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     timeDimName = "time_" + pName;
 
-    boost::shared_ptr<NcDim> tDim(ncFile.get_dim(timeDimName.c_str()), dimDeleter);
+    netCDF::NcDim tDim(ncFile.get_dim(timeDimName), dimDeleter);
 
     if (tDim)
       return tDim;
 
     // Add aggregate period length specific time dimension and variable
 
-    boost::shared_ptr<NcVar> tVar;
+    netCDF::NcVar tVar;
     tDim = addTimeDimension(periodLengthInMinutes, tVar);
 
     // Add time bounds dimension
 
     if (!timeBoundsDim)
-      timeBoundsDim = addDimension("time_bounds", 2);
+      timeBoundsDim = ncFile.addDim("time_bounds", 2);
 
     // Determine and store time bounds
 
@@ -900,14 +811,14 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     string name("time_bounds_" + pName);
 
-    auto timeBoundsVar = addVariable(name, ncInt, &(*tDim), &(*timeBoundsDim));
+    auto timeBoundsVar = ncFile.addVar(name, ncInt, &(*tDim), &(*timeBoundsDim));
 
     if (!timeBoundsVar->put(bounds, timeDim->size(), 2))
       throw Spine::Exception(BCP, "Failed to store time bounds");
 
     // Connect the bounds to the time variable
 
-    addAttribute(tVar, "bounds", name.c_str());
+    tVar.putAtt("bounds", name);
 
     return tDim;
   }
@@ -928,15 +839,15 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 {
   try
   {
-    NcDim &yOrLat = (yDim ? *yDim : *latDim);
-    NcDim &xOrLon = (yDim ? *xDim : *lonDim);
+    netCDF::NcDim &yOrLat = (yDim ? *yDim : *latDim);
+    netCDF::NcDim &xOrLon = (yDim ? *xDim : *lonDim);
 
-    NcDim *dim1;                                      // Time dimension
-    NcDim *dim2 = levelDim ? &(*levelDim) : &yOrLat;  // Level or Y/lat dimension
-    NcDim *dim3 = levelDim ? &yOrLat : &xOrLon;       // Y/lat or X/lon dimension
-    NcDim *dim4 = levelDim ? &xOrLon : nullptr;       // X dimension or n/a
+    netCDF::NcDim *dim1;                                      // Time dimension
+    netCDF::NcDim *dim2 = levelDim ? &(*levelDim) : &yOrLat;  // Level or Y/lat dimension
+    netCDF::NcDim *dim3 = levelDim ? &yOrLat : &xOrLon;       // Y/lat or X/lon dimension
+    netCDF::NcDim *dim4 = levelDim ? &xOrLon : nullptr;       // X dimension or n/a
 
-    boost::shared_ptr<NcDim> tDim;
+    netCDF::NcDim tDim;
 
     for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
     {
@@ -949,7 +860,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 
       signed long usedParId = theParam.GetIdent();
 
-      for (i = j = 0; i < pTable.size(); ++i)
+      for (i = j = 0; i < pTable.getSize(); ++i)
         if (usedParId == pTable[i].itsWantedParam.GetIdent())
         {
           if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
@@ -957,15 +868,15 @@ void NetCdfStreamer::addParameters(bool relative_uv)
           else if (j == 0)
             j = i + 1;
           else
-            throw Spine::Exception(BCP,
-                                   "Missing gridrelative configuration for parameter " +
-                                       boost::lexical_cast<string>(usedParId));
+            throw Spine::Exception(
+                BCP,
+                "Missing gridrelative configuration for parameter " + Fmi::to_string(usedParId));
         }
 
-      if ((i >= pTable.size()) && (j > 0))
+      if ((i >= pTable.getSize()) && (j > 0))
         i = j - 1;
 
-      if (i < pTable.size())
+      if (i < pTable.getSize())
       {
         paramName = pTable[i].itsWantedParam.GetName();
         stdName = pTable[i].itsStdName;
@@ -987,30 +898,26 @@ void NetCdfStreamer::addParameters(bool relative_uv)
       else
         paramName = theParam.GetName();
 
-      auto dataVar = addVariable(paramName + "_" + boost::lexical_cast<string>(usedParId),
-                                 ncFloat,
-                                 dim1,
-                                 dim2,
-                                 dim3,
-                                 dim4);
-      addAttribute(dataVar, "units", unit.c_str());
-      addAttribute(dataVar, "_FillValue", kFloatMissing);
-      addAttribute(dataVar, "missing_value", kFloatMissing);
-      addAttribute(dataVar, "grid_mapping", "crs");
+      auto dataVar = ncFile.addVar(
+          paramName + "_" + Fmi::to_string(usedParId), ncFloat, dim1, dim2, dim3, dim4);
+      dataVar.putAtt("units", unit);
+      dataVar.putAtt("_FillValue", kFloatMissing);
+      dataVar.putAtt("missing_value", kFloatMissing);
+      dataVar.putAtt("grid_mapping", "crs");
 
       if (!stdName.empty())
-        addAttribute(dataVar, "standard_name", stdName.c_str());
+        dataVar.putAtt("standard_name", stdName);
 
       if (!longName.empty())
-        addAttribute(dataVar, "long_name", longName.c_str());
+        dataVar.putAtt("long_name", longName);
 
-      if ((i < pTable.size()) && (!pTable[i].itsStepType.empty()))
+      if ((i < pTable.getSize()) && (!pTable[i].itsStepType.empty()))
         // Cell method for aggregate data
         //
-        addAttribute(dataVar, "cell_methods", (timeDimName + ": " + pTable[i].itsStepType).c_str());
+        dataVar.putAtt("cell_methods", timeDimName + ": " + pTable[i].itsStepType);
 
       if (yDim)
-        addAttribute(dataVar, "coordinates", "lat lon");
+        dataVar.putAtt("coordinates", "lat lon");
 
       dataVars.push_back(dataVar.get());
     }

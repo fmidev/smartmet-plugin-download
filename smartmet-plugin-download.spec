@@ -23,7 +23,7 @@ BuildRequires: smartmet-library-newbase-devel >= 18.8.6
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 18.8.13
 BuildRequires: smartmet-engine-geonames-devel
-BuildRequires: netcdf-cxx-devel
+BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
@@ -38,8 +38,8 @@ Requires: boost-date-time
 Requires: boost-iostreams
 Requires: boost-system
 Requires: boost-thread
-BuildRequires: netcdf-cxx-devel
-Requires: netcdf-cxx
+BuildRequires: netcdf-cxx4-devel
+Requires: netcdf-cxx4
 %endif
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1

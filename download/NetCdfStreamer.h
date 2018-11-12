@@ -7,8 +7,7 @@
 #pragma once
 
 #include "DataStreamer.h"
-
-#include <netcdfcpp.h>
+#include <netcdf>
 
 namespace SmartMet
 {
@@ -35,48 +34,34 @@ class NetCdfStreamer : public DataStreamer
  private:
   NetCdfStreamer();
 
-  NcError ncError;
   std::string file;
-  NcFile ncFile;
+  netCDF::NcFile ncFile;
   std::ifstream ioStream;
-  bool isLoaded;
+  bool isLoaded = false;
 
-  // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
-  // shared_ptr:s)
+  netCDF::NcDim timeDim, timeBoundsDim, levelDim, yDim, xDim, latDim, lonDim;
+  netCDF::NcVar timeVar;
 
-  boost::shared_ptr<NcDim> timeDim, timeBoundsDim, levelDim, yDim, xDim, latDim, lonDim;
-  boost::shared_ptr<NcVar> timeVar;
+  std::list<netCDF::NcVar *>::iterator it_Var;
+  std::list<netCDF::NcVar *> dataVars;
 
-  std::list<NcVar *>::iterator it_Var;
-  std::list<NcVar *> dataVars;
-
-  boost::shared_ptr<NcDim> addDimension(std::string dimName, long dimSize);
-  boost::shared_ptr<NcVar> addVariable(std::string varName,
-                                       NcType dataType,
-                                       NcDim *dim1 = nullptr,
-                                       NcDim *dim2 = nullptr,
-                                       NcDim *dim3 = nullptr,
-                                       NcDim *dim4 = nullptr);
-  boost::shared_ptr<NcVar> addCoordVariable(std::string dimName,
-                                            long dimSize,
-                                            NcType dataType,
-                                            std::string stdName,
-                                            std::string unit,
-                                            std::string axisType,
-                                            boost::shared_ptr<NcDim> &dim);
-  template <typename T1, typename T2>
-  void addAttribute(T1 resource, std::string attrName, T2 attrValue);
+  netCDF::NcVar addCoordVariable(std::string dimName,
+                                 long dimSize,
+                                 netCDF::NcType dataType,
+                                 std::string stdName,
+                                 std::string unit,
+                                 std::string axisType,
+                                 netCDF::NcDim &dim);
 
   void addTimeDimension();
-  boost::shared_ptr<NcDim> addTimeDimension(long periodLengthInMinutes,
-                                            boost::shared_ptr<NcVar> &tVar);
+  netCDF::NcDim addTimeDimension(long periodLengthInMinutes, netCDF::NcVar &tVar);
   void addLevelDimension();
 
-  void setLatLonGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
-  void setStereographicGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
+  void setLatLonGeometry(const NFmiArea *area, const netCDF::NcVar &crsVar);
+  void setStereographicGeometry(const NFmiArea *area, const netCDF::NcVar &crsVar);
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
-  boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
+  netCDF::NcDim addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
   void addParameters(bool relative_uv);
 
   void storeParamValues();

@@ -98,7 +98,7 @@ LIBS = -L$(libdir) \
 	-lbz2 -lz \
 	-leccodes \
 	-lgdal \
-	-lnetcdf_c++ \
+	-lnetcdf_c++-4 \
 	`pkg-config --libs jsoncpp`
 
 # What to install
