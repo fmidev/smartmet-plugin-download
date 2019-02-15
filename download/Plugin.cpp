@@ -864,6 +864,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
       Spine::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", theRequest.getURI());
+      exception.addParameter("ClientIP", theRequest.getClientIP());
       exception.printError();
 
       if (isdebug)
@@ -926,7 +927,7 @@ void Plugin::init()
   {
     /* Dont't let the NetCDF library crash the server */
     ncopts = NC_VERBOSE;
-    
+
     /* QEngine */
 
     auto *engine = itsReactor->getSingleton("Querydata", nullptr);

@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 18.11.8
+Version: 19.2.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,22 +17,22 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 18.8.13
-BuildRequires: smartmet-library-macgyver-devel >= 18.8.4
-BuildRequires: smartmet-library-newbase-devel >= 18.8.6
+BuildRequires: smartmet-library-spine-devel >= 18.12.13
+BuildRequires: smartmet-library-macgyver-devel >= 18.11.24
+BuildRequires: smartmet-library-newbase-devel >= 19.2.14
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 18.8.13
+BuildRequires: smartmet-engine-querydata-devel >= 19.2.8
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 18.8.4
-Requires: smartmet-library-spine >= 18.8.13
-Requires: smartmet-library-newbase >= 18.8.6
-Requires: smartmet-engine-querydata >= 18.8.13
-Requires: smartmet-server >= 18.8.8
+Requires: smartmet-library-macgyver >= 18.11.24
+Requires: smartmet-library-spine >= 18.12.13
+Requires: smartmet-library-newbase >= 19.2.14
+Requires: smartmet-engine-querydata >= 19.2.8
+Requires: smartmet-server >= 18.12.14
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Fri Feb 15 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.2.15-1.fmi
+- Report client IP in stack traces to ease resolving problems
+
 * Thu Nov  8 2018 Mika Heiskanen <mika.heiskanen@fmi.fi> - 18.11.8-1.fmi
 - Do not throw in destructors in C++11
 
