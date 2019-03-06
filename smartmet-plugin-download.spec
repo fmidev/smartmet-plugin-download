@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.2.15
+Version: 19.3.6
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,9 +17,9 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 18.12.13
+BuildRequires: smartmet-library-spine-devel >= 19.2.28
 BuildRequires: smartmet-library-macgyver-devel >= 18.11.24
-BuildRequires: smartmet-library-newbase-devel >= 19.2.14
+BuildRequires: smartmet-library-newbase-devel >= 19.3.6
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 19.2.8
 BuildRequires: smartmet-engine-geonames-devel
@@ -29,8 +29,8 @@ Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 18.11.24
-Requires: smartmet-library-spine >= 18.12.13
-Requires: smartmet-library-newbase >= 19.2.14
+Requires: smartmet-library-spine >= 19.2.28
+Requires: smartmet-library-newbase >= 19.3.6
 Requires: smartmet-engine-querydata >= 19.2.8
 Requires: smartmet-server >= 18.12.14
 %if 0%{rhel} >= 7
@@ -67,6 +67,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Mar  6 2019 Pertti Kinnia <pertti.kinnia@fmi.fi> - 19.3.6-1.fmi
+- Loading/using in-memory querydata object for each parameter for better throughput
+- Loading/using input buffer for stringstream output for better querydata format throughput
+
 * Fri Feb 15 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.2.15-1.fmi
 - Report client IP in stack traces to ease resolving problems
 
