@@ -117,22 +117,29 @@ std::string QDStreamer::getChunk()
 
       // Send parameter values
 
-      for (; ((currentY < itsReqGridSizeY) && (chunkLen < itsChunkLength));
+      size_t rowLen = itsGrids.size() * itsReqGridSizeX * valueSize;
+      size_t bufLen = ((itsChunkLength / rowLen) + 1) * rowLen,v;
+      std::unique_ptr<float[]> buf(new float[bufLen]);
+
+      for (bufLen = v = 0; ((currentY < itsReqGridSizeY) && (chunkLen < itsChunkLength));
            currentY++, currentX = 0)
       {
         for (; (currentX < itsReqGridSizeX); currentX++)
         {
           // Note: Time is the fastest running querydata dimension; get the values from all grids
-          // for
-          // the current x/y cell
+          // for the current x/y cell
           //
           BOOST_FOREACH (auto const &grid, itsGrids)
           {
-            os.write((const char *)&grid[currentX][currentY], valueSize);
-            chunkLen += valueSize;
-          }
-        }
+            buf[v++] = grid[currentX][currentY];
+          } 
+	}
+
+        bufLen += rowLen;
+        chunkLen += rowLen;
       }
+
+      os.write((const char *)buf.get(), bufLen);
 
       if (currentY >= itsReqGridSizeY)
       {
