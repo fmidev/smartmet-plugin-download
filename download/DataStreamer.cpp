@@ -2392,6 +2392,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameter
 
   boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
   NFmiFastQueryInfo dstInfo(data.get());
+  auto levelIndex = itsQ->levelIndex();
 
   for (dstInfo.ResetParam(); dstInfo.NextParam();)
   {
@@ -2409,6 +2410,8 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameter
       }
     }
   }
+
+  itsQ->levelIndex(levelIndex);
 
   std::size_t hash = 0;
   auto model = boost::make_shared<Engine::Querydata::Model>(data, hash);
