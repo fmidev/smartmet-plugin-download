@@ -293,8 +293,7 @@ void NetCdfStreamer::addTimeDimension()
     timeVar.putAtt("calendar", "gregorian");
     timeVar.putAtt("units", timeUnitDef);
 
-    if (!timeVar.putVar(times))
-      throw Spine::Exception(BCP, "Failed to store validtimes");
+    timeVar.putVar(&times[0]);
   }
   catch (...)
   {
@@ -352,27 +351,18 @@ netCDF::NcDim NetCdfStreamer::addTimeDimension(long periodLengthInMinutes, netCD
     tVar = ncFile.addVar(name, netCDF::ncInt, tDim);
 
     int times[timeDim.getSize()];
-    timeVar.get(times, timeDim.getSize());
-
-    if (!tVar.put(times, timeDim.getSize()))
-      throw Spine::Exception(BCP, "Failed to store validtimes");
+    timeVar.getVar(&times[0]);
+    tVar.putVar(&times[0]);
 
     tVar.putAtt("long_name", "time");
     tVar.putAtt("calendar", "gregorian");
 
     auto uAtt = timeVar.getAtt("units");
-    if (!uAtt)
-      throw Spine::Exception(BCP, "Failed to get time unit attribute");
+    if (uAtt.isNull())
+      throw Spine::Exception(BCP, "Failed to get time units attribute");
 
-    netCDF::NcValues uVal = uAtt.values();
-    char *u;
-    int uLen;
-
-    if ((!uVal) || (!(u = (char *)uVal->base())) ||
-        ((uLen = (uVal->num() * uVal->bytes_for_one())) < 1))
-      throw Spine::Exception(BCP, "Failed to get time unit attribute value");
-
-    string unit(u, uLen);
+    string unit;
+    uAtt.getValues(unit);
     tVar.putAtt("units", unit);
 
     return tDim;
@@ -526,10 +516,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    ncFile.addAtt("Conventions", "CF-1.6");
-    ncFile.addAtt("title", "<title>");
-    ncFile.addAtt("institution", "fmi.fi");
-    ncFile.addAtt("source", "<producer>");
+    ncFile.putAtt("Conventions", "CF-1.6");
+    ncFile.putAtt("title", "<title>");
+    ncFile.putAtt("institution", "fmi.fi");
+    ncFile.putAtt("source", "<producer>");
 
     // Time dimension
 
