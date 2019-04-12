@@ -96,13 +96,13 @@ std::string NetCdfStreamer::getChunk()
 
         if (!ioStream.eof())
         {
-          char mesg[itsChunkLength];
+          std::unique_ptr<char[]> mesg(new char[itsChunkLength]);
 
-          ioStream.read(mesg, sizeof(mesg));
+          ioStream.read(mesg.get(), itsChunkLength);
           streamsize mesg_len = ioStream.gcount();
 
           if (mesg_len > 0)
-            chunk = string(mesg, mesg_len);
+            chunk = string(mesg.get(), mesg_len);
         }
 
         if (chunk.empty())

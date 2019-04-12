@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <unordered_set>
 
-static const long maxChunkLengthInBytes = 1024 * 1024;  // Max length of data chunk to return
+static const long maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return
 static const long maxMsgChunks = 30;  // Max # of data chunks collected and returned as one chunk
 
 using namespace std;
