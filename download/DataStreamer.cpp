@@ -2542,37 +2542,39 @@ void DataStreamer::extractData(string &chunk)
 
         coordTransform(q, area);
 
-        if (!itsCPQ)
+        if (! itsMultiFile)
         {
-          // Get Q for in-memory querydata object containing only current parameter.
-          //
-          // For wind component true north adjustment both U and V are needed.
-          //
-          // Note: Should check all called newbase methods actually do the fix
-          // (DoWindComponentFix or whatever).
-
-          std::list<FmiParameterName> currentParams;
-
-          auto id = q->parameterName();
-          currentParams.push_back(id);
-
-          if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
+          if (!itsCPQ)
           {
+            // Get Q for in-memory querydata object containing only current parameter.
+            //
+            // For wind component true north adjustment both U and V are needed.
+            //
+            // Note: Should check all called newbase methods actually do the fix
+            // (DoWindComponentFix or whatever).
 
-            FmiParameterName id2 = ((id == kFmiWindUMS) ? kFmiWindVMS : kFmiWindUMS);
-            if (q->param(id2))
-              currentParams.push_back(id2);
+            std::list<FmiParameterName> currentParams;
 
-            // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
+            auto id = q->parameterName();
+            currentParams.push_back(id);
+
+            if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
+            {
+              FmiParameterName id2 = ((id == kFmiWindUMS) ? kFmiWindVMS : kFmiWindUMS);
+              if (q->param(id2))
+                currentParams.push_back(id2);
+
+              // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
+            }
+
+            itsCPQ = getCurrentParamQ(currentParams); 
           }
 
-          itsCPQ = getCurrentParamQ(currentParams); 
+          // Set level index from main data, time index gets set (or is not used) below
+
+          itsCPQ->levelIndex(itsQ->levelIndex());
+          q = itsCPQ;
         }
-
-        // Set level index from main data, time index gets set (or is not used) below
-
-        itsCPQ->levelIndex(itsQ->levelIndex());
-        q = itsCPQ;
 
         if (itsReqParams.datumShift == Datum::None)
         {

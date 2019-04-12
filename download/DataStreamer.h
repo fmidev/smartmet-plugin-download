@@ -126,7 +126,12 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void setLevels(const Query &query);
   void setParams(const Spine::OptionParsers::ParameterList &params, const Scaling &scaling);
 
-  void setGeonames(const Engine::Geonames::Engine *theGeoEngine) { itsGeoEngine = theGeoEngine; }
+  void setEngines(const Engine::Querydata::Engine *theQEngine,
+                  const Engine::Geonames::Engine *theGeoEngine)
+  {
+    itsQEngine = theQEngine;
+    itsGeoEngine = theGeoEngine;
+  }
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer);
 
@@ -229,11 +234,14 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   Query::Levels::const_iterator itsLevelIterator;
 
+  const Engine::Querydata::Engine *itsQEngine;
   const Engine::Geonames::Engine *itsGeoEngine;
   NFmiDataMatrix<float> itsDEMMatrix;
   NFmiDataMatrix<bool> itsWaterFlagMatrix;
 
   std::string itsDataChunk;
+
+  bool itsMultiFile;
 
   void resetDataSet(bool getFirstChunk)
   {
@@ -244,6 +252,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     itsTimeIndex = itsLevelIndex = 0;
     itsQ->resetTime();
+
+    itsMultiFile = itsQEngine->getProducerConfig(itsReqParams.producer).ismultifile;
 
     itsDataChunk.clear();
 

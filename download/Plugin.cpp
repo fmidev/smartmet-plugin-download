@@ -699,9 +699,9 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     ds->setRequestParams(reqParams);
 
-    // Set geonames
+    // Set engines
 
-    ds->setGeonames(geoEngine);
+    ds->setEngines(&qEngine, geoEngine);
 
     // Get Q object for the producer/origintime
 
