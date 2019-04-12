@@ -1552,10 +1552,17 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
  */
 // ----------------------------------------------------------------------
 
-NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q) const
+NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
+                                                        bool allLevels) const
 {
   try
   {
+    if (allLevels)
+    {
+      auto info = q->info();
+      return NFmiVPlaceDescriptor(((NFmiQueryInfo *) &(*info))->VPlaceDescriptor());
+    }
+
     auto old_idx = q->levelIndex();
 
     NFmiLevelBag lbag;
@@ -1592,15 +1599,30 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q) 
  */
 // ----------------------------------------------------------------------
 
-NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q) const
+NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q,
+                                                      const std::list<FmiParameterName> &currentParams) const
 {
   try
   {
+    NFmiParamBag pbag;
+
+    if (currentParams.size() > 0)
+    {
+      for (auto const &param : currentParams)
+      {
+        q->param(param);
+        pbag.Add(q->param());
+      }
+
+      if (currentParams.size() > 1)
+        q->param(currentParams.front());
+
+      return pbag;
+    }
+
     // Save parameter status
     auto old_idx = q->paramIndex();
     bool wasSubParamUsed = q->isSubParamUsed();
-
-    NFmiParamBag pbag;
 
     for (auto it = itsDataParams.begin(); it != itsDataParams.end(); ++it)
     {
@@ -1634,13 +1656,18 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q) co
  */
 // ----------------------------------------------------------------------
 
-NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q)
+NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q, bool nativeTimes)
 {
   try
   {
     // Note: Origintime is taken from the first querydata; firstTime() (by generateValidTimeList())
-    // and
-    //		 possibly Time(itsDataTimes.begin()) (by extractData()) has been called for q.
+    // and possibly Time(itsDataTimes.begin()) (by extractData()) has been called for q.
+
+    if (nativeTimes)
+    {
+      auto info = q->info();
+      return NFmiTimeDescriptor(((NFmiQueryInfo *) &(*info))->TimeDescriptor());
+    }
 
     NFmiMetTime ot = q->originTime();
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
@@ -1653,6 +1680,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q)
       if (itsReqParams.outputFormat != QD)
       {
         // Only one time for querydata created for cached projection handling
+        //
         return NFmiTimeDescriptor(ot, dataTimes);
       }
     }
@@ -1742,8 +1770,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
     itsGridValues.Resize(xs, wantedGrid.YNumber(), kFloatMissing);
 
     // Target querydata is needed for the interpolation. It will be used for the data output too if
-    // qd
-    // format was selected.
+    // qd format was selected.
 
     if (!itsQueryData.get())
       createQD(wantedGrid);
@@ -1757,8 +1784,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
     }
     else if (demValues && waterFlags && (demValues->NX() == 0))
       // Target grid does not intersect the native grid; the DEM values were loaded (and then
-      // cleared)
-      // upon the first call
+      // cleared) upon the first call
       //
       return;
 
@@ -1783,8 +1809,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       // Wind components need to be rotated by the difference of the true north azimuthal angles.
       //
       // Note: getting/setting isSubParamUsed flag is obsolete when no more setting the parameter
-      // index;
-      //		 for now keeping it.
+      // index; for now keeping it.
 
       bool isSubParamUsed = q->isSubParamUsed();
 
@@ -2332,12 +2357,66 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
         break;
     }
 
+    // In-memory qd needs to be reloaded if it does not contain current parameter
+
+    if ((itsParamIterator != itsDataParams.end()) && itsCPQ && (!itsCPQ->param(itsParamIterator->number())))
+      itsCPQ.reset();
+
     paramChanged();
   }
   catch (...)
   {
     throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get Q for in-memory querydata object containing only current parameter(s)
+ *        (both U and V if true north azimuth adjustment needed)
+ *
+ */
+// ----------------------------------------------------------------------
+
+Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const
+{
+  NFmiParamDescriptor paramDescriptor = makeParamDescriptor(itsQ, currentParams);
+  auto srcInfo = itsQ->info();
+
+  NFmiFastQueryInfo info(paramDescriptor,
+                         srcInfo->TimeDescriptor(),
+                         srcInfo->HPlaceDescriptor(),
+                         srcInfo->VPlaceDescriptor(),
+                         itsQ->infoVersion()
+                        );
+
+  boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
+  NFmiFastQueryInfo dstInfo(data.get());
+  auto levelIndex = itsQ->levelIndex();
+
+  for (dstInfo.ResetParam(); dstInfo.NextParam();)
+  {
+    srcInfo->Param(dstInfo.Param());
+
+    for (dstInfo.ResetLocation(), srcInfo->ResetLocation();
+         dstInfo.NextLocation() && srcInfo->NextLocation();)
+    {
+      for (dstInfo.ResetLevel(), srcInfo->ResetLevel(); dstInfo.NextLevel() && srcInfo->NextLevel();)
+      {
+        for (dstInfo.ResetTime(), srcInfo->ResetTime(); dstInfo.NextTime() && srcInfo->NextTime();)
+        {
+          dstInfo.FloatValue(srcInfo->FloatValue());
+        }
+      }
+    }
+  }
+
+  itsQ->levelIndex(levelIndex);
+
+  std::size_t hash = 0;
+  auto model = boost::make_shared<Engine::Querydata::Model>(data, hash);
+
+  return boost::make_shared<Engine::Querydata::QImpl>(model);
 }
 
 // ----------------------------------------------------------------------
@@ -2462,6 +2541,38 @@ void DataStreamer::extractData(string &chunk)
         // values.
 
         coordTransform(q, area);
+
+        if (!itsCPQ)
+        {
+          // Get Q for in-memory querydata object containing only current parameter.
+          //
+          // For wind component true north adjustment both U and V are needed.
+          //
+          // Note: Should check all called newbase methods actually do the fix
+          // (DoWindComponentFix or whatever).
+
+          std::list<FmiParameterName> currentParams;
+
+          auto id = q->parameterName();
+          currentParams.push_back(id);
+
+          if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
+          {
+
+            FmiParameterName id2 = ((id == kFmiWindUMS) ? kFmiWindVMS : kFmiWindUMS);
+            if (q->param(id2))
+              currentParams.push_back(id2);
+
+            // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
+          }
+
+          itsCPQ = getCurrentParamQ(currentParams); 
+        }
+
+        // Set level index from main data, time index gets set (or is not used) below
+
+        itsCPQ->levelIndex(itsQ->levelIndex());
+        q = itsCPQ;
 
         if (itsReqParams.datumShift == Datum::None)
         {
