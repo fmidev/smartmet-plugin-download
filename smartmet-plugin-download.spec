@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.3.8
+Version: 19.4.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Fri Apr 12 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.4.12-1.fmi
+- Revert to older version, optimized code is bugged
+
 * Fri Mar  8 2019 Pertti Kinnia <pertti.kinnia@fmi.fi> - 19.3.8-1.fmi
 - Fixed bug with levels, current level index was left changed when loading in-memory querydata
 

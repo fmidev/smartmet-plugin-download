@@ -203,8 +203,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   size_t itsTimeIndex;
   size_t itsLevelIndex;
 
-  Engine::Querydata::Q itsQ;	// Q for input querydata file
-  Engine::Querydata::Q itsCPQ;	// Q for in-memory querydata object containing current parameter
+  Engine::Querydata::Q itsQ;
   boost::posix_time::ptime itsOriginTime;
   boost::posix_time::ptime itsFirstDataTime;
   boost::posix_time::ptime itsLastDataTime;
@@ -295,14 +294,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q,
-                                            bool allLevels = false) const;
-  NFmiParamDescriptor makeParamDescriptor(Engine::Querydata::Q q,
-                                          const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
-  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q,
-                                        bool nativeTimes = false);
-
-  Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q) const;
+  NFmiParamDescriptor makeParamDescriptor(Engine::Querydata::Q q) const;
+  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q);
 
   void nextParam(Engine::Querydata::Q q);
 };
