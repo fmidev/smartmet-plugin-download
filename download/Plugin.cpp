@@ -5,23 +5,11 @@
 // ======================================================================
 
 #include "Plugin.h"
-#include "Query.h"
-
 #include "DataStreamer.h"
 #include "GribStreamer.h"
 #include "NetCdfStreamer.h"
+#include "Query.h"
 #include "QueryDataStreamer.h"
-
-#include <spine/Convenience.h>
-#include <spine/Exception.h>
-#include <spine/Reactor.h>
-#include <spine/SmartMet.h>
-#include <spine/Table.h>
-
-#include <macgyver/StringConversion.h>
-#include <macgyver/TimeFormatter.h>
-#include <macgyver/TimeZoneFactory.h>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -31,19 +19,22 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
-
-#include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiRotatedLatLonArea.h>
-
+#include <gdal/cpl_conv.h>
 #include <macgyver/HelmertTransformation.h>
+#include <macgyver/StringConversion.h>
+#include <macgyver/TimeFormatter.h>
 #include <macgyver/TimeParser.h>
-
+#include <macgyver/TimeZoneFactory.h>
+#include <newbase/NFmiQueryData.h>
+#include <spine/Convenience.h>
+#include <spine/Exception.h>
+#include <spine/Reactor.h>
+#include <spine/SmartMet.h>
+#include <spine/Table.h>
 #include <cmath>
 #include <iostream>
 #include <limits>
 #include <stdexcept>
-
-#include <gdal/cpl_conv.h>
 
 using namespace std;
 using namespace boost::posix_time;

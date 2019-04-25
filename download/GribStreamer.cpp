@@ -7,25 +7,18 @@
 #include "GribStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-
-#include <spine/Exception.h>
-
+#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/foreach.hpp>
+#include <boost/interprocess/sync/lock_options.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
-#include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiTimeList.h>
-
-#include <boost/foreach.hpp>
-#include <string>
-
+#include <spine/Exception.h>
 #include <sys/types.h>
+#include <string>
 #include <unistd.h>
-
-#include <boost/interprocess/sync/lock_options.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
-#include "boost/date_time/gregorian/gregorian.hpp"
 
 static const long gribMissingValue = 9999;
 

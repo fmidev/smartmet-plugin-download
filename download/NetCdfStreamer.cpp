@@ -5,19 +5,14 @@
 // ======================================================================
 
 #include "NetCdfStreamer.h"
-
-#include <macgyver/StringConversion.h>
-
-#include <spine/Exception.h>
-
-#include <newbase/NFmiMetTime.h>
-#include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiStereographicArea.h>
-
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <macgyver/StringConversion.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiQueryData.h>
+#include <spine/Exception.h>
 
 using namespace std;
 
@@ -46,7 +41,7 @@ NetCdfStreamer::~NetCdfStreamer()
 {
   if (ioStream.is_open())
     ioStream.close();
-  
+
   unlink(file.c_str());
 }
 

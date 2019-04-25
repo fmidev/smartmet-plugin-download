@@ -9,17 +9,13 @@
 #include "Config.h"
 #include "Query.h"
 
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/querydata/Model.h>
+#include <gdal/ogr_spatialref.h>
+#include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <spine/TimeSeriesGenerator.h>
-
-#include <newbase/NFmiGrid.h>
-#include <newbase/NFmiRotatedLatLonArea.h>
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-
-#include <gdal/ogr_spatialref.h>
 
 typedef std::list<std::pair<float, float>> Scaling;
 
@@ -208,8 +204,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   size_t itsTimeIndex;
   size_t itsLevelIndex;
 
-  Engine::Querydata::Q itsQ;	// Q for input querydata file
-  Engine::Querydata::Q itsCPQ;	// Q for in-memory querydata object containing current parameter
+  Engine::Querydata::Q itsQ;    // Q for input querydata file
+  Engine::Querydata::Q itsCPQ;  // Q for in-memory querydata object containing current parameter
   boost::posix_time::ptime itsOriginTime;
   boost::posix_time::ptime itsFirstDataTime;
   boost::posix_time::ptime itsLastDataTime;
@@ -305,12 +301,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q,
-                                            bool allLevels = false) const;
-  NFmiParamDescriptor makeParamDescriptor(Engine::Querydata::Q q,
-                                          const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
-  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q,
-                                        bool nativeTimes = false);
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q, bool allLevels = false) const;
+  NFmiParamDescriptor makeParamDescriptor(
+      Engine::Querydata::Q q,
+      const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
+  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q, bool nativeTimes = false);
 
   Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
 

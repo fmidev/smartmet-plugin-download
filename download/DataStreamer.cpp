@@ -8,20 +8,17 @@
 #include "Datum.h"
 #include "Plugin.h"
 
+#include <boost/date_time/gregorian/gregorian.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/foreach.hpp>
+#include <gis/DEM.h>
+#include <gis/LandCover.h>
+#include <macgyver/StringConversion.h>
 #include <newbase/NFmiAreaFactory.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
-#include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiTimeList.h>
-
-#include <gis/DEM.h>
-#include <gis/LandCover.h>
-
-#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/foreach.hpp>
-#include <macgyver/StringConversion.h>
 #include <spine/Exception.h>
 #include <string>
 
@@ -57,7 +54,7 @@ ResMgr::~ResMgr()
   {
     OGRCoordinateTransformation::DestroyCT(ct);
   }
-  
+
   // Delete cloned srs:s
   //
   // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
@@ -1560,7 +1557,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
     if (allLevels)
     {
       auto info = q->info();
-      return NFmiVPlaceDescriptor(((NFmiQueryInfo *) &(*info))->VPlaceDescriptor());
+      return NFmiVPlaceDescriptor(((NFmiQueryInfo *)&(*info))->VPlaceDescriptor());
     }
 
     auto old_idx = q->levelIndex();
@@ -1599,8 +1596,8 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q,
-                                                      const std::list<FmiParameterName> &currentParams) const
+NFmiParamDescriptor DataStreamer::makeParamDescriptor(
+    Engine::Querydata::Q q, const std::list<FmiParameterName> &currentParams) const
 {
   try
   {
@@ -1666,7 +1663,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q, bool
     if (nativeTimes)
     {
       auto info = q->info();
-      return NFmiTimeDescriptor(((NFmiQueryInfo *) &(*info))->TimeDescriptor());
+      return NFmiTimeDescriptor(((NFmiQueryInfo *)&(*info))->TimeDescriptor());
     }
 
     NFmiMetTime ot = q->originTime();
@@ -2359,7 +2356,8 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
 
     // In-memory qd needs to be reloaded if it does not contain current parameter
 
-    if ((itsParamIterator != itsDataParams.end()) && itsCPQ && (!itsCPQ->param(itsParamIterator->number())))
+    if ((itsParamIterator != itsDataParams.end()) && itsCPQ &&
+        (!itsCPQ->param(itsParamIterator->number())))
       itsCPQ.reset();
 
     paramChanged();
@@ -2378,7 +2376,8 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
  */
 // ----------------------------------------------------------------------
 
-Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const
+Engine::Querydata::Q DataStreamer::getCurrentParamQ(
+    const std::list<FmiParameterName> &currentParams) const
 {
   NFmiParamDescriptor paramDescriptor = makeParamDescriptor(itsQ, currentParams);
   auto srcInfo = itsQ->info();
@@ -2387,8 +2386,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameter
                          srcInfo->TimeDescriptor(),
                          srcInfo->HPlaceDescriptor(),
                          srcInfo->VPlaceDescriptor(),
-                         itsQ->infoVersion()
-                        );
+                         itsQ->infoVersion());
 
   boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
   NFmiFastQueryInfo dstInfo(data.get());
@@ -2401,7 +2399,8 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameter
     for (dstInfo.ResetLocation(), srcInfo->ResetLocation();
          dstInfo.NextLocation() && srcInfo->NextLocation();)
     {
-      for (dstInfo.ResetLevel(), srcInfo->ResetLevel(); dstInfo.NextLevel() && srcInfo->NextLevel();)
+      for (dstInfo.ResetLevel(), srcInfo->ResetLevel();
+           dstInfo.NextLevel() && srcInfo->NextLevel();)
       {
         for (dstInfo.ResetTime(), srcInfo->ResetTime(); dstInfo.NextTime() && srcInfo->NextTime();)
         {
@@ -2542,7 +2541,7 @@ void DataStreamer::extractData(string &chunk)
 
         coordTransform(q, area);
 
-        if (! itsMultiFile)
+        if (!itsMultiFile)
         {
           if (!itsCPQ)
           {
@@ -2567,7 +2566,7 @@ void DataStreamer::extractData(string &chunk)
               // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
             }
 
-            itsCPQ = getCurrentParamQ(currentParams); 
+            itsCPQ = getCurrentParamQ(currentParams);
           }
 
           // Set level index from main data, time index gets set (or is not used) below
