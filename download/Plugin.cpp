@@ -162,10 +162,10 @@ static ProjType getProjectionType(ReqParams &reqParams)
 
     // If request datum is 'epsg', check epsg projection for implied datum shift to wgs84.
 
-    bool checkDatum = (reqParams.datumShift == Datum::EPSG);
+    bool checkDatum = (reqParams.datumShift == Datum::DatumShift::Epsg);
 
     if (checkDatum)
-      reqParams.datumShift = Datum::None;
+      reqParams.datumShift = Datum::DatumShift::None;
 
     reqParams.areaClassId = A_Native;
 
@@ -204,7 +204,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
               const char *datum = srs.GetAttrValue("DATUM");
 
               if (Fmi::ascii_toupper_copy(string(datum ? datum : "")) == Datum::epsgWGS84DatumName)
-                reqParams.datumShift = Datum::WGS84;
+                reqParams.datumShift = Datum::DatumShift::Wgs84;
             }
 
             if (!srs.IsProjected())
@@ -359,10 +359,10 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     reqParams.projection = getRequestParam(req, producer, "projection", "");
     reqParams.projType = getProjectionType(reqParams);
 
-    if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::None))
+    if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::DatumShift::None))
       // gdal/proj4 needed for projection
       //
-      reqParams.datumShift = Datum::FMI;
+      reqParams.datumShift = Datum::DatumShift::Fmi;
 
     reqParams.bbox = reqParams.origBBox = getRequestParam(req, producer, "bbox", "");
     reqParams.gridCenter = getRequestParam(req, producer, "gridcenter", "");

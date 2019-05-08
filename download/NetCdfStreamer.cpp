@@ -571,11 +571,12 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 
     if (!geometrySRS)
     {
-      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
-
-      lon_0 = a.CentralLongitude();
-      lat_0 = a.CentralLatitude();
-      lat_ts = a.TrueLatitude();
+      auto opt_lon_0 = area->Proj().GetDouble("lon_0");
+      auto opt_lat_0 = area->Proj().GetDouble("lat_0");
+      auto opt_lat_ts = area->Proj().GetDouble("lat_ts");
+      lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
+      lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
+      lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
     }
     else
     {
@@ -695,9 +696,9 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       auto xVar = addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", xDim);
 
       NFmiPoint p0 =
-          ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToWorldXY(x0, y0)
-                                                                      : tgtWorldXYs[x0][y0]);
-      NFmiPoint pN = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
+          ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToWorldXY(x0, y0)
+                                                                : tgtWorldXYs[x0][y0]);
+      NFmiPoint pN = ((itsReqParams.datumShift == Datum::DatumShift::None)
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
                           : tgtWorldXYs[xN - 1][yN - 1]);
 
@@ -724,8 +725,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         for (x = x0; (x < xN); x += xStep, n++)
         {
           const NFmiPoint p =
-              ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToLatLon(x, y)
-                                                                          : tgtLatLons[x][y]);
+              ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, y)
+                                                                    : tgtLatLons[x][y]);
 
           lat[n] = p.Y();
           lon[n] = p.X();
@@ -744,14 +745,14 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", lonDim);
 
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
-        lat[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
-                      ? grid->GridToLatLon(0, y).Y()
-                      : tgtLatLons[0][y].Y());
+        lat[n] =
+            ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(0, y).Y()
+                                                                  : tgtLatLons[0][y].Y());
 
       for (x = x0, n = 0; (x < xN); x += xStep, n++)
-        lon[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
-                      ? grid->GridToLatLon(x, 0).X()
-                      : tgtLatLons[x][0].X());
+        lon[n] =
+            ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
+                                                                  : tgtLatLons[x][0].X());
 
       if (!latVar->put(lat, itsNY))
         throw Spine::Exception(BCP, "Failed to store latitude coordinates");
@@ -767,15 +768,13 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     addAttribute(lonVar, "long_name", "longitude");
     addAttribute(lonVar, "units", "degrees_east");
 
-    if (Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
     {
-      addAttribute(crsVar, "semi_major", Plugin::Download::Datum::Sphere::NetCdf::WGS84_semiMajor);
-      addAttribute(crsVar,
-                   "inverse_flattening",
-                   Plugin::Download::Datum::Sphere::NetCdf::WGS84_invFlattening);
+      addAttribute(crsVar, "semi_major", Datum::NetCdf::WGS84_semiMajor);
+      addAttribute(crsVar, "inverse_flattening", Datum::NetCdf::WGS84_invFlattening);
     }
     else if (projected)
-      addAttribute(crsVar, "earth_radius", Plugin::Download::Datum::Sphere::NetCdf::Fmi_6371220m);
+      addAttribute(crsVar, "earth_radius", Datum::NetCdf::Fmi_6371220m);
   }
   catch (...)
   {

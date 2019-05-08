@@ -11,6 +11,7 @@
 #include <boost/foreach.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <fmt/format.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
@@ -201,13 +202,52 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     if (itsResMgr.getGeometrySRS())
       throw Spine::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
+    BBoxCorners rotLLBBox;
+#ifdef WGS84
+
+    auto opt_plat = area->Proj().GetDouble("o_lat_p");
+    auto opt_plon = area->Proj().GetDouble("o_lon_p");
+
+    if (*opt_plon != 0)
+      throw Spine::Exception(
+          BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
+
+    double slon = *opt_plon;
+    double slat = -(*opt_plat);
+
+    auto fmisphere = fmt::format("+proj=latlong +R={:.0f} +over +towgs84=0,0,0 +no_defs", kRearth);
+
+    auto rotatedsphere = fmt::format(
+        "+to_meter=.0174532925199433 +proj=ob_tran +o_proj=latlong +o_lon_p={} +o_lat_p={} "
+        "+R={:.0f} +over +towgs84=0,0,0 +no_defs",
+        *opt_plon,
+        *opt_plat,
+        kRearth);
+
+    std::unique_ptr<NFmiArea> rotatedarea(NFmiArea::CreateFromCorners(
+        fmisphere, rotatedsphere, itsBoundingBox.bottomLeft, itsBoundingBox.topRight));
+
+    rotLLBBox.bottomLeft = rotatedarea->LatLonToWorldXY(itsBoundingBox.bottomLeft);
+    rotLLBBox.topRight = rotatedarea->LatLonToWorldXY(itsBoundingBox.topRight);
+
+#else
     const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
 
-    BBoxCorners rotLLBBox;
+    double slon = a.SouthernPole().X();
+    double slat = a.SouthernPole().Y());
+
     rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
     rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
 
+#endif
+
+    if (slon)
+      throw Spine::Exception(
+          BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
+
     gset(gribHandle, "typeOfGrid", "rotated_ll");
+
+    gset(gribHandle, "latitudeOfSouthernPoleInDegrees", slat);
 
     gset(gribHandle, "longitudeOfFirstGridPointInDegrees", rotLLBBox.bottomLeft.X());
     gset(gribHandle, "latitudeOfFirstGridPointInDegrees", rotLLBBox.bottomLeft.Y());
@@ -231,12 +271,6 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 
     gset(gribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
     gset(gribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
-
-    if (a.SouthernPole().X() != 0)
-      throw Spine::Exception(
-          BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
-
-    gset(gribHandle, "latitudeOfSouthernPoleInDegrees", a.SouthernPole().Y());
 
     // DUMP(gribHandle, "geography");
   }
@@ -298,11 +332,12 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     if (!geometrySRS)
     {
-      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
-
-      lon_0 = a.CentralLongitude();
-      lat_0 = a.CentralLatitude();
-      lat_ts = a.TrueLatitude();
+      auto opt_lon_0 = area->Proj().GetDouble("lon_0");
+      auto opt_lat_0 = area->Proj().GetDouble("lat_0");
+      auto opt_lat_ts = area->Proj().GetDouble("lat_ts");
+      lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
+      lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
+      lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
     }
     else
     {
@@ -465,6 +500,8 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
       case kNFmiMercatorArea:
         setMercatorGeometryToGrib();
         break;
+      case kNFmiProjArea:
+        throw Spine::Exception(BCP, "Generic PROJ.4 projections not supported yet");
       case kNFmiEquiDistArea:
         throw Spine::Exception(BCP, "Equidistant projection is not supported by GRIB");
       case kNFmiGnomonicArea:
@@ -491,16 +528,16 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
     if (grib1)
     {
       if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
-        resolAndCompFlags |= (1 << Datum::Sphere::Grib1::WGS84);
+        resolAndCompFlags |= (1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
       else
-        resolAndCompFlags &= ~(1 << Datum::Sphere::Grib1::WGS84);
+        resolAndCompFlags &= ~(1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
     }
     else
       gset(gribHandle,
            "shapeOfTheEarth",
-           (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
-                ? Datum::Sphere::Grib2::WGS84
-                : Datum::Sphere::Grib2::Fmi_6371229m));
+           static_cast<int>((Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
+                                 ? Datum::Grib2::Sphere::Wgs84
+                                 : Datum::Grib2::Sphere::Fmi_6371229m)));
 
     if (relative_uv)
       resolAndCompFlags |= (1 << 3);

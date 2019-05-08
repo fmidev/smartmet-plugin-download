@@ -13,6 +13,7 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost-devel
+BuildRequires: fmt-devel
 BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
@@ -27,6 +28,7 @@ BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
+Requires: fmt >= 5.2.0
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 18.11.24
 Requires: smartmet-library-spine >= 19.4.12

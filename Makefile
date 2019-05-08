@@ -26,7 +26,7 @@ objdir = obj
 
 # Compiler options
 
-DEFINES = -DUNIX -D_REENTRANT
+DEFINES = -DUNIX -DWGS84 -D_REENTRANT
 
 ifeq ($(CXX), clang++)
 
@@ -99,6 +99,7 @@ LIBS = -L$(libdir) \
 	-leccodes \
 	-lgdal \
 	-lnetcdf_c++ \
+	-lfmt \
 	`pkg-config --libs jsoncpp`
 
 # What to install

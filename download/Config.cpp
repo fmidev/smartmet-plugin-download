@@ -280,7 +280,7 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
 
     Producer currentSettings;
     currentSettings.verticalInterpolation = false;
-    currentSettings.datumShift = Plugin::Download::Datum::None;
+    currentSettings.datumShift = Datum::DatumShift::None;
 
     itsConfig.lookupValue("verticalinterpolation", currentSettings.verticalInterpolation);
 

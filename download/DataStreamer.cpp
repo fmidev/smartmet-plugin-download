@@ -20,9 +20,8 @@
 #include <newbase/NFmiQueryDataUtil.h>
 #include <newbase/NFmiTimeList.h>
 #include <spine/Exception.h>
-#include <string>
-
 #include <sys/types.h>
+#include <string>
 #include <unistd.h>
 #include <unordered_set>
 
@@ -1264,7 +1263,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     // qd projected (or latlon/geographic) cs
 
-    if ((err = qdProjectedSrs.SetFromUserInput(area->WKT().c_str())) != OGRERR_NONE)
+    if ((err = qdProjectedSrs.SetFromUserInput(area->ProjStr().c_str())) != OGRERR_NONE)
       throw Spine::Exception(BCP,
                              "transform: srs.Set(WKT) error " + boost::lexical_cast<string>(err));
 
@@ -1286,9 +1285,13 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     OGRSpatialReference wgs84ProjectedSrs, *wgs84PrSrsPtr = &wgs84ProjectedSrs,
                                            *wgs84LLSrsPtr = &wgs84ProjectedSrs;
+    bool wgs84ProjLL = false;
+#ifdef WGS84
+    bool qdProjLL = area->SpatialReference()->IsGeographic();
+#else
     bool qdProjLL =
-             ((area->AreaStr().find("rotlatlon") == 0) || (area->AreaStr().find("latlon") == 0)),
-         wgs84ProjLL;
+        ((area->AreaStr().find("rotlatlon") == 0) || (area->AreaStr().find("latlon") == 0));
+#endif
 
     if (itsReqParams.projType == P_Epsg)
     {
@@ -1498,7 +1501,7 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
       //
       NFmiPoint bl, tr;
 
-      if (((!cropping.cropped) && (itsReqParams.datumShift == Datum::None)) ||
+      if (((!cropping.cropped) && (itsReqParams.datumShift == Datum::DatumShift::None)) ||
           (!itsReqParams.bboxRect))
       {
         // Using the native or projected area's corners
@@ -1517,7 +1520,7 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
       itsBoundingBox.bottomLeft = bl;
       itsBoundingBox.topRight = tr;
 
-      if (itsReqParams.datumShift == Datum::None)
+      if (itsReqParams.datumShift == Datum::DatumShift::None)
       {
         itsDX = area->WorldXYWidth() / (itsReqGridSizeX - 1);
         itsDY = area->WorldXYHeight() / (itsReqGridSizeY - 1);
@@ -2028,7 +2031,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
     itsUseNativeProj = itsUseNativeBBox = true;
     itsRetainNativeGridResolution = cropping.crop = false;
 
-    if (itsReqParams.datumShift != Datum::None)
+    if (itsReqParams.datumShift != Datum::DatumShift::None)
     {
       // With datum shift the data is read using transformed coordinates and native projected data.
       //
@@ -2052,8 +2055,11 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
     if ((!itsReqParams.projection.empty()) || (!itsReqParams.bbox.empty()) ||
         (!itsReqParams.gridCenter.empty()) || (!itsUseNativeGridSize))
     {
-      string projection = nativeArea.AreaStr(), projStr, bboxStr;
-      boost::replace_all(projection, ":", "|");
+      string projStr = nativeArea.ProjStr();
+      string bboxStr;
+      string projection = AreaStr();
+
+      TODO();
 
       if ((!itsReqParams.projection.empty()) && (projection.find(itsReqParams.projection) == 0))
         itsReqParams.projection.clear();
@@ -2256,7 +2262,8 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      if ((itsReqParams.datumShift == Datum::None) && (nonNativeGrid || (!itsUseNativeBBox)))
+      if ((itsReqParams.datumShift == Datum::DatumShift::None) &&
+          (nonNativeGrid || (!itsUseNativeBBox)))
       {
         // Create grid if using nonnative grid size. Use the cropped size for cropped querydata.
         //
@@ -2575,7 +2582,7 @@ void DataStreamer::extractData(string &chunk)
           q = itsCPQ;
         }
 
-        if (itsReqParams.datumShift == Datum::None)
+        if (itsReqParams.datumShift == Datum::DatumShift::None)
         {
           // Using newbase projection.
           //
