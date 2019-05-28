@@ -77,68 +77,6 @@ bool special(const Spine::Parameter &theParam)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Return pairs of values from comma separated string
- */
-// ----------------------------------------------------------------------
-
-template <typename T>
-boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs)
-{
-  try
-  {
-    boost::optional<vector<pair<T, T>>> pvalue;
-    boost::trim(pvs);
-
-    if (pvs.empty())
-      return pvalue;
-
-    try
-    {
-      std::vector<std::string> flds;
-      boost::split(flds, pvs, boost::is_any_of(","));
-      size_t nValues = 2 * nPairs;
-
-      if (flds.size() != nValues)
-        throw Spine::Exception(
-            BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
-
-      size_t n;
-
-      for (n = 0; (n < nValues); n++)
-      {
-        boost::trim(flds[n]);
-
-        if (flds[n].empty())
-          throw Spine::Exception(
-              BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
-      }
-
-      vector<pair<T, T>> pvv;
-      size_t np;
-
-      for (np = 0, n = 0; (n < nValues); np++, n += 2)
-        pvv.push_back(
-            make_pair<T, T>(boost::lexical_cast<T>(flds[n]), boost::lexical_cast<T>(flds[n + 1])));
-
-      pvalue = pvv;
-
-      return pvalue;
-    }
-    catch (...)
-    {
-    }
-
-    throw Spine::Exception(BCP,
-                           string("Invalid value for parameter '") + param + "': '" + pvs + "'");
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Get projection type
  */
 // ----------------------------------------------------------------------

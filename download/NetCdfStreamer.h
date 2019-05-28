@@ -35,20 +35,21 @@ class NetCdfStreamer : public DataStreamer
  private:
   NetCdfStreamer();
 
-  NcError ncError;
-  std::string file;
-  NcFile ncFile;
-  std::ifstream ioStream;
-  bool isLoaded;
+  NcError itsError;
+  std::string itsFilename;
+  NcFile itsFile;
+  std::ifstream itsStream;
+  bool itsLoadedFlag;
 
   // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
   // shared_ptr:s)
 
-  boost::shared_ptr<NcDim> timeDim, timeBoundsDim, levelDim, yDim, xDim, latDim, lonDim;
-  boost::shared_ptr<NcVar> timeVar;
+  boost::shared_ptr<NcDim> itsTimeDim, itsTimeBoundsDim, itsLevelDim, itsYDim, itsXDim, itsLatDim,
+      itsLonDim;
+  boost::shared_ptr<NcVar> itsTimeVar;
 
-  std::list<NcVar *>::iterator it_Var;
-  std::list<NcVar *> dataVars;
+  std::list<NcVar *>::iterator itsVarIterator;
+  std::list<NcVar *> itsDataVars;
 
   boost::shared_ptr<NcDim> addDimension(std::string dimName, long dimSize);
   boost::shared_ptr<NcVar> addVariable(std::string varName,

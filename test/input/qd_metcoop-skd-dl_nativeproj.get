@@ -1,1 +1,0 @@
-GET	/download?param=TemperatureF50&producer=metcoop&format=qd&starttime=data HTTP/1.0

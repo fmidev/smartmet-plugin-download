@@ -1,1 +1,0 @@
-GET	/download?param=4&producer=ecmwf_skandinavia_painepinta&format=grib2&starttime=data&levels=1000,925 HTTP/1.0

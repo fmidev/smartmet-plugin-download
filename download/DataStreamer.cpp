@@ -7,7 +7,7 @@
 #include "DataStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-
+#include <boost/algorithm/string/split.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
@@ -39,376 +39,6 @@ namespace Plugin
 {
 namespace Download
 {
-// Extern
-template <typename T>
-boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
-
-ResMgr::ResMgr() : area(), grid(), spatialReferences(), transformations(), geometrySRS(nullptr) {}
-
-ResMgr::~ResMgr()
-{
-  // Delete coordinate transformations
-  //
-  BOOST_FOREACH (OGRCoordinateTransformation *ct, transformations)
-  {
-    OGRCoordinateTransformation::DestroyCT(ct);
-  }
-
-  // Delete cloned srs:s
-  //
-  // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
-  //
-  BOOST_FOREACH (OGRSpatialReference *srs, spatialReferences)
-  {
-    OGRSpatialReference::DestroySpatialReference(srs);
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Create area with given projection string
- */
-// ----------------------------------------------------------------------
-
-void ResMgr::createArea(string &projection)
-{
-  try
-  {
-    area = NFmiAreaFactory::Create(projection);
-
-    if (!area.get())
-      throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Get current projected area object
- */
-// ----------------------------------------------------------------------
-
-const NFmiArea *ResMgr::getArea()
-{
-  try
-  {
-    return area.get();
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-// ----------------------------------------------------------------------
-/*!
- * \brief (Re)create grid
- */
-// ----------------------------------------------------------------------
-
-void ResMgr::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
-{
-  try
-  {
-    grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));
-
-    if (!grid.get())
-      throw Spine::Exception(BCP, "Internal: could not create grid");
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Check if suitable grid exists
- */
-// ----------------------------------------------------------------------
-
-bool ResMgr::hasGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
-{
-  try
-  {
-    NFmiGrid *g = grid.get();
-    const NFmiArea *ga = (g ? g->Area() : nullptr);
-
-    if (!(ga && (ga->ClassId() == a.ClassId()) && (g->XNumber() == gridSizeX) &&
-          (g->YNumber() == gridSizeY)))
-    {
-      return false;
-    }
-
-    return true;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Return current grid if it (exists and) matches the area and
- * 	    gridsize given. Otherwise the grid is (re)created.
- */
-// ----------------------------------------------------------------------
-
-NFmiGrid *ResMgr::getGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
-{
-  try
-  {
-    if (!hasGrid(a, gridSizeX, gridSizeY))
-      createGrid(a, gridSizeX, gridSizeY);
-
-    return grid.get();
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Clone spatial reference
- */
-// ----------------------------------------------------------------------
-
-OGRSpatialReference *ResMgr::cloneCS(const OGRSpatialReference &SRS)
-{
-  try
-  {
-    OGRSpatialReference *srs = SRS.Clone();
-
-    if (srs)
-      spatialReferences.push_back(srs);
-
-    return srs;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Clone geographic spatial reference
- */
-// ----------------------------------------------------------------------
-
-OGRSpatialReference *ResMgr::cloneGeogCS(const OGRSpatialReference &SRS)
-{
-  try
-  {
-    OGRSpatialReference *srs = SRS.CloneGeogCS();
-
-    if (srs)
-      spatialReferences.push_back(srs);
-
-    return srs;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Get coordinate transformation
- */
-// ----------------------------------------------------------------------
-
-OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialReference *fromSRS,
-                                                                 OGRSpatialReference *toSRS,
-                                                                 bool isGeometrySRS)
-{
-  try
-  {
-    OGRCoordinateTransformation *ct = OGRCreateCoordinateTransformation(fromSRS, toSRS);
-
-    if (ct)
-    {
-      // Store the target srs if output geometry will be set from it (instead of using qd's area)
-      //
-      if (isGeometrySRS)
-      {
-        if (!(geometrySRS = toSRS->Clone()))
-          throw Spine::Exception(BCP,
-                                 "getCoordinateTransformation: OGRSpatialReference cloning failed");
-        else
-          spatialReferences.push_back(geometrySRS);
-      }
-
-      transformations.push_back(ct);
-    }
-
-    return ct;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Utility routines for testing querydata's level type
- */
-// ----------------------------------------------------------------------
-
-bool isSurfaceLevel(FmiLevelType levelType)
-{
-  return ((levelType == kFmiGroundSurface) || (levelType == kFmiAnyLevelType));
-}
-
-bool isPressureLevel(FmiLevelType levelType)
-{
-  return (levelType == kFmiPressureLevel);
-}
-
-bool isHybridLevel(FmiLevelType levelType)
-{
-  return (levelType == kFmiHybridLevel);
-}
-
-bool isHeightOrDepthLevel(FmiLevelType levelType)
-{
-  return ((levelType == kFmiHeight) || (levelType == kFmiDepth));
-}
-
-bool isHeightLevel(FmiLevelType levelType, int levelValue)
-{
-  return ((levelType == kFmiHeight) && (levelValue >= 0));
-}
-
-bool isDepthLevel(FmiLevelType levelType, int levelValue)
-{
-  return (((levelType == kFmiHeight) && (levelValue < 0)) || (levelType == kFmiDepth));
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Utility routine for getting querydata's level type
- */
-// ----------------------------------------------------------------------
-
-static FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
-                                         const string &producer,
-                                         FmiLevelType &nativeLevelType,
-                                         bool &positiveLevels)
-{
-  try
-  {
-    q->firstLevel();
-
-    // BUG: Onko bugi kun on auto mukana??
-    auto levelType = nativeLevelType = q->levelType();
-
-    if ((!isSurfaceLevel(levelType)) && (!isHybridLevel(levelType)) &&
-        (!isPressureLevel(levelType)) && (!isHeightOrDepthLevel(levelType)))
-    {
-      throw Spine::Exception(BCP,
-                             "Internal: Unrecognized level type '" +
-                                 boost::lexical_cast<string>(levelType) + "' for producer '" +
-                                 producer + "'");
-    }
-
-    positiveLevels = true;
-
-    if (isHeightOrDepthLevel(levelType))
-    {
-      // Height level data with negative levels is returned as kFmiDepth; check the second level
-      // (first might be 0).
-      //
-      if (!q->nextLevel())
-        q->firstLevel();
-
-      if (q->levelValue() < 0)
-      {
-        levelType = kFmiDepth;
-        positiveLevels = false;
-      }
-    }
-
-    return levelType;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Utility routine for testing querydata's level order
- */
-// ----------------------------------------------------------------------
-
-static bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
-{
-  try
-  {
-    q->firstLevel();
-
-    if (isSurfaceLevel(q->levelType()))
-      return true;
-
-    double firstLevel = q->levelValue();
-
-    if (!q->nextLevel())
-      return true;
-
-    double secondLevel = q->levelValue();
-
-    // Note: Height level data can have negative levels.
-
-    return (fabs(secondLevel) > fabs(firstLevel));
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Utility routine for getting projection parameter's value from srs
- */
-// ----------------------------------------------------------------------
-
-double getProjParam(const OGRSpatialReference &srs,
-                    const char *param,
-                    bool ignoreErr,
-                    double defaultValue)
-{
-  try
-  {
-    OGRErr err;
-
-    double v = srs.GetNormProjParm(param, defaultValue, &err);
-
-    if (err != OGRERR_NONE)
-    {
-      if (ignoreErr)
-        return defaultValue;
-      else
-        throw Spine::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
-    }
-
-    return v;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Chunked data streaming
@@ -422,22 +52,9 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
       itsRequest(req),
       itsCfg(config),
       itsProducer(producer),
-      isDone(false),
       itsChunkLength(maxChunkLengthInBytes),
-      itsMaxMsgChunks(maxMsgChunks),
-      setMeta(true),
-      itsReqGridSizeX(0),
-      itsReqGridSizeY(0),
-      itsProjectionChecked(false)
+      itsMaxMsgChunks(maxMsgChunks)
 {
-  try
-  {
-    cropping.crop = cropping.cropped = false;
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
 }
 
 DataStreamer::~DataStreamer() {}
@@ -454,7 +71,7 @@ void DataStreamer::checkDataTimeStep()
   try
   {
     const long minMinutesInMonth = 28 * minutesInDay;
-    const long maxMinutesInMonth = (31 * minutesInDay);
+    const long maxMinutesInMonth = 31 * minutesInDay;
     const long minMinutesInYear = 365 * minutesInDay;
     const long maxMinutesInYear = 366 * minutesInDay;
 
@@ -587,13 +204,14 @@ void DataStreamer::setLevels(const Query &query)
 
     // Level type
 
-    levelType = getLevelTypeFromData(q, itsReqParams.producer, nativeLevelType, itsPositiveLevels);
+    itsLevelType =
+        getLevelTypeFromData(q, itsReqParams.producer, itsNativeLevelType, itsPositiveLevels);
 
     // Fetching level/height range ?
 
-    itsLevelRng = ((!isSurfaceLevel(levelType)) &&
+    itsLevelRng = ((!isSurfaceLevel(itsLevelType)) &&
                    ((itsReqParams.minLevel >= 0) || (itsReqParams.maxLevel > 0)));
-    itsHeightRng = ((!isSurfaceLevel(levelType)) &&
+    itsHeightRng = ((!isSurfaceLevel(itsLevelType)) &&
                     ((itsReqParams.minHeight >= 0) || (itsReqParams.maxHeight > 0)));
 
     Query::Levels &levels =
@@ -609,7 +227,7 @@ void DataStreamer::setLevels(const Query &query)
 
     itsRisingLevels = areLevelValuesInIncreasingOrder(q);
 
-    if (isSurfaceLevel(levelType))
+    if (isSurfaceLevel(itsLevelType))
       // Surface data; set exactly one level (ignoring user input), value does not matter
       //
       itsDataLevels.insert(0);
@@ -728,7 +346,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
 
     // Check if any of the requested levels exist or is interpolatable.
 
-    bool exactLevel = (itsLevelRng || isSurfaceLevel(levelType));
+    bool exactLevel = (itsLevelRng || isSurfaceLevel(itsLevelType));
 
     BOOST_FOREACH (auto const &queryLevel, itsDataLevels)
     {
@@ -765,7 +383,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
         //
         //			else if (heightrng) {
         //			}
-        else if (!isSurfaceLevel(levelType))
+        else if (!isSurfaceLevel(itsLevelType))
         {
           exactLevel = (level == queryLevel);
 
@@ -776,12 +394,12 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
                 continue;
               else
               {
-                if (first || (!isPressureLevel(levelType)) || (!producer.verticalInterpolation))
+                if (first || (!isPressureLevel(itsLevelType)) || (!producer.verticalInterpolation))
                   break;
               }
             else if (itsRisingLevels)
             {
-              if (first || (!isPressureLevel(levelType)) || (!producer.verticalInterpolation))
+              if (first || (!isPressureLevel(itsLevelType)) || (!producer.verticalInterpolation))
                 break;
             }
             else
@@ -805,6 +423,32 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Parse bbox from input
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getBBoxStr(const std::string &bbox)
+{
+  try
+  {
+    std::vector<std::string> parts;
+    boost::algorithm::split(parts, bbox, boost::algorithm::is_any_of(","));
+    if (parts.size() != 4)
+      throw Spine::Exception(BCP, "bbox must contain four comma separated values");
+
+    NFmiPoint bottomLeft{std::stod(parts[0]), std::stod(parts[1])};
+    NFmiPoint topRight{std::stod(parts[2]), std::stod(parts[3])};
+    // std::cerr << __LINE__ << " BBOX: " << bottomLeft << " and " << topRight << std::endl;
+    itsRegBoundingBox = BBoxCorners{bottomLeft, topRight};
+  }
+  catch (...)
+  {
+    throw Spine::Exception::Trace(BCP, "Failed to parse bbox '" + bbox + "'");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get (regular) latlon bbox.
  *
  */
@@ -814,18 +458,33 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 {
   try
   {
+    // Note: Q object latLonCache is in WGS84, but what we are looking for is the native
+    // bounding box. Alternatively anyone using this method should switch to using WGS84
+    // bboxes.
+
+#ifndef WGS84
     auto shared_latlons = q->latLonCache();
     const auto &llc = *shared_latlons;
+#else
+    const auto &area = q->area();
+    const auto &grid = q->grid();
+#endif
 
     double blLon = 0.0, blLat = 0.0, trLon = 0.0, trLat = 0.0;
-    size_t gridSizeX = q->grid().XNumber(), gridSizeY = q->grid().YNumber();
+    std::size_t gridSizeX = q->grid().XNumber();
+    std::size_t gridSizeY = q->grid().YNumber();
 
     // Loop all columns of first and last row and first and last columns of other rows.
 
-    for (size_t y = 1, n = 0, dx = (gridSizeX - 1); (y <= gridSizeY); y++, n++)
-      for (size_t x = 1; (x <= gridSizeX);)
+    for (std::size_t y = 1, n = 0, dx = (gridSizeX - 1); (y <= gridSizeY); y++, n++)
+      for (std::size_t x = 1; (x <= gridSizeX);)
       {
+#ifndef WGS84
         const NFmiPoint &p = llc[n];
+#else
+        const NFmiPoint p = area.ToNativeLatLon(grid.GridToXY(NFmiPoint(x, y)));
+#endif
+
         auto px = p.X(), py = p.Y();
 
         if (n == 0)
@@ -855,35 +514,11 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 
     itsRegBoundingBox = BBoxCorners();
 
+    // std::cerr << __LINE__ << " BBOX: " << blLon << "," << blLat << " " << trLon << "," << trLat
+    // << std::endl;
+
     (*itsRegBoundingBox).bottomLeft = NFmiPoint(blLon, blLat);
     (*itsRegBoundingBox).topRight = NFmiPoint(trLon, trLat);
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Get (regular) latlon bbox string.
- *
- */
-// ----------------------------------------------------------------------
-
-string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q)
-{
-  try
-  {
-    if (!itsRegBoundingBox)
-      getRegLLBBox(q);
-
-    ostringstream os;
-    os << fixed << setprecision(8) << (*itsRegBoundingBox).bottomLeft.X() << ","
-       << (*itsRegBoundingBox).bottomLeft.Y() << "," << (*itsRegBoundingBox).topRight.X() << ","
-       << (*itsRegBoundingBox).topRight.Y();
-
-    return os.str();
   }
   catch (...)
   {
@@ -907,6 +542,8 @@ void DataStreamer::getLLBBox(Engine::Querydata::Q q)
 
     itsBoundingBox.bottomLeft = (*itsRegBoundingBox).bottomLeft;
     itsBoundingBox.topRight = (*itsRegBoundingBox).topRight;
+    // std::cerr << __LINE__ << " BBOX: " << itsBoundingBox.bottomLeft << " - " <<
+    // itsBoundingBox.topRight << std::endl;
   }
   catch (...)
   {
@@ -927,8 +564,8 @@ void DataStreamer::setSteppedGridSize()
 {
   try
   {
-    size_t xCnt = (cropping.cropped ? cropping.gridSizeX : itsReqGridSizeX),
-           yCnt = (cropping.cropped ? cropping.gridSizeY : itsReqGridSizeY);
+    size_t xCnt = (itsCropping.cropped ? itsCropping.gridSizeX : itsReqGridSizeX),
+           yCnt = (itsCropping.cropped ? itsCropping.gridSizeY : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
@@ -940,10 +577,10 @@ void DataStreamer::setSteppedGridSize()
       if (xCnt % xStep)
         itsNX++;
 
-      if (cropping.cropped)
+      if (itsCropping.cropped)
       {
-        cropping.topRightX = cropping.bottomLeftX + ((itsNX - 1) * xStep);
-        cropping.gridSizeX = ((cropping.topRightX - cropping.bottomLeftX) + 1);
+        itsCropping.topRightX = itsCropping.bottomLeftX + ((itsNX - 1) * xStep);
+        itsCropping.gridSizeX = ((itsCropping.topRightX - itsCropping.bottomLeftX) + 1);
       }
     }
 
@@ -952,10 +589,10 @@ void DataStreamer::setSteppedGridSize()
       if (yCnt % yStep)
         itsNY++;
 
-      if (cropping.cropped)
+      if (itsCropping.cropped)
       {
-        cropping.topRightY = cropping.bottomLeftY + ((itsNY - 1) * yStep);
-        cropping.gridSizeY = ((cropping.topRightY - cropping.bottomLeftY) + 1);
+        itsCropping.topRightY = itsCropping.bottomLeftY + ((itsNY - 1) * yStep);
+        itsCropping.gridSizeY = ((itsCropping.topRightY - itsCropping.bottomLeftY) + 1);
       }
     }
 
@@ -1038,32 +675,6 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get projection string for gridcenter bounding.
- *
- */
-// ----------------------------------------------------------------------
-
-std::string DataStreamer::getGridCenterBBoxStr(bool useNativeProj, const NFmiGrid &grid) const
-{
-  try
-  {
-    ostringstream os;
-
-    os << fixed << setprecision(8) << (*itsReqParams.gridCenterLL)[0].first << ","
-       << (*itsReqParams.gridCenterLL)[0].second << ",1/"
-       << (useNativeProj ? grid.Area()->WorldXYAspectRatio() : 1.0) << "|"
-       << (*itsReqParams.gridCenterLL)[1].first << "," << (*itsReqParams.gridCenterLL)[1].second;
-
-    return os.str();
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Set native grid resolution.
  *
  */
@@ -1103,74 +714,69 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
   {
     // Note: With rotlatlon projection bbox corners are now taken as regular latlons
 
-    string bboxStr(itsReqParams.gridCenterLL ? getGridCenterBBoxStr(itsUseNativeProj, grid)
-                                             : itsReqParams.origBBox);
+    // string bboxStr(itsReqParams.gridCenterLL ? getGridCenterBBoxStr(itsUseNativeProj, grid)
+    //                                          : itsReqParams.origBBox);
+
+    NFmiPoint bl;
+    NFmiPoint tr;
 
     if (itsReqParams.gridCenterLL)
     {
-      // NFmiFastQueryInfo does not support reading native grid points within bounded area;
-      // creating temporary projection to get bboxrect to crop the native area.
-      //
-      // Rotated latlon area is created using 'invrotlatlon' projection to handle the given
-      // bounding as rotated coordinates.
-      //
-      string projection =
-          boost::algorithm::replace_all_copy(itsReqParams.projection, "rotlatlon", "invrotlatlon") +
-          "|" + bboxStr;
+      const auto &gridcenter = *itsReqParams.gridCenterLL;
 
-      boost::shared_ptr<NFmiArea> a = NFmiAreaFactory::Create(projection);
-      NFmiArea *area = a.get();
-      if (!area)
-        throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+      NFmiPoint center(gridcenter[0].first, gridcenter[0].second);
+      auto width = gridcenter[1].first;
+      auto height = gridcenter[1].second;
 
-      NFmiPoint bl(area->BottomLeftLatLon());
-      NFmiPoint tr(area->TopRightLatLon());
-
-      ostringstream os;
-      os << fixed << setprecision(8) << bl.X() << "," << bl.Y() << "," << tr.X() << "," << tr.Y();
-
-      bboxStr = os.str();
+      boost::shared_ptr<NFmiArea> area(
+          NFmiArea::CreateFromCenter(itsReqParams.projection, "FMI", center, width, height));
+      // These will be WGS84, not native
+      bl = area->BottomLeftLatLon();
+      tr = area->TopRightLatLon();
+    }
+    else
+    {
+      itsReqParams.bboxRect = nPairsOfValues<double>(itsReqParams.origBBox, "bboxstr", 2);
+      bl = NFmiPoint((*itsReqParams.bboxRect)[BOTTOMLEFT].first,
+                     (*itsReqParams.bboxRect)[BOTTOMLEFT].second);
+      tr = NFmiPoint((*itsReqParams.bboxRect)[TOPRIGHT].first,
+                     (*itsReqParams.bboxRect)[TOPRIGHT].second);
     }
 
-    itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
-
-    NFmiPoint bl((*itsReqParams.bboxRect)[BOTTOMLEFT].first,
-                 (*itsReqParams.bboxRect)[BOTTOMLEFT].second);
-    NFmiPoint tr((*itsReqParams.bboxRect)[TOPRIGHT].first,
-                 (*itsReqParams.bboxRect)[TOPRIGHT].second);
+    // std::cerr << " CROP: " << bl << "\t" << tr << std::endl;
 
     NFmiPoint xy1 = grid.LatLonToGrid(bl);
     NFmiPoint xy2 = grid.LatLonToGrid(tr);
 
-    cropping.bottomLeftX = boost::numeric_cast<int>(floor(xy1.X()));
-    cropping.bottomLeftY = boost::numeric_cast<int>(floor(xy1.Y()));
-    cropping.topRightX = boost::numeric_cast<int>(ceil(xy2.X()));
-    cropping.topRightY = boost::numeric_cast<int>(ceil(xy2.Y()));
+    itsCropping.bottomLeftX = boost::numeric_cast<int>(floor(xy1.X()));
+    itsCropping.bottomLeftY = boost::numeric_cast<int>(floor(xy1.Y()));
+    itsCropping.topRightX = boost::numeric_cast<int>(ceil(xy2.X()));
+    itsCropping.topRightY = boost::numeric_cast<int>(ceil(xy2.Y()));
 
-    if (cropping.bottomLeftX < 0)
-      cropping.bottomLeftX = 0;
-    if (cropping.bottomLeftY < 0)
-      cropping.bottomLeftY = 0;
-    if (cropping.topRightX >= (int)grid.XNumber())
-      cropping.topRightX = grid.XNumber() - 1;
-    if (cropping.topRightY >= (int)grid.YNumber())
-      cropping.topRightY = grid.YNumber() - 1;
+    if (itsCropping.bottomLeftX < 0)
+      itsCropping.bottomLeftX = 0;
+    if (itsCropping.bottomLeftY < 0)
+      itsCropping.bottomLeftY = 0;
+    if (itsCropping.topRightX >= (int)grid.XNumber())
+      itsCropping.topRightX = grid.XNumber() - 1;
+    if (itsCropping.topRightY >= (int)grid.YNumber())
+      itsCropping.topRightY = grid.YNumber() - 1;
 
-    if ((cropping.bottomLeftX >= cropping.topRightX) ||
-        (cropping.bottomLeftY >= cropping.topRightY))
+    if ((itsCropping.bottomLeftX >= itsCropping.topRightX) ||
+        (itsCropping.bottomLeftY >= itsCropping.topRightY))
       throw Spine::Exception(BCP, "Bounding box does not intersect the grid").disableStackTrace();
 
-    cropping.gridSizeX = ((cropping.topRightX - cropping.bottomLeftX) + 1);
-    cropping.gridSizeY = ((cropping.topRightY - cropping.bottomLeftY) + 1);
+    itsCropping.gridSizeX = ((itsCropping.topRightX - itsCropping.bottomLeftX) + 1);
+    itsCropping.gridSizeY = ((itsCropping.topRightY - itsCropping.bottomLeftY) + 1);
 
-    cropping.crop = cropping.cropped = true;
+    itsCropping.crop = itsCropping.cropped = true;
 
     // Take stepping (gridstep=dx,dy) into account
 
     setSteppedGridSize();
 
-    bl = grid.GridToLatLon(NFmiPoint(cropping.bottomLeftX, cropping.bottomLeftY));
-    tr = grid.GridToLatLon(NFmiPoint(cropping.topRightX, cropping.topRightY));
+    bl = grid.GridToLatLon(NFmiPoint(itsCropping.bottomLeftX, itsCropping.bottomLeftY));
+    tr = grid.GridToLatLon(NFmiPoint(itsCropping.topRightX, itsCropping.topRightY));
 
     ostringstream os;
     os << fixed << setprecision(8) << bl.X() << "," << bl.Y() << "," << tr.X() << "," << tr.Y();
@@ -1243,7 +849,7 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
  * \brief Coordinate transformation from querydata 'datum'/projection to
  * 		requested projection with or without datum shift to wgs84
  *
- *		The transformed coordinates are stored to 'srcLatLons' -member;
+ *		The transformed coordinates are stored to 'itsSrcLatLons' -member;
  *		they are used to get the data from the source grid.
  *
  *		Target projection's bounding box is set to 'itsBoundingBox' -member.
@@ -1269,7 +875,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     // qd geographic cs
 
-    qdLLSrsPtr = itsResMgr.cloneGeogCS(qdProjectedSrs);
+    qdLLSrsPtr = itsResources.cloneGeogCS(qdProjectedSrs);
     if (!qdLLSrsPtr)
       throw Spine::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
 
@@ -1310,8 +916,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       // qd projection
       //
       if (!(wgs84PrSrsPtr = (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
-                                 ? itsResMgr.cloneCS(qdProjectedSrs)
-                                 : itsResMgr.cloneGeogCS(qdProjectedSrs))))
+                                 ? itsResources.cloneCS(qdProjectedSrs)
+                                 : itsResources.cloneGeogCS(qdProjectedSrs))))
         throw Spine::Exception(BCP, "transform: qdsrs.clone() failed");
     }
 
@@ -1330,7 +936,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         itsReqParams.areaClassId =
             getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
 
-      if (!(wgs84LLSrsPtr = itsResMgr.cloneGeogCS(*wgs84PrSrsPtr)))
+      if (!(wgs84LLSrsPtr = itsResources.cloneGeogCS(*wgs84PrSrsPtr)))
         throw Spine::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
     }
     else if (itsReqParams.projType == P_Epsg)
@@ -1354,7 +960,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     // the target srs is cloned and stored by resMgr and the srs is used later when setting output
     // geometry.
 
-    OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResMgr.getCoordinateTransformation(
+    OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResources.getCoordinateTransformation(
         qdLLSrsPtr, wgs84PrSrsPtr, ((itsReqParams.projType == P_Epsg) && (!wgs84ProjLL)));
     if (!qdLL2Wgs84Prct)
       throw Spine::Exception(BCP, "transform: OGRCreateCoordinateTransformation(qd,wgs84) failed");
@@ -1381,31 +987,33 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     NFmiPoint bl = itsBoundingBox.bottomLeft;
     NFmiPoint tr = itsBoundingBox.topRight;
 
+    // std::cerr << __LINE__ << " BYT: " << bl << "\t" << tr << std::endl;
+
     // Calculate/transform output cs grid cell projected (or latlon) coordinates to qd latlons.
     //
     // Get transformations from projected (or latlon) target cs to qd latlon cs and from projected
     // target cs to geographic target cs (to get target grid corner latlons).
 
     OGRCoordinateTransformation *wgs84Pr2QDLLct =
-        itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, qdLLSrsPtr);
+        itsResources.getCoordinateTransformation(wgs84PrSrsPtr, qdLLSrsPtr);
     if (!wgs84Pr2QDLLct)
       throw Spine::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,qd) failed");
 
     OGRCoordinateTransformation *wgs84Pr2LLct = nullptr;
     if ((!wgs84ProjLL) &&
-        (!(wgs84Pr2LLct = itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
+        (!(wgs84Pr2LLct = itsResources.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
       throw Spine::Exception(BCP,
                              "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
-    srcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-    const sz_t xs = srcLatLons.NX(), ys = srcLatLons.NY();
+    itsSrcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
+    const sz_t xs = itsSrcLatLons.NX(), ys = itsSrcLatLons.NY();
     const sz_t xN = xs - 1, yN = ys - 1;
     sz_t x, y;
 
     if (itsReqParams.outputFormat == NetCdf)
     {
-      tgtLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-      tgtWorldXYs.Resize(itsReqGridSizeX, itsReqGridSizeY);
+      itsTargetLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
+      itsTargetWorldXYs.Resize(itsReqGridSizeX, itsReqGridSizeY);
     }
 
     itsDX = ((tr.X() - bl.X()) / xN);
@@ -1419,7 +1027,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           (((y == 0) && (yc <= -89.999)) || ((y == yN) && (yc >= 89.999))))
       {
         for (x = 0; x < xs; x++, xc += itsDX)
-          srcLatLons[x][y] = NFmiPoint(xc, ((y == 0) ? -90.0 : 90.0));
+          itsSrcLatLons[x][y] = NFmiPoint(xc, ((y == 0) ? -90.0 : 90.0));
 
         continue;
       }
@@ -1432,7 +1040,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
           throw Spine::Exception(BCP, "transform: Transform(wgs84,qd) failed");
 
-        srcLatLons[x][y] = NFmiPoint(txc, tyc);
+        itsSrcLatLons[x][y] = NFmiPoint(txc, tyc);
 
         if (!wgs84ProjLL)
         {
@@ -1450,13 +1058,15 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
               itsBoundingBox.bottomLeft = NFmiPoint(txc, tyc);
             else
               itsBoundingBox.topRight = NFmiPoint(txc, tyc);
+            // std::cerr << __LINE__ << " BBOX: " << itsBoundingBox.bottomLeft << " - " <<
+            // itsBoundingBox.topRight << std::endl;
           }
 
           if (itsReqParams.outputFormat == NetCdf)
           {
             // Output cs world xy coordinates for netcdf output
             //
-            tgtWorldXYs[x][y] = NFmiPoint(xc, yc);
+            itsTargetWorldXYs[x][y] = NFmiPoint(xc, yc);
           }
         }
 
@@ -1470,7 +1080,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
             throw Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
-          tgtLatLons[x][y] = NFmiPoint(txc, tyc);
+          itsTargetLatLons[x][y] = NFmiPoint(txc, tyc);
         }
       }
     }
@@ -1495,19 +1105,24 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
 {
   try
   {
-    if (setMeta)
+    if (itsMetaFlag)
     {
       // Set geometry
       //
       NFmiPoint bl, tr;
 
-      if (((!cropping.cropped) && (itsReqParams.datumShift == Datum::DatumShift::None)) ||
+      if (((!itsCropping.cropped) && (itsReqParams.datumShift == Datum::DatumShift::None)) ||
           (!itsReqParams.bboxRect))
       {
         // Using the native or projected area's corners
-        //
-        bl = area->BottomLeftLatLon();
-        tr = area->TopRightLatLon();
+
+#if 0        
+        bl = area->WorldXYToNativeLatLon(area->WorldRect().TopLeft());
+        tr = area->WorldXYToNativeLatLon(area->WorldRect().BottomRight());
+#else
+        bl = area->ToNativeLatLon(area->BottomLeft());
+        tr = area->ToNativeLatLon(area->TopRight());
+#endif
       }
       else
       {
@@ -1527,7 +1142,7 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
       }
       else
       {
-        // Transform the coordinates to 'srcLatLons' -member
+        // Transform the coordinates to 'itsSrcLatLons' -member
         //
         setTransformedCoordinates(q, area);
       }
@@ -1772,15 +1387,16 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
     // Target querydata is needed for the interpolation. It will be used for the data output too if
     // qd format was selected.
 
+    // std::cerr << "Creating QD" << std::endl;
     if (!itsQueryData.get())
       createQD(wantedGrid);
 
     // Get location cache
 
-    if (locCache.NX() == 0)
+    if (itsLocCache.NX() == 0)
     {
       NFmiFastQueryInfo tqi(itsQueryData.get());
-      q->calcLatlonCachePoints(tqi, locCache);
+      q->calcLatlonCachePoints(tqi, itsLocCache);
     }
     else if (demValues && waterFlags && (demValues->NX() == 0))
       // Target grid does not intersect the native grid; the DEM values were loaded (and then
@@ -1796,10 +1412,10 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
 
     FmiParameterName id = q->parameterName();
 
-    bool cropxy = (cropping.cropped && cropping.cropMan);
-    size_t x0 = (cropxy ? cropping.bottomLeftX : 0), y0 = (cropxy ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
@@ -1830,7 +1446,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       for (y = y0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep)
         {
-          NFmiLocationCache &lc = locCache[x][y];
+          NFmiLocationCache &lc = itsLocCache[x][y];
           *(vPtr0 + ((y * xs) + x)) =
               (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));
         }
@@ -1847,7 +1463,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       for (y = y0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep)
         {
-          NFmiLocationCache &lc = locCache[x][y];
+          NFmiLocationCache &lc = itsLocCache[x][y];
           *(uPtr0 + ((y * xs) + x)) =
               (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));
         }
@@ -1904,7 +1520,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
 
         if ((!(theDEM && theLandCover)) ||
             (!(q->loadDEMAndWaterFlags(
-                *theDEM, *theLandCover, resolution, locCache, demMatrix, waterFlagMatrix))))
+                *theDEM, *theLandCover, resolution, itsLocCache, demMatrix, waterFlagMatrix))))
         {
           // No dem/waterflag data or target grid does not intersect the native grid
           //
@@ -1919,7 +1535,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       if (!mt)
         tc = q->calcTimeCache(q->validTime());
 
-      q->landscapeCachedInterpolation(itsGridValues, locCache, tc, demMatrix, waterFlagMatrix);
+      q->landscapeCachedInterpolation(itsGridValues, itsLocCache, tc, demMatrix, waterFlagMatrix);
     }
     else
     {
@@ -1929,7 +1545,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       {
         for (x = x0; (x < xN); x += xStep)
         {
-          NFmiLocationCache &lc = locCache[x][y];
+          NFmiLocationCache &lc = itsLocCache[x][y];
           itsGridValues[x][y] = (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));
         }
       }
@@ -1964,7 +1580,7 @@ bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
     if (!hasNextLevel)
       throw Spine::Exception(BCP, "isLevelAvailable: internal: no levels in data");
 
-    if (isSurfaceLevel(levelType))
+    if (isSurfaceLevel(itsLevelType))
     {
       // Just set the one and only level from the surface data.
       //
@@ -1976,7 +1592,7 @@ bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
 
     // Level interpolation is possible for pressure data only.
 
-    bool interpolatable = (isPressureLevel(levelType) && itsProducer.verticalInterpolation);
+    bool interpolatable = (isPressureLevel(itsLevelType) && itsProducer.verticalInterpolation);
     bool first = true;
 
     for (; hasNextLevel; first = false, hasNextLevel = q->nextLevel())
@@ -2029,7 +1645,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
   try
   {
     itsUseNativeProj = itsUseNativeBBox = true;
-    itsRetainNativeGridResolution = cropping.crop = false;
+    itsRetainNativeGridResolution = itsCropping.crop = false;
 
     if (itsReqParams.datumShift != Datum::DatumShift::None)
     {
@@ -2040,11 +1656,13 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       // coordinate)
       // currently not supported.
       //
+
       if ((itsReqParams.areaClassId == A_RotLatLon) ||
           ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiRotatedLatLonArea)))
         throw Spine::Exception(BCP, "Rotated latlon not supported when using gdal transformation");
-      else if ((itsReqParams.areaClassId == A_Mercator) ||
-               ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
+
+      if ((itsReqParams.areaClassId == A_Mercator) ||
+          ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
         throw Spine::Exception(BCP, "Mercator not supported when using gdal transformation");
 
       return;
@@ -2052,99 +1670,103 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
 
     // No datum shift; nonnative target projection, bounding or gridsize ?
 
-    if ((!itsReqParams.projection.empty()) || (!itsReqParams.bbox.empty()) ||
-        (!itsReqParams.gridCenter.empty()) || (!itsUseNativeGridSize))
+    if ((itsReqParams.projection.empty()) && (itsReqParams.bbox.empty()) &&
+        (itsReqParams.gridCenter.empty()) && (itsUseNativeGridSize))
+      return;
+
+    // Clear the projection request if it is identical to the data:
+    //
+    // if ((!itsReqParams.projection.empty()) && (projection.find(itsReqParams.projection) == 0))
+    //  itsReqParams.projection.clear();
+
+    if ((itsReqParams.projection.empty()) && (itsReqParams.bbox.empty()) &&
+        (itsReqParams.gridCenter.empty()))
+      return;
+
+    string projStr = nativeArea.ProjStr();
+    string bboxStr;
+
+    NFmiPoint bottomLeft, topRight;
+
+#ifndef WGS84
+    itsUseNativeProj = (itsReqParams.projection.empty() || (itsReqParams.projection == projStr));
+#else
+    itsUseNativeProj = true;
+    if (!itsReqParams.projection.empty())
     {
-      string projStr = nativeArea.ProjStr();
-      string bboxStr;
-      string projection = AreaStr();
+      // Use native projection if generated PROJ.4 would be the same
+      NFmiPoint center = nativeArea.CenterLatLon();  // WGS84, doesn't matter
+      boost::shared_ptr<NFmiArea> reqarea(
+          NFmiAreaFactory::CreateFromCenter(itsReqParams.projection, center, 1000, 1000));
+      auto reqProjStr = reqarea->ProjStr();
+      itsUseNativeProj = (projStr == reqProjStr);
+    }
+#endif
 
-      TODO();
+    if (!itsUseNativeProj)
+      projStr = itsReqParams.projection;  // Creating nonnative projection
 
-      if ((!itsReqParams.projection.empty()) && (projection.find(itsReqParams.projection) == 0))
-        itsReqParams.projection.clear();
+    if (((itsReqParams.outputFormat == QD) && (!itsUseNativeProj)) || (!itsUseNativeGridSize))
+    {
+      // Creating native or nonnative projection with given bounding to load data using
+      // absolutegridsize
 
-      if ((!itsReqParams.projection.empty()) || (!itsReqParams.bbox.empty()) ||
-          (!itsReqParams.gridCenter.empty()))
+      if (itsUseNativeGridSize)
       {
-        size_t bboxPos = projection.find("|");
+        // Projected qd output; set native gridresolution for output querydata
+        setNativeGridResolution(nativeArea, nativeGridSizeX, nativeGridSizeY);
+        itsUseNativeGridSize = false;
+      }
+      itsUseNativeProj = false;
+    }
+    else if ((!itsUseNativeProj) && (nativeClassId != kNFmiLatLonArea))
+    {
+      // Get native area latlon bounding box for nonnative projection.
+      // Set itsRetainNativeGridResolution to retain native gridresolution if projecting to
+      // latlon.
 
-        if ((bboxPos != string::npos) && (bboxPos > 0) && (bboxPos < (projStr.length() - 1)))
-        {
-          projStr = projection.substr(0, bboxPos);
-          bboxStr = projection.substr(bboxPos + 1);
+      getRegLLBBox(q);
 
-          itsUseNativeProj =
-              (itsReqParams.projection.empty() || (itsReqParams.projection == projStr));
+      if (itsReqParams.projType == P_LatLon)
+        itsRetainNativeGridResolution = itsUseNativeGridSize;
+    }
 
-          if (!itsUseNativeProj)
-            projStr = itsReqParams.projection;  // Creating nonnative projection
+    itsReqParams.projection = projStr;
 
-          itsUseNativeBBox = ((itsReqParams.bbox.empty() || (itsReqParams.bbox == bboxStr)) &&
-                              itsReqParams.gridCenter.empty());
-          if (!itsUseNativeBBox && (((itsReqParams.outputFormat == QD) && (!itsUseNativeProj)) ||
-                                    (!itsUseNativeGridSize)))
-          {
-            // Creating native or nonnative projection with given bounding to load data using
-            // absolute
-            // gridsize
-            //
-            if (itsUseNativeGridSize)
-            {
-              // Projected qd output; set native gridresolution for output querydata
-              //
-              setNativeGridResolution(nativeArea, nativeGridSizeX, nativeGridSizeY);
-              itsUseNativeGridSize = false;
-            }
+    if ((!itsUseNativeProj) || ((itsReqParams.outputFormat == QD) && (!itsUseNativeBBox)))
+    {
+      if (itsUseNativeProj)
+      {
+        // Set cropping to the native grid and adjust the target bbox.
+        //
+        setCropping(q->grid());
+      }
 
-            itsUseNativeProj = false;
-          }
-          else if ((!itsUseNativeProj) && (nativeClassId != kNFmiLatLonArea))
-          {
-            // Get native area latlon bounding box for nonnative projection.
-            // Set itsRetainNativeGridResolution to retain native gridresolution if projecting to
-            // latlon.
-            //
-            bboxStr = getRegLLBBoxStr(q);
+      if (!itsReqParams.bbox.empty())
+      {
+        // bbox from the request or set by setCropping()
+        getBBoxStr(itsReqParams.bbox);
+        itsResources.createArea(
+            projStr, itsRegBoundingBox->bottomLeft, itsRegBoundingBox->topRight);
+      }
+      else if (!itsReqParams.gridCenter.empty())
+      {
+        NFmiPoint center((*itsReqParams.gridCenterLL)[0].first,
+                         (*itsReqParams.gridCenterLL)[1].second);
+        auto width = (*itsReqParams.gridCenterLL)[1].first;
+        auto height = (*itsReqParams.gridCenterLL)[1].second;
 
-            if (itsReqParams.projType == P_LatLon)
-              itsRetainNativeGridResolution = itsUseNativeGridSize;
-          }
-
-          itsReqParams.projection = projStr;
-
-          if ((!itsUseNativeProj) || ((itsReqParams.outputFormat == QD) && (!itsUseNativeBBox)))
-          {
-            if (itsUseNativeProj)
-            {
-              // Set cropping to the native grid and adjust the target bbox.
-              //
-              setCropping(q->grid());
-            }
-
-            if (!itsReqParams.bbox.empty())
-              // bbox from the request or set by setCropping()
-              bboxStr = itsReqParams.bbox;
-            else if (!itsReqParams.gridCenter.empty())
-              // lon,lat,xkm,ykm
-              bboxStr = getGridCenterBBoxStr(itsUseNativeProj, q->grid());
-            else
-            {
-              // Native area latlon bounding box from getRegLLBBoxStr()
-            }
-
-            projection = projStr + "|" + bboxStr;
-            itsResMgr.createArea(projection);
-          }
-
-          cropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);
-        }
-        else
-          throw Spine::Exception(BCP,
-                                 "Unrecognized projection '" + projection + "' for producer '" +
-                                     itsReqParams.producer + "'");
+        itsResources.createArea(projStr, center, width, height);
+      }
+      else
+      {
+        getRegLLBBox(q);
+        itsResources.createArea(
+            projStr, itsRegBoundingBox->bottomLeft, itsRegBoundingBox->topRight);
       }
     }
+
+    itsCropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);
   }
   catch (...)
   {
@@ -2168,11 +1790,11 @@ void DataStreamer::createGrid(const NFmiArea &area,
 {
   try
   {
-    NFmiGrid *grid = itsResMgr.getGrid(area, gridSizeX, gridSizeY);
+    NFmiGrid *grid = itsResources.getGrid(area, gridSizeX, gridSizeY);
 
-    if (cropping.crop)
+    if (itsCropping.crop)
     {
-      if (!cropping.cropped)
+      if (!itsCropping.cropped)
       {
         // Set cropped grid xy area
         //
@@ -2185,7 +1807,7 @@ void DataStreamer::createGrid(const NFmiArea &area,
       // support
       // level/pressure interpolation.
 
-      cropping.cropMan = ((!itsUseNativeProj) || interpolation);
+      itsCropping.cropMan = ((!itsUseNativeProj) || interpolation);
     }
   }
   catch (...)
@@ -2243,7 +1865,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     // Note: area is set to the native area or owned by the resource manager; *DO NOT DELETE*
 
-    if (!(*area = itsResMgr.getArea()))
+    if (!(*area = itsResources.getArea()))
       *area = &nativeArea;
 
     if (!itsProjectionChecked)
@@ -2267,16 +1889,18 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
       {
         // Create grid if using nonnative grid size. Use the cropped size for cropped querydata.
         //
-        gridSizeX = ((itsReqParams.outputFormat == QD) && cropping.cropped) ? cropping.gridSizeX
-                                                                            : itsReqGridSizeX;
-        gridSizeY = ((itsReqParams.outputFormat == QD) && cropping.cropped) ? cropping.gridSizeY
-                                                                            : itsReqGridSizeY;
+        gridSizeX = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
+                        ? itsCropping.gridSizeX
+                        : itsReqGridSizeX;
+        gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
+                        ? itsCropping.gridSizeY
+                        : itsReqGridSizeY;
 
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
       }
 
-      auto gs = (cropping.crop ? cropping.gridSizeX * cropping.gridSizeY
-                               : itsReqGridSizeX * itsReqGridSizeY);
+      auto gs = (itsCropping.crop ? itsCropping.gridSizeX * itsCropping.gridSizeY
+                                  : itsReqGridSizeX * itsReqGridSizeY);
       unsigned long numValues =
           itsDataParams.size() * itsDataLevels.size() * itsDataTimes.size() * gs;
 
@@ -2294,7 +1918,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     // Note: grid is set to nullptr or owned by the resource manager; *DO NOT DELETE*
 
-    *grid = itsResMgr.getGrid();
+    *grid = itsResources.getGrid();
 
     if ((!nonNativeGrid) && landscaping && (itsDEMMatrix.NX() == 0))
     {
@@ -2302,12 +1926,12 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
       //
       int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
-      if (cropping.cropped && (!cropping.cropMan))
+      if (itsCropping.cropped && (!itsCropping.cropMan))
       {
-        x1 = cropping.bottomLeftX;
-        y1 = cropping.bottomLeftY;
-        x2 = cropping.topRightX;
-        y2 = cropping.topRightY;
+        x1 = itsCropping.bottomLeftX;
+        y1 = itsCropping.bottomLeftY;
+        x2 = itsCropping.topRightX;
+        y2 = itsCropping.topRightY;
       }
 
       auto theDEM = itsGeoEngine->dem();
@@ -2519,7 +2143,7 @@ void DataStreamer::extractData(string &chunk)
         // Note: Grid size is set to 'itsReqGridSizeX' and 'itsReqGridSizeY' members.
 
         // bool landscapedParam =
-        //     (isSurfaceLevel(levelType) && (itsParamIterator->type() ==
+        //     (isSurfaceLevel(itsLevelType) && (itsParamIterator->type() ==
         //     Parameter::Type::Landscaped));
         bool landscapedParam =
             false;  // Disable landscaping until sufficiently fast algorithm is found!
@@ -2536,14 +2160,14 @@ void DataStreamer::extractData(string &chunk)
 
         // Heigth level data with negative levels ?
 
-        if ((levelType == kFmiDepth) && (nativeLevelType == kFmiHeight))
+        if ((itsLevelType == kFmiDepth) && (itsNativeLevelType == kFmiHeight))
           level = 0 - level;
 
         NFmiMetTime mt(itsTimeIterator->utc_time());
 
         // Set target projection geometry data (to 'itsBoundingBox' and 'dX'/'dY' members) and if
         // using gdal/proj4 projection,
-        // transform target projection grid coordinates to 'srcLatLons' -member to get the grid
+        // transform target projection grid coordinates to 'itsSrcLatLons' -member to get the grid
         // values.
 
         coordTransform(q, area);
@@ -2603,18 +2227,18 @@ void DataStreamer::extractData(string &chunk)
                 // Must manually crop the data if bounding was given
                 // ('cropMan' was not set by the call to getAreaAndGrid())
                 //
-                cropping.cropMan = cropping.crop;
+                itsCropping.cropMan = itsCropping.crop;
                 q->values(itsGridValues, mt, demValues, waterFlags);
               }
             }
             else
             {
-              if (cropping.cropped && (!cropping.cropMan))
+              if (itsCropping.cropped && (!itsCropping.cropMan))
                 q->croppedValues(itsGridValues,
-                                 cropping.bottomLeftX,
-                                 cropping.bottomLeftY,
-                                 cropping.topRightX,
-                                 cropping.topRightY,
+                                 itsCropping.bottomLeftX,
+                                 itsCropping.bottomLeftY,
+                                 itsCropping.topRightX,
+                                 itsCropping.topRightY,
                                  demValues,
                                  waterFlags);
               else
@@ -2629,7 +2253,7 @@ void DataStreamer::extractData(string &chunk)
         else
           // Using gdal/proj4 projection.
           //
-          q->values(srcLatLons, itsGridValues, mt, exactLevel ? kFloatMissing : level);
+          q->values(itsSrcLatLons, itsGridValues, mt, exactLevel ? kFloatMissing : level);
 
         // Load the data chunk from 'itsGridValues'.
         //
@@ -2659,6 +2283,33 @@ void DataStreamer::extractData(string &chunk)
   {
     throw Spine::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+void DataStreamer::resetDataSet(bool getFirstChunk)
+{
+  itsLevelIterator = itsDataLevels.begin();
+  itsParamIterator = itsDataParams.begin();
+  itsTimeIterator = itsDataTimes.begin();
+  itsScalingIterator = itsValScaling.begin();
+
+  itsTimeIndex = itsLevelIndex = 0;
+  itsQ->resetTime();
+
+  itsMultiFile = itsQEngine->getProducerConfig(itsReqParams.producer).ismultifile;
+
+  itsDataChunk.clear();
+
+  if (getFirstChunk)
+  {
+    extractData(itsDataChunk);
+  }
+}
+
+void DataStreamer::setEngines(const Engine::Querydata::Engine *theQEngine,
+                              const Engine::Geonames::Engine *theGeoEngine)
+{
+  itsQEngine = theQEngine;
+  itsGeoEngine = theGeoEngine;
 }
 
 }  // namespace Download

@@ -1,1 +1,0 @@
-GET	/download?param=4&producer=pal_skandinavia_dl&format=netcdf&starttime=201309170000 HTTP/1.0

@@ -42,21 +42,22 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Producer &producer,
                            OutputFormat outputFormat,
                            unsigned int grib2TablesVersion)
-    : DataStreamer(req, config, producer), grib1(outputFormat == Grib1)
+    : DataStreamer(req, config, producer), itsGrib1Flag(outputFormat == Grib1)
 {
   try
   {
     // Get grib handle
 
     grib_context *c = grib_context_get_default();
-    gribHandle = grib_handle_new_from_samples(c, grib1 ? "GRIB1" : "GRIB2");
-    if (!gribHandle)
-      throw Spine::Exception(BCP, string("Could not get handle for grib") + (grib1 ? "1" : "2"));
+    itsGribHandle = grib_handle_new_from_samples(c, itsGrib1Flag ? "GRIB1" : "GRIB2");
+    if (!itsGribHandle)
+      throw Spine::Exception(BCP,
+                             string("Could not get handle for grib") + (itsGrib1Flag ? "1" : "2"));
 
     // Set tables version for grib2
 
     if (grib2TablesVersion > 0)
-      gset(gribHandle, "gribMasterTablesVersionNumber", (unsigned long)grib2TablesVersion);
+      gset(itsGribHandle, "gribMasterTablesVersionNumber", (unsigned long)grib2TablesVersion);
   }
   catch (...)
   {
@@ -66,8 +67,8 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
 
 GribStreamer::~GribStreamer()
 {
-  if (gribHandle)
-    grib_handle_delete(gribHandle);
+  if (itsGribHandle)
+    grib_handle_delete(itsGribHandle);
 }
 
 // ----------------------------------------------------------------------
@@ -155,15 +156,18 @@ void GribStreamer::setLatlonGeometryToGrib() const
 {
   try
   {
-    gset(gribHandle, "typeOfGrid", "regular_ll");
+    gset(itsGribHandle, "typeOfGrid", "regular_ll");
 
-    gset(gribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
-    gset(gribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
-    gset(gribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
-    gset(gribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
+    // std::cerr << __LINE__ << " BB: " << itsBoundingBox.bottomLeft << " - " <<
+    // itsBoundingBox.topRight << std::endl;
 
-    gset(gribHandle, "Ni", itsNX);
-    gset(gribHandle, "Nj", itsNY);
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
+    gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
+
+    gset(itsGribHandle, "Ni", itsNX);
+    gset(itsGribHandle, "Nj", itsNY);
 
     double gridCellHeightInDegrees =
         (itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1);
@@ -174,13 +178,13 @@ void GribStreamer::setLatlonGeometryToGrib() const
 
     scanningDirections(iNegative, jPositive);
 
-    gset(gribHandle, "jScansPositively", jPositive);
-    gset(gribHandle, "iScansNegatively", iNegative);
+    gset(itsGribHandle, "jScansPositively", jPositive);
+    gset(itsGribHandle, "iScansNegatively", iNegative);
 
-    gset(gribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
-    gset(gribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
+    gset(itsGribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
+    gset(itsGribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
 
-    // DUMP(gribHandle, "geography");
+    // DUMP(itsGribHandle, "geography");
   }
   catch (...)
   {
@@ -199,7 +203,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 {
   try
   {
-    if (itsResMgr.getGeometrySRS())
+    if (itsResources.getGeometrySRS())
       throw Spine::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
     BBoxCorners rotLLBBox;
@@ -245,17 +249,17 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
       throw Spine::Exception(
           BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
 
-    gset(gribHandle, "typeOfGrid", "rotated_ll");
+    gset(itsGribHandle, "typeOfGrid", "rotated_ll");
 
-    gset(gribHandle, "latitudeOfSouthernPoleInDegrees", slat);
+    gset(itsGribHandle, "latitudeOfSouthernPoleInDegrees", slat);
 
-    gset(gribHandle, "longitudeOfFirstGridPointInDegrees", rotLLBBox.bottomLeft.X());
-    gset(gribHandle, "latitudeOfFirstGridPointInDegrees", rotLLBBox.bottomLeft.Y());
-    gset(gribHandle, "longitudeOfLastGridPointInDegrees", rotLLBBox.topRight.X());
-    gset(gribHandle, "latitudeOfLastGridPointInDegrees", rotLLBBox.topRight.Y());
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", rotLLBBox.bottomLeft.X());
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", rotLLBBox.bottomLeft.Y());
+    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", rotLLBBox.topRight.X());
+    gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", rotLLBBox.topRight.Y());
 
-    gset(gribHandle, "Ni", itsNX);
-    gset(gribHandle, "Nj", itsNY);
+    gset(itsGribHandle, "Ni", itsNX);
+    gset(itsGribHandle, "Nj", itsNY);
 
     double gridCellHeightInDegrees =
         (rotLLBBox.topRight.Y() - rotLLBBox.bottomLeft.Y()) / (itsNY - 1);
@@ -266,13 +270,13 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 
     scanningDirections(iNegative, jPositive);
 
-    gset(gribHandle, "jScansPositively", jPositive);
-    gset(gribHandle, "iScansNegatively", iNegative);
+    gset(itsGribHandle, "jScansPositively", jPositive);
+    gset(itsGribHandle, "iScansNegatively", iNegative);
 
-    gset(gribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
-    gset(gribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
+    gset(itsGribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
+    gset(itsGribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
 
-    // DUMP(gribHandle, "geography");
+    // DUMP(itsGribHandle, "geography");
   }
   catch (...)
   {
@@ -309,25 +313,28 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 {
   try
   {
-    gset(gribHandle, "typeOfGrid", "polar_stereographic");
+    gset(itsGribHandle, "typeOfGrid", "polar_stereographic");
 
     // Note: grib2 longitude 0-360
 
     double lon = itsBoundingBox.bottomLeft.X();
 
-    if ((!grib1) && (lon < 0))
+    if ((!itsGrib1Flag) && (lon < 0))
       lon += 360;
 
-    gset(gribHandle, "longitudeOfFirstGridPointInDegrees", lon);
-    gset(gribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+    // std::cerr << __LINE__ << " BB: " << itsBoundingBox.bottomLeft << " - " <<
+    // itsBoundingBox.topRight << std::endl;
 
-    gset(gribHandle, "Ni", itsNX);
-    gset(gribHandle, "Nj", itsNY);
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", lon);
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
 
-    gset(gribHandle, "DxInMetres", itsDX);
-    gset(gribHandle, "DyInMetres", itsDY);
+    gset(itsGribHandle, "Ni", itsNX);
+    gset(itsGribHandle, "Nj", itsNY);
 
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    gset(itsGribHandle, "DxInMetres", itsDX);
+    gset(itsGribHandle, "DyInMetres", itsDY);
+
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     double lon_0, lat_0, lat_ts;
 
     if (!geometrySRS)
@@ -346,20 +353,20 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
       lat_0 = (lat_ts > 0) ? 90 : -90;
     }
 
-    if ((!grib1) && (lon_0 < 0))
+    if ((!itsGrib1Flag) && (lon_0 < 0))
       lon_0 += 360;
 
-    gset(gribHandle, "orientationOfTheGridInDegrees", lon_0);
+    gset(itsGribHandle, "orientationOfTheGridInDegrees", lon_0);
 
     long iNegative, jPositive;
 
     scanningDirections(iNegative, jPositive);
 
-    gset(gribHandle, "jScansPositively", jPositive);
-    gset(gribHandle, "iScansNegatively", iNegative);
+    gset(itsGribHandle, "jScansPositively", jPositive);
+    gset(itsGribHandle, "iScansNegatively", iNegative);
 
-    if (!grib1)
-      gset(gribHandle, "LaDInDegrees", lat_ts);
+    if (!itsGrib1Flag)
+      gset(itsGribHandle, "LaDInDegrees", lat_ts);
     else if (lat_ts != 60)
       throw Spine::Exception(
           BCP,
@@ -372,7 +379,7 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
     if (lat_0 != 90)
       throw Spine::Exception(BCP, "Only N-pole polar stereographic projections are supported");
 
-    // DUMP(gribHandle,"geography");
+    // DUMP(itsGribHandle,"geography");
   }
   catch (...)
   {
@@ -391,34 +398,37 @@ void GribStreamer::setMercatorGeometryToGrib() const
 {
   try
   {
-    gset(gribHandle, "typeOfGrid", "mercator");
+    // std::cerr << __LINE__ << " BB: " << itsBoundingBox.bottomLeft << " - " <<
+    // itsBoundingBox.topRight << std::endl;
 
-    gset(gribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
-    gset(gribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+    gset(itsGribHandle, "typeOfGrid", "mercator");
 
-    gset(gribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
-    gset(gribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
 
-    gset(gribHandle, "Ni", itsNX);
-    gset(gribHandle, "Nj", itsNY);
+    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
+    gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
 
-    gset(gribHandle, "DiInMetres", itsDX);
-    gset(gribHandle, "DjInMetres", itsDY);
+    gset(itsGribHandle, "Ni", itsNX);
+    gset(itsGribHandle, "Nj", itsNY);
+
+    gset(itsGribHandle, "DiInMetres", itsDX);
+    gset(itsGribHandle, "DjInMetres", itsDY);
 
     long iNegative, jPositive;
 
     scanningDirections(iNegative, jPositive);
 
-    gset(gribHandle, "jScansPositively", jPositive);
-    gset(gribHandle, "iScansNegatively", iNegative);
+    gset(itsGribHandle, "jScansPositively", jPositive);
+    gset(itsGribHandle, "iScansNegatively", iNegative);
 
     double lon_0 = 0;
     double lat_ts = 0;
 
-    gset(gribHandle, "orientationOfTheGridInDegrees", lon_0);
-    gset(gribHandle, "LaDInDegrees", lat_ts);
+    gset(itsGribHandle, "orientationOfTheGridInDegrees", lon_0);
+    gset(itsGribHandle, "LaDInDegrees", lat_ts);
 
-    // DUMP(gribHandle,"geography");
+    // DUMP(itsGribHandle,"geography");
   }
   catch (...)
   {
@@ -445,7 +455,7 @@ void GribStreamer::setNamedSettingsToGrib() const
 
     for (auto it = setBeg; (it != setEnd); it++)
     {
-      gset(gribHandle, (it->first).c_str(), it->second);
+      gset(itsGribHandle, (it->first).c_str(), it->second);
 
       if (it->first == centre)
         hasCentre = true;
@@ -459,7 +469,7 @@ void GribStreamer::setNamedSettingsToGrib() const
       const auto dit = dpr.namedSettings.find(centre);
 
       if (dit != dpr.namedSettingsEnd())
-        gset(gribHandle, (dit->first).c_str(), dit->second);
+        gset(itsGribHandle, (dit->first).c_str(), dit->second);
     }
   }
   catch (...)
@@ -484,7 +494,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
     if (itsReqParams.areaClassId != A_Native)
       classid = itsReqParams.areaClassId;
 
-    valueArray.resize(itsNX * itsNY);
+    itsValueArray.resize(itsNX * itsNY);
 
     switch (classid)
     {
@@ -519,13 +529,13 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
     // Set packing type
 
     if (!itsReqParams.packing.empty())
-      gset(gribHandle, "packingType", itsReqParams.packing);
+      gset(itsGribHandle, "packingType", itsReqParams.packing);
 
     // Set shape of the earth depending on the datum
 
-    long resolAndCompFlags = get_long(gribHandle, "resolutionAndComponentFlags");
+    long resolAndCompFlags = get_long(itsGribHandle, "resolutionAndComponentFlags");
 
-    if (grib1)
+    if (itsGrib1Flag)
     {
       if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
         resolAndCompFlags |= (1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
@@ -533,7 +543,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
         resolAndCompFlags &= ~(1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
     }
     else
-      gset(gribHandle,
+      gset(itsGribHandle,
            "shapeOfTheEarth",
            static_cast<int>((Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
                                  ? Datum::Grib2::Sphere::Wgs84
@@ -544,12 +554,12 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
     else
       resolAndCompFlags &= ~(1 << 3);
 
-    gset(gribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
+    gset(itsGribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
 
     // Bitmap to flag missing values
 
-    gset(gribHandle, "bitmapPresent", 1);
-    gset(gribHandle, "missingValue", gribMissingValue);
+    gset(itsGribHandle, "bitmapPresent", 1);
+    gset(itsGribHandle, "missingValue", gribMissingValue);
   }
   catch (...)
   {
@@ -600,7 +610,8 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
         //
         cfgLevel = pTable[i].itsLevel;
 
-        if ((isSurfaceLevel(levelType) && cfgLevel) || (!(isSurfaceLevel(levelType) || cfgLevel)))
+        if ((isSurfaceLevel(itsLevelType) && cfgLevel) ||
+            (!(isSurfaceLevel(itsLevelType) || cfgLevel)))
           break;
 
         if (j == pTable.size())
@@ -620,7 +631,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
       templateNumber = (long)pTable[i].itsTemplateNumber;
     }
 
-    if (isSurfaceLevel(levelType))
+    if (isSurfaceLevel(itsLevelType))
     {
       if (cfgLevel)
       {
@@ -633,29 +644,29 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
         level = 0;
       }
     }
-    else if (isPressureLevel(levelType))
+    else if (isPressureLevel(itsLevelType))
       levelTypeStr = PressureLevel;
-    else if (isHybridLevel(levelType))
+    else if (isHybridLevel(itsLevelType))
       levelTypeStr = HybridLevel;
-    else if (isHeightLevel(levelType, level))
+    else if (isHeightLevel(itsLevelType, level))
       levelTypeStr = HeightLevel;
-    else if (isDepthLevel(levelType, level))
+    else if (isDepthLevel(itsLevelType, level))
       levelTypeStr = DepthLevel;
     else
       throw Spine::Exception(
-          BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(levelType));
+          BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(itsLevelType));
 
     if (!centre.empty())
-      gset(gribHandle, "centre", centre);
+      gset(itsGribHandle, "centre", centre);
 
     // Cannot set template number 0 unless stepType has been set
-    gset(gribHandle, "stepType", "instant");
-    if ((!grib1) && (templateNumber != 0))
-      gset(gribHandle, "productDefinitionTemplateNumber", templateNumber);
+    gset(itsGribHandle, "stepType", "instant");
+    if ((!itsGrib1Flag) && (templateNumber != 0))
+      gset(itsGribHandle, "productDefinitionTemplateNumber", templateNumber);
 
-    gset(gribHandle, "paramId", usedParId);
-    gset(gribHandle, "typeOfLevel", levelTypeStr);
-    gset(gribHandle, "level", boost::numeric_cast<long>(abs(level)));
+    gset(itsGribHandle, "paramId", usedParId);
+    gset(itsGribHandle, "typeOfLevel", levelTypeStr);
+    gset(itsGribHandle, "level", boost::numeric_cast<long>(abs(level)));
   }
   catch (...)
   {
@@ -679,7 +690,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     // stepUnits always 'minute' to keep it simple
 
     string stepUnits = "m", stepType;
-    time_duration fromOriginTime(validTime - gribOriginTime);
+    time_duration fromOriginTime(validTime - itsGribOriginTime);
     long step = (fromOriginTime.hours() * 60) + fromOriginTime.minutes();
     long startStep = step, endStep = step;
 
@@ -799,41 +810,41 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
           }
         }
 
-        startStep = (periodStart - gribOriginTime).hours() * 60;
-        endStep = (periodEnd - gribOriginTime).hours() * 60;
+        startStep = (periodStart - itsGribOriginTime).hours() * 60;
+        endStep = (periodEnd - itsGribOriginTime).hours() * 60;
       }
 
       if (startStep < 0)
       {
         // Can't be negative, set start step to 0 and adjust origintime and end step accordingly
         //
-        gribOriginTime -= time_duration(0, -startStep, 0);
+        itsGribOriginTime -= time_duration(0, -startStep, 0);
         endStep -= startStep;
         startStep = 0;
 
         setOriginTime = true;
       }
 
-      gset(gribHandle, "stepType", pTable[paramIdx].itsStepType);
+      gset(itsGribHandle, "stepType", pTable[paramIdx].itsStepType);
     }
 
     if (setOriginTime)
     {
-      boost::gregorian::date d = gribOriginTime.date();
-      time_duration t = gribOriginTime.time_of_day();
+      boost::gregorian::date d = itsGribOriginTime.date();
+      time_duration t = itsGribOriginTime.time_of_day();
 
       long dateLong = d.year() * 10000 + d.month() * 100 + d.day();
       long timeLong = t.hours() * 100 + t.minutes();
 
-      gset(gribHandle, "date", dateLong);
-      gset(gribHandle, "time", timeLong);
+      gset(itsGribHandle, "date", dateLong);
+      gset(itsGribHandle, "time", timeLong);
     }
 
     // Set time step and unit
 
-    gset(gribHandle, "stepUnits", stepUnits);
-    gset(gribHandle, "startStep", startStep);
-    gset(gribHandle, "endStep", endStep);
+    gset(itsGribHandle, "stepUnits", stepUnits);
+    gset(itsGribHandle, "startStep", startStep);
+    gset(itsGribHandle, "endStep", endStep);
   }
   catch (...)
   {
@@ -914,7 +925,7 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
       // Set origintime
       //
       itsOriginTime = oTime;
-      gribOriginTime =
+      itsGribOriginTime =
           ((validTime < itsOriginTime) ? validTime
                                        : adjustToTimeStep(itsOriginTime, itsDataTimeStep));
     }
@@ -934,10 +945,10 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 
     // Load the data, cropping the grid/values it if manual cropping is set
 
-    bool cropxy = (cropping.cropped && cropping.cropMan);
-    size_t x0 = (cropxy ? cropping.bottomLeftX : 0), y0 = (cropxy ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
@@ -949,12 +960,12 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
         float value = dataValues[x][y];
 
         if (value != kFloatMissing)
-          valueArray[i] = (value + offset) / scale;
+          itsValueArray[i] = (value + offset) / scale;
         else
-          valueArray[i] = gribMissingValue;
+          itsValueArray[i] = gribMissingValue;
       }
 
-    grib_set_double_array(gribHandle, "values", &valueArray[0], valueArray.size());
+    grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
   }
   catch (...)
   {
@@ -981,7 +992,7 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
 
     const void *mesg;
     size_t mesg_len;
-    grib_get_message(gribHandle, &mesg, &mesg_len);
+    grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
     if (mesg_len == 0)
       throw Spine::Exception(BCP, "Empty grib message returned");
@@ -1011,7 +1022,7 @@ std::string GribStreamer::getChunk()
       string chunk;
       size_t chunkBufLength = 0, nChunks = 0;
 
-      while (!isDone)
+      while (!itsDoneFlag)
       {
         // Get next chunk e.g. next param/level/validtime grid
         //
@@ -1019,7 +1030,7 @@ std::string GribStreamer::getChunk()
         nChunks++;
 
         if (chunk.empty())
-          isDone = true;
+          itsDoneFlag = true;
         else
           chunkBufLength += chunk.length();
 
@@ -1027,9 +1038,9 @@ std::string GribStreamer::getChunk()
         // of
         // collected chunks are reached
 
-        if (isDone || (nChunks >= itsMaxMsgChunks) || (chunkBufLength >= itsChunkLength))
+        if (itsDoneFlag || (nChunks >= itsMaxMsgChunks) || (chunkBufLength >= itsChunkLength))
         {
-          if (isDone)
+          if (itsDoneFlag)
             setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
 
           if (nChunks > 1)
@@ -1056,7 +1067,7 @@ std::string GribStreamer::getChunk()
 
     setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
 
-    isDone = true;
+    itsDoneFlag = true;
     return "";
   }
   catch (...)
@@ -1082,12 +1093,12 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
 {
   try
   {
-    if (setMeta)
+    if (itsMetaFlag)
     {
       // Set geometry
       //
       setGeometryToGrib(area, q->isRelativeUV());
-      setMeta = false;
+      itsMetaFlag = false;
     }
 
     // Build and get grib message

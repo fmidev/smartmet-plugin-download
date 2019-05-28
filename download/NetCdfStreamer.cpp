@@ -29,20 +29,20 @@ NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
                                const Producer &producer)
     : DataStreamer(req, config, producer),
-      ncError(NcError::verbose_nonfatal),
-      file(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) + "_" +
-           boost::lexical_cast<string>(boost::this_thread::get_id())),
-      ncFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic),
-      isLoaded(false)
+      itsError(NcError::verbose_nonfatal),
+      itsFilename(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) +
+                  "_" + boost::lexical_cast<string>(boost::this_thread::get_id())),
+      itsFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic),
+      itsLoadedFlag(false)
 {
 }
 
 NetCdfStreamer::~NetCdfStreamer()
 {
-  if (ioStream.is_open())
-    ioStream.close();
+  if (itsStream.is_open())
+    itsStream.close();
 
-  unlink(file.c_str());
+  unlink(itsFilename.c_str());
 }
 
 // ----------------------------------------------------------------------
@@ -60,9 +60,9 @@ std::string NetCdfStreamer::getChunk()
     {
       string chunk;
 
-      if (!isDone)
+      if (!itsDoneFlag)
       {
-        if (!isLoaded)
+        if (!itsLoadedFlag)
         {
           // The data is first loaded into a netcdf file (memory mapped filesystem assumed).
           //
@@ -74,37 +74,37 @@ std::string NetCdfStreamer::getChunk()
             extractData(chunk);
 
             if (chunk.empty())
-              isLoaded = true;
+              itsLoadedFlag = true;
             else
               storeParamValues();
-          } while (!isLoaded);
+          } while (!itsLoadedFlag);
 
           // Then outputting the file/data in chunks
 
-          ncFile.close();
+          itsFile.close();
 
-          ioStream.open(file, ifstream::in | ifstream::binary);
+          itsStream.open(itsFilename, ifstream::in | ifstream::binary);
 
-          if (!ioStream)
+          if (!itsStream)
             throw Spine::Exception(BCP, "Unable to open file stream");
         }
 
-        if (!ioStream.eof())
+        if (!itsStream.eof())
         {
           std::unique_ptr<char[]> mesg(new char[itsChunkLength]);
 
-          ioStream.read(mesg.get(), itsChunkLength);
-          streamsize mesg_len = ioStream.gcount();
+          itsStream.read(mesg.get(), itsChunkLength);
+          streamsize mesg_len = itsStream.gcount();
 
           if (mesg_len > 0)
             chunk = string(mesg.get(), mesg_len);
         }
 
         if (chunk.empty())
-          isDone = true;
+          itsDoneFlag = true;
       }
 
-      if (isDone)
+      if (itsDoneFlag)
         setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
 
       return chunk;
@@ -119,7 +119,7 @@ std::string NetCdfStreamer::getChunk()
 
     setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
 
-    isDone = true;
+    itsDoneFlag = true;
     return "";
   }
   catch (...)
@@ -142,7 +142,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
 {
   try
   {
-    auto dim = boost::shared_ptr<NcDim>(ncFile.add_dim(dimName.c_str(), dimSize), dimDeleter);
+    auto dim = boost::shared_ptr<NcDim>(itsFile.add_dim(dimName.c_str(), dimSize), dimDeleter);
 
     if (dim)
       return dim;
@@ -171,7 +171,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
   try
   {
     auto var = boost::shared_ptr<NcVar>(
-        ncFile.add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4), varDeleter);
+        itsFile.add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4), varDeleter);
 
     if (var)
       return var;
@@ -365,14 +365,14 @@ void NetCdfStreamer::addTimeDimension()
 
     string timeUnitDef = timeUnit + " since " + os.str();
 
-    timeDim = addDimension("time", timeSize);
+    itsTimeDim = addDimension("time", timeSize);
 
-    timeVar = addVariable("time", ncInt, &(*timeDim));
-    addAttribute(timeVar, "long_name", "time");
-    addAttribute(timeVar, "calendar", "gregorian");
-    addAttribute(timeVar, "units", timeUnitDef.c_str());
+    itsTimeVar = addVariable("time", ncInt, &(*itsTimeDim));
+    addAttribute(itsTimeVar, "long_name", "time");
+    addAttribute(itsTimeVar, "calendar", "gregorian");
+    addAttribute(itsTimeVar, "units", timeUnitDef.c_str());
 
-    if (!timeVar->put(times, timeSize))
+    if (!itsTimeVar->put(times, timeSize))
       throw Spine::Exception(BCP, "Failed to store validtimes");
   }
   catch (...)
@@ -428,19 +428,19 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
   {
     string name("time_" + getPeriodName(periodLengthInMinutes));
 
-    auto tDim = addDimension(name, timeDim->size());
+    auto tDim = addDimension(name, itsTimeDim->size());
     tVar = addVariable(name, ncInt, &(*tDim));
 
-    int times[timeDim->size()];
-    timeVar->get(times, timeDim->size());
+    int times[itsTimeDim->size()];
+    itsTimeVar->get(times, itsTimeDim->size());
 
-    if (!tVar->put(times, timeDim->size()))
+    if (!tVar->put(times, itsTimeDim->size()))
       throw Spine::Exception(BCP, "Failed to store validtimes");
 
     addAttribute(tVar, "long_name", "time");
     addAttribute(tVar, "calendar", "gregorian");
 
-    boost::shared_ptr<NcAtt> uAtt(timeVar->get_att("units"));
+    boost::shared_ptr<NcAtt> uAtt(itsTimeVar->get_att("units"));
     if (!uAtt)
       throw Spine::Exception(BCP, "Failed to get time unit attribute");
 
@@ -474,22 +474,22 @@ void NetCdfStreamer::addLevelDimension()
 {
   try
   {
-    if (isSurfaceLevel(levelType))
+    if (isSurfaceLevel(itsLevelType))
       return;
 
     string name, positive;
 
-    if (isPressureLevel(levelType))
+    if (isPressureLevel(itsLevelType))
     {
       name = "pressure";
       positive = "down";
     }
-    else if (isHybridLevel(levelType))
+    else if (isHybridLevel(itsLevelType))
     {
       name = "hybrid";
       positive = "up";
     }
-    else if (isHeightLevel(levelType, 0))
+    else if (isHeightLevel(itsLevelType, 0))
     {
       name = "height";
       positive = "up";
@@ -498,7 +498,7 @@ void NetCdfStreamer::addLevelDimension()
     {
       name = "depth";
 
-      if (levelType != nativeLevelType)
+      if (itsLevelType != itsNativeLevelType)
         // kFmiHeight with negative levels
         //
         positive = "up";
@@ -507,7 +507,7 @@ void NetCdfStreamer::addLevelDimension()
     }
 
     auto levelVar =
-        addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", "", "Z", levelDim);
+        addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", "", "Z", itsLevelDim);
 
     addAttribute(levelVar, "long_name", (string(levelVar->name()) + " level").c_str());
     addAttribute(levelVar, "positive", positive.c_str());
@@ -543,7 +543,7 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
   {
     addAttribute(crsVar, "grid_mapping_name", "latitude_longitude");
 
-    //	OGRSpatialReference * geometrySRS = itsResMgr.getGeometrySRS();
+    //	OGRSpatialReference * geometrySRS = itsResources.getGeometrySRS();
     //
     //	if (geometrySRS) {
     //	}
@@ -566,7 +566,7 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 {
   try
   {
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     double lon_0, lat_0, lat_ts;
 
     if (!geometrySRS)
@@ -609,10 +609,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    addAttribute(&ncFile, "Conventions", "CF-1.6");
-    addAttribute(&ncFile, "title", "<title>");
-    addAttribute(&ncFile, "institution", "fmi.fi");
-    addAttribute(&ncFile, "source", "<producer>");
+    addAttribute(&itsFile, "Conventions", "CF-1.6");
+    addAttribute(&itsFile, "title", "<title>");
+    addAttribute(&itsFile, "institution", "fmi.fi");
+    addAttribute(&itsFile, "source", "<producer>");
 
     // Time dimension
 
@@ -648,10 +648,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     bool projected = (classid != kNFmiLatLonArea);
 
-    size_t x0 = (cropping.cropped ? cropping.bottomLeftX : 0),
-           y0 = (cropping.cropped ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0),
+           y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
     size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
@@ -692,15 +692,17 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       // and
       // longitude coordinates."
 
-      auto yVar = addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", yDim);
-      auto xVar = addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", xDim);
+      auto yVar =
+          addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);
+      auto xVar =
+          addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", itsXDim);
 
       NFmiPoint p0 =
           ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToWorldXY(x0, y0)
-                                                                : tgtWorldXYs[x0][y0]);
+                                                                : itsTargetWorldXYs[x0][y0]);
       NFmiPoint pN = ((itsReqParams.datumShift == Datum::DatumShift::None)
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
-                          : tgtWorldXYs[xN - 1][yN - 1]);
+                          : itsTargetWorldXYs[xN - 1][yN - 1]);
 
       double worldY[itsNY], worldX[itsNX];
       double wY = p0.Y(), wX = p0.X();
@@ -718,15 +720,15 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       if (!xVar->put(worldX, itsNX))
         throw Spine::Exception(BCP, "Failed to store x -coordinates");
 
-      latVar = addVariable("lat", ncFloat, &(*yDim), &(*xDim));
-      lonVar = addVariable("lon", ncFloat, &(*yDim), &(*xDim));
+      latVar = addVariable("lat", ncFloat, &(*itsYDim), &(*itsXDim));
+      lonVar = addVariable("lon", ncFloat, &(*itsYDim), &(*itsXDim));
 
       for (y = y0, n = 0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, n++)
         {
           const NFmiPoint p =
               ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, y)
-                                                                    : tgtLatLons[x][y]);
+                                                                    : itsTargetLatLons[x][y]);
 
           lat[n] = p.Y();
           lon[n] = p.X();
@@ -741,18 +743,18 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     {
       // latlon, grid defined as cartesian product of latitude and longitude axes
       //
-      latVar = addCoordVariable("lat", itsNY, ncFloat, "latitude", "degrees_north", "Y", latDim);
-      lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", lonDim);
+      latVar = addCoordVariable("lat", itsNY, ncFloat, "latitude", "degrees_north", "Y", itsLatDim);
+      lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", itsLonDim);
 
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
         lat[n] =
             ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(0, y).Y()
-                                                                  : tgtLatLons[0][y].Y());
+                                                                  : itsTargetLatLons[0][y].Y());
 
       for (x = x0, n = 0; (x < xN); x += xStep, n++)
         lon[n] =
             ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
-                                                                  : tgtLatLons[x][0].X());
+                                                                  : itsTargetLatLons[x][0].X());
 
       if (!latVar->put(lat, itsNY))
         throw Spine::Exception(BCP, "Failed to store latitude coordinates");
@@ -854,7 +856,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     timeDimName = "time_" + pName;
 
-    boost::shared_ptr<NcDim> tDim(ncFile.get_dim(timeDimName.c_str()), dimDeleter);
+    boost::shared_ptr<NcDim> tDim(itsFile.get_dim(timeDimName.c_str()), dimDeleter);
 
     if (tDim)
       return tDim;
@@ -866,14 +868,14 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     // Add time bounds dimension
 
-    if (!timeBoundsDim)
-      timeBoundsDim = addDimension("time_bounds", 2);
+    if (!itsTimeBoundsDim)
+      itsTimeBoundsDim = addDimension("time_bounds", 2);
 
     // Determine and store time bounds
 
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time(), vt;
-    int bounds[2 * timeDim->size()];
+    int bounds[2 * itsTimeDim->size()];
     size_t i = 0;
 
     for (; (timeIter != itsDataTimes.end()); timeIter++)
@@ -894,9 +896,9 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     string name("time_bounds_" + pName);
 
-    auto timeBoundsVar = addVariable(name, ncInt, &(*tDim), &(*timeBoundsDim));
+    auto timeBoundsVar = addVariable(name, ncInt, &(*tDim), &(*itsTimeBoundsDim));
 
-    if (!timeBoundsVar->put(bounds, timeDim->size(), 2))
+    if (!timeBoundsVar->put(bounds, itsTimeDim->size(), 2))
       throw Spine::Exception(BCP, "Failed to store time bounds");
 
     // Connect the bounds to the time variable
@@ -922,13 +924,13 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 {
   try
   {
-    NcDim &yOrLat = (yDim ? *yDim : *latDim);
-    NcDim &xOrLon = (yDim ? *xDim : *lonDim);
+    NcDim &yOrLat = (itsYDim ? *itsYDim : *itsLatDim);
+    NcDim &xOrLon = (itsYDim ? *itsXDim : *itsLonDim);
 
-    NcDim *dim1;                                      // Time dimension
-    NcDim *dim2 = levelDim ? &(*levelDim) : &yOrLat;  // Level or Y/lat dimension
-    NcDim *dim3 = levelDim ? &yOrLat : &xOrLon;       // Y/lat or X/lon dimension
-    NcDim *dim4 = levelDim ? &xOrLon : nullptr;       // X dimension or n/a
+    NcDim *dim1;                                            // Time dimension
+    NcDim *dim2 = itsLevelDim ? &(*itsLevelDim) : &yOrLat;  // Level or Y/lat dimension
+    NcDim *dim3 = itsLevelDim ? &yOrLat : &xOrLon;          // Y/lat or X/lon dimension
+    NcDim *dim4 = itsLevelDim ? &xOrLon : nullptr;          // X dimension or n/a
 
     boost::shared_ptr<NcDim> tDim;
 
@@ -939,7 +941,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
       string paramName, stdName, longName, unit, timeDimName = "time";
       size_t i, j;
 
-      dim1 = &(*timeDim);
+      dim1 = &(*itsTimeDim);
 
       signed long usedParId = theParam.GetIdent();
 
@@ -1003,13 +1005,13 @@ void NetCdfStreamer::addParameters(bool relative_uv)
         //
         addAttribute(dataVar, "cell_methods", (timeDimName + ": " + pTable[i].itsStepType).c_str());
 
-      if (yDim)
+      if (itsYDim)
         addAttribute(dataVar, "coordinates", "lat lon");
 
-      dataVars.push_back(dataVar.get());
+      itsDataVars.push_back(dataVar.get());
     }
 
-    it_Var = dataVars.begin();
+    itsVarIterator = itsDataVars.begin();
   }
   catch (...)
   {
@@ -1033,10 +1035,10 @@ void NetCdfStreamer::storeParamValues()
     //
     // Note: Using heap because buffer size might exceed stack size
 
-    bool cropxy = (cropping.cropped && cropping.cropMan);
-    size_t x0 = (cropxy ? cropping.bottomLeftX : 0), y0 = (cropxy ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
 
@@ -1061,19 +1063,19 @@ void NetCdfStreamer::storeParamValues()
     //
     // Note: timeIndex was incremented after getting the data
 
-    if ((it_Var == dataVars.begin()) && (itsParamIterator != itsDataParams.begin()))
+    if ((itsVarIterator == itsDataVars.begin()) && (itsParamIterator != itsDataParams.begin()))
       for (auto it_p = itsDataParams.begin(); (it_p != itsParamIterator); it_p++)
-        it_Var++;
+        itsVarIterator++;
 
-    if (!(*it_Var)->set_cur(itsTimeIndex - 1, levelDim ? itsLevelIndex : -1))
+    if (!(*itsVarIterator)->set_cur(itsTimeIndex - 1, itsLevelDim ? itsLevelIndex : -1))
       throw Spine::Exception(BCP, "Failed to set active netcdf time/level");
 
-    long edge1 = 1;                         // Time dimension, edge length 1
-    long edge2 = levelDim ? 1 : itsNY;      // Level (edge length 1) or Y dimension
-    long edge3 = levelDim ? itsNY : itsNX;  // Y or X dimension
-    long edge4 = levelDim ? itsNX : -1;     // X dimension or n/a
+    long edge1 = 1;                            // Time dimension, edge length 1
+    long edge2 = itsLevelDim ? 1 : itsNY;      // Level (edge length 1) or Y dimension
+    long edge3 = itsLevelDim ? itsNY : itsNX;  // Y or X dimension
+    long edge4 = itsLevelDim ? itsNX : -1;     // X dimension or n/a
 
-    if (!(*it_Var)->put(values.get(), edge1, edge2, edge3, edge4))
+    if (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4))
       throw Spine::Exception(BCP, "Failed to store netcdf variable values");
   }
   catch (...)
@@ -1095,12 +1097,12 @@ void NetCdfStreamer::paramChanged()
   {
     // Note: Netcdf varibles are created when first nonmissing querydata parameter is encountered
 
-    if (dataVars.size() > 0)
+    if (itsDataVars.size() > 0)
     {
-      if (it_Var != dataVars.end())
-        it_Var++;
+      if (itsVarIterator != itsDataVars.end())
+        itsVarIterator++;
 
-      if ((it_Var == dataVars.end()) && (itsParamIterator != itsDataParams.end()))
+      if ((itsVarIterator == itsDataVars.end()) && (itsParamIterator != itsDataParams.end()))
         throw Spine::Exception(BCP, "paramChanged: internal: No more netcdf variables");
     }
   }
@@ -1127,7 +1129,7 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 {
   try
   {
-    if (setMeta)
+    if (itsMetaFlag)
     {
       // Set geometry and dimensions
       //
@@ -1137,7 +1139,7 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 
       addParameters(q->isRelativeUV());
 
-      setMeta = false;
+      itsMetaFlag = false;
     }
 
     // Data is loaded from 'values'; set nonempty chunk to indicate data is available.

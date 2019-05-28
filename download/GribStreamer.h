@@ -41,10 +41,10 @@ class GribStreamer : public DataStreamer
  private:
   GribStreamer();
 
-  grib_handle* gribHandle;
-  std::vector<double> valueArray;
-  boost::posix_time::ptime gribOriginTime;
-  bool grib1;
+  grib_handle* itsGribHandle;
+  std::vector<double> itsValueArray;
+  boost::posix_time::ptime itsGribOriginTime;
+  bool itsGrib1Flag;
 
   void scanningDirections(long& iNegative, long& jPositive) const;
 
@@ -57,9 +57,9 @@ class GribStreamer : public DataStreamer
   void setLevelAndParameterToGrib(int level,
                                   const NFmiParam& theParam,
                                   const ParamChangeTable& pTable,
-                                  size_t& paramIdx);
+                                  std::size_t& paramIdx);
   void setStepToGrib(const ParamChangeTable& pTable,
-                     size_t paramIdx,
+                     std::size_t paramIdx,
                      bool setOriginTime,
                      const boost::posix_time::ptime& validTime);
   void addValuesToGrib(Engine::Querydata::Q q,
