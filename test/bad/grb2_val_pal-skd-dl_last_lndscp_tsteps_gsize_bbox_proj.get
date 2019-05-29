@@ -1,0 +1,1 @@
+GET	/download?param=Temperature,DewPoint&producer=ecmwf_eurooppa_pinta&format=grib2&starttime=data&timesteps=4&gridsize=45,50&bbox=15,58,38,71&projection=latlon HTTP/1.0

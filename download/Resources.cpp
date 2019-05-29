@@ -51,6 +51,11 @@ void Resources::createArea(const std::string &projection,
 {
   try
   {
+#if 1
+    std::cout << "Creating proj " << projection << " with\ncenter = " << center << "\n";
+    std::cout << boost::stacktrace::stacktrace();
+#endif
+
     area = NFmiAreaFactory::CreateFromCenter(projection, center, width, height);
 
     if (!area.get())
@@ -87,6 +92,7 @@ const NFmiArea *Resources::getArea()
 
 void Resources::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
 {
+  // std::cerr << "CREATING GRID:\n" << a << gridSizeX << " * " << gridSizeY << std::endl;
   try
   {
     grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));

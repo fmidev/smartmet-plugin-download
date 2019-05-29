@@ -1,0 +1,1 @@
+GET	/download?param=4&producer=pal_skandinavia_dl&format=grib1&starttime=20130917T1000&timesteps=4&gridresolution=18,18&projection=latlon HTTP/1.0
