@@ -629,16 +629,18 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
     {
       // divisor was multiplied by 1000 before WGS84 change
       gridSizeX = boost::numeric_cast<size_t>(
-          fabs(ceil(area.WorldXYWidth() / ((*itsReqParams.gridResolutionXY)[0].first))));
+          fabs(ceil(area.WorldXYWidth() / ((*itsReqParams.gridResolutionXY)[0].first * 1000))));
       gridSizeY = boost::numeric_cast<size_t>(
-          fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second))));
+          fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second * 1000))));
+
+      std::cerr << "\n\nAREA = " << area << std::endl;
 
       std::cerr << "nativeGridSizeX = " << nativeGridSizeX << "\n"
                 << "nativeGridSizeY = " << nativeGridSizeY << "\n"
                 << "gridSizeX = " << gridSizeX << "\n"
                 << "gridSizeY = " << gridSizeY << "\n"
-                << "width = " << area.WorldXYWidth() << "\n"
-                << "height = " << area.WorldXYHeight() << "\n"
+                << "w width = " << area.WorldXYWidth() << "\n"
+                << "w height = " << area.WorldXYHeight() << "\n"
                 << "resolx = " << (*itsReqParams.gridResolutionXY)[0].first << "\n"
                 << "resoly = " << (*itsReqParams.gridResolutionXY)[0].second << "\n";
 
@@ -738,6 +740,8 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       NFmiPoint center(gridcenter[0].first, gridcenter[0].second);
       auto width = gridcenter[1].first;  // kilometers
       auto height = gridcenter[1].second;
+
+      std::cerr << "\n\nCREATE FROM CENTER: " << width << "x" << height << "\n";
 
       boost::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
           itsReqParams.projection, "FMI", center, 2 * 1000 * width, 2 * 1000 * height));
@@ -1720,6 +1724,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
     {
       // Use native projection if generated PROJ.4 would be the same
       NFmiPoint center = nativeArea.CenterLatLon();  // WGS84, doesn't matter, it's close enough
+      std::cerr << "\n\nCREATE 2 FROM CENTER:\n";
       boost::shared_ptr<NFmiArea> reqarea(
           NFmiAreaFactory::CreateFromCenter(itsReqParams.projection, center, 1000, 1000));
       auto reqProjStr = reqarea->ProjStr();

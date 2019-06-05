@@ -49,8 +49,8 @@ class Resources : private boost::noncopyable
                   const NFmiPoint &topRight);
   void createArea(const std::string &projection,
                   const NFmiPoint &center,
-                  double width,
-                  double height);
+                  double widthKM,
+                  double heightKM);
   const NFmiArea *getArea();
 
   NFmiGrid *getGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);

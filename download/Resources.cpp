@@ -46,8 +46,8 @@ void Resources::createArea(const std::string &projection,
 
 void Resources::createArea(const std::string &projection,
                            const NFmiPoint &center,
-                           double width,
-                           double height)
+                           double widthKM,
+                           double heightKM)
 {
   try
   {
@@ -56,7 +56,8 @@ void Resources::createArea(const std::string &projection,
     std::cout << boost::stacktrace::stacktrace();
 #endif
 
-    area = NFmiAreaFactory::CreateFromCenter(projection, center, width, height);
+    area = NFmiAreaFactory::CreateFromCenter(
+        projection, center, 2 * 1000 * widthKM, 2 * 1000 * heightKM);
 
     if (!area.get())
       throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
