@@ -1,0 +1,1 @@
+GET	/download?param=4&producer=pal_skandinavia_dl&format=qd&starttime=20130917T1000&timesteps=4&bbox=15,58,38,71 HTTP/1.0
