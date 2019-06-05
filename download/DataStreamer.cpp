@@ -476,8 +476,14 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 
     // Loop all columns of first and last row and first and last columns of other rows.
 
+#ifndef WGS84
     for (std::size_t y = 1, n = 0, dx = (gridSizeX - 1); (y <= gridSizeY); y++, n++)
       for (std::size_t x = 1; (x <= gridSizeX);)
+#else
+    bool first = true;
+    for (std::size_t y = 0, dx = gridSizeX - 1; y < gridSizeY; y++)
+      for (std::size_t x = 0; x < gridSizeX;)
+#endif
       {
 #ifndef WGS84
         const NFmiPoint &p = llc[n];
@@ -487,38 +493,50 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 
         auto px = p.X(), py = p.Y();
 
+#ifndef WGS84
         if (n == 0)
         {
           blLon = trLon = px;
           blLat = trLat = py;
         }
+#else
+        if (first)
+        {
+          first = false;
+          blLon = trLon = px;
+          blLat = trLat = py;
+        }
+#endif
         else
         {
-          if (px < blLon)
-            blLon = px;
-          else if (px > trLon)
-            trLon = px;
-
-          if (py < blLat)
-            blLat = py;
-          else if (py > trLat)
-            trLat = py;
+          blLon = std::min(px, blLon);
+          trLon = std::max(px, trLon);
+          blLat = std::min(py, blLat);
+          trLat = std::max(py, trLat);
         }
 
+#ifndef WGS84
         size_t dn = (((y == 1) || (y == gridSizeY)) ? 1 : dx);
+#else
+        size_t dn = (((y == 0) || (y == gridSizeY - 1)) ? 1 : dx);
+#endif
 
         x += dn;
+#ifndef WGS84
         if (x <= gridSizeX)
           n += dn;
+#endif
       }
 
-    itsRegBoundingBox = BBoxCorners();
+    itsRegBoundingBox = BBoxCorners{NFmiPoint(blLon, blLat), NFmiPoint(trLon, trLat)};
 
     // std::cerr << __LINE__ << " BBOX: " << blLon << "," << blLat << " " << trLon << "," << trLat
     // << std::endl;
 
-    (*itsRegBoundingBox).bottomLeft = NFmiPoint(blLon, blLat);
-    (*itsRegBoundingBox).topRight = NFmiPoint(trLon, trLat);
+    // (*itsRegBoundingBox).bottomLeft = NFmiPoint(blLon, blLat);
+    // (*itsRegBoundingBox).topRight = NFmiPoint(trLon, trLat);
+
+    // std::cout << "BL: " << blLon << "," << blLat << "\nTR: " << trLon << "," << trLat << "\n";
   }
   catch (...)
   {
@@ -633,6 +651,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
       gridSizeY = boost::numeric_cast<size_t>(
           fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second * 1000))));
 
+#if 0
       std::cerr << "\n\nAREA = " << area << std::endl;
 
       std::cerr << "nativeGridSizeX = " << nativeGridSizeX << "\n"
@@ -643,6 +662,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
                 << "w height = " << area.WorldXYHeight() << "\n"
                 << "resolx = " << (*itsReqParams.gridResolutionXY)[0].first << "\n"
                 << "resoly = " << (*itsReqParams.gridResolutionXY)[0].second << "\n";
+#endif
 
       if ((gridSizeX <= 1) || (gridSizeY <= 1))
         throw Spine::Exception(BCP, "Invalid gridsize for producer '" + itsReqParams.producer + "'")
@@ -741,7 +761,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       auto width = gridcenter[1].first;  // kilometers
       auto height = gridcenter[1].second;
 
-      std::cerr << "\n\nCREATE FROM CENTER: " << width << "x" << height << "\n";
+      // std::cerr << "\n\nCREATE FROM CENTER: " << width << "x" << height << "\n";
 
       boost::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
           itsReqParams.projection, "FMI", center, 2 * 1000 * width, 2 * 1000 * height));
@@ -1724,7 +1744,6 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
     {
       // Use native projection if generated PROJ.4 would be the same
       NFmiPoint center = nativeArea.CenterLatLon();  // WGS84, doesn't matter, it's close enough
-      std::cerr << "\n\nCREATE 2 FROM CENTER:\n";
       boost::shared_ptr<NFmiArea> reqarea(
           NFmiAreaFactory::CreateFromCenter(itsReqParams.projection, center, 1000, 1000));
       auto reqProjStr = reqarea->ProjStr();
@@ -1884,8 +1903,10 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
     std::size_t gridSizeX = itsReqGridSizeX;
     std::size_t gridSizeY = itsReqGridSizeY;
 
+#if 0    
     std::cerr << "Native size: " << nativeGridSizeX << "," << nativeGridSizeY
               << "\nRequested: " << gridSizeX << "," << gridSizeY << std::endl;
+#endif
 
     // All data has same projection, gridsize and bounding box; thus target projection (area object)
     // and grid needs to be checked/created only once.
@@ -1895,7 +1916,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      std::cerr << "Path 1\n";
+      // std::cerr << "Path 1\n";
       itsUseNativeGridSize = setRequestedGridSize(nativeArea, nativeGridSizeX, nativeGridSizeY);
       createArea(q, nativeArea, nativeClassId, nativeGridSizeX, nativeGridSizeY);
     }
@@ -1907,7 +1928,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      std::cerr << "Path 2\n";
+      // std::cerr << "Path 2\n";
       // Recalculate gridsize if nonnative projection and grid resolution is given (or set to retain
       // it when projecting to latlon).
       //
@@ -1922,7 +1943,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      std::cerr << "Path 3\n";
+      // std::cerr << "Path 3\n";
       if ((itsReqParams.datumShift == Datum::DatumShift::None) &&
           (nonNativeGrid || (!itsUseNativeBBox)))
       {
@@ -1935,9 +1956,9 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                         ? itsCropping.gridSizeY
                         : itsReqGridSizeY;
 
-        std::cerr << "createGrid!\n";
+        // std::cerr << "createGrid!\n";
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
-        std::cerr << "createGrid done!\n";
+        // std::cerr << "createGrid done!\n";
       }
 
       auto gs = (itsCropping.crop ? itsCropping.gridSizeX * itsCropping.gridSizeY

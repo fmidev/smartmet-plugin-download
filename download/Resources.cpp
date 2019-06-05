@@ -21,7 +21,7 @@ void Resources::createArea(const std::string &projection,
 {
   try
   {
-#if 1
+#if 0
     std::cout << "Creating proj " << projection << " with\nBL = " << bottomLeft
               << "TR = " << topRight << "\n";
     std::cout << boost::stacktrace::stacktrace();
@@ -51,7 +51,7 @@ void Resources::createArea(const std::string &projection,
 {
   try
   {
-#if 1
+#if 0
     std::cout << "Creating proj " << projection << " with\ncenter = " << center << "\n";
     std::cout << boost::stacktrace::stacktrace();
 #endif
