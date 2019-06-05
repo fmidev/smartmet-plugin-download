@@ -26,17 +26,64 @@ Timesteps	= 4
 
 Information on the querydata area:
 
-projection		= NFmiLatLonArea
+projection		= kNFmiLatLonArea
 top left lonlat		= -9.09871,72.6421
 top right lonlat	= 49,72.6421
 bottom left lonlat	= -9.09871,51.3
 bottom right lonlat	= 49,51.3
-center lonlat		= 19.9506,61.971
+
+top left WGS84		= -9.09871,72.7512
+top right WGS84		= 49,72.7512
+bottom left WGS84	= -9.09871,51.4875
+bottom right WGS84	= 49,51.4875
+center WGS84		= 19.9506,62.1301
+
 bbox			= [-1011765.33 5448739.55 5704496.71 8077711.91]
 
-fmiarea	= latlon:-9.09871,51.3,49,72.6421
-wktarea	= GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]]
-proj4	= +proj=longlat +a=6371220 +b=6371220 +no_defs 
+projstr	= +proj=eqc +R=6371220 +wktext +over +no_defs +towgs84=0,0,0
+wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371220,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],EXTENSION["PROJ4","+proj=eqc +R=6371220 +wktext +over +no_defs +towgs84=0,0,0"]]
+
+prettywkt =
+PROJCS["unnamed",
+    GEOGCS["unnamed ellipse",
+        DATUM["unknown",
+            SPHEROID["unnamed",6371220,0],
+            TOWGS84[0,0,0,0,0,0,0]],
+        PRIMEM["Greenwich",0],
+        UNIT["degree",0.0174532925199433]],
+    PROJECTION["Equirectangular"],
+    PARAMETER["latitude_of_origin",0],
+    PARAMETER["central_meridian",0],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    EXTENSION["PROJ4","+proj=eqc +R=6371220 +wktext +over +no_defs +towgs84=0,0,0"]]
+
+EPSGTreatsAsLatLong		= 0
+EPSGTreatsAsNorthingEasting	= 0
+PrimeMeridian			= 0
+IsGeographic			= 0
+IsProjected			= 1
+IsGeocentric			= 0
+IsLocal				= 0
+IsVertical			= 0
+IsCompound			= 0
+SemiMajor			= 6371220
+SemiMinor			= 6371220
+InvFlattening			= 0
+EPSG				= -1
+
+central_meridian	= 0
+latitude_of_origin	= 0
+false_easting	= 0
+false_northing	= 0
+
+proj options:
++R = 6371220
++proj = "eqc"
++towgs84 = "0,0,0"
++no_defs
++over
++wktext
 
 top	= 0
 left	= 0
@@ -45,15 +92,12 @@ bottom	= 1
 
 xnumber		= 430
 ynumber		= 159
-dx		= 15.0244 km
-dy		= 14.9259 km
+dx		= 15.02442995 km
+dy		= 14.92588171 km
 
-xywidth		= 6460.5 km
-xyheight	= 2373.22 km
-aspectratio	= 2.72226
-
-xscale		= 58.0987
-yscale		= -21.3421
+xywidth		= 6460.50488 km
+xyheight	= 2373.215192 km
+aspectratio	= 2.722258353
 
 Information on the locations:
 

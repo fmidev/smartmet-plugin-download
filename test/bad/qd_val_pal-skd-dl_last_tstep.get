@@ -1,1 +1,0 @@
-GET	/download?param=4,23,24&producer=pal_skandinavia_dl&format=qd&starttime=data&origintime=20130920T1237&timestep=180 HTTP/1.0
