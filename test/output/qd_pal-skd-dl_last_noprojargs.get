@@ -27,21 +27,21 @@ Timesteps	= 295
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-top left lonlat		= -29.0098,76.9349
-top right lonlat	= 49,72.6421
-bottom left lonlat	= -9.09871,51.3
-bottom right lonlat	= 18.3781,49.8562
+top left lonlat		= -9.09871,70.1814
+top right lonlat	= 49,70.2
+bottom left lonlat	= 6,51.3
+bottom right lonlat	= 33.9455,51.3085
 
-top left WGS84		= -29.0098,77.0192
-top right WGS84		= 49,72.7512
-bottom left WGS84	= -9.09871,51.4875
-bottom right WGS84	= 18.3781,50.0455
-center WGS84		= 7.60509,64.7406
+top left WGS84		= -9.09871,70.3036
+top right WGS84		= 49,70.3221
+bottom left WGS84	= 6,51.4875
+bottom right WGS84	= 33.9455,51.4959
+center WGS84		= 19.96,62.4422
 
-bbox			= [-660228.167 1369632.67 -4122536.52 -1190603.51]
+bbox			= [-1010040.82 1005949.88 -4051052.47 -1814781.62]
 
-projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=0 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs
-wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371220,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1],EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=0 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
+projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs
+wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371220,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1],EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
 
 prettywkt =
 PROJCS["unnamed",
@@ -53,12 +53,12 @@ PROJCS["unnamed",
         UNIT["degree",0.0174532925199433]],
     PROJECTION["Polar_Stereographic"],
     PARAMETER["latitude_of_origin",60],
-    PARAMETER["central_meridian",0],
+    PARAMETER["central_meridian",20],
     PARAMETER["scale_factor",1],
     PARAMETER["false_easting",0],
     PARAMETER["false_northing",0],
     UNIT["Meter",1],
-    EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=0 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
+    EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
@@ -74,7 +74,7 @@ SemiMinor			= 6371220
 InvFlattening			= 0
 EPSG				= -1
 
-central_meridian	= 0
+central_meridian	= 20
 scale_factor	= 1
 latitude_of_origin	= 60
 false_easting	= 0
@@ -84,7 +84,7 @@ proj options:
 +R = 6371220
 +lat_0 = 90
 +lat_ts = 60
-+lon_0 = 0
++lon_0 = 20
 +proj = "stere"
 +towgs84 = "0,0,0"
 +units = "m"
@@ -98,12 +98,12 @@ bottom	= 1
 
 xnumber		= 135
 ynumber		= 150
-dx		= 15.0360062 km
-dy		= 19.54622005 km
+dx		= 14.93326445 km
+dy		= 14.90847236 km
 
-xywidth		= 2029.860836 km
-xyheight	= 2931.933007 km
-aspectratio	= 0.6923285189
+xywidth		= 2015.990701 km
+xyheight	= 2236.270854 km
+aspectratio	= 0.901496658
 
 Information on the locations:
 

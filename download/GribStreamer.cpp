@@ -158,9 +158,6 @@ void GribStreamer::setLatlonGeometryToGrib() const
   {
     gset(itsGribHandle, "typeOfGrid", "regular_ll");
 
-    // std::cerr << __LINE__ << " BB: " << itsBoundingBox.bottomLeft << " - " <<
-    // itsBoundingBox.topRight << std::endl;
-
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
     gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
     gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
@@ -322,9 +319,6 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
     if ((!itsGrib1Flag) && (lon < 0))
       lon += 360;
 
-    // std::cerr << __LINE__ << " BB: " << itsBoundingBox.bottomLeft << " - " <<
-    // itsBoundingBox.topRight << std::endl;
-
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", lon);
     gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
 
@@ -398,9 +392,6 @@ void GribStreamer::setMercatorGeometryToGrib() const
 {
   try
   {
-    // std::cerr << __LINE__ << " BB: " << itsBoundingBox.bottomLeft << " - " <<
-    // itsBoundingBox.topRight << std::endl;
-
     gset(itsGribHandle, "typeOfGrid", "mercator");
 
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());

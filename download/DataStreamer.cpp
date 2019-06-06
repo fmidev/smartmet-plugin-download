@@ -438,7 +438,6 @@ void DataStreamer::getBBoxStr(const std::string &bbox)
 
     NFmiPoint bottomLeft{std::stod(parts[0]), std::stod(parts[1])};
     NFmiPoint topRight{std::stod(parts[2]), std::stod(parts[3])};
-    // std::cerr << __LINE__ << " BBOX: " << bottomLeft << " and " << topRight << std::endl;
     itsRegBoundingBox = BBoxCorners{bottomLeft, topRight};
   }
   catch (...)
@@ -529,14 +528,6 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
       }
 
     itsRegBoundingBox = BBoxCorners{NFmiPoint(blLon, blLat), NFmiPoint(trLon, trLat)};
-
-    // std::cerr << __LINE__ << " BBOX: " << blLon << "," << blLat << " " << trLon << "," << trLat
-    // << std::endl;
-
-    // (*itsRegBoundingBox).bottomLeft = NFmiPoint(blLon, blLat);
-    // (*itsRegBoundingBox).topRight = NFmiPoint(trLon, trLat);
-
-    // std::cout << "BL: " << blLon << "," << blLat << "\nTR: " << trLon << "," << trLat << "\n";
   }
   catch (...)
   {
@@ -560,8 +551,6 @@ void DataStreamer::getLLBBox(Engine::Querydata::Q q)
 
     itsBoundingBox.bottomLeft = (*itsRegBoundingBox).bottomLeft;
     itsBoundingBox.topRight = (*itsRegBoundingBox).topRight;
-    // std::cerr << __LINE__ << " BBOX: " << itsBoundingBox.bottomLeft << " - " <<
-    // itsBoundingBox.topRight << std::endl;
   }
   catch (...)
   {
@@ -650,19 +639,6 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
           fabs(ceil(area.WorldXYWidth() / ((*itsReqParams.gridResolutionXY)[0].first * 1000))));
       gridSizeY = boost::numeric_cast<size_t>(
           fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second * 1000))));
-
-#if 0
-      std::cerr << "\n\nAREA = " << area << std::endl;
-
-      std::cerr << "nativeGridSizeX = " << nativeGridSizeX << "\n"
-                << "nativeGridSizeY = " << nativeGridSizeY << "\n"
-                << "gridSizeX = " << gridSizeX << "\n"
-                << "gridSizeY = " << gridSizeY << "\n"
-                << "w width = " << area.WorldXYWidth() << "\n"
-                << "w height = " << area.WorldXYHeight() << "\n"
-                << "resolx = " << (*itsReqParams.gridResolutionXY)[0].first << "\n"
-                << "resoly = " << (*itsReqParams.gridResolutionXY)[0].second << "\n";
-#endif
 
       if ((gridSizeX <= 1) || (gridSizeY <= 1))
         throw Spine::Exception(BCP, "Invalid gridsize for producer '" + itsReqParams.producer + "'")
@@ -761,8 +737,6 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       auto width = gridcenter[1].first;  // kilometers
       auto height = gridcenter[1].second;
 
-      // std::cerr << "\n\nCREATE FROM CENTER: " << width << "x" << height << "\n";
-
       boost::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
           itsReqParams.projection, "FMI", center, 2 * 1000 * width, 2 * 1000 * height));
 
@@ -777,7 +751,6 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       tr = NFmiPoint((*itsReqParams.bboxRect)[TOPRIGHT].first,
                      (*itsReqParams.bboxRect)[TOPRIGHT].second);
     }
-    // std::cerr << __LINE__ << " CROP: " << bl << "\t" << tr << std::endl;
 
 #ifdef WGS84
     NFmiPoint xy1 = grid.XYToGrid(grid.Area()->NativeToXY(bl));
@@ -823,8 +796,6 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
     bl = grid.GridToLatLon(NFmiPoint(itsCropping.bottomLeftX, itsCropping.bottomLeftY));
     tr = grid.GridToLatLon(NFmiPoint(itsCropping.topRightX, itsCropping.topRightY));
 #endif
-
-    // std::cerr << __LINE__ << " CROP: " << bl << "\t" << tr << std::endl;
 
     ostringstream os;
     os << fixed << setprecision(8) << bl.X() << "," << bl.Y() << "," << tr.X() << "," << tr.Y();
@@ -1035,8 +1006,6 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     NFmiPoint bl = itsBoundingBox.bottomLeft;
     NFmiPoint tr = itsBoundingBox.topRight;
 
-    // std::cerr << __LINE__ << " BYT: " << bl << "\t" << tr << std::endl;
-
     // Calculate/transform output cs grid cell projected (or latlon) coordinates to qd latlons.
     //
     // Get transformations from projected (or latlon) target cs to qd latlon cs and from projected
@@ -1106,8 +1075,6 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
               itsBoundingBox.bottomLeft = NFmiPoint(txc, tyc);
             else
               itsBoundingBox.topRight = NFmiPoint(txc, tyc);
-            // std::cerr << __LINE__ << " BBOX: " << itsBoundingBox.bottomLeft << " - " <<
-            // itsBoundingBox.topRight << std::endl;
           }
 
           if (itsReqParams.outputFormat == NetCdf)
@@ -1435,7 +1402,6 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
     // Target querydata is needed for the interpolation. It will be used for the data output too if
     // qd format was selected.
 
-    // std::cerr << "Creating QD" << std::endl;
     if (!itsQueryData.get())
       createQD(wantedGrid);
 
@@ -1677,6 +1643,44 @@ bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Test if the newbase projection name matches (and there are no parameters to it)
+ *
+ * - stereographic matches PROJ.4 stere
+ * - stereographic,20 does not match due to the extra parameter
+ */
+// ----------------------------------------------------------------------
+
+bool projectionMatches(const std::string &projection, const NFmiArea &area)
+{
+  if (projection.empty())
+    return false;
+  if (projection.find(',') != std::string::npos)
+    return false;
+
+  // Match projection names to projection types. Note that +towgs84 etc
+  // checks are done automatically by DetectClassId, we do not need
+  // to check them separately.
+
+  const auto &proj = area.Proj();
+  auto id = proj.DetectClassId();
+
+  switch (id)
+  {
+    // clang-format off
+    case kNFmiLatLonArea:                return (projection == "latlon");
+    case kNFmiMercatorArea:              return (projection == "mercator");
+    case kNFmiStereographicArea:         return (projection == "stereographic");
+    case kNFmiEquiDistArea:              return (projection == "equidist");
+    case kNFmiLambertConformalConicArea: return (projection == "lcc");
+    case kNFmiRotatedLatLonArea:         return (projection == "rotlatlon" || projection == "invrotlatlon");
+    case kNFmiYKJArea:                   return (projection == "ykj");
+    default:                             return (projection == proj.GetString("proj"));
+      // clang-format on
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Inspect request's gridsize and projection related parameters
  *	    and create target projection (area object) if needed.
  *
@@ -1723,7 +1727,10 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       return;
 
     // Clear the projection request if it is identical to the data:
-    //
+
+    if (projectionMatches(itsReqParams.projection, nativeArea))
+      itsReqParams.projection.clear();
+
     // if ((!itsReqParams.projection.empty()) && (projection.find(itsReqParams.projection) == 0))
     //  itsReqParams.projection.clear();
 
@@ -1903,11 +1910,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
     std::size_t gridSizeX = itsReqGridSizeX;
     std::size_t gridSizeY = itsReqGridSizeY;
 
-#if 0    
-    std::cerr << "Native size: " << nativeGridSizeX << "," << nativeGridSizeY
-              << "\nRequested: " << gridSizeX << "," << gridSizeY << std::endl;
-#endif
-
     // All data has same projection, gridsize and bounding box; thus target projection (area object)
     // and grid needs to be checked/created only once.
     //
@@ -1916,7 +1918,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      // std::cerr << "Path 1\n";
       itsUseNativeGridSize = setRequestedGridSize(nativeArea, nativeGridSizeX, nativeGridSizeY);
       createArea(q, nativeArea, nativeClassId, nativeGridSizeX, nativeGridSizeY);
     }
@@ -1928,7 +1929,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      // std::cerr << "Path 2\n";
       // Recalculate gridsize if nonnative projection and grid resolution is given (or set to retain
       // it when projecting to latlon).
       //
@@ -1943,7 +1943,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     if (!itsProjectionChecked)
     {
-      // std::cerr << "Path 3\n";
       if ((itsReqParams.datumShift == Datum::DatumShift::None) &&
           (nonNativeGrid || (!itsUseNativeBBox)))
       {
@@ -1956,9 +1955,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                         ? itsCropping.gridSizeY
                         : itsReqGridSizeY;
 
-        // std::cerr << "createGrid!\n";
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
-        // std::cerr << "createGrid done!\n";
       }
 
       auto gs = (itsCropping.crop ? itsCropping.gridSizeX * itsCropping.gridSizeY
