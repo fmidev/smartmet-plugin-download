@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.4.15
+Version: 19.9.2
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,22 +17,22 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 19.4.12
-BuildRequires: smartmet-library-macgyver-devel >= 18.11.24
-BuildRequires: smartmet-library-newbase-devel >= 19.4.11
+BuildRequires: smartmet-library-spine-devel >= 19.8.28
+BuildRequires: smartmet-library-macgyver-devel >= 19.8.2
+BuildRequires: smartmet-library-newbase-devel >= 19.8.12
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 19.3.21
+BuildRequires: smartmet-engine-querydata-devel >= 19.8.28
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 18.11.24
-Requires: smartmet-library-spine >= 19.4.12
-Requires: smartmet-library-newbase >= 19.4.11
-Requires: smartmet-engine-querydata >= 19.3.21
-Requires: smartmet-server >= 19.3.19
+Requires: smartmet-library-macgyver >= 19.8.2
+Requires: smartmet-library-spine >= 19.8.28
+Requires: smartmet-library-newbase >= 19.8.12
+Requires: smartmet-engine-querydata >= 19.8.28
+Requires: smartmet-server >= 19.8.9
 %if 0%{rhel} >= 7
 Requires: boost-date-time
 Requires: boost-iostreams
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Mon Sep  2 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.9.2-1.fmi
+- Repackaged since Spine::Location ABI changed
+
 * Mon Apr 15 2019 Pertti Kinnia <pertti.kinnia@fmi.fi> - 19.4.15-1.fmi
 - Reapplied the changes to use in-memory querydata, just not using in-mem qd for multifile data (BS-1567)
 - Increased output chunk size. Allocating output buffer from heap when loading netcdf data
