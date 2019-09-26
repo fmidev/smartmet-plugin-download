@@ -78,7 +78,9 @@ struct Producer
 
   NamedSettings::const_iterator namedSettingsBegin() const { return (namedSettings.begin()); }
   NamedSettings::const_iterator namedSettingsEnd() const { return (namedSettings.end()); }
+#ifdef USE_QENGINE_CONFIG
   boost::optional<const Engine::Querydata::ProducerConfig &> qEngineProducerConfig;
+#endif  
 };
 
 typedef std::map<std::string, Producer> Producers;
