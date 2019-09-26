@@ -1,6 +1,6 @@
 PROG = $(patsubst %.cpp,%,$(wildcard *Test.cpp))
 
-MAINFLAGS = -std=c++11 -Wall -W -Wno-unused-parameter
+FLAGS = -std=c++11 -Wall -W -Wno-unused-parameter
 
 EXTRAFLAGS = -Werror -pedantic -Wpointer-arith -Wcast-qual \
 	-Wcast-align -Wwrite-strings -Wconversion -Winline \
@@ -10,8 +10,15 @@ EXTRAFLAGS = -Werror -pedantic -Wpointer-arith -Wcast-qual \
 
 DIFFICULTFLAGS = -Weffc++ -Wunreachable-code -Wredundant-decls
 
+ifeq ($(TSAN), yes)
+  FLAGS += -fsanitize=thread
+endif
+ifeq ($(ASAN), yes)
+  FLAGS += -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined -fsanitize-address-use-after-scope
+endif
+
 CC = g++
-CFLAGS = -DUNIX -O0 -g $(MAINFLAGS)
+CFLAGS = -DUNIX -O0 -g $(FLAGS)
 INCLUDES = -I ../download -I /usr/include/smartmet -I /usr/include/mysql
 
 LIBS =	-lsmartmet-spine \
@@ -21,7 +28,6 @@ LIBS =	-lsmartmet-spine \
 	-lboost_thread \
 	-lboost_filesystem \
 	-lboost_iostreams \
-	-lboost_regex \
 	-lboost_system \
 	-lconfig++ \
 	-lbz2 -lz \
