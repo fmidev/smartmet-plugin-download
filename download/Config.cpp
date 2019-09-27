@@ -490,6 +490,7 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
 
     if (p != itsProducers.end())
     {
+#ifdef USE_QENGINE_CONFIG
       if (!(p->second.qEngineProducerConfig))
       {
         if (name.empty())
@@ -502,8 +503,10 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
             name = *prodlist.begin();
         }
 
+	// THIS IS NOT THREAD SAFE IF THE VARIABLE IS USED!
         p->second.qEngineProducerConfig = querydata.getProducerConfig(name);
       }
+#endif      
 
       return p->second;
     }

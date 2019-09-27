@@ -28,6 +28,9 @@ objdir = obj
 
 DEFINES = -DUNIX -DWGS84 -D_REENTRANT
 
+-include $(HOME)/.smartmet.mk
+GCC_DIAG_COLOR ?= always
+
 ifeq ($(CXX), clang++)
 
 # TODO: Try to shorten the list of disabled checks
@@ -48,11 +51,12 @@ ifeq ($(CXX), clang++)
 	-isystem $(includedir) \
 	-isystem $(includedir)/smartmet \
 	-isystem $(includedir)/mysql \
-	-isystem $(includedir)/gdal
+	-isystem $(includedir)/gdal \
+	-isystem $(includedir)/jsoncpp
 
 else
 
- FLAGS = -std=c++11 -fPIC -MD -Wall -W -Wno-unused-parameter -fno-omit-frame-pointer -Wno-unknown-pragmas -fdiagnostics-color=always
+ FLAGS = -std=c++11 -fPIC -MD -Wall -W -Wno-unused-parameter -fno-omit-frame-pointer -Wno-unknown-pragmas -fdiagnostics-color=$(GCC_DIAG_COLOR)  -Wnon-virtual-dtor
 
  FLAGS_DEBUG = \
 	-Wcast-align \
@@ -74,6 +78,13 @@ else
 	-I$(includedir)/mysql \
 	-I$(includedir)/gdal \
 	-I$(includedir)/jsoncpp
+endif
+
+ifeq ($(TSAN), yes)
+  FLAGS += -fsanitize=thread
+endif
+ifeq ($(ASAN), yes)
+  FLAGS += -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined -fsanitize-address-use-after-scope
 endif
 
 # Compile options in detault, debug and profile modes
