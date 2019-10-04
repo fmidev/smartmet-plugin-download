@@ -32,11 +32,11 @@ top right lonlat	= 29.1677,61.5952
 bottom left lonlat	= 21.2419,58.2907
 bottom right lonlat	= 28.0827,57.9959
 
-top left WGS84		= 21.4113,61.9354
-top right WGS84		= 29.1677,61.5952
-bottom left WGS84	= 21.2419,58.2907
-bottom right WGS84	= 28.0827,57.9959
-center WGS84		= 24.9763,60.005
+top left WGS84		= 21.4113,62.0947
+top right WGS84		= 29.1677,61.7557
+bottom left WGS84	= 21.2419,58.4623
+bottom right WGS84	= 28.0827,58.1684
+center WGS84		= 24.9763,60.1711
 
 bbox			= [73179.8422 479387.793 -3375665.88 -2970438.92]
 
