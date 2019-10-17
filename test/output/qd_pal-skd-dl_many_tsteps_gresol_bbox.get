@@ -38,16 +38,16 @@ bottom left WGS84	= 15,58.1725
 bottom right WGS84	= 30.2611,57.7978
 center WGS84		= 23.4377,65.0262
 
-bbox			= [-297120.488 614793.197 -3396102.72 -1892138.9]
+bbox			= [-297120.908 614794.066 -3396107.52 -1892141.58]
 
-projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs
-wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371220,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1],EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
+projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371229 +units=m +wktext +towgs84=0,0,0 +no_defs
+wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371229,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["Meter",1],EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371229 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
 
 prettywkt =
 PROJCS["unnamed",
     GEOGCS["unnamed ellipse",
         DATUM["unknown",
-            SPHEROID["unnamed",6371220,0],
+            SPHEROID["unnamed",6371229,0],
             TOWGS84[0,0,0,0,0,0,0]],
         PRIMEM["Greenwich",0],
         UNIT["degree",0.0174532925199433]],
@@ -58,7 +58,7 @@ PROJCS["unnamed",
     PARAMETER["false_easting",0],
     PARAMETER["false_northing",0],
     UNIT["Meter",1],
-    EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371220 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
+    EXTENSION["PROJ4","+proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +R=6371229 +units=m +wktext +towgs84=0,0,0 +no_defs"]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
@@ -69,8 +69,8 @@ IsGeocentric			= 0
 IsLocal				= 0
 IsVertical			= 0
 IsCompound			= 0
-SemiMajor			= 6371220
-SemiMinor			= 6371220
+SemiMajor			= 6371229
+SemiMinor			= 6371229
 InvFlattening			= 0
 EPSG				= -1
 
@@ -81,7 +81,7 @@ false_easting	= 0
 false_northing	= 0
 
 proj options:
-+R = 6371220
++R = 6371229
 +lat_0 = 90
 +lat_ts = 60
 +lon_0 = 20
@@ -98,11 +98,11 @@ bottom	= 1
 
 xnumber		= 112
 ynumber		= 125
-dx		= 8.142086479 km
-dy		= 12.03171054 km
+dx		= 8.14209798 km
+dy		= 12.03172753 km
 
-xywidth		= 911.9136856 km
-xyheight	= 1503.963817 km
+xywidth		= 911.9149738 km
+xyheight	= 1503.965942 km
 aspectratio	= 0.606340176
 
 Information on the locations:

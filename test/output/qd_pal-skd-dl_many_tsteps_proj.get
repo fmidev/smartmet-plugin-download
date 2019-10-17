@@ -38,16 +38,16 @@ bottom left WGS84	= -9.09871,51.4875
 bottom right WGS84	= 49,51.4875
 center WGS84		= 19.9506,62.1301
 
-bbox			= [-1011765.33 5448739.55 5704496.71 8077711.91]
+bbox			= [-1011766.76 5448747.25 5704504.77 8077723.32]
 
-projstr	= +proj=eqc +R=6371220 +wktext +over +no_defs +towgs84=0,0,0
-wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371220,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],EXTENSION["PROJ4","+proj=eqc +R=6371220 +wktext +over +no_defs +towgs84=0,0,0"]]
+projstr	= +proj=eqc +R=6371229 +wktext +over +no_defs +towgs84=0,0,0
+wkt	= PROJCS["unnamed",GEOGCS["unnamed ellipse",DATUM["unknown",SPHEROID["unnamed",6371229,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0],UNIT["degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],EXTENSION["PROJ4","+proj=eqc +R=6371229 +wktext +over +no_defs +towgs84=0,0,0"]]
 
 prettywkt =
 PROJCS["unnamed",
     GEOGCS["unnamed ellipse",
         DATUM["unknown",
-            SPHEROID["unnamed",6371220,0],
+            SPHEROID["unnamed",6371229,0],
             TOWGS84[0,0,0,0,0,0,0]],
         PRIMEM["Greenwich",0],
         UNIT["degree",0.0174532925199433]],
@@ -56,7 +56,7 @@ PROJCS["unnamed",
     PARAMETER["central_meridian",0],
     PARAMETER["false_easting",0],
     PARAMETER["false_northing",0],
-    EXTENSION["PROJ4","+proj=eqc +R=6371220 +wktext +over +no_defs +towgs84=0,0,0"]]
+    EXTENSION["PROJ4","+proj=eqc +R=6371229 +wktext +over +no_defs +towgs84=0,0,0"]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
@@ -67,8 +67,8 @@ IsGeocentric			= 0
 IsLocal				= 0
 IsVertical			= 0
 IsCompound			= 0
-SemiMajor			= 6371220
-SemiMinor			= 6371220
+SemiMajor			= 6371229
+SemiMinor			= 6371229
 InvFlattening			= 0
 EPSG				= -1
 
@@ -78,7 +78,7 @@ false_easting	= 0
 false_northing	= 0
 
 proj options:
-+R = 6371220
++R = 6371229
 +proj = "eqc"
 +towgs84 = "0,0,0"
 +no_defs
@@ -92,11 +92,11 @@ bottom	= 1
 
 xnumber		= 430
 ynumber		= 159
-dx		= 15.02442995 km
-dy		= 14.92588171 km
+dx		= 15.02445118 km
+dy		= 14.92590279 km
 
-xywidth		= 6460.50488 km
-xyheight	= 2373.215192 km
+xywidth		= 6460.514006 km
+xyheight	= 2373.218544 km
 aspectratio	= 2.722258353
 
 Information on the locations:
