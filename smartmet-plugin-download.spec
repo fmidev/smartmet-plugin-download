@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.9.26
+Version: 19.11.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,11 +17,11 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 19.9.26
+BuildRequires: smartmet-library-spine-devel >= 19.11.20
 BuildRequires: smartmet-library-macgyver-devel >= 19.9.26
-BuildRequires: smartmet-library-newbase-devel >= 19.9.26
+BuildRequires: smartmet-library-newbase-devel >= 19.11.20
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 19.9.26
+BuildRequires: smartmet-engine-querydata-devel >= 19.11.20
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -29,10 +29,10 @@ Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 19.9.26
-Requires: smartmet-library-spine >= 19.9.26
-Requires: smartmet-library-newbase >= 19.9.26
-Requires: smartmet-engine-querydata >= 19.9.26
-Requires: smartmet-server >= 19.9.26
+Requires: smartmet-library-spine >= 19.11.20
+Requires: smartmet-library-newbase >= 19.11.20
+Requires: smartmet-engine-querydata >= 19.11.20
+Requires: smartmet-server >= 19.10.1
 Requires: boost-date-time
 Requires: boost-iostreams
 Requires: boost-system
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Nov 20 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.11.20-1.fmi
+- Rebuilt due to newbase API changes
+
 * Thu Sep 26 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.9.26-1.fmi
 - Fixed thread safety issue (TSAN)
 - Added support for ASAN & TSAN builds
