@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.11.20
+Version: 19.11.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Fri Nov 22 2019 Pertti Kinnia <pertti.kinnia@fmi.fi> - 19.11.22-1.fmi
+- Added config setting 'logrequestdatavalues' (default is 0; no logging). Request is written to stderr if given number of output data values is exceeded
+
 * Wed Nov 20 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.11.20-1.fmi
 - Rebuilt due to newbase API changes
 

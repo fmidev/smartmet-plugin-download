@@ -2284,6 +2284,15 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                 Fmi::to_string(itsCfg.getMaxRequestDataValues()) +
                 "); adjust area/grid and/or number of parameters, levels and times");
       }
+      else
+      {
+        auto logValues = itsCfg.getLogRequestDataValues();
+
+        if ((logValues > 0) && (numValues > logValues))
+          fprintf(stderr, "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
+                  numValues, itsDataParams.size(), itsDataLevels.size(), itsDataTimes.size(), gs,
+                  itsRequest.getURI().c_str());
+      }
 
       itsProjectionChecked = true;
     }
