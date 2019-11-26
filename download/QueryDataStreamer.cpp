@@ -205,9 +205,7 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
 
     // Data must be cropped manually.
 
-    NFmiDataMatrix<float> croppedValues;
-
-    croppedValues.resize(itsCropping.gridSizeX, itsCropping.gridSizeY);
+    NFmiDataMatrix<float> croppedValues(cropping.gridSizeX, cropping.gridSizeY);
 
     size_t x0 = itsCropping.bottomLeftX, y0 = itsCropping.bottomLeftY;
     size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx, cy, x, y;
