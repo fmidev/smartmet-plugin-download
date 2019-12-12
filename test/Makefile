@@ -19,11 +19,15 @@ endif
 
 CC = g++
 CFLAGS = -DUNIX -O0 -g $(FLAGS)
-INCLUDES = -I ../download -I /usr/include/smartmet -I /usr/include/mysql
+INCLUDES = \
+	-I../download \
+	-I/usr/include/smartmet \
+	-I/usr/gdal30/include
 
 LIBS =	-lsmartmet-spine \
 	-lsmartmet-newbase \
 	-lsmartmet-macgyver \
+	-L/usr/gdal30/lib -lgdal \
 	-lboost_date_time \
 	-lboost_thread \
 	-lboost_filesystem \
@@ -32,9 +36,7 @@ LIBS =	-lsmartmet-spine \
 	-lconfig++ \
 	-lbz2 -lz \
 	-leccodes \
-	-lgdal \
-	-lpthread \
-	-L/usr/lib64/mysql -lmysqlclient_r
+	-lpthread
 
 OBS =	../obj/Config.o \
 		../obj/DataStreamer.o \

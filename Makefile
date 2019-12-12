@@ -50,8 +50,7 @@ ifeq ($(CXX), clang++)
  INCLUDES = \
 	-isystem $(includedir) \
 	-isystem $(includedir)/smartmet \
-	-isystem $(includedir)/mysql \
-	-isystem $(includedir)/gdal \
+	-isystem $(PREFIX)/gdal30/include \
 	-isystem $(includedir)/jsoncpp
 
 else
@@ -75,8 +74,7 @@ else
   INCLUDES = \
 	-I$(includedir) \
 	-I$(includedir)/smartmet \
-	-I$(includedir)/mysql \
-	-I$(includedir)/gdal \
+	-I$(PREFIX)/gdal30/include \
 	-I$(includedir)/jsoncpp
 endif
 
@@ -108,7 +106,7 @@ LIBS = -L$(libdir) \
 	-lboost_system \
 	-lbz2 -lz \
 	-leccodes \
-	-lgdal \
+	-L$(PREFIX)/gdal30/lib -lgdal \
 	-lnetcdf_c++ \
 	-lfmt \
 	`pkg-config --libs jsoncpp`

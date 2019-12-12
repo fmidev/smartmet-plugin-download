@@ -19,7 +19,7 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <gdal/cpl_conv.h>
+#include <cpl_conv.h>
 #include <macgyver/HelmertTransformation.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>

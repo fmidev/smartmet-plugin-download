@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.11.20
+Version: 19.12.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -14,7 +14,7 @@ BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost-devel
 BuildRequires: fmt-devel
-BuildRequires: gdal-devel >= 1.11.4
+BuildRequires: gdal30-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
@@ -26,7 +26,7 @@ BuildRequires: smartmet-engine-querydata-devel >= 19.11.20
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
-Requires: gdal >= 1.11.4
+Requires: gdal30
 Requires: eccodes
 Requires: fmt >= 5.2.0
 Requires: jsoncpp >= 0.10.5
@@ -68,6 +68,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Thu Dec 12 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.12.12-1.fmi
+- Upgrade to GDAL 3.0
+
 * Wed Nov 20 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.11.20-1.fmi
 - Rebuilt due to newbase API changes
 

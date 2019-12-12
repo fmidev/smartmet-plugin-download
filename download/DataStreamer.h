@@ -13,7 +13,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/querydata/Model.h>
-#include <gdal/ogr_spatialref.h>
+#include <ogr_spatialref.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <spine/TimeSeriesGenerator.h>

@@ -3,7 +3,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/optional.hpp>
 #include <engines/querydata/Q.h>
-#include <gdal/ogr_spatialref.h>
+#include <ogr_spatialref.h>
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiPoint.h>
 #include <spine/Exception.h>

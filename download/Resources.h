@@ -2,7 +2,7 @@
 
 #include <boost/core/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-#include <gdal/ogr_spatialref.h>
+#include <ogr_spatialref.h>
 #include <newbase/NFmiArea.h>
 #include <newbase/NFmiGrid.h>
 #include <newbase/NFmiPoint.h>
