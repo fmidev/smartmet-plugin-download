@@ -10,6 +10,7 @@
 #include "DataStreamer.h"
 
 #include <engines/geonames/Engine.h>
+#include <engines/grid/Engine.h>
 #include <spine/HTTP.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMetPlugin.h>
@@ -53,6 +54,7 @@ class Plugin : public SmartMetPlugin, private boost::noncopyable
 
   Spine::Reactor* itsReactor;
   Engine::Querydata::Engine* itsQEngine;
+  Engine::Grid::Engine* itsGridEngine;
   Engine::Geonames::Engine* itsGeoEngine;
 };
 

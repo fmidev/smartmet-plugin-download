@@ -17,7 +17,8 @@ namespace Download
 class QDStreamer : public DataStreamer
 {
  public:
-  QDStreamer(const Spine::HTTP::Request& req, const Config& config, const Producer& producer);
+  QDStreamer(const Spine::HTTP::Request& req, const Config& config, const Producer& producer,
+             const ReqParams &reqParams);
   virtual ~QDStreamer();
 
   virtual std::string getChunk();
