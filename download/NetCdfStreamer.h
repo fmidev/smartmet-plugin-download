@@ -19,7 +19,8 @@ namespace Download
 class NetCdfStreamer : public DataStreamer
 {
  public:
-  NetCdfStreamer(const Spine::HTTP::Request &req, const Config &config, const Producer &producer);
+  NetCdfStreamer(const Spine::HTTP::Request &req, const Config &config, const Producer &producer,
+                 const ReqParams &reqParams);
   virtual ~NetCdfStreamer();
 
   virtual std::string getChunk();
@@ -31,6 +32,11 @@ class NetCdfStreamer : public DataStreamer
                             const NFmiMetTime &mt,
                             NFmiDataMatrix<float> &values,
                             std::string &chunk);
+
+  virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
+                                int level,
+                                const NFmiMetTime &mt,
+                                std::string &chunk);
 
  private:
   NetCdfStreamer();

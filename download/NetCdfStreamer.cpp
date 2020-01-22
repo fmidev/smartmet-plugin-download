@@ -32,8 +32,9 @@ namespace Download
 {
 NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
-                               const Producer &producer)
-    : DataStreamer(req, config, producer),
+                               const Producer &producer,
+                               const ReqParams &reqParams)
+    : DataStreamer(req, config, producer, reqParams),
       ncError(NcError::verbose_nonfatal),
       file(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) + "_" +
            boost::lexical_cast<string>(boost::this_thread::get_id())),
@@ -1149,6 +1150,28 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
     // Data is loaded from 'values'; set nonempty chunk to indicate data is available.
 
     chunk = " ";
+  }
+  catch (...)
+  {
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Load chunk of grid data; called by DataStreamer to get format specific chunk.
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
+                                      int level,
+                                      const NFmiMetTime &mt,
+                                      string &chunk)
+{
+  try
+  {
+    throw Spine::Exception(BCP, "Netcdf format not yet supported with grid data");
   }
   catch (...)
   {
