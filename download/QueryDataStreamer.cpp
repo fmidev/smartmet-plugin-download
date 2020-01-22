@@ -23,8 +23,10 @@ namespace Download
 {
 QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Config &config,
-                       const Producer &producer)
-    : DataStreamer(req, config, producer), sendMeta(true), isLoaded(false), currentX(0), currentY(0)
+                       const Producer &producer,
+                       const ReqParams &reqParams)
+    : DataStreamer(req, config, producer, reqParams),
+      sendMeta(true), isLoaded(false), currentX(0), currentY(0)
 {
 }
 
@@ -205,9 +207,7 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
 
     // Data must be cropped manually.
 
-    NFmiDataMatrix<float> croppedValues;
-
-    croppedValues.resize(cropping.gridSizeX, cropping.gridSizeY);
+    NFmiDataMatrix<float> croppedValues(cropping.gridSizeX, cropping.gridSizeY);
 
     size_t x0 = cropping.bottomLeftX, y0 = cropping.bottomLeftY;
     size_t xN = x0 + cropping.gridSizeX, yN = y0 + cropping.gridSizeY, cx, cy, x, y;

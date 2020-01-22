@@ -41,6 +41,8 @@ class Config : private boost::noncopyable
   const Producer& getProducer(std::string& name, const Engine::Querydata::Engine& querydata);
   const Producer& getProducer(const std::string& name) const;
 
+  const std::string& defaultSource() const { return itsDefaultSource; }
+
   const std::string& defaultProducerName() const { return itsDefaultProducer->first; }
   const Producer& defaultProducer() const { return itsDefaultProducer->second; }
   const ParamChangeTable& getParamChangeTable(bool grib = true) const
@@ -61,6 +63,8 @@ class Config : private boost::noncopyable
 
  private:
   libconfig::Config itsConfig;
+
+  std::string itsDefaultSource;
 
   Producers itsProducers;
   Producers::const_iterator itsDefaultProducer;
