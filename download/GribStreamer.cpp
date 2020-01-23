@@ -1285,7 +1285,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
       {
         float value = dataValues[i];
 
-        if (value != kFloatMissing)
+        if (value != ParamValueMissing)
           valueArray[i] = (value + offset) / scale;
         else
           valueArray[i] = gribMissingValue;
