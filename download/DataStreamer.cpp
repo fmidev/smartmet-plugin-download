@@ -3172,10 +3172,10 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery) const
   }
   else if (itsReqParams.gridCenterLL)
   {
-    string gridCenter = Fmi::to_string((*itsReqParams.gridResolutionXY)[0].first) + "," +
-                        Fmi::to_string((*itsReqParams.gridResolutionXY)[0].second);
-    string gridMetricWidth = Fmi::to_string((*itsReqParams.gridResolutionXY)[1].first);
-    string gridMetricHeight = Fmi::to_string((*itsReqParams.gridResolutionXY)[1].second);
+    string gridCenter = Fmi::to_string((*itsReqParams.gridCenterLL)[0].first) + "," +
+                        Fmi::to_string((*itsReqParams.gridCenterLL)[0].second);
+    string gridMetricWidth = Fmi::to_string((*itsReqParams.gridCenterLL)[1].first);
+    string gridMetricHeight = Fmi::to_string((*itsReqParams.gridCenterLL)[1].second);
 
     gridQuery.mAttributeList.addAttribute("grid.center", gridCenter);
     gridQuery.mAttributeList.addAttribute("grid.metricWidth", gridMetricWidth);
