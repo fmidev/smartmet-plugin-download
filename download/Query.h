@@ -54,7 +54,6 @@ struct Producer
 {
   std::set<std::string> disabledReqParams;  // Disabled url option names from config
   std::set<int> disabledDataParams;         // Disabled url 'param' option values from config
-  std::set<int> gridDefaultLevels;          // Default 'level' values for grid data from config
 
   NamedSettings namedSettings;  // Named settings ('key = value;') to be set to output (used with
                                 // grib formats only)
@@ -127,10 +126,6 @@ typedef unsigned long EpsgCode;
 
 struct ReqParams
 {
-  //
-  // Data source
-  //
-  std::string source;
   //
   // Producer name
   //

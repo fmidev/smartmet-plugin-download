@@ -49,8 +49,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
 
         try
         {
-          if ((paramName == "disabledReqParameters") || (paramName == "disabledDataParameters") ||
-              (paramName == "gridDefaultLevels"))
+          if ((paramName == "disabledReqParameters") || (paramName == "disabledDataParameters"))
           {
             libconfig::Setting& setting = settings[i];
 
@@ -72,24 +71,14 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
                 currentSettings.disabledReqParams.insert(param);
               }
             }
-            else if (paramName == "disabledDataParameters")
+            else
             {
               currentSettings.disabledDataParams.clear();
 
-              for (int j = 0; j < setting.getLength(); ++j)
+              for (int j = 0; i < setting.getLength(); ++j)
               {
                 int param = setting[j];
                 currentSettings.disabledDataParams.insert(param);
-              }
-            }
-            else
-            {
-              currentSettings.gridDefaultLevels.clear();
-
-              for (int j = 0; j < setting.getLength(); ++j)
-              {
-                int level = setting[j];
-                currentSettings.gridDefaultLevels.insert(level);
               }
             }
           }
@@ -157,15 +146,12 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
                                   currentSettings.disabledReqParams.end());
     prod.disabledDataParams.insert(currentSettings.disabledDataParams.begin(),
                                    currentSettings.disabledDataParams.end());
-    prod.gridDefaultLevels.insert(currentSettings.gridDefaultLevels.begin(),
-                                  currentSettings.gridDefaultLevels.end());
     prod.namedSettings.insert(currentSettings.namedSettings.begin(),
                               currentSettings.namedSettings.end());
     prod.verticalInterpolation = currentSettings.verticalInterpolation;
     prod.datumShift = currentSettings.datumShift;
 
     currentSettings.namedSettings.clear();
-    currentSettings.gridDefaultLevels.clear();
 
     itsProducers.insert(Producers::value_type(name, prod));
   }
@@ -245,7 +231,7 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
 {
   try
   {
-    // Available producers; if not specified, all producers available in data source
+    // Available producers; if not specified, all producers available in querydata
 
     if (!itsConfig.exists("producers"))
       itsConfig.getRoot().add("producers", libconfig::Setting::TypeGroup);
@@ -281,11 +267,6 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
       throw Spine::Exception(BCP,
                              "producers.enabled must be an array in dls configuration file line " +
                                  boost::lexical_cast<string>(enabled.getSourceLine()));
-
-    // Default data source
-
-    itsConfig.lookupValue("defaultsource", itsDefaultSource);
-    boost::trim(itsDefaultSource);
 
     // Default producer; if not set, using the first producer
 
