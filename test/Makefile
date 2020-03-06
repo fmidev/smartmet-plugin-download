@@ -19,7 +19,7 @@ endif
 
 CC = g++
 CFLAGS = -DUNIX -O0 -g $(FLAGS)
-INCLUDES = -I ../download -I /usr/include/smartmet -I /usr/include/mysql
+INCLUDES = -I ../download -I /usr/include/smartmet
 
 LIBS =	-lsmartmet-spine \
 	-lsmartmet-newbase \
@@ -33,8 +33,7 @@ LIBS =	-lsmartmet-spine \
 	-lbz2 -lz \
 	-leccodes \
 	-lgdal \
-	-lpthread \
-	-L/usr/lib64/mysql -lmysqlclient_r
+	-lpthread
 
 OBS =	../obj/Config.o \
 		../obj/DataStreamer.o \
