@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 19.11.22
+Version: 20.3.19
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,22 +17,22 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 19.11.20
-BuildRequires: smartmet-library-macgyver-devel >= 19.9.26
-BuildRequires: smartmet-library-newbase-devel >= 19.11.20
+BuildRequires: smartmet-library-spine-devel >= 20.3.9
+BuildRequires: smartmet-library-macgyver-devel >= 20.3.5
+BuildRequires: smartmet-library-newbase-devel >= 20.2.13
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 19.11.20
+BuildRequires: smartmet-engine-querydata-devel >= 20.3.19
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 19.9.26
-Requires: smartmet-library-spine >= 19.11.20
-Requires: smartmet-library-newbase >= 19.11.20
-Requires: smartmet-engine-querydata >= 19.11.20
-Requires: smartmet-server >= 19.10.1
+Requires: smartmet-library-macgyver >= 20.3.5
+Requires: smartmet-library-spine >= 20.3.9
+Requires: smartmet-library-newbase >= 20.2.13
+Requires: smartmet-engine-querydata >= 20.3.19
+Requires: smartmet-server >= 20.2.13
 Requires: boost-date-time
 Requires: boost-iostreams
 Requires: boost-system
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Thu Mar 19 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.3.19-1.fmi
+- Improved safety of NcFile initialization
+
 * Fri Nov 22 2019 Pertti Kinnia <pertti.kinnia@fmi.fi> - 19.11.22-1.fmi
 - Added config setting 'logrequestdatavalues' (default is 0; no logging). Request is written to stderr if given number of output data values is exceeded
 
