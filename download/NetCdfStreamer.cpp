@@ -37,7 +37,6 @@ NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
       ncError(NcError::verbose_nonfatal),
       file(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) + "_" +
            boost::lexical_cast<string>(boost::this_thread::get_id())),
-      ncFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic),
       isLoaded(false)
 {
 }
@@ -46,8 +45,17 @@ NetCdfStreamer::~NetCdfStreamer()
 {
   if (ioStream.is_open())
     ioStream.close();
-  
+
   unlink(file.c_str());
+}
+
+void NetCdfStreamer::requireNcFile()
+{
+  // Require a started NetCDF file
+  if (ncFile)
+    return;
+
+  ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
 }
 
 // ----------------------------------------------------------------------
@@ -86,7 +94,8 @@ std::string NetCdfStreamer::getChunk()
 
           // Then outputting the file/data in chunks
 
-          ncFile.close();
+          requireNcFile();
+          ncFile->close();
 
           ioStream.open(file, ifstream::in | ifstream::binary);
 
@@ -147,7 +156,8 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
 {
   try
   {
-    auto dim = boost::shared_ptr<NcDim>(ncFile.add_dim(dimName.c_str(), dimSize), dimDeleter);
+    requireNcFile();
+    auto dim = boost::shared_ptr<NcDim>(ncFile->add_dim(dimName.c_str(), dimSize), dimDeleter);
 
     if (dim)
       return dim;
@@ -175,8 +185,9 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
 {
   try
   {
+    requireNcFile();
     auto var = boost::shared_ptr<NcVar>(
-        ncFile.add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4), varDeleter);
+        ncFile->add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4), varDeleter);
 
     if (var)
       return var;
@@ -613,10 +624,11 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    addAttribute(&ncFile, "Conventions", "CF-1.6");
-    addAttribute(&ncFile, "title", "<title>");
-    addAttribute(&ncFile, "institution", "fmi.fi");
-    addAttribute(&ncFile, "source", "<producer>");
+    requireNcFile();
+    addAttribute(ncFile.get(), "Conventions", "CF-1.6");
+    addAttribute(ncFile.get(), "title", "<title>");
+    addAttribute(ncFile.get(), "institution", "fmi.fi");
+    addAttribute(ncFile.get(), "source", "<producer>");
 
     // Time dimension
 
@@ -860,7 +872,8 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     timeDimName = "time_" + pName;
 
-    boost::shared_ptr<NcDim> tDim(ncFile.get_dim(timeDimName.c_str()), dimDeleter);
+    requireNcFile();
+    boost::shared_ptr<NcDim> tDim(ncFile->get_dim(timeDimName.c_str()), dimDeleter);
 
     if (tDim)
       return tDim;
