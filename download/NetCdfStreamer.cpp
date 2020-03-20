@@ -47,10 +47,11 @@ NetCdfStreamer::~NetCdfStreamer()
 void NetCdfStreamer::requireNcFile()
 {
   // Require a started NetCDF file
-  if (ncFile)
+  if (itsFile)
     return;
 
-  ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
+  itsFile.reset(
+      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
 }
 
 // ----------------------------------------------------------------------
