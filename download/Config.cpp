@@ -421,6 +421,9 @@ Config::Config(const string& configfile)
 
     if (itsConfig.exists("maxrequestdatavalues"))
       itsMaxRequestDataValues = itsConfig.lookup("maxrequestdatavalues");
+
+    if (itsConfig.exists("logrequestdatavalues"))
+      itsLogRequestDataValues = itsConfig.lookup("logrequestdatavalues");
   }
   catch (...)
   {

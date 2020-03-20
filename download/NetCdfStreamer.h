@@ -7,7 +7,7 @@
 #pragma once
 
 #include "DataStreamer.h"
-
+#include <memory>
 #include <netcdfcpp.h>
 
 namespace SmartMet
@@ -34,10 +34,11 @@ class NetCdfStreamer : public DataStreamer
 
  private:
   NetCdfStreamer();
+  void requireNcFile();
 
   NcError itsError;
   std::string itsFilename;
-  NcFile itsFile;
+  std::unique_ptr<NcFile> itsFile;
   std::ifstream itsStream;
   bool itsLoadedFlag;
 

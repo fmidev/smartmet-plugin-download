@@ -58,6 +58,7 @@ class Config : private boost::noncopyable
   std::string packingErrorMessage(const std::string& thePackingType) const;
 
   unsigned long getMaxRequestDataValues() const { return itsMaxRequestDataValues; }
+  unsigned long getLogRequestDataValues() const { return itsLogRequestDataValues; }
 
  private:
   libconfig::Config itsConfig;
@@ -74,6 +75,7 @@ class Config : private boost::noncopyable
   unsigned int itsGrib2TablesVersionMax;
 
   unsigned long itsMaxRequestDataValues = 1024 * 1024 * 1024;
+  unsigned long itsLogRequestDataValues = 0; // if 0, no logging
 
   void parseConfigProducers(const Engine::Querydata::Engine& querydata);
   void parseConfigProducer(const std::string& name, Producer& currentSettings);

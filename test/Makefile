@@ -19,6 +19,7 @@ endif
 
 CC = g++
 CFLAGS = -DUNIX -O0 -g $(FLAGS)
+
 INCLUDES = \
 	-I../download \
 	-I/usr/include/smartmet \
