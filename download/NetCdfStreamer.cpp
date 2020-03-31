@@ -50,8 +50,10 @@ void NetCdfStreamer::requireNcFile()
   if (itsFile)
     return;
 
-  itsFile.reset(
-      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
+  // NcFile::Open does not seem to be thread safe
+  Spine::WriteLock lock(itsFileOpenMutex);
+
+  ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
 }
 
 // ----------------------------------------------------------------------
