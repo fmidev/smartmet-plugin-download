@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.3.19
+Version: 20.3.31
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Tue Mar 31 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.3.31-1.fmi
+- Use a mutex to protect opening temporary NetCDF files, which does not seem to be thread safe
+
 * Thu Mar 19 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.3.19-1.fmi
 - Improved safety of NcFile initialization
 

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "DataStreamer.h"
+#include <spine/Thread.h>
 #include <memory>
 #include <netcdfcpp.h>
 
@@ -41,6 +42,8 @@ class NetCdfStreamer : public DataStreamer
   std::unique_ptr<NcFile> ncFile;
   std::ifstream ioStream;
   bool isLoaded;
+
+  Spine::MutexType itsFileOpenMutex;  // NcFile::Open does not seem to be thread safe
 
   // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
   // shared_ptr:s)
