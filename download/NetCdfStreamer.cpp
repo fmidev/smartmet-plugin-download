@@ -12,7 +12,15 @@
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
+#include <newbase/NFmiStereographicArea.h>
 #include <spine/Exception.h>
+#include <spine/Thread.h>
+
+namespace
+{
+// NcFile::Open does not seem to be thread safe
+SmartMet::Spine::MutexType myFileOpenMutex;
+}  // namespace
 
 using namespace std;
 
@@ -51,7 +59,7 @@ void NetCdfStreamer::requireNcFile()
     return;
 
   // NcFile::Open does not seem to be thread safe
-  Spine::WriteLock lock(itsFileOpenMutex);
+  Spine::WriteLock lock(myFileOpenMutex);
 
   ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
 }
