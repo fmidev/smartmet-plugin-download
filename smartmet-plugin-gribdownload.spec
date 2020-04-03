@@ -70,6 +70,12 @@ rm -rf $RPM_BUILD_ROOT
 * Fri Apr  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.3-1.fmi
 - Repackaged due to library API changes
 
+* Thu Apr  2 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.2-1.fmi
+- Fixed NetCDF mutex to be a global variable instead of a class member variable
+
+* Tue Mar 31 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.3.31-1.fmi
+- Use a mutex to protect opening temporary NetCDF files, which does not seem to be thread safe
+
 * Thu Mar 19 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.3.19-1.fmi
 - Improved safety of NcFile initialization
 
