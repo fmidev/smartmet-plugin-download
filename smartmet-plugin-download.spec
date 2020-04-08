@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.4.2
+Version: 20.4.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Apr  8 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.8-1.fmi
+- Protect the entire NetCDF metadata generation section with a mutex for thread safety
+
 * Thu Apr  2 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.2-1.fmi
 - Fixed NetCDF mutex to be a global variable instead of a class member variable
 
