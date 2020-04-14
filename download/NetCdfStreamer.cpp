@@ -58,9 +58,6 @@ void NetCdfStreamer::requireNcFile()
   if (itsFile)
     return;
 
-  // NcFile::Open does not seem to be thread safe
-  Spine::WriteLock lock(myFileOpenMutex);
-
   ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
 }
 
@@ -1155,8 +1152,10 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
   {
     if (itsMetaFlag)
     {
+      // NcFile metadata generation is not thread safe
+      Spine::WriteLock lock(myFileOpenMutex);
+
       // Set geometry and dimensions
-      //
       setGeometry(q, area, grid);
 
       // Add parameters
