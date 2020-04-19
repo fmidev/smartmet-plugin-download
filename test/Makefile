@@ -20,12 +20,19 @@ endif
 CC = g++
 CFLAGS = -DUNIX -O0 -g $(FLAGS)
 
-INCLUDES = \
+# Boost 1.69
+
+ifneq "$(wildcard /usr/include/boost169)" ""
+  INCLUDES += -I/usr/include/boost169
+  LIBS += -L/usr/lib64/boost169
+endif
+
+INCLUDES += \
 	-I../download \
 	-I/usr/include/smartmet \
 	-I/usr/gdal30/include
 
-LIBS =	-lsmartmet-spine \
+LIBS +=	-lsmartmet-spine \
 	-lsmartmet-newbase \
 	-lsmartmet-macgyver \
 	-L/usr/gdal30/lib -lgdal \
