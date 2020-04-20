@@ -13,7 +13,8 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/querydata/Model.h>
-#include <ogr_spatialref.h>
+#include <gis/CoordinateMatrix.h>
+#include <gis/SpatialReference.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <spine/TimeSeriesGenerator.h>
@@ -92,10 +93,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   bool itsPositiveLevels = false;   // true if (depth) levels are positive
   Query::Levels itsDataLevels;
 
-  BBoxCorners itsBoundingBox;                   // Target projection latlon bounding box
-  NFmiDataMatrix<NFmiPoint> itsSrcLatLons;      // Source grid latlons
-  NFmiDataMatrix<NFmiPoint> itsTargetLatLons;   // Target grid latlons
-  NFmiDataMatrix<NFmiPoint> itsTargetWorldXYs;  // Target grid projected coordinates
+  BBoxCorners itsBoundingBox;               // Target projection latlon bounding box
+  Fmi::CoordinateMatrix itsSrcLatLons;      // Source grid latlons
+  Fmi::CoordinateMatrix itsTargetLatLons;   // Target grid latlons
+  Fmi::CoordinateMatrix itsTargetWorldXYs;  // Target grid projected coordinates
   std::size_t itsReqGridSizeX = 0;
   std::size_t itsReqGridSizeY = 0;
   std::size_t itsNX = 0;

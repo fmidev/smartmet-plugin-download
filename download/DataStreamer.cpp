@@ -912,7 +912,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
                                            *wgs84LLSrsPtr = &wgs84ProjectedSrs;
     bool wgs84ProjLL = false;
 #ifdef WGS84
-    bool qdProjLL = area->SpatialReference()->IsGeographic();
+    bool qdProjLL = area->SpatialReference().isGeographic();
 #else
     bool qdProjLL =
         ((area->AreaStr().find("rotlatlon") == 0) || (area->AreaStr().find("latlon") == 0));
@@ -1549,7 +1549,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       if (!mt)
         tc = q->calcTimeCache(q->validTime());
 
-      q->landscapeCachedInterpolation(itsGridValues, itsLocCache, tc, demMatrix, waterFlagMatrix);
+      itsGridValues = q->landscapeCachedInterpolation(itsLocCache, tc, demMatrix, waterFlagMatrix);
     }
     else
     {
@@ -1976,8 +1976,13 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
         auto logValues = itsCfg.getLogRequestDataValues();
 
         if ((logValues > 0) && (numValues > logValues))
-          fprintf(stderr, "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
-                  numValues, itsDataParams.size(), itsDataLevels.size(), itsDataTimes.size(), gs,
+          fprintf(stderr,
+                  "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
+                  numValues,
+                  itsDataParams.size(),
+                  itsDataLevels.size(),
+                  itsDataTimes.size(),
+                  gs,
                   itsRequest.getURI().c_str());
       }
 
@@ -2296,32 +2301,31 @@ void DataStreamer::extractData(string &chunk)
                 // ('cropMan' was not set by the call to getAreaAndGrid())
                 //
                 itsCropping.cropMan = itsCropping.crop;
-                q->values(itsGridValues, mt, demValues, waterFlags);
+                itsGridValues = q->values(mt, demValues, waterFlags);
               }
             }
             else
             {
               if (itsCropping.cropped && (!itsCropping.cropMan))
-                q->croppedValues(itsGridValues,
-                                 itsCropping.bottomLeftX,
-                                 itsCropping.bottomLeftY,
-                                 itsCropping.topRightX,
-                                 itsCropping.topRightY,
-                                 demValues,
-                                 waterFlags);
+                itsGridValues = q->croppedValues(itsCropping.bottomLeftX,
+                                                 itsCropping.bottomLeftY,
+                                                 itsCropping.topRightX,
+                                                 itsCropping.topRightY,
+                                                 demValues,
+                                                 waterFlags);
               else
-                q->values(itsGridValues, demValues, waterFlags);
+                itsGridValues = q->values(demValues, waterFlags);
             }
           }
           else if (nonNativeGrid)
-            q->pressureValues(itsGridValues, *grid, mt, level, q->isRelativeUV());
+            itsGridValues = q->pressureValues(*grid, mt, level, q->isRelativeUV());
           else
-            q->pressureValues(itsGridValues, mt, level);
+            itsGridValues = q->pressureValues(mt, level);
         }
         else
           // Using gdal/proj4 projection.
           //
-          q->values(itsSrcLatLons, itsGridValues, mt, exactLevel ? kFloatMissing : level);
+          itsGridValues = q->values(itsSrcLatLons, mt, exactLevel ? kFloatMissing : level);
 
         // Load the data chunk from 'itsGridValues'.
         //
