@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.4.3
+Version: 20.4.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -13,31 +13,31 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
-BuildRequires: boost-devel
+BuildRequires: boost169-devel
 BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.3.9
-BuildRequires: smartmet-library-macgyver-devel >= 20.3.5
-BuildRequires: smartmet-library-newbase-devel >= 20.2.13
+BuildRequires: smartmet-library-spine-devel >= 20.4.18
+BuildRequires: smartmet-library-macgyver-devel >= 20.4.18
+BuildRequires: smartmet-library-newbase-devel >= 20.4.18
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.3.19
+BuildRequires: smartmet-engine-querydata-devel >= 20.4.18
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.3.5
-Requires: smartmet-library-spine >= 20.3.9
-Requires: smartmet-library-newbase >= 20.2.13
-Requires: smartmet-engine-querydata >= 20.3.19
-Requires: smartmet-server >= 20.2.13
-Requires: boost-date-time
-Requires: boost-iostreams
-Requires: boost-system
-Requires: boost-thread
+Requires: smartmet-library-macgyver >= 20.4.18
+Requires: smartmet-library-spine >= 20.4.18
+Requires: smartmet-library-newbase >= 20.4.18
+Requires: smartmet-engine-querydata >= 20.4.18
+Requires: smartmet-server >= 20.4.18
+Requires: boost169-date-time
+Requires: boost169-iostreams
+Requires: boost169-system
+Requires: boost169-thread
 BuildRequires: netcdf-cxx-devel
 Requires: netcdf-cxx
 
@@ -67,6 +67,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
+- Upgraded to Boost 1.69
+
+* Wed Apr  8 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.8-1.fmi
+- Protect the entire NetCDF metadata generation section with a mutex for thread safety
+
 * Fri Apr  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.3-1.fmi
 - Repackaged due to library API changes
 
