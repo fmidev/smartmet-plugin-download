@@ -38,6 +38,14 @@ ifneq "$(wildcard /usr/include/boost169)" ""
   LIBS += -L/usr/lib64/boost169
 endif
 
+ifneq "$(wildcard /usr/gdal30/include)" ""
+  INCLUDES += -I/usr/gdal30/include
+  LIBS += -L/usr/gdal30/lib
+else
+  INCLUDES += -I/usr/include/gdal
+endif
+
+
 ifeq ($(CXX), clang++)
 
 # TODO: Try to shorten the list of disabled checks
@@ -57,7 +65,6 @@ ifeq ($(CXX), clang++)
  INCLUDES += \
 	-isystem $(includedir) \
 	-isystem $(includedir)/smartmet \
-	-isystem $(PREFIX)/gdal30/include \
 	-isystem $(includedir)/jsoncpp
 
 else
@@ -79,7 +86,6 @@ else
   INCLUDES += \
 	-I$(includedir) \
 	-I$(includedir)/smartmet \
-	-I$(PREFIX)/gdal30/include \
 	-I$(includedir)/jsoncpp
 endif
 
@@ -111,7 +117,7 @@ LIBS += -L$(libdir) \
 	-lboost_system \
 	-lbz2 -lz \
 	-leccodes \
-	-L$(PREFIX)/gdal30/lib -lgdal \
+	-lgdal \
 	-lnetcdf_c++ \
 	-lfmt \
 	`pkg-config --libs jsoncpp`
