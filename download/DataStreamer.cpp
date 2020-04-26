@@ -1022,15 +1022,17 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       throw Spine::Exception(BCP,
                              "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
-    itsSrcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-    const sz_t xs = itsSrcLatLons.NX(), ys = itsSrcLatLons.NY();
-    const sz_t xN = xs - 1, yN = ys - 1;
+    itsSrcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+    const sz_t xs = itsSrcLatLons.width();
+    const sz_t ys = itsSrcLatLons.height();
+    const sz_t xN = xs - 1;
+    const sz_t yN = ys - 1;
     sz_t x, y;
 
     if (itsReqParams.outputFormat == NetCdf)
     {
-      itsTargetLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-      itsTargetWorldXYs.Resize(itsReqGridSizeX, itsReqGridSizeY);
+      itsTargetLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+      itsTargetWorldXYs = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
     }
 
     itsDX = ((tr.X() - bl.X()) / xN);
@@ -1044,7 +1046,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           (((y == 0) && (yc <= -89.999)) || ((y == yN) && (yc >= 89.999))))
       {
         for (x = 0; x < xs; x++, xc += itsDX)
-          itsSrcLatLons[x][y] = NFmiPoint(xc, ((y == 0) ? -90.0 : 90.0));
+          itsSrcLatLons.set(x, y, xc, (y == 0) ? -90.0 : 90.0);
 
         continue;
       }
@@ -1057,7 +1059,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
           throw Spine::Exception(BCP, "transform: Transform(wgs84,qd) failed");
 
-        itsSrcLatLons[x][y] = NFmiPoint(txc, tyc);
+        itsSrcLatLons.set(x, y, txc, tyc);
 
         if (!wgs84ProjLL)
         {
@@ -1081,7 +1083,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           {
             // Output cs world xy coordinates for netcdf output
             //
-            itsTargetWorldXYs[x][y] = NFmiPoint(xc, yc);
+            itsTargetWorldXYs.set(x, y, xc, yc);
           }
         }
 
@@ -1095,7 +1097,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
             throw Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
-          itsTargetLatLons[x][y] = NFmiPoint(txc, tyc);
+          itsTargetLatLons.set(x, y, txc, tyc);
         }
       }
     }

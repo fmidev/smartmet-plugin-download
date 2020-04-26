@@ -12,7 +12,6 @@
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiStereographicArea.h>
 #include <spine/Exception.h>
 #include <spine/Thread.h>
 
@@ -58,7 +57,8 @@ void NetCdfStreamer::requireNcFile()
   if (itsFile)
     return;
 
-  ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
+  itsFile.reset(
+      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
 }
 
 // ----------------------------------------------------------------------
@@ -719,10 +719,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
       NFmiPoint p0 =
           ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToWorldXY(x0, y0)
-                                                                : itsTargetWorldXYs[x0][y0]);
+                                                                : itsTargetWorldXYs(x0, y0));
       NFmiPoint pN = ((itsReqParams.datumShift == Datum::DatumShift::None)
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
-                          : itsTargetWorldXYs[xN - 1][yN - 1]);
+                          : itsTargetWorldXYs(xN - 1, yN - 1));
 
       double worldY[itsNY], worldX[itsNX];
       double wY = p0.Y(), wX = p0.X();
@@ -748,7 +748,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         {
           const NFmiPoint p =
               ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, y)
-                                                                    : itsTargetLatLons[x][y]);
+                                                                    : itsTargetLatLons(x, y));
 
           lat[n] = p.Y();
           lon[n] = p.X();
@@ -769,12 +769,12 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
         lat[n] =
             ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(0, y).Y()
-                                                                  : itsTargetLatLons[0][y].Y());
+                                                                  : itsTargetLatLons.y(0, y));
 
       for (x = x0, n = 0; (x < xN); x += xStep, n++)
         lon[n] =
             ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
-                                                                  : itsTargetLatLons[x][0].X());
+                                                                  : itsTargetLatLons.x(x, 0));
 
       if (!latVar->put(lat, itsNY))
         throw Spine::Exception(BCP, "Failed to store latitude coordinates");
