@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.4.18
+Version: 20.5.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,11 +17,11 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.4.18
+BuildRequires: smartmet-library-spine-devel >= 20.5.5
 BuildRequires: smartmet-library-macgyver-devel >= 20.4.18
 BuildRequires: smartmet-library-newbase-devel >= 20.4.18
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.4.18
+BuildRequires: smartmet-engine-querydata-devel >= 20.5.5
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -29,9 +29,9 @@ Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 20.4.18
-Requires: smartmet-library-spine >= 20.4.18
+Requires: smartmet-library-spine >= 20.5.5
 Requires: smartmet-library-newbase >= 20.4.18
-Requires: smartmet-engine-querydata >= 20.4.18
+Requires: smartmet-engine-querydata >= 20.5.5
 Requires: smartmet-server >= 20.4.18
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Fri May  8 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.8-1.fmi
+- Fixed bug in netcdf output when skipping missing querydata parameters (BS-1823)
+
 * Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
 - Upgraded to Boost 1.69
 
