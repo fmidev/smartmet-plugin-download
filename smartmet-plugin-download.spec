@@ -69,6 +69,9 @@ rm -rf $RPM_BUILD_ROOT
 * Wed May 13 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.13-1.fmi
 - Repackaged since Spine Parameter class ABI changed
 
+* Fri May  8 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.8-1.fmi
+- Fixed bug in netcdf output when skipping missing querydata parameters (BS-1823)
+
 * Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
 - Upgraded to Boost 1.69
 

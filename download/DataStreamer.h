@@ -203,7 +203,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
 
-  virtual void paramChanged() {}
+  virtual void paramChanged(size_t nextParamOffset = 1) {}
   long itsDataTimeStep;
   size_t itsTimeIndex;
   size_t itsLevelIndex;
