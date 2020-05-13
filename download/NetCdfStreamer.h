@@ -83,7 +83,7 @@ class NetCdfStreamer : public DataStreamer
 
   void storeParamValues();
 
-  void paramChanged();
+  void paramChanged(size_t nextParamOffset = 1);
 };
 
 }  // namespace Download

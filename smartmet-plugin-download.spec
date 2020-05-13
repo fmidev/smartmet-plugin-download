@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.4.26
+Version: 20.5.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -18,11 +18,11 @@ BuildRequires: boost169-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.4.18
+BuildRequires: smartmet-library-spine-devel >= 20.5.12
 BuildRequires: smartmet-library-macgyver-devel >= 20.4.18
 BuildRequires: smartmet-library-newbase-devel >= 20.4.23
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.4.23
+BuildRequires: smartmet-engine-querydata-devel >= 20.5.13
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -31,9 +31,9 @@ Requires: eccodes
 Requires: fmt >= 5.2.0
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 20.4.18
-Requires: smartmet-library-spine >= 20.4.18
-Requires: smartmet-library-newbase >= 20.4.23
-Requires: smartmet-engine-querydata >= 20.4.23
+Requires: smartmet-library-spine >= 20.5.12
+Requires: smartmet-library-newbase >= 20.4.18
+Requires: smartmet-engine-querydata >= 20.5.13
 Requires: smartmet-server >= 20.4.18
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -68,6 +68,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed May 13 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.13-1.fmi
+- Repackaged since Spine Parameter class ABI changed
+
+* Fri May  8 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.8-1.fmi
+- Fixed bug in netcdf output when skipping missing querydata parameters (BS-1823)
+
 * Sun Apr 26 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.26-1.fmi
 - Use Fmi::CoordinateMatrix
 

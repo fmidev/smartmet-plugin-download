@@ -126,6 +126,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
 
+  virtual void paramChanged(size_t nextParamOffset = 1) {}
+
   long itsDataTimeStep = 0;
   std::size_t itsTimeIndex = 0;
   std::size_t itsLevelIndex = 0;
