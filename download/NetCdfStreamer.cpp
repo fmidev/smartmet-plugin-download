@@ -1122,10 +1122,10 @@ void NetCdfStreamer::paramChanged(size_t nextParamOffset)
     {
       for (size_t n = 0; (n < nextParamOffset); n++)
       {
-        if (it_Var != dataVars.end())
-          it_Var++;
+        if (itsVarIterator != itsDataVars.end())
+          itsVarIterator++;
 
-        if ((it_Var == dataVars.end()) && (itsParamIterator != itsDataParams.end()))
+        if ((itsVarIterator == itsDataVars.end()) && (itsParamIterator != itsDataParams.end()))
           throw Spine::Exception(BCP, "paramChanged: internal: No more netcdf variables");
       }
     }

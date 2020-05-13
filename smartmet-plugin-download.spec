@@ -32,7 +32,7 @@ Requires: fmt >= 5.2.0
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 20.4.18
 Requires: smartmet-library-spine >= 20.5.12
-Requires: smartmet-library-newbase >= 20.4.18
+Requires: smartmet-library-newbase >= 20.4.23
 Requires: smartmet-engine-querydata >= 20.5.13
 Requires: smartmet-server >= 20.4.18
 Requires: boost169-date-time
