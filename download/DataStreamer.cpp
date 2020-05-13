@@ -2823,6 +2823,8 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
   {
     // Advance parameter and scaling iterators. Skip missing parameters
 
+    size_t nextParamOffset = 1;
+
     for (itsParamIterator++; (itsParamIterator != itsDataParams.end()); itsParamIterator++)
     {
       if ((itsReqParams.outputFormat != QD) && (itsScalingIterator != itsValScaling.end()))
@@ -2835,6 +2837,8 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
 
       if (q->param(itsParamIterator->number()))
         break;
+
+      nextParamOffset++;
     }
 
     // In-memory qd needs to be reloaded if it does not contain current parameter
@@ -2842,7 +2846,7 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
     if ((itsParamIterator != itsDataParams.end()) && itsCPQ && (!itsCPQ->param(itsParamIterator->number())))
       itsCPQ.reset();
 
-    paramChanged();
+    paramChanged(nextParamOffset);
   }
   catch (...)
   {
