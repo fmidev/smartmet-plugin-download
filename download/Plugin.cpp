@@ -316,8 +316,13 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     static Producer dummyProducer;
     reqParams.source = getRequestParam(req, dummyProducer, "source", "querydata");
 
-    if ((reqParams.source != "querydata") && (reqParams.source != "grid"))
-      throw Spine::Exception(BCP, "Unknown source '" + reqParams.source + "', 'querydata' or 'grid' expected");
+    if (reqParams.source == "querydata")
+      reqParams.dataSource = QueryData;
+    else if (reqParams.source == "grid")
+      reqParams.dataSource = Grid;
+    else
+      throw Spine::Exception(BCP, "Unknown source '" + reqParams.source +
+                             "', 'querydata' or 'grid' expected");
 
     if ((!gridEngine) && (reqParams.source == "grid"))
       throw Spine::Exception(BCP, "Grid data is not available");
@@ -340,7 +345,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     /*
     TODO: no qEngine dependency with grid data
 
-    const Producer &producer = (reqParams.source == "querydata")
+    const Producer &producer = (reqParams.dataSource == QueryData)
       ? config.getProducer(reqParams.producer, qEngine)
       : config.getProducer(reqParams.producer, qEngine);
 //    : dummyProducer;
@@ -387,10 +392,8 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     // Projection, bounding and grid size/step
 
     reqParams.projection = getRequestParam(req, producer, "projection", "");
-    if (reqParams.source == "querydata")
-    {
+    if (reqParams.dataSource == QueryData)
       reqParams.projType = getProjectionType(reqParams);
-    }
 
     if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::None))
       // gdal/proj4 needed for projection
@@ -734,8 +737,10 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     Engine::Querydata::Q q;
 
-    if (reqParams.source == "querydata")
+    if (reqParams.dataSource == QueryData)
     {
+      ds->setMultiFile(qEngine.getProducerConfig(reqParams.producer).ismultifile);
+
       if (!reqParams.originTime.empty())
       {
         if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
@@ -752,6 +757,8 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
         q = qEngine.get(reqParams.producer);
       }
     }
+    else
+      ds->setMultiFile(producer.multiFile);
 
     // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
     // timestep (60m --> data) defaults.
@@ -769,7 +776,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     query.tOptions.timeStep = reqParams.timeStep;
     query.tOptions.endTimeData = (reqParams.endTime.empty() && (reqParams.timeStep == 0));
 
-    if (reqParams.source == "querydata")
+    if (reqParams.dataSource == QueryData)
     {
       // Generate list of validtimes for the data to be loaded.
       // For grid data validtimes are generated after checking data availability
