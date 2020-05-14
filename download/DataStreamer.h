@@ -126,6 +126,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                              boost::posix_time::ptime &sTime,
                              boost::posix_time::ptime &eTime);
 
+  void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
   void setLevels(const Query &query);
   void setParams(const Spine::OptionParsers::ParameterList &params, const Scaling &scaling);
 
@@ -269,8 +270,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     if (itsQ)
       itsQ->resetTime();
 
-    itsMultiFile = itsQEngine->getProducerConfig(itsReqParams.producer).ismultifile;
-
     itsDataChunk.clear();
 
     if (getFirstChunk)
@@ -365,8 +364,25 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     static const T::ParamLevelIdType GridFMILevelTypeEntireAtmosphere = 8;
     static const T::ParamLevelIdType GridFMILevelTypeDepth	      = 10;
 
-    GridMetaData(std::string producerName)
+    class GridIterator
     {
+     public:
+      GridIterator(GridMetaData *gM) : gridMetaData(gM) { init = true; }
+
+      bool atEnd();
+      bool hasData(T::ParamLevelIdType &gridLevelType, int &level);
+      GridIterator& operator++();
+      GridIterator operator++(int);
+
+     private:
+      bool init;
+      GridMetaData *gridMetaData;
+    };
+
+    GridMetaData(DataStreamer *dS, std::string producerName)
+      : gridIterator(this)
+    {
+      dataStreamer = dS;
       producer = producerName;
       paramLevelId = GridFMILevelTypeNone;
       relativeUV = false;
@@ -384,45 +400,74 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     boost::optional<BBoxCorners> rotLLBBox; // QueryServer::Query grid.bbox for rotlat
     double southernPoleLat;		    // wkt p4 EXTENSION o_lat_p
     double southernPoleLon;		    // wkt p4 EXTENSION o_lon_p
+    std::unique_ptr<double> rotLongitudes;  // rotated coords for rotlat grid
+    std::unique_ptr<double> rotLatitudes;   //
 
-    boost::posix_time::ptime originTime;
-    std::map<std::string, std::set<std::string>> originTimeParams;
-    std::map<std::string, std::set<std::string>> originTimeTimes;
+    typedef std::map<std::string, std::set<std::string>> StringMapSet;
+    typedef StringMapSet OriginTimeTimes;
+    typedef std::map<T::ParamLevel, OriginTimeTimes> LevelOriginTimes;
+    typedef std::map<T::GeometryId, LevelOriginTimes> GeometryLevels;
+    typedef std::map<std::string, GeometryLevels> ParamGeometries;
+
+    ParamGeometries paramGeometries;
+
+    boost::posix_time::ptime originTime;     // Set if fixed (latest non-multifile or given) otime
+    boost::posix_time::ptime gridOriginTime; // otime of current grid (fixed or latest multifile)
+    int gridEnsemble;                        // ensemble of current grid
+    T::GeometryId geometryId;
+    StringMapSet originTimeParams;
+    std::map<std::string, std::set<T::ParamLevel>> originTimeLevels;
+    StringMapSet originTimeTimes;
     std::map<std::string, std::string> paramKeys;
+    std::map<std::string, T::ParamLevelIdType> paramLevelIds;
     T::ParamLevelIdType paramLevelId;
-    std::set<T::ParamLevel> levels;
 
-    const std::string &getLatestOriginTime(boost::posix_time::ptime *originTime = NULL);
-    bool getDataTimeRange(const std::string &originTime,
+    boost::posix_time::ptime selectGridLatestValidOriginTime();
+    const std::string &getLatestOriginTime(boost::posix_time::ptime *originTime = NULL,
+                                           const boost::posix_time::ptime *validTime = NULL) const;
+    bool getDataTimeRange(const std::string &originTimeStr,
                           boost::posix_time::ptime &firstTime,
                           boost::posix_time::ptime &lastTime,
-                          long &timeStep);
-    boost::shared_ptr<SmartMet::Engine::Querydata::ValidTimeList> getDataTimes(const std::string &originTime);
+                          long &timeStep) const;
+    boost::shared_ptr<SmartMet::Engine::Querydata::ValidTimeList>
+      getDataTimes(const std::string &originTimeStr) const;
+
+    GridIterator &getGridIterator() { return gridIterator; }
+
+   private:
+    DataStreamer *dataStreamer; // To access chunking loop iterators
+    GridIterator gridIterator;  //
   };
 
   void generateGridValidTimeList(Query &query,
                                  boost::posix_time::ptime &oTime,
                                  boost::posix_time::ptime &sTime,
                                  boost::posix_time::ptime &eTime);
-  void setGridLevels(const Query &query, const Producer &producer, uint levelScale = 1);
+  void setGridLevels(const Producer &producer, const Query &query);
   bool hasRequestedGridData(const Producer &producer,
                             Query &query,
                             boost::posix_time::ptime &oTime,
                             boost::posix_time::ptime &sTime,
                             boost::posix_time::ptime &eTime);
-  void nextGridParam();
-  bool isGridLevelAvailable(int &requestedLevel, bool &exactLevel) const;
-  bool buildGridQuery(SmartMet::QueryServer::Query&) const;
+  bool isGridLevelRequested(const Producer &producer,
+                            const Query &query,
+                            FmiLevelType mappingLevelType,
+                            int level) const;
+  bool buildGridQuery(SmartMet::QueryServer::Query&, T::ParamLevelIdType gridLevelType, int level);
   void getGridLLBBox();
   std::string getGridLLBBoxStr();
   void setGridSize(size_t gridSizeX, size_t gridSizeY);
   void getGridBBox(QueryServer::Query &gridQuery);
   void getGridProjection(const QueryServer::Query &gridQuery);
+  void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
   void getGridQueryInfo(const QueryServer::Query &gridQuery);
   void extractGridData(std::string &chunk);
 
  protected:
+  static const long gribMissingValue = 9999;
+
   GridMetaData itsGridMetaData;
+  QueryServer::Query itsGridQuery;
 };
 
 }  // namespace Download
