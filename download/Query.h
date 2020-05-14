@@ -62,11 +62,12 @@ struct Producer
   bool verticalInterpolation;  // Set if vertical interpolation is allowed. Default: false
 
   Plugin::Download::Datum::DatumShift datumShift;  // Datum handling. Default: native
-                                                   // datum (no
-                                                   // shift). See
-                                                   // Datum.h
+                                                   // datum (no shift). See Datum.h
 
-  Producer() {}
+  bool multiFile;  // If set, query can span over multiple grid origintimes
+
+  Producer() : verticalInterpolation(false), multiFile(false) {}
+
   bool disabledReqParam(std::string param) const
   {
     return (disabledReqParams.find(param) != disabledReqParams.end());
@@ -91,6 +92,12 @@ typedef std::map<std::string, Producer> Producers;
  * \brief Request parameters
  */
 // ----------------------------------------------------------------------
+
+typedef enum
+{
+  QueryData,
+  Grid
+} DataSource;
 
 typedef enum
 {
@@ -131,6 +138,7 @@ struct ReqParams
   // Data source
   //
   std::string source;
+  DataSource dataSource;
   //
   // Producer name
   //
