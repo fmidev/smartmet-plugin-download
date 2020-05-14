@@ -28,8 +28,6 @@
 
 #include "boost/date_time/gregorian/gregorian.hpp"
 
-static const long gribMissingValue = 9999;
-
 using namespace std;
 
 using namespace boost::posix_time;
@@ -210,7 +208,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     BBoxCorners rotLLBBox;
     double southernPoleLat,southernPoleLon;
 
-    if (itsReqParams.source == "querydata")
+    if (itsReqParams.dataSource == QueryData)
     {
       if (itsResMgr.getGeometrySRS())
         throw Spine::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
@@ -225,6 +223,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     }
     else
     {
+      rotLLBBox = *itsGridMetaData.rotLLBBox;
+
       southernPoleLat = itsGridMetaData.southernPoleLat;
       southernPoleLon = itsGridMetaData.southernPoleLon;
     }
@@ -1240,8 +1240,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     //		 If the actual data origintime is used, adjust it backwards to even data timestep;
     //		 the output validtimes are set as number of timesteps forwards from the origintime.
 
-    ptime oTime = itsGridMetaData.originTime;
-    ptime validTime = vTime;
+    ptime oTime = itsGridMetaData.gridOriginTime, validTime = vTime;
     bool setOriginTime = (itsOriginTime.is_not_a_date_time() || (itsOriginTime != oTime));
 
     if (setOriginTime)
@@ -1483,14 +1482,19 @@ void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
 {
   try
   {
-    // Set geometry
-
-    setGridGeometryToGrib(gridQuery);
+    if (setMeta)
+    {
+      // Set geometry
+      //
+      setGridGeometryToGrib(gridQuery);
+      setMeta = false;
+    }
 
     // Build and get grib message
 
     chunk =
-        getGridGribMessage(gridQuery, level, mt, itsScalingIterator->first, itsScalingIterator->second);
+        getGridGribMessage(gridQuery, level, mt, itsScalingIterator->first,
+                           itsScalingIterator->second);
   }
   catch (...)
   {
