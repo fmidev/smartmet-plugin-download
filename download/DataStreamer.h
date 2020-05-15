@@ -413,7 +413,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     boost::posix_time::ptime originTime;     // Set if fixed (latest non-multifile or given) otime
     boost::posix_time::ptime gridOriginTime; // otime of current grid (fixed or latest multifile)
-    int gridEnsemble;                        // ensemble of current grid
+    T::ForecastNumber gridEnsemble;          // ensemble of current grid
     T::GeometryId geometryId;
     StringMapSet originTimeParams;
     std::map<std::string, std::set<T::ParamLevel>> originTimeLevels;
