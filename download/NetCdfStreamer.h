@@ -33,6 +33,9 @@ class NetCdfStreamer : public DataStreamer
                             NFmiDataMatrix<float> &values,
                             std::string &chunk);
 
+  // Grid support
+  //
+
   virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
                                 int level,
                                 const NFmiMetTime &mt,
@@ -51,7 +54,7 @@ class NetCdfStreamer : public DataStreamer
   // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
   // shared_ptr:s)
 
-  boost::shared_ptr<NcDim> timeDim, timeBoundsDim, levelDim, yDim, xDim, latDim, lonDim;
+  boost::shared_ptr<NcDim> ensembleDim, timeDim, timeBoundsDim, levelDim, yDim, xDim, latDim, lonDim;
   boost::shared_ptr<NcVar> timeVar;
 
   std::list<NcVar *>::iterator it_Var;
@@ -63,7 +66,8 @@ class NetCdfStreamer : public DataStreamer
                                        NcDim *dim1 = nullptr,
                                        NcDim *dim2 = nullptr,
                                        NcDim *dim3 = nullptr,
-                                       NcDim *dim4 = nullptr);
+                                       NcDim *dim4 = nullptr,
+                                       NcDim *dim5 = nullptr);
   boost::shared_ptr<NcVar> addCoordVariable(std::string dimName,
                                             long dimSize,
                                             NcType dataType,
@@ -73,14 +77,20 @@ class NetCdfStreamer : public DataStreamer
                                             boost::shared_ptr<NcDim> &dim);
   template <typename T1, typename T2>
   void addAttribute(T1 resource, std::string attrName, T2 attrValue);
+  template <typename T1, typename T2>
+  void addAttribute(T1 resource, std::string attrName, int nValues, T2 *attrValues);
 
+  void addEnsembleDimension();
   void addTimeDimension();
   boost::shared_ptr<NcDim> addTimeDimension(long periodLengthInMinutes,
                                             boost::shared_ptr<NcVar> &tVar);
   void addLevelDimension();
 
   void setLatLonGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
+  void setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setStereographicGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
+  void setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar);
+  void setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
   boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
@@ -89,6 +99,11 @@ class NetCdfStreamer : public DataStreamer
   void storeParamValues();
 
   void paramChanged(size_t nextParamOffset = 1);
+
+  // Grid support
+  //
+
+  void setGridGeometry(const QueryServer::Query &gridQuery);
 };
 
 }  // namespace Download

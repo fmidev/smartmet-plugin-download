@@ -121,6 +121,10 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
                                      "Invalid datum in dls configuration file line " +
                                          boost::lexical_cast<string>(settings.getSourceLine()));
           }
+          else if (paramName == "multiFile")
+          {
+            currentSettings.multiFile = settings[i];
+          }
           else
           {
             throw Spine::Exception(BCP,
@@ -163,9 +167,11 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
                               currentSettings.namedSettings.end());
     prod.verticalInterpolation = currentSettings.verticalInterpolation;
     prod.datumShift = currentSettings.datumShift;
+    prod.multiFile = currentSettings.multiFile;
 
     currentSettings.namedSettings.clear();
     currentSettings.gridDefaultLevels.clear();
+    currentSettings.multiFile = false;
 
     itsProducers.insert(Producers::value_type(name, prod));
   }

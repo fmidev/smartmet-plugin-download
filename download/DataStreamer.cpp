@@ -448,7 +448,7 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
       itsReqGridSizeX(0),
       itsReqGridSizeY(0),
       itsProjectionChecked(false),
-      itsGridMetaData(itsReqParams.producer)
+      itsGridMetaData(this, itsReqParams.producer)
 {
   try
   {
@@ -528,90 +528,453 @@ void DataStreamer::checkDataTimeStep(long timeStep)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Generate list of validtimes for the grid data to be loaded and
- * 		set origin-, start- and endtime parameters from data if unset
- * 		(they are only used when naming download file)
+ * \brief Increment grid iterator
  *
  */
 // ----------------------------------------------------------------------
 
-const string &DataStreamer::GridMetaData::getLatestOriginTime(ptime *originTime)
+DataStreamer::GridMetaData::GridIterator& DataStreamer::GridMetaData::GridIterator::operator++()
 {
-  if (originTimeParams.empty())
-      throw Spine::Exception(BCP, "No data available for producer " + producer);
+  if (init)
+  {
+    // Skip first incrementation (incremented before loading 1'st grid)
 
-  if (originTime)
-    *originTime = from_iso_string(originTimeParams.rbegin()->first);
+    init = false;
+    return *this;
+  }
 
-  return originTimeParams.rbegin()->first;
+  auto ds = gridMetaData->dataStreamer;
+  auto paramsEnd = ds->itsDataParams.end();
+
+  if (ds->itsParamIterator == paramsEnd)
+    return *this;
+
+  auto timesEnd = ds->itsDataTimes.end();
+
+  while (ds->itsTimeIterator != timesEnd)
+  {
+    ds->itsTimeIterator++;
+    ds->itsTimeIndex++;
+
+    if (ds->itsTimeIterator != timesEnd)
+    {
+      auto timeInstant = ds->itsTimeIterator->utc_time();
+
+      if ((timeInstant >= ds->itsFirstDataTime) && (timeInstant <= ds->itsLastDataTime))
+        break;
+    }
+  }
+
+  if (ds->itsTimeIterator != timesEnd)
+    return *this;
+
+  ds->itsTimeIterator =  ds->itsDataTimes.begin();
+  ds->itsTimeIndex = 0;
+
+  auto levelsEnd = ds->itsDataLevels.end();
+
+  if (ds->itsLevelIterator != levelsEnd)
+  {
+    ds->itsLevelIterator++;
+    ds->itsLevelIndex++;
+
+    if (ds->itsLevelIterator != levelsEnd)
+      return *this;
+  }
+
+  ds->itsLevelIterator = ds->itsDataLevels.begin();
+  ds->itsLevelIndex = 0;
+
+  for (ds->itsParamIterator++; (ds->itsParamIterator != paramsEnd); ds->itsParamIterator++)
+  {
+    if (ds->itsScalingIterator != ds->itsValScaling.end())
+      ds->itsScalingIterator++;
+
+    if (ds->itsScalingIterator == ds->itsValScaling.end())
+      throw Spine::Exception(BCP, "GridIterator: internal: No more scaling data");
+
+    ds->paramChanged();
+
+    auto paramKey = gridMetaData->paramKeys.find(ds->itsParamIterator->name());
+
+    if (paramKey != gridMetaData->paramKeys.end())
+      break;
+  }
+
+  return *this;
 }
 
-bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTime,
-                                                  ptime &firstTime,
-                                                  ptime &lastTime,
-                                                  long &timeStep)
+DataStreamer::GridMetaData::GridIterator DataStreamer::GridMetaData::GridIterator::operator++(int)
 {
-  auto ott = originTimeTimes.find(originTime);
+  // No need to return pre -value
+  //
+  // GridIterator pre(*this);
 
-  if (ott == originTimeTimes.end())
+  operator++();
+  return *this;
+
+  // return pre;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check if grid iterator is at end position
+ *
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::GridMetaData::GridIterator::atEnd()
+{
+  auto ds = gridMetaData->dataStreamer;
+  return (ds->itsParamIterator == ds->itsDataParams.end());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check if data exists for current grid
+ *
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelIdType &gridLevelType,
+                                                       int &level)
+{
+  auto ds = gridMetaData->dataStreamer;
+  ptime validTime = ds->itsTimeIterator->utc_time();
+
+  gridMetaData->gridOriginTime = gridMetaData->originTime;
+
+  string originTimeStr =
+      ds->itsMultiFile
+      ? gridMetaData->getLatestOriginTime(&gridMetaData->gridOriginTime, &validTime)
+      : to_iso_string(gridMetaData->gridOriginTime);
+
+  if (gridMetaData->gridOriginTime.is_not_a_date_time())
     return false;
 
-  auto t = ott->second.begin();
-  firstTime = from_iso_string(*t);
-  lastTime = from_iso_string(*(ott->second.rbegin()));
+  // Check if param/level/otime/validtime data is available
 
-  if (++t != ott->second.end())
+  auto const paramGeom = gridMetaData->paramGeometries.find(ds->itsParamIterator->name());
+  if (paramGeom == gridMetaData->paramGeometries.end())
+    return false;
+
+  auto const geomLevels = paramGeom->second.find(gridMetaData->geometryId);
+  if (geomLevels == paramGeom->second.end())
+    return false;
+
+  auto levelTimes = geomLevels->second.begin();
+  auto prevLevelTimes = levelTimes;
+
+  // Level interpolation is possible for pressure data only.
+
+  bool interpolatable = (isPressureLevel(ds->levelType) && ds->itsProducer.verticalInterpolation);
+  bool exactLevel = isSurfaceLevel(ds->levelType),first = true;
+
+  for ( ; ((!exactLevel) && (levelTimes != geomLevels->second.end())); first = false, levelTimes++)
   {
-    auto secondTime = from_iso_string(*t);
-    timeStep = (secondTime - firstTime).minutes();
+    if ((exactLevel = (levelTimes->first == *(ds->itsLevelIterator))))
+      break;
+    else if (*ds->itsLevelIterator < levelTimes->first)
+    {
+      // Interpolatable if between data levels, data is interpolatable and interpolation is
+      // allowed
+      //
+      interpolatable &= (!first);
+
+      break;
+    }
+
+    prevLevelTimes = levelTimes;
   }
-  else
-    timeStep = 60;
+
+  auto levelTimesEnd = next(levelTimes);
+
+  if (!exactLevel)
+    levelTimes = prevLevelTimes;
+
+  for (; levelTimes != levelTimesEnd; levelTimes++)
+  {
+    auto originTimeTimes = levelTimes->second.find(originTimeStr);
+
+    if (
+        (originTimeTimes == levelTimes->second.end()) ||
+        (validTime < from_iso_string(*(originTimeTimes->second.begin()))) ||
+        (validTime > from_iso_string(*(originTimeTimes->second.rbegin())))
+       )
+      return false;
+  }
+
+  auto paramLevelId = gridMetaData->paramLevelIds.find(ds->itsParamIterator->name());
+
+  if (paramLevelId == gridMetaData->paramLevelIds.end())
+    throw Spine::Exception(BCP, "GridIterator: internal: Parameter level type not in metadata; " +
+                           ds->itsParamIterator->name());
+
+  gridLevelType = paramLevelId->second;
+
+  level = (isSurfaceLevel(ds->levelType) ? prevLevelTimes->first : *(ds->itsLevelIterator));
 
   return true;
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return the latest common origintime
+ *
+ */
+// ----------------------------------------------------------------------
+
+ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
+{
+  // Check if all parameters have common origintime among the 2 newest origintimes
+  //
+  // Collect (max) 2 latest origitimes for each grid
+
+  set<std::string> originTimeSet;
+
+  for (auto const &paramGeom : paramGeometries)
+    for (auto const &geomLevels : paramGeom.second)
+      for (auto const &levelTimes : geomLevels.second)
+      {
+        auto ot = levelTimes.second.rbegin();
+
+        for (int i = 0; (ot != levelTimes.second.rend()) && (i < 2); ot++, i++)
+          originTimeSet.insert(ot->first);
+      }
+
+  // Search common origintime among grid's 2 latest origintimes
+
+  long index = -1;
+
+  auto ot = originTimeSet.rbegin();
+
+  for (; ot != originTimeSet.rend(); ot++)
+  {
+    for (auto const &paramGeom : paramGeometries)
+    {
+      for (auto const &geomLevels : paramGeom.second)
+      {
+        for (auto const &levelTimes : geomLevels.second)
+        {
+          auto otLevel = levelTimes.second.find(*ot);
+
+          if (otLevel != levelTimes.second.end())
+          {
+            // Check if the newest data covers the last validtime of 2'nd newest data
+
+            index = levelTimes.second.size() - distance(levelTimes.second.begin(),otLevel);
+
+            // Check if latest data covers the last validtime of 2'nd latest data
+
+            if (
+                (index == 0) && (levelTimes.second.size() > 1) &&
+                (*(otLevel->second.rbegin()) < *(prev(otLevel)->second.rbegin()))
+               )
+              index = -1;
+          }
+          else
+            index = -1;
+
+          if ((index < 0) || (index > 2))
+          {
+            index = -1;
+            break;
+          }
+        }
+
+        if (index < 0)
+          break;
+      }
+
+      if (index < 0)
+        break;
+    }
+
+    if (index < 0)
+      throw Spine::Exception(BCP, "Data has no common origintime");
+
+    // Erase newer/nonvalid origintimes from metadata
+
+    for (auto &paramGeom : paramGeometries)
+       for (auto &geomLevels : paramGeom.second)
+         for (auto &levelTimes : geomLevels.second)
+         {
+            auto otl = levelTimes.second.find(*ot);
+
+             if (otl == levelTimes.second.end())
+               throw Spine::Exception(BCP, "GridMetaData: internal: Latest origintime not in metadata");
+
+             levelTimes.second.erase(next(otl), levelTimes.second.end());
+         }
+
+    auto otp = originTimeParams.find(*ot);
+    auto otl = originTimeLevels.find(*ot);
+    auto ott = originTimeTimes.find(*ot);
+
+    if (
+        (otp == originTimeParams.end()) ||
+        (otl == originTimeLevels.end()) ||
+        (ott == originTimeTimes.end())
+       )
+      throw Spine::Exception(BCP, "GridMetaData: internal: Latest origintime not in common metadata");
+
+    originTimeParams.erase(next(otp), originTimeParams.end());
+    originTimeLevels.erase(next(otl), originTimeLevels.end());
+    originTimeTimes.erase(next(ott), originTimeTimes.end());
+
+    break;
+  }
+
+  return ((index >= 0) ? from_iso_string(ot->c_str()) : ptime());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return the latest origintime or latest origintime covering given validtime
+ *
+ */
+// ----------------------------------------------------------------------
+
+const string &DataStreamer::GridMetaData::getLatestOriginTime(ptime *originTime,
+                                                              const ptime *validTime) const
+{
+  static const string empty("");
+
+  if (originTimeTimes.empty())
+      throw Spine::Exception(BCP, "No data available for producer " + producer);
+
+  auto ott = originTimeTimes.rbegin();
+
+  if (validTime)
+  {
+    ptime firstTime, lastTime;
+    long timeStep;
+
+    for (; ott != originTimeTimes.rend(); ott++)
+    {
+      getDataTimeRange(ott->first, firstTime, lastTime, timeStep);
+
+      if ((*validTime >= firstTime) && (*validTime <= lastTime))
+        break;
+    }
+  }
+
+  if (originTime)
+    *originTime = ((ott == originTimeTimes.rend()) ? ptime() : from_iso_string(ott->first));
+
+  return ((ott == originTimeTimes.rend()) ? empty : ott->first);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return validtime range for given origintime or for all data/origintimes
+ *
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTimeStr,
+                                                  ptime &firstTime,
+                                                  ptime &lastTime,
+                                                  long &timeStep) const
+{
+  // If originTime is empty, return validtime range for all data/origintimes
+
+  auto ott = originTimeStr.empty() ? originTimeTimes.begin() : originTimeTimes.find(originTimeStr);
+
+  if (ott == originTimeTimes.end())
+    return false;
+
+  firstTime = ptime();
+
+  for (; ott != originTimeTimes.end(); ott++)
+  {
+    auto t = ott->second.begin();
+
+    if (firstTime.is_not_a_date_time())
+      firstTime = from_iso_string(*t);
+    lastTime = from_iso_string(*(ott->second.rbegin()));
+
+    if (++t != ott->second.end())
+    {
+      auto secondTime = from_iso_string(*t);
+      timeStep = (secondTime - firstTime).minutes();
+    }
+    else
+      timeStep = 60;
+
+    if (!originTimeStr.empty())
+      break;
+  }
+
+  return true;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get all validtimes for given origintime or for all data/origintimes
+ *
+ */
+// ----------------------------------------------------------------------
+
 using ValidTimeList = SmartMet::Engine::Querydata::ValidTimeList;
 
-boost::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(const std::string &originTime)
+boost::shared_ptr<ValidTimeList>
+  DataStreamer::GridMetaData::getDataTimes(const std::string &originTimeStr) const
 {
+  // If originTime is empty, return validtimes for all data/origintimes
+
   boost::shared_ptr<ValidTimeList> validTimeList(new ValidTimeList());
 
-  auto ott = originTimeTimes.find(originTime);
+  auto ott = originTimeStr.empty() ? originTimeTimes.begin() : originTimeTimes.find(originTimeStr);
 
-  if (ott != originTimeTimes.end())
+  for (; ott != originTimeTimes.end(); ott++)
   {
     auto tit = ott->second.begin();
 
     for (; (tit != ott->second.end()); tit++)
       validTimeList->push_back(from_iso_string(*tit));
+
+    if (!originTimeStr.empty())
+      break;
   }
 
   return validTimeList;
 }
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Generate list of validtimes for the grid data to be loaded and
+ *        set origin-, start- and endtime parameters from data if unset
+ *        (they are only used when naming download file)
+ *
+ */
+// ----------------------------------------------------------------------
 
 void DataStreamer::generateGridValidTimeList(Query &query, ptime &oTime, ptime &sTime, ptime &eTime)
 {
   try
   {
     // Use data times if not given in request
-    //
-    // Note: Query with too old validtime returns no data (and an exception is thrown by
-    // extractGridData()); start with first available validtime.
 
     string originTimeStr;
     long timeStep;
 
     if (oTime.is_not_a_date_time())
-      originTimeStr = itsGridMetaData.getLatestOriginTime(&oTime);
+    {
+      if (!itsMultiFile)
+        originTimeStr = itsGridMetaData.getLatestOriginTime(&oTime);
+    }
     else
+    {
+      itsMultiFile = false;
       originTimeStr = to_iso_string(oTime);
+    }
 
     itsGridMetaData.originTime = oTime;
 
     if (! itsGridMetaData.getDataTimeRange(originTimeStr, itsFirstDataTime, itsLastDataTime, timeStep))
       throw Spine::Exception(BCP, "No data available for producer " + itsReqParams.producer +
-                             "; ot=" + originTimeStr +
+                             "; ot=" + (originTimeStr.empty() ? "none" : originTimeStr) +
                              ", ft=" + to_iso_string(itsFirstDataTime) +
                              ", lt=" + to_iso_string(itsLastDataTime) + ")"
                             );
@@ -728,12 +1091,11 @@ void DataStreamer::generateValidTimeList(
 // ----------------------------------------------------------------------
 /*!
  * \brief Set levels from request parameter(s) or from data if none was given.
- *		Check querydata(s) level types and time step.
  *
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::setGridLevels(const Query &query, const Producer &producer, uint levelScale)
+void DataStreamer::setGridLevels(const Producer &producer, const Query &query)
 {
   try
   {
@@ -754,12 +1116,14 @@ void DataStreamer::setGridLevels(const Query &query, const Producer &producer, u
             ? itsDataLevels
             : allLevels;
 
-    levels.insert(itsGridMetaData.levels.begin(), itsGridMetaData.levels.end());
+    auto metaDataLevels = itsGridMetaData.originTimeLevels.begin()->second;
+    levels.insert(metaDataLevels.begin(), metaDataLevels.end());
 
     itsRisingLevels = true;
 
     if (isSurfaceLevel(levelType))
-      // Surface data; set exactly one level (ignoring user input), value does not matter
+      // Surface data; set only level 0 (ignoring user input).
+      // Parameter specific level is used when fetching or storing parameter data
       //
       itsDataLevels.insert(0);
     else
@@ -774,7 +1138,7 @@ void DataStreamer::setGridLevels(const Query &query, const Producer &producer, u
       }
       else
         for (auto it = queryLevels.begin(); (it != queryLevels.end()); it++)
-          itsDataLevels.insert(*it * levelScale);
+          itsDataLevels.insert(*it);
     }
   }
   catch (...)
@@ -903,91 +1267,184 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
     // Check if any of the requested parameters and levels exist or is interpolatable.
 
     Engine::Grid::Times validTimes;
+    string originTimeStr(oTime.is_not_a_date_time() ? "" : to_iso_string(oTime));
     size_t nMissingParam = 0;
 
-    BOOST_FOREACH (auto const &param, itsDataParams)
+    for (auto const &param : itsDataParams)
     {
       SmartMet::Engine::Grid::ParameterDetails_vec paramDetails;
       itsGridEngine->getParameterDetails(itsReqParams.producer, param.name(), paramDetails);
 
-      if (paramDetails.size() > 0)
+      for (auto const &paramDetail : paramDetails)
       {
-        // Use first detail for newbase producer+parameter
-
-//      if (paramDetails.size() > 1)
-//        throw Spine::Exception(BCP, "Multiple mappings for parameter " + param.name());
-
         string paramKey = itsReqParams.producer + ";" + param.name();
 
-        if (strcasecmp(paramDetails[0].mProducerName.c_str(),paramKey.c_str()) != 0)
+        if (strcasecmp(paramDetail.mProducerName.c_str(),paramKey.c_str()) != 0)
         {
-          set<T::ParamLevel> paramLevels;
+          T::ParamLevelId paramLevelId = GridMetaData::GridFMILevelTypeNone;
           bool hasParam = false;
+          paramKey.clear();
 
-          itsGridEngine->mapParameterDetails(paramDetails);
+          if (&paramDetail == &(paramDetails.front()))
+            itsGridEngine->mapParameterDetails(paramDetails);
 
-          BOOST_FOREACH (auto const &paramMapping, paramDetails[0].mMappings)
+          for (auto const &paramMapping : paramDetail.mMappings)
           {
+            // Check for supported level type
+
+            auto const &pm = paramMapping.mMapping;
+
             if (
-                (paramMapping.mMapping.mParameterLevelIdType == T::ParamLevelIdTypeValue::FMI) &&
+                (pm.mParameterLevelIdType == T::ParamLevelIdTypeValue::FMI) &&
                 (
-                 (paramMapping.mMapping.mParameterLevelId == GridMetaData::GridFMILevelTypeGround) ||
-                 (paramMapping.mMapping.mParameterLevelId == GridMetaData::GridFMILevelTypePressure) ||
-                 (paramMapping.mMapping.mParameterLevelId == GridMetaData::GridFMILevelTypeHybrid) ||
-                 (paramMapping.mMapping.mParameterLevelId == GridMetaData::GridFMILevelTypeHeight) ||
-                 (paramMapping.mMapping.mParameterLevelId == GridMetaData::GridFMILevelTypeDepth)
+                 (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeGround) ||
+                 (pm.mParameterLevelId == GridMetaData::GridFMILevelTypePressure) ||
+                 (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeHybrid) ||
+                 (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeHeight) ||
+                 (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeDepth)
                 )
                )
             {
+              // Check if level is requested by the query
+
+              FmiLevelType mappingLevelType;
+
+              if (
+                  (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeGround) ||
+                  (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeHeight)
+                 )
+                mappingLevelType = kFmiGroundSurface;
+              else if (pm.mParameterLevelId == GridMetaData::GridFMILevelTypePressure)
+                mappingLevelType = kFmiPressureLevel;
+              else if (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeHybrid)
+                mappingLevelType = kFmiHybridLevel;
+              else
+                mappingLevelType = kFmiDepth;
+
+              int level = (pm.mParameterLevelId == GridMetaData::GridFMILevelTypePressure)
+                          ? pm.mParameterLevel * 0.01 : pm.mParameterLevel;
+
+              if (!isGridLevelRequested(producer, query, mappingLevelType, level))
+                continue;
+
+              if (paramKey.empty())
+                paramKey = pm.mParameterName + ":" + pm.mProducerName;
+
               if (itsGridMetaData.paramLevelId != GridMetaData::GridFMILevelTypeNone)
               {
-                if (paramMapping.mMapping.mParameterLevelId != itsGridMetaData.paramLevelId)
-                  throw Spine::Exception(BCP, "Multiple leveltypes for parameter " + param.name());
+                // Currently on 1 geometry supported
+
+                if (pm.mGeometryId != itsGridMetaData.geometryId)
+                  continue;
+
+                // (Parameter and) producer must not change
+		//
+                auto pKey = pm.mParameterName + ":" + pm.mProducerName;
+
+                if (pKey != paramKey)
+                  throw Spine::Exception(BCP, "GridMetaData: Multiple mappings: " + param.name() + ": " +
+                                         paramKey + "," + pKey);
+                // Level type must not change, except allow ground and height (e.g. 2m) above ground
+                //
+                else if (
+                         (
+                          (paramLevelId != GridMetaData::GridFMILevelTypeNone) &&
+                          (pm.mParameterLevelId != paramLevelId)
+                         ) ||
+                         (
+                          (pm.mParameterLevelId != itsGridMetaData.paramLevelId) &&
+                          (
+                           (pm.mParameterLevelId != GridMetaData::GridFMILevelTypeGround) &&
+                           (pm.mParameterLevelId != GridMetaData::GridFMILevelTypeHeight)
+                          ) &&
+                          (
+                           (itsGridMetaData.paramLevelId != GridMetaData::GridFMILevelTypeGround) &&
+                           (itsGridMetaData.paramLevelId != GridMetaData::GridFMILevelTypeHeight)
+                          )
+                         )
+                        )
+                {
+                  string levelTypeId = (paramLevelId != GridMetaData::GridFMILevelTypeNone)
+                                       ? "," + Fmi::to_string(paramLevelId) : "";
+
+                  throw Spine::Exception(BCP, "GridMetaData: Multiple leveltypes: " +
+                                         param.name() + "," + Fmi::to_string(pm.mParameterLevelId) +
+                                         levelTypeId +
+                                         "," + Fmi::to_string(itsGridMetaData.paramLevelId));
+                }
               }
-              else
-              {
-                itsGridMetaData.paramLevelId = paramMapping.mMapping.mParameterLevelId;
 
-                if (itsGridMetaData.paramLevelId == GridMetaData::GridFMILevelTypeGround)
-                  levelType = kFmiGroundSurface;
-                else if (itsGridMetaData.paramLevelId == GridMetaData::GridFMILevelTypePressure)
-                  levelType = kFmiPressureLevel;
-                else if (itsGridMetaData.paramLevelId == GridMetaData::GridFMILevelTypeHybrid)
-                  levelType = kFmiHybridLevel;
-                else if  (itsGridMetaData.paramLevelId == GridMetaData::GridFMILevelTypeHeight)
-                  levelType = kFmiHeight;
-                else
-                  levelType = kFmiDepth;
-              }
+              // Collect origintimes and available parameters, times and levels for each of them
 
-              auto level = paramLevels.insert(paramMapping.mMapping.mParameterLevel);
-              if (!level.second)
-                throw Spine::Exception(BCP, "Duplicate level value for parameter " + param.name());
-
-              // Collect origintimes and available parameters and times for each of them
+              if (paramMapping.mTimes.empty())
+                throw Spine::Exception(BCP, "GridMetaData: Mapping with no times: " + param.name());
 
               for (auto const & dataTimes : paramMapping.mTimes)
               {
-                auto otp = itsGridMetaData.originTimeParams.insert(make_pair(dataTimes.first, set<string>()));
+                if ((!originTimeStr.empty()) && (originTimeStr != dataTimes.first))
+                  continue;
+                else if (dataTimes.second.empty())
+                  throw Spine::Exception(BCP, "GridMetaData: Mapping with no validtimes: " +
+                                         param.name());
+
+                if (itsGridMetaData.paramLevelId == GridMetaData::GridFMILevelTypeNone)
+                {
+                  itsGridMetaData.paramLevelId = pm.mParameterLevelId;
+                  itsGridMetaData.geometryId = pm.mGeometryId;
+
+                  levelType = mappingLevelType;
+                }
+
+                if (paramLevelId == GridMetaData::GridFMILevelTypeNone)
+                  paramLevelId = pm.mParameterLevelId;
+
+                using GeometryLevels = GridMetaData::GeometryLevels;
+                using LevelOriginTimes = GridMetaData::LevelOriginTimes;
+                using OriginTimeTimes = GridMetaData::OriginTimeTimes;
+
+                auto paramGeom = itsGridMetaData.paramGeometries.insert(
+                    make_pair(param.name(), GeometryLevels()));
+                auto geomLevels = paramGeom.first->second.insert(
+                    make_pair(itsGridMetaData.geometryId, LevelOriginTimes()));
+                auto levelTimes = geomLevels.first->second.insert(make_pair(level,
+                                                                         OriginTimeTimes()));
+                auto originTimes = levelTimes.first->second.insert(make_pair(dataTimes.first,
+                                                                             set<string>()));
+                originTimes.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
+
+                auto otp = itsGridMetaData.originTimeParams.insert(make_pair(dataTimes.first,
+                                                                             set<string>()));
                 otp.first->second.insert(param.name());
 
-                auto ott = itsGridMetaData.originTimeTimes.insert(make_pair(dataTimes.first, set<string>()));
-                ott.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
-              }
+                // Store level 0 for surface data for level iteration; parameter specific
+                // level is used when fetching or storing parameter data
 
-              paramKey = paramMapping.mMapping.mParameterName + ":" + paramMapping.mMapping.mProducerName;
-              hasParam = true;
+                bool surfaceLevel = isSurfaceLevel(levelType);
+
+                auto otl = itsGridMetaData.originTimeLevels.insert(make_pair(dataTimes.first,
+                                                                            set<T::ParamLevel>()));
+                auto levels = otl.first->second.insert(surfaceLevel ? 0 : level);
+                if ((!levels.second) && (!surfaceLevel))
+                  throw Spine::Exception(BCP, "GridMetaData: Duplicate level; " + param.name() +
+                                         "," + Fmi::to_string(level));
+
+                auto ott = itsGridMetaData.originTimeTimes.insert(make_pair(dataTimes.first,
+                                                                            set<string>()));
+                ott.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
+
+                hasParam = true;
+              }
             }
           }
 
           if (hasParam)
           {
+            // Only the first valid detail is used
+
             itsGridMetaData.paramKeys.insert(make_pair(param.name(), paramKey));
+            itsGridMetaData.paramLevelIds.insert(make_pair(param.name(), paramLevelId));
 
-            if (paramLevels.size() > 0)
-              itsGridMetaData.levels.insert(paramLevels.begin(), paramLevels.end());
-
-            continue;
+            break;
           }
         }
       }
@@ -1001,43 +1458,32 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
         if (!itsValScaling.empty())
           itsValScaling.pop_front();
         else
-          throw Spine::Exception(BCP, "Internal error in skipping missing parameters");
+          throw Spine::Exception(BCP, "GridMetaData: internal: No more scaling data");
       }
     }
 
     if (itsGridMetaData.paramLevelId == GridMetaData::GridFMILevelTypeNone)
       return false;
 
-    // Erase leading missing parameters. The first parameter in 'itsDataParams' must be the first
-    // valid/existent parameter after the initialization phase.
-    // At the end of initialization parameter iterator is set to the start of 'itsDataParams';
-    // data chunking starts with it
+    // Erase leading missing parameters
 
     if (nMissingParam > 0)
       itsDataParams.erase(itsDataParams.begin(), itsDataParams.begin() + nMissingParam);
+
+    // If origintime is not given, select latest valid origintime from metadata
+
+    if (originTimeStr.empty())
+      itsGridMetaData.selectGridLatestValidOriginTime();
 
     // Generate list of validtimes for the data to be loaded.
 
     generateGridValidTimeList(query, oTime, sTime, eTime);
 
-    // Set request levels. Scale default/configured pressure levels to hPa
+    // Set request levels
 
-    setGridLevels(query, producer, (levelType == kFmiPressureLevel) ? 100 : 1);
+    setGridLevels(producer, query);
 
-    // Check data is available for at least one requested level
-
-    Query::Levels::const_iterator it = itsDataLevels.begin();
-    bool exactLevel;
-
-    for (; (it != itsDataLevels.end()); it++)
-    {
-      int level = *it;
-
-      if (isGridLevelAvailable(level, exactLevel))
-        return true;
-    }
-
-    return false;
+    return true;
   }
   catch (...)
   {
@@ -2316,58 +2762,46 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Check if 'requestedLevel' is available in grid data.
- *
- *		Returns true on success and 'exactLevel' is set to indicate
- *		exact match or need to interpolate.
+ * \brief Check if level is requested by the query
  *
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::isGridLevelAvailable(int &requestedLevel, bool &exactLevel) const
+bool DataStreamer::isGridLevelRequested(const Producer &producer,
+                                        const Query &query,
+                                        FmiLevelType mappingLevelType,
+                                        int level) const
 {
   try
   {
-    if (isSurfaceLevel(levelType))
-    {
-      // Just set the one and only level from the surface data.
-      //
-      requestedLevel = 0;
-      exactLevel = true;
+    auto queryLevels = (query.levels.begin() == query.levels.end())
+                       ? producer.gridDefaultLevels : query.levels;
 
+    if (
+        isSurfaceLevel(mappingLevelType) ||
+        (
+         (queryLevels.begin() == queryLevels.end()) &&
+         (
+          (itsHeightRng || (!itsLevelRng)) ||
+          ((level >= itsReqParams.minLevel) && (level <= itsReqParams.maxLevel))
+         )
+        )
+       )
       return true;
-    }
 
     // Level interpolation is possible for pressure data only.
 
-    bool interpolatable = (isPressureLevel(levelType) && itsProducer.verticalInterpolation);
+    bool interpolatable = (isPressureLevel(mappingLevelType) && itsProducer.verticalInterpolation);
     bool first = true;
 
-    set<T::ParamLevel>::const_iterator it = itsGridMetaData.levels.begin();
-
-    for ( ; (it != itsGridMetaData.levels.end()); first = false, it++)
-    {
-      // Note: Height level data can have negative levels.
-
-      int level = *it;
-
-      if ((exactLevel = (level == requestedLevel)))
+    for (auto it = queryLevels.begin(); (it != queryLevels.end()); it++)
+      if (*it == level)
         return true;
-
-      if (requestedLevel > level)
-      {
-        if (!itsRisingLevels)
-          // Interpolatable if between data levels, data is interpolatable and interpolation is
-          // allowed
-          //
-          return (!(first || (!interpolatable)));
-      }
-      else if (itsRisingLevels)
+      else if (level < *it)
         // Interpolatable if between data levels, data is interpolatable and interpolation is
         // allowed
         //
         return (!(first || (!interpolatable)));
-    }
 
     return false;
   }
@@ -2777,41 +3211,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Move to next grid parameter
- *
- */
-// ----------------------------------------------------------------------
-
-void DataStreamer::nextGridParam()
-{
-  try
-  {
-    // Advance parameter and scaling iterators. Skip missing parameters
-
-    for (itsParamIterator++; (itsParamIterator != itsDataParams.end()); itsParamIterator++)
-    {
-      if (itsScalingIterator != itsValScaling.end())
-      {
-        itsScalingIterator++;
-
-        if (itsScalingIterator == itsValScaling.end())
-          throw Spine::Exception(BCP, "nextGridParam: internal: No more scaling data");
-      }
-
-      if (itsGridMetaData.paramKeys.find(itsParamIterator->name()) != itsGridMetaData.paramKeys.end())
-        break;
-    }
-
-    paramChanged();
-  }
-  catch (...)
-  {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Move to next querydata parameter
  *
  */
@@ -3153,7 +3552,8 @@ void DataStreamer::extractData(string &chunk)
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery) const
+bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelIdType gridLevelType,
+                                  int level)
 {
   bool nativeArea = false;
 
@@ -3209,9 +3609,11 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery) const
   else
     nativeResolution = (!nativeArea);  // Use 'data' crs if area not given
 
+  gridQuery.mAnalysisTime = to_iso_string(itsGridMetaData.gridOriginTime);
+  gridQuery.mForecastTimeList.insert(to_iso_string(itsTimeIterator->utc_time()));
+
   gridQuery.mSearchType = QueryServer::Query::SearchType::TimeSteps;
   gridQuery.mTimezone = "UTC";
-  gridQuery.mForecastTimeList.insert(to_iso_string(itsTimeIterator->utc_time()));
 
   QueryServer::QueryParameter queryParam;
 
@@ -3220,12 +3622,12 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery) const
 
   queryParam.mParam = itsGridMetaData.paramKeys.find(itsParamIterator->name())->second;
   queryParam.mParameterLevelIdType = T::ParamLevelIdTypeValue::FMI;
-  queryParam.mParameterLevelId = itsGridMetaData.paramLevelId;
-  queryParam.mParameterLevel = *itsLevelIterator;
+  queryParam.mParameterLevelId = gridLevelType;
+  queryParam.mParameterLevel = ((levelType == kFmiPressureLevel) ? level * 100 : level);
 
   queryParam.mForecastType = -1;
   queryParam.mForecastNumber = -1;
-  queryParam.mGeometryId = -1;
+  queryParam.mGeometryId = itsGridMetaData.geometryId;
 
   queryParam.mAreaInterpolationMethod = -1;
   queryParam.mTimeInterpolationMethod = -1;
@@ -3233,7 +3635,7 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery) const
 
   // If reprojecting and bbox/area is not given, query without data first to get the bbox
 
-  bool queryBBox = false;
+  bool queryBBox = false, getCoordinates = (itsReqParams.outputFormat == NetCdf);
 
   if (itsReqParams.projection.empty())
     gridQuery.mAttributeList.addAttribute("grid.crs", nativeResolution ? "crop" : "data");
@@ -3241,15 +3643,19 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery) const
   {
     // Reprojecting and bbox/area is not given; query without data first to get the bbox
 
-    queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates); // |
-//                       QueryServer::QueryParameter::Flags::NoReturnValues);
-
     gridQuery.mAttributeList.addAttribute("grid.crs", "data");
-
-    queryBBox = true;
+    queryBBox = getCoordinates = true;
   }
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
+
+  if (getCoordinates)
+  {
+    // Get grid coordinates when reprojecting and bbox/area is not given or for netcdf output
+
+    queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates); // |
+//                       QueryServer::QueryParameter::Flags::NoReturnValues);
+  }
 
   gridQuery.mQueryParameterList.push_back(queryParam);
 
@@ -3646,6 +4052,64 @@ void DataStreamer::getGridBBox(QueryServer::Query &gridQuery)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Transform (native) grid's regular latlon coords to rotated
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
+{
+  try
+  {
+    auto coords = gridQuery.mQueryParameterList.front().mCoordinates;
+
+    if (coords.empty())
+      throw Spine::Exception(BCP,"No coordinates to transform");
+
+    itsGridMetaData.rotLongitudes.reset(new double[coords.size()]);
+    itsGridMetaData.rotLatitudes.reset(new double[coords.size()]);
+    std::unique_ptr<int> pS(new int[coords.size()]);
+
+    auto rotLons = itsGridMetaData.rotLongitudes.get();
+    auto rotLon = rotLons;
+    auto rotLats = itsGridMetaData.rotLatitudes.get();
+    auto rotLat = rotLats;
+    auto pabSuccess = pS.get();
+
+    for (auto const & coord : coords)
+    {
+      *rotLon = coord.x(); rotLon++;
+      *rotLat = coord.y(); rotLat++;
+    }
+
+    auto rotLLSRS = itsResMgr.getGeometrySRS();
+
+    OGRSpatialReference regLLSRS;
+    regLLSRS.CopyGeogCSFrom(rotLLSRS);
+
+    OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&regLLSRS, rotLLSRS);
+
+    int status = ct->TransformEx(coords.size(), rotLons, rotLats, nullptr, pabSuccess);
+
+    if (status != 0)
+      for (size_t n = 0; (n < coords.size()); n++, pabSuccess++)
+        if (*pabSuccess == 0)
+        {
+          status = 0;
+          break;
+        }
+
+    if (!status)
+      throw Spine::Exception(BCP,"Failed to transform regular latlon coords to rotated");
+  }
+  catch (...)
+  {
+    throw Spine::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get query result grid infomation (projection and grid size)
  *
  */
@@ -3666,23 +4130,46 @@ void DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     getGridProjection(gridQuery);
 
-    // Bounding box
+    // Latlon or rotated latlon bounding box
+    //
+    // Note: using grid.bbox for latlon data too, original llbox is modified
+    // for wms (?); e.g. ECG
+    //
+    // grid.llbox = 0.000000,-90.000000,-0.100000,90.000000
+    // grid.bbox = 0.000000,-90.000000,359.900000,90.000000
 
-    string llBBoxStr;
-    auto llBBoxAttr = gridQuery.mAttributeList.getAttribute("grid.llbox");
+    string bboxStr;
 
-    if (!llBBoxAttr)
-      llBBoxStr = getGridLLBBoxStr();
+    auto attr = (
+                 (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ||
+                 (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon)
+                )
+                ? "grid.bbox" : "grid.llbox";
+    auto bboxAttr = gridQuery.mAttributeList.getAttribute(attr);
+
+    if (bboxAttr)
+      bboxStr = bboxAttr->mValue;
+    else if (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+      bboxStr = getGridLLBBoxStr();
+
+    auto bbox = nPairsOfValues<double>(bboxStr, attr, 2);
+
+    if (!bbox)
+      throw Spine::Exception(BCP, string(attr) + " is empty in query result");
+
+    if (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon)
+    {
+      itsBoundingBox.bottomLeft = NFmiPoint((*bbox)[BOTTOMLEFT].first, (*bbox)[BOTTOMLEFT].second);
+      itsBoundingBox.topRight = NFmiPoint((*bbox)[TOPRIGHT].first, (*bbox)[TOPRIGHT].second);
+    }
     else
-      llBBoxStr = llBBoxAttr->mValue;
-
-    auto llBBox = nPairsOfValues<double>(llBBoxStr, "grid.llbox", 2);
-
-    if (!llBBox)
-      throw Spine::Exception(BCP, "Grid llbox is empty in query result");
-
-    itsBoundingBox.bottomLeft = NFmiPoint((*llBBox)[BOTTOMLEFT].first, (*llBBox)[BOTTOMLEFT].second);
-    itsBoundingBox.topRight = NFmiPoint((*llBBox)[TOPRIGHT].first, (*llBBox)[TOPRIGHT].second);
+    {
+      itsGridMetaData.rotLLBBox = BBoxCorners();
+      itsGridMetaData.rotLLBBox->bottomLeft = NFmiPoint((*bbox)[BOTTOMLEFT].first,
+                                                        (*bbox)[BOTTOMLEFT].second);
+      itsGridMetaData.rotLLBBox->topRight = NFmiPoint((*bbox)[TOPRIGHT].first,
+                                                      (*bbox)[TOPRIGHT].second);
+    }
 
     // Grid size
 
@@ -3692,23 +4179,32 @@ void DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
     if ((!widthAttr) || (!heightAttr))
       throw Spine::Exception(BCP, "Grid width/height not set in query result");
 
-    itsReqGridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
-    itsReqGridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
+    auto gridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
+    auto gridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
 
-    if (vVec.size() != (itsReqGridSizeX * itsReqGridSizeY))
-      throw Spine::Exception(BCP, "Grid size (" + Fmi::to_string(vVec.size()) +
-                             ") and width/height (" + Fmi::to_string(itsReqGridSizeX) + "/" +
-                             Fmi::to_string(itsReqGridSizeY) + ") mismatch");
+    if (vVec.size() != (gridSizeX * gridSizeY))
+      throw Spine::Exception(BCP, "Grid size " + Fmi::to_string(vVec.size()) +
+                             " and width/height " + Fmi::to_string(gridSizeX) + "/" +
+                             Fmi::to_string(gridSizeY) + " mismatch");
+    else if (
+             itsReqParams.gridSizeXY &&
+             ((gridSizeX != itsReqGridSizeX) || (gridSizeY != itsReqGridSizeY))
+            )
+      throw Spine::Exception(BCP, "Invalid grid width/height " + Fmi::to_string(gridSizeX) +
+                             "/" + Fmi::to_string(gridSizeY) + ", expecting " +
+                             Fmi::to_string(itsReqGridSizeX) + "/" +
+                             Fmi::to_string(itsReqGridSizeY));
+
+    // Set/use constant grid size if size/resolution was not set
+
+    itsReqGridSizeX = gridSizeX;
+    itsReqGridSizeY = gridSizeY;
+
+    setGridSize(itsReqGridSizeX, itsReqGridSizeY);
 
     // Take stepping (gridstep=dx,dy) into account
 
     setSteppedGridSize();
-
-    // Set/use constant grid size if size/resolution was not set
-    //
-    // TODO: set or not ?
-    //
-    // setGridSize(itsReqGridSizeX, itsReqGridSizeY);
 
     // Grid resolution
 
@@ -3735,6 +4231,22 @@ void DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
       throw Spine::Exception::Trace(BCP, "grid.original.relativeUV has unknown value");
 
     itsGridMetaData.relativeUV = (uvAttr && (uvAttr->mValue == "1"));
+
+    if (
+        (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon) &&
+        (itsReqParams.outputFormat == NetCdf) &&
+        (!itsGridMetaData.rotLongitudes.get())
+       )
+    {
+      // Transform regular latlon coords to rotated
+
+      regLLToGridRotatedCoords(gridQuery);
+    }
+
+    // Ensemble
+
+    itsGridMetaData.gridEnsemble =
+        gridQuery.mQueryParameterList.front().mValueList.front().mForecastNumber;
   }
   catch (...)
   {
@@ -3753,106 +4265,55 @@ void DataStreamer::extractGridData(string &chunk)
 {
   try
   {
-    auto theParamsEnd = itsDataParams.end();
-    auto theLevelsBegin = itsDataLevels.begin();
-    auto theLevelsEnd = itsDataLevels.end();
-    auto theTimesBegin = itsDataTimes.begin();
-    auto theTimesEnd = itsDataTimes.end();
+    auto &gridIterator = itsGridMetaData.getGridIterator();
 
-    // Loop over the parameters.
-
-    for (; (itsParamIterator != theParamsEnd); nextGridParam(),
-                                               itsLevelIterator = theLevelsBegin,
-                                               itsTimeIterator = theTimesBegin)
+    for (gridIterator++; !gridIterator.atEnd(); gridIterator++)
     {
-      // Loop over the queried levels.
+      // Parameter specific level type and level for surface data
 
-      for (; (itsLevelIterator != theLevelsEnd); itsLevelIterator++, itsTimeIterator = theTimesBegin)
+      T::ParamLevelIdType gridLevelType;
+      int level;
+
+      if (!gridIterator.hasData(gridLevelType, level))
+        continue;
+
+      itsGridQuery = QueryServer::Query();
+
+      bool queryBBox = buildGridQuery(itsGridQuery, gridLevelType, level);
+
+      int result = itsGridEngine->executeQuery(itsGridQuery);
+
+      if ((result == 0) && queryBBox)
       {
-        // Skip times earlier than first available validtime
+        getGridBBox(itsGridQuery);
 
-        auto timeInstant = itsFirstDataTime;
+        itsGridQuery = QueryServer::Query();
+        buildGridQuery(itsGridQuery, gridLevelType, level);
 
-        while (itsTimeIterator != theTimesEnd)
-        {
-          timeInstant = itsTimeIterator->utc_time();
+        result = itsGridEngine->executeQuery(itsGridQuery);
+      }
 
-          if (timeInstant < itsFirstDataTime)
-            itsTimeIterator++;
-          else
-            break;
-        }
+      if (result != 0)
+      {
+        Spine::Exception exception(BCP, "The query server returns an error message!");
+        exception.addParameter("Result", std::to_string(result));
+        exception.addParameter("Message", QueryServer::getResultString(result));
+        throw exception;
+      }
 
-        // Skip times later than last available validtime
+      getGridQueryInfo(itsGridQuery);
 
-        if ((itsTimeIterator == theTimesEnd) || (timeInstant > itsLastDataTime))
-        {
-          // Next level or parameter
+      // Load the data chunk from itsGridQuery
+      //
+      // Note: With netcdf output the data is taken (and buffered) from the 'itsGridValues' member
+      // instead of 'chunk' by the upper level (i.e. the format specific getChunk() method).
 
-          continue;
-        }
+      NFmiMetTime mt(itsTimeIterator->utc_time());
 
-        // Check that the requested level is available in the querydata (exact match or
-        // interpolatable).
+      getGridDataChunk(itsGridQuery, level, mt, chunk);
 
-        int level = *itsLevelIterator;
-        bool exactLevel;
-
-        if (!isGridLevelAvailable(level, exactLevel))
-          continue;
-
-        QueryServer::Query dataGridQuery,bboxGridQuery;
-        QueryServer::Query &gridQuery = bboxGridQuery;
-
-        bool queryBBox = buildGridQuery(gridQuery);
-
-        int result = itsGridEngine->executeQuery(gridQuery);
-
-        if ((result == 0) && queryBBox)
-        {
-          getGridBBox(gridQuery);
-
-          gridQuery = dataGridQuery;
-          buildGridQuery(gridQuery);
-
-          result = itsGridEngine->executeQuery(gridQuery);
-        }
-
-        if (result != 0)
-        {
-          Spine::Exception exception(BCP, "The query server returns an error message!");
-          exception.addParameter("Result", std::to_string(result));
-          exception.addParameter("Message", QueryServer::getResultString(result));
-          throw exception;
-        }
-
-        getGridQueryInfo(gridQuery);
-
-        // Load the data chunk from gridQuery
-        //
-        // Note: With netcdf output the data is taken (and buffered) from the 'itsGridValues' member
-        // instead of 'chunk' by the upper level (e.g. the format specific getChunk() method).
-
-/*
-        if ((itsGridValues.NX() == 0) || (itsGridValues.NY() == 0))
-          throw Spine::Exception(BCP,
-                                 "Extract data: internal: Query returned no data for producer '" +
-                                     itsReqParams.producer + "'");
-*/
-
-        NFmiMetTime mt(itsTimeIterator->utc_time());
-
-        getGridDataChunk(gridQuery, level, mt, chunk);
-
-        // Move to next time instant
-
-        itsTimeIterator++;
-
-        return;
-      }  // for queried levels
-    }    // for parameters
-
-    // No more data
+      return;
+    }
   }
   catch (...)
   {
