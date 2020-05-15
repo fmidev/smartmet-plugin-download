@@ -1647,16 +1647,20 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 // ----------------------------------------------------------------------
 
 void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
-                                      int level,
-                                      const NFmiMetTime &mt,
+                                      int,
+                                      const NFmiMetTime &,
                                       string &chunk)
 {
   try
   {
     if (setMeta)
     {
+      // NcFile metadata generation is not thread safe
+
+      Spine::WriteLock lock(myFileOpenMutex);
+
       // Set geometry and dimensions
-      //
+
       setGridGeometry(gridQuery);
 
       // Add parameters

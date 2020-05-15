@@ -37,8 +37,8 @@ class NetCdfStreamer : public DataStreamer
   //
 
   virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
-                                int level,
-                                const NFmiMetTime &mt,
+                                int,
+                                const NFmiMetTime &,
                                 std::string &chunk);
 
  private:
