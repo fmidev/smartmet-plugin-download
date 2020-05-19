@@ -1069,13 +1069,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       OGRSpatialReference llSRS;
       llSRS.CopyGeogCSFrom(inputSRS);
 
-      OGRSpatialReference toSRS;
-      OGRErr err = toSRS.SetFromUserInput(itsReqParams.projection.c_str());
-
-      if (err != OGRERR_NONE)
-        throw Spine::Exception(BCP,"Failed to initialize srs: " + itsReqParams.projection);
-
-      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&llSRS, &toSRS);
+      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&llSRS, inputSRS);
 
       double xc[] = { coords[0].x(), coords[coords.size() - 1].x() };
       double yc[] = { coords[0].y(), coords[coords.size() - 1].y() };
@@ -1084,8 +1078,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       int status = ct->TransformEx(2, xc, yc, nullptr, pabSuccess);
 
       if (!(status && pabSuccess[0] && pabSuccess[1]))
-        throw Spine::Exception(BCP,"Failed to transform llbbox to bbox: " +
-                               itsReqParams.projection);
+        throw Spine::Exception(BCP,"Failed to transform llbbox to bbox: " + itsGridMetaData.crs);
 
       auto yVar = addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", yDim);
       auto xVar = addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", xDim);
