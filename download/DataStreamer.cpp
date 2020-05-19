@@ -961,8 +961,10 @@ void DataStreamer::generateGridValidTimeList(Query &query, ptime &oTime, ptime &
 
     if (oTime.is_not_a_date_time())
     {
+      auto latestOriginTimeStr = itsGridMetaData.getLatestOriginTime(&oTime);
+
       if (!itsMultiFile)
-        originTimeStr = itsGridMetaData.getLatestOriginTime(&oTime);
+        originTimeStr = latestOriginTimeStr;
     }
     else
     {
