@@ -480,15 +480,8 @@ void GribStreamer::setLambertConformalGeometryToGrib() const
     gset(gribHandle, "jScansPositively", jPositive);
     gset(gribHandle, "iScansNegatively", iNegative);
 
-    // TODO: set/use gridmetadata pole coords from p4 extension for ob_tran lcc ?
-
-    double southPoleLon = 180;
+    double southPoleLon = 0;
     double southPoleLat = -90;
-
-    /*
-    if ((!grib1) && (southPoleLon < 0))
-      southPoleLon += 360;
-    */
 
     gset(gribHandle, "longitudeOfSouthernPoleInDegrees", southPoleLon);
     gset(gribHandle, "latitudeOfSouthernPoleInDegrees", southPoleLat);
@@ -786,7 +779,7 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 
       if (shapeOfTheEarth == 1)
       {
-        gset(gribHandle, "scaleFactorOfRadiusOfSphericalEarth", 2.0);
+        gset(gribHandle, "scaleFactorOfRadiusOfSphericalEarth", 0.0);
         gset(gribHandle, "scaledValueOfRadiusOfSphericalEarth", itsGridMetaData.earthRadiusOrSemiMajorInMeters);
       }
     }
