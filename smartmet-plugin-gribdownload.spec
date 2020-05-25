@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.5.15
+Version: 20.5.25
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon May 25 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.25-1.fmi
+- Some bugfixes. New release version
+
 * Fri May 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.15-1.fmi
 - Create enseble dimension only when applicable
 - Added lock protecting netcdf metadata generation for grid data (not thread safe)
