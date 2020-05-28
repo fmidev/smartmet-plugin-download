@@ -1664,8 +1664,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
   // checks are done automatically by DetectClassId, we do not need
   // to check them separately.
 
-  const auto &proj = area.ProjInfo();
-  auto id = proj.DetectClassId();
+  auto id = area.DetectClassId();
 
   switch (id)
   {
@@ -1677,7 +1676,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
     case kNFmiLambertConformalConicArea: return (projection == "lcc");
     case kNFmiRotatedLatLonArea:         return (projection == "rotlatlon" || projection == "invrotlatlon");
     case kNFmiYKJArea:                   return (projection == "ykj");
-    default:                             return (projection == proj.getString("proj"));
+    default:                             return (projection == area.ProjInfo().getString("proj"));
       // clang-format on
   }
 }
