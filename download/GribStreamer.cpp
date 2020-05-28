@@ -12,6 +12,7 @@
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <fmt/format.h>
+#include <gis/ProjInfo.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
@@ -206,8 +207,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     BBoxCorners rotLLBBox;
 #ifdef WGS84
 
-    auto opt_plat = area->Proj().GetDouble("o_lat_p");
-    auto opt_plon = area->Proj().GetDouble("o_lon_p");
+    auto opt_plat = area->ProjInfo().getDouble("o_lat_p");
+    auto opt_plon = area->ProjInfo().getDouble("o_lon_p");
 
     if (*opt_plon != 0)
       throw Spine::Exception(
@@ -333,9 +334,9 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     if (!geometrySRS)
     {
-      auto opt_lon_0 = area->Proj().GetDouble("lon_0");
-      auto opt_lat_0 = area->Proj().GetDouble("lat_0");
-      auto opt_lat_ts = area->Proj().GetDouble("lat_ts");
+      auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
+      auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
+      auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
       lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
       lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
       lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);

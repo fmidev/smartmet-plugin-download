@@ -9,6 +9,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <gis/ProjInfo.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
@@ -590,9 +591,9 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 
     if (!geometrySRS)
     {
-      auto opt_lon_0 = area->Proj().GetDouble("lon_0");
-      auto opt_lat_0 = area->Proj().GetDouble("lat_0");
-      auto opt_lat_ts = area->Proj().GetDouble("lat_ts");
+      auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
+      auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
+      auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
       lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
       lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
       lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);

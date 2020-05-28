@@ -13,6 +13,7 @@
 #include <boost/foreach.hpp>
 #include <gis/DEM.h>
 #include <gis/LandCover.h>
+#include <gis/ProjInfo.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiAreaFactory.h>
 #include <newbase/NFmiEnumConverter.h>
@@ -1663,7 +1664,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
   // checks are done automatically by DetectClassId, we do not need
   // to check them separately.
 
-  const auto &proj = area.Proj();
+  const auto &proj = area.ProjInfo();
   auto id = proj.DetectClassId();
 
   switch (id)
@@ -1676,7 +1677,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
     case kNFmiLambertConformalConicArea: return (projection == "lcc");
     case kNFmiRotatedLatLonArea:         return (projection == "rotlatlon" || projection == "invrotlatlon");
     case kNFmiYKJArea:                   return (projection == "ykj");
-    default:                             return (projection == proj.GetString("proj"));
+    default:                             return (projection == proj.getString("proj"));
       // clang-format on
   }
 }
