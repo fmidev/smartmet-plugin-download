@@ -4170,12 +4170,14 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get query result grid infomation (projection and grid size)
+ * \brief Get query result grid infomation (projection, grid size etc).
+ *        Return false on empty result (missing data assumed),
+ *        throw on errors
  *
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
+bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 {
   try
   {
@@ -4184,7 +4186,7 @@ void DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
     auto vVec = gridQuery.mQueryParameterList.front().mValueList.front().mValueVector;
 
     if (vVec.size() == 0)
-      throw Spine::Exception(BCP, "Query returned an empty result");
+      return false;
 
     // Projection and spheroid
 
@@ -4307,6 +4309,8 @@ void DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     itsGridMetaData.gridEnsemble =
         gridQuery.mQueryParameterList.front().mValueList.front().mForecastNumber;
+
+    return true;
   }
   catch (...)
   {
@@ -4361,7 +4365,14 @@ void DataStreamer::extractGridData(string &chunk)
         throw exception;
       }
 
-      getGridQueryInfo(itsGridQuery);
+      // Unfortunately no usable status is returned by gridengine query.
+      //
+      // If no data was returned getGridQueryInfo returs false, assuming the data is just
+      // missing because it got cleaned. Otherwise if the returned grid e.g. does not match
+      // requested grid size etc, an error is thrown
+
+      if (!getGridQueryInfo(itsGridQuery))
+        continue;
 
       // Load the data chunk from itsGridQuery
       //

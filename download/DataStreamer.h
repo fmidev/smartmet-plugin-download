@@ -460,7 +460,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getGridBBox(QueryServer::Query &gridQuery);
   void getGridProjection(const QueryServer::Query &gridQuery);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
-  void getGridQueryInfo(const QueryServer::Query &gridQuery);
+  bool getGridQueryInfo(const QueryServer::Query &gridQuery);
   void extractGridData(std::string &chunk);
 
  protected:
