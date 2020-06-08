@@ -460,18 +460,18 @@ void NetCdfStreamer::addEnsembleDimension()
 {
   try
   {
+    // Create dimension only if ensembe is applicable
+
+    if (itsGridMetaData.gridEnsemble < 0)
+      return;
+
     auto ensembleVar =
         addCoordVariable("ensemble", 1, ncShort, "ensemble", "", "Ensemble", ensembleDim);
 //      addCoordVariable("ensemble", 1, ncShort, "realization", "", "E", ensembleDim);
 
     addAttribute(ensembleVar, "long_name", "Ensemble");
 
-    short ensemble = itsGridMetaData.gridEnsemble;
-
-    if (ensemble < 0)
-      ensemble = 0;
-
-    if (!ensembleVar->put(&ensemble, 1))
+    if (!ensembleVar->put(&itsGridMetaData.gridEnsemble, 1))
       throw Spine::Exception(BCP, "Failed to store ensemble");
   }
   catch (...)
@@ -984,7 +984,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     addAttribute(ncFile.get(), "institution", "fmi.fi");
     addAttribute(ncFile.get(), "source", "<producer>");
 
-    // Time dimension
+    // Ensemble dimension
 
     addEnsembleDimension();
 
@@ -1069,13 +1069,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       OGRSpatialReference llSRS;
       llSRS.CopyGeogCSFrom(inputSRS);
 
-      OGRSpatialReference toSRS;
-      OGRErr err = toSRS.SetFromUserInput(itsReqParams.projection.c_str());
-
-      if (err != OGRERR_NONE)
-        throw Spine::Exception(BCP,"Failed to initialize srs: " + itsReqParams.projection);
-
-      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&llSRS, &toSRS);
+      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&llSRS, inputSRS);
 
       double xc[] = { coords[0].x(), coords[coords.size() - 1].x() };
       double yc[] = { coords[0].y(), coords[coords.size() - 1].y() };
@@ -1084,8 +1078,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       int status = ct->TransformEx(2, xc, yc, nullptr, pabSuccess);
 
       if (!(status && pabSuccess[0] && pabSuccess[1]))
-        throw Spine::Exception(BCP,"Failed to transform llbbox to bbox: " +
-                               itsReqParams.projection);
+        throw Spine::Exception(BCP,"Failed to transform llbbox to bbox: " + itsGridMetaData.crs);
 
       auto yVar = addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", yDim);
       auto xVar = addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", xDim);
@@ -1395,8 +1388,6 @@ void NetCdfStreamer::addParameters(bool relative_uv)
       else
         paramName = theParam.GetName();
 
-      // Ensemble is not used with querydata (to not to change old data structure/dimensions)
-
       NcDim **dim = dimensions;
 
       if (!ensembleDim)
@@ -1530,7 +1521,7 @@ void NetCdfStreamer::storeParamValues()
     long *edge = edgeLengths;
     uint nEdges = (levelDim ? 5 : 4);
 
-    if (itsReqParams.dataSource == QueryData)
+    if (!ensembleDim)
     {
       if (!(*it_Var)->set_cur(timeIndex, levelDim ? itsLevelIndex : -1))
         throw Spine::Exception(BCP, "Failed to set active netcdf time/level");
@@ -1545,12 +1536,12 @@ void NetCdfStreamer::storeParamValues()
     long edge2 = *(edge++);
     long edge3 = *(edge++);
     long edge4 = *(edge++);
-    long edge5 = ((itsReqParams.dataSource == QueryData) ? -1 : *edge);
+    long edge5 = (ensembleDim ? *edge : -1);
 
     // It seems there can be at max 1 missing (-1) edge at the end of parameter edges
     //
     // e.g.
-    // n,n,n and n,n,n,-1 are both valid for surface data without ensemble (i.e. querydata source)
+    // n,n,n and n,n,n,-1 are both valid for surface data without ensemble
     // n,n,n,n and n,n,n,n,-1 are both valid (level data without ensemble or surface data with it)
 
     if (
