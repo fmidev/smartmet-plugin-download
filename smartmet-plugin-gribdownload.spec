@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.5.25
+Version: 20.6.8
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -18,7 +18,7 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.5.12
+BuildRequires: smartmet-library-spine-devel >= 20.5.27
 BuildRequires: smartmet-library-macgyver-devel >= 20.4.18
 BuildRequires: smartmet-library-newbase-devel >= 20.4.18
 BuildRequires: netcdf-devel
@@ -30,7 +30,7 @@ Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
 Requires: smartmet-library-macgyver >= 20.4.18
-Requires: smartmet-library-spine >= 20.5.12
+Requires: smartmet-library-spine >= 20.5.27
 Requires: smartmet-library-newbase >= 20.4.18
 Requires: smartmet-engine-querydata >= 20.5.13
 Requires: smartmet-server >= 20.4.18
@@ -67,6 +67,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Jun  8 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.6.8-1.fmi
+- Repackaged due to base library changes
+
 * Mon May 25 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.25-1.fmi
 - Some bugfixes. New release version
 
