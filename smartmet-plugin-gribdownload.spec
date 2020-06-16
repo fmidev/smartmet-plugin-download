@@ -22,6 +22,7 @@ BuildRequires: smartmet-library-spine-devel >= 20.6.8
 BuildRequires: smartmet-library-macgyver-devel >= 20.6.8
 BuildRequires: smartmet-library-newbase-devel >= 20.4.18
 BuildRequires: smartmet-library-grid-content-devel >= 20.6.15
+BuildRequires: smartmet-library-grid-files-devel >= 20.6.15
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 20.5.13
 BuildRequires: smartmet-engine-geonames-devel >= 20.6.8
