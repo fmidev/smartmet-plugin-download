@@ -41,7 +41,7 @@ workflows:
       - build:
           filters:
             branches:
-              only: master
+              only: master-grid-support-BS-1661-new
       - test:
           requires:
             - build
