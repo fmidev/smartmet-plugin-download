@@ -18,21 +18,23 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.5.27
-BuildRequires: smartmet-library-macgyver-devel >= 20.4.18
+BuildRequires: smartmet-library-spine-devel >= 20.6.8
+BuildRequires: smartmet-library-macgyver-devel >= 20.6.8
 BuildRequires: smartmet-library-newbase-devel >= 20.4.18
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 20.5.13
-BuildRequires: smartmet-engine-geonames-devel
+BuildRequires: smartmet-engine-geonames-devel >= 20.6.8
+BuildRequires: smartmet-engine-grid-devel >= 20.6.8
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.4.18
-Requires: smartmet-library-spine >= 20.5.27
+Requires: smartmet-library-macgyver >= 20.6.8
+Requires: smartmet-library-spine >= 20.6.8
 Requires: smartmet-library-newbase >= 20.4.18
 Requires: smartmet-engine-querydata >= 20.5.13
+Requires: smartmet-engine-grid >= 20.6.8
 Requires: smartmet-server >= 20.4.18
 Requires: boost169-date-time
 Requires: boost169-iostreams
