@@ -27,28 +27,29 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= NFmiLatLonArea
-top left lonlat		= -9.09871,72.6421
-top right lonlat	= 49,72.6421
-bottom left lonlat	= -9.09871,51.3
-bottom right lonlat	= 49,51.3
+top left lonlat		= -9.07237,72.5338
+top right lonlat	= 49,72.5338
+bottom left lonlat	= -9.07237,51.1121
+bottom right lonlat	= 49,51.1121
 
-top left WGS84		= -9.09871,72.7512
-top right WGS84		= 49,72.7512
-bottom left WGS84	= -9.09871,51.4875
-bottom right WGS84	= 49,51.4875
-center WGS84		= 19.9506,62.1301
+top left WGS84		= -9.07237,72.5338
+top right WGS84		= 49,72.5338
+bottom left WGS84	= -9.07237,51.1121
+bottom right WGS84	= 49,51.1121
+center WGS84		= 19.9638,61.8229
 
-bbox			= [-1011766.76 5448747.25 5704504.77 8077723.32]
+bbox			= [-1009931.61 5454655.05 5689772.95 8074425.68]
 
-projstr	= +proj=eqc +R=6371229 +over +no_defs +towgs84=0,0,0
-wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["unknown",SPHEROID["unknown",6371229,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=eqc +R=6371229 +over +no_defs +towgs84=0,0,0"]]
+projstr	= +proj=eqc +datum=WGS84 +over +no_defs
+wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
 
 prettywkt =
 PROJCS["unknown",
     GEOGCS["unknown",
-        DATUM["unknown",
-            SPHEROID["unknown",6371229,0],
-            TOWGS84[0,0,0,0,0,0,0]],
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
         PRIMEM["Greenwich",0,
             AUTHORITY["EPSG","8901"]],
         UNIT["degree",0.0174532925199433,
@@ -62,7 +63,7 @@ PROJCS["unknown",
         AUTHORITY["EPSG","9001"]],
     AXIS["Easting",EAST],
     AXIS["Northing",NORTH],
-    EXTENSION["PROJ4","+proj=eqc +R=6371229 +over +no_defs +towgs84=0,0,0"]]
+    EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
@@ -73,10 +74,10 @@ IsGeocentric			= 0
 IsLocal				= 0
 IsVertical			= 0
 IsCompound			= 0
-SemiMajor			= 6371229
-SemiMinor			= 6371229
-InvFlattening			= 0
-EPSG				= -1
+SemiMajor			= 6378137
+SemiMinor			= 6356752.314
+InvFlattening			= 298.2572236
+EPSG				= 4326
 
 central_meridian	= 0
 standard_parallel_1	= 0
@@ -84,9 +85,8 @@ false_easting	= 0
 false_northing	= 0
 
 proj options:
-+R = 6371229
++datum = "WGS84"
 +proj = "eqc"
-+towgs84 = "0,0,0"
 +no_defs
 +over
 
@@ -95,14 +95,14 @@ left	= 0
 right	= 1
 bottom	= 1
 
-xnumber		= 112
+xnumber		= 113
 ynumber		= 125
-dx		= 57.68316077 km
-dy		= 18.98574835 km
+dx		= 57.20873148 km
+dy		= 19.07722189 km
 
-xywidth		= 6460.514006 km
-xyheight	= 2373.218544 km
-aspectratio	= 2.722258353
+xywidth		= 6464.586658 km
+xyheight	= 2384.652736 km
+aspectratio	= 2.710913233
 
 Information on the locations:
 
