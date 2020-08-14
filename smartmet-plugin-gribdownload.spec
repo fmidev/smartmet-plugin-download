@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.6.15
+Version: 20.8.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -18,26 +18,26 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.6.8
-BuildRequires: smartmet-library-macgyver-devel >= 20.6.8
-BuildRequires: smartmet-library-newbase-devel >= 20.4.18
-BuildRequires: smartmet-library-grid-content-devel >= 20.6.15
-BuildRequires: smartmet-library-grid-files-devel >= 20.6.15
+BuildRequires: smartmet-library-spine-devel >= 20.8.11
+BuildRequires: smartmet-library-macgyver-devel >= 20.8.7
+BuildRequires: smartmet-library-newbase-devel >= 20.6.16
+BuildRequires: smartmet-library-grid-content-devel >= 20.8.14
+BuildRequires: smartmet-library-grid-files-devel >= 20.8.14
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 20.5.13
 BuildRequires: smartmet-engine-geonames-devel >= 20.6.8
-BuildRequires: smartmet-engine-grid-devel >= 20.6.8
+BuildRequires: smartmet-engine-grid-devel >= 20.8.14
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.6.8
-Requires: smartmet-library-spine >= 20.6.8
-Requires: smartmet-library-newbase >= 20.4.18
+Requires: smartmet-library-macgyver >= 20.8.7
+Requires: smartmet-library-spine >= 20.8.11
+Requires: smartmet-library-newbase >= 20.6.16
 Requires: smartmet-engine-querydata >= 20.5.13
-Requires: smartmet-engine-grid >= 20.6.8
-Requires: smartmet-server >= 20.4.18
+Requires: smartmet-engine-grid >= 20.8.14
+Requires: smartmet-server >= 20.8.10
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -71,6 +71,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Fri Aug 14 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.14-1.fmi
+- Repackaged due to grid library ABI changes
+
 * Mon Jun 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.6.15-1.fmi
 - Renamed .so to enable simultaneous installation of download and gribdownload
 
