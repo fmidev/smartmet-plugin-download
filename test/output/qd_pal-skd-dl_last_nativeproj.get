@@ -27,18 +27,18 @@ Timesteps	= 295
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-top left lonlat		= -31.8979,65.2805
-top right lonlat	= 49,72.4233
-bottom left lonlat	= -9.07237,50.9239
-bottom right lonlat	= 33.5855,54.606
+top left lonlat		= -9.04577,69.9447
+top right lonlat	= 49,69.9534
+bottom left lonlat	= 6,50.9239
+bottom right lonlat	= 33.9747,50.9279
 
-top left WGS84		= -31.8979,65.4261
-top right WGS84		= 49,72.5336
-bottom left WGS84	= -9.07237,51.1119
-bottom right WGS84	= 33.5855,54.7873
-center WGS84		= 7.65381,64.4666
+top left WGS84		= -9.04577,70.0681
+top right WGS84		= 49,70.0768
+bottom left WGS84	= 6,51.1119
+bottom right WGS84	= 33.9747,51.1159
+center WGS84		= 19.9815,62.1453
 
-bbox			= [-2050050.77 891089.098 -3687397.67 -1607567.29]
+bbox			= [-1020658.41 1018738.17 -4093637.28 -1837852.31]
 
 projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371229 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
 wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["unknown",SPHEROID["unknown",6371229,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
@@ -101,12 +101,12 @@ bottom	= 1
 
 xnumber		= 135
 ynumber		= 150
-dx		= 21.78622125 km
-dy		= 13.86553587 km
+dx		= 15.10664132 km
+dy		= 15.03856642 km
 
-xywidth		= 2941.139869 km
-xyheight	= 2079.830381 km
-aspectratio	= 1.414124871
+xywidth		= 2039.396578 km
+xyheight	= 2255.784963 km
+aspectratio	= 0.9040740194
 
 Information on the locations:
 
