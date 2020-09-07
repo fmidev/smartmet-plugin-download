@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.8.31
+Version: 20.9.7
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -18,24 +18,24 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.8.26
-BuildRequires: smartmet-library-macgyver-devel >= 20.8.26
-BuildRequires: smartmet-library-newbase-devel >= 20.8.21
-BuildRequires: smartmet-library-grid-content-devel >= 20.8.31
-BuildRequires: smartmet-library-grid-files-devel >= 20.8.31
+BuildRequires: smartmet-library-spine-devel >= 20.9.4
+BuildRequires: smartmet-library-macgyver-devel >= 20.9.3
+BuildRequires: smartmet-library-newbase-devel >= 20.9.7
+BuildRequires: smartmet-library-grid-content-devel >= 20.9.7
+BuildRequires: smartmet-library-grid-files-devel >= 20.9.7
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.8.21
+BuildRequires: smartmet-engine-querydata-devel >= 20.9.4
 BuildRequires: smartmet-engine-geonames-devel >= 20.8.21
-BuildRequires: smartmet-engine-grid-devel >= 20.8.31
+BuildRequires: smartmet-engine-grid-devel >= 20.9.7
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.8.26
-Requires: smartmet-library-spine >= 20.8.26
-Requires: smartmet-library-newbase >= 20.8.21
-Requires: smartmet-engine-querydata >= 20.8.21
+Requires: smartmet-library-macgyver >= 20.9.3
+Requires: smartmet-library-spine >= 20.9.4
+Requires: smartmet-library-newbase >= 20.9.7
+Requires: smartmet-engine-querydata >= 20.9.4
 Requires: smartmet-server >= 20.8.25
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -70,6 +70,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Mon Sep  7 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.7-1.fmi
+- Repackaged due to library ABI changes
+
 * Mon Aug 31 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.31-1.fmi
 - Repackaged due to library ABI changes
 
