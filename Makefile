@@ -34,45 +34,20 @@ GCC_DIAG_COLOR ?= always
 # Boost 1.69
 
 ifneq "$(wildcard /usr/include/boost169)" ""
-  INCLUDES += -I/usr/include/boost169
+  INCLUDES += -isystem /usr/include/boost169
   LIBS += -L/usr/lib64/boost169
 endif
 
 ifneq "$(wildcard /usr/gdal30/include)" ""
-  INCLUDES += -I/usr/gdal30/include
+  INCLUDES += -isystem /usr/gdal30/include
   LIBS += -L/usr/gdal30/lib
 else
-  INCLUDES += -I/usr/include/gdal
+  INCLUDES += -isystem /usr/include/gdal
 endif
 
+FLAGS = -std=c++11 -fPIC -MD -Wall -W -Wno-unused-parameter -fno-omit-frame-pointer -Wno-unknown-pragmas -fdiagnostics-color=$(GCC_DIAG_COLOR)
 
-ifeq ($(CXX), clang++)
-
-# TODO: Try to shorten the list of disabled checks
- FLAGS = \
-	-std=c++11 -fPIC -MD \
-	-Weverything \
-	-Wno-c++98-compat \
-	-Wno-float-equal \
-	-Wno-padded \
-	-Wno-missing-prototypes \
-	-Wno-exit-time-destructors \
-	-Wno-global-constructors \
-	-Wno-shorten-64-to-32 \
-	-Wno-sign-conversion \
-	-Wno-vla -Wno-vla-extension
-
- INCLUDES += \
-	-isystem $(includedir) \
-	-isystem $(includedir)/smartmet \
-	-isystem $(includedir)/mysql \
-	-isystem $(includedir)/jsoncpp
-
-else
-
- FLAGS = -std=c++11 -fPIC -MD -Wall -W -Wno-unused-parameter -fno-omit-frame-pointer -Wno-unknown-pragmas -fdiagnostics-color=$(GCC_DIAG_COLOR)
-
- FLAGS_DEBUG = \
+FLAGS_DEBUG = \
 	-Wcast-align \
 	-Wcast-qual \
 	-Winline \
@@ -82,14 +57,12 @@ else
 	-Wwrite-strings \
 	-Wno-deprecated
 
- FLAGS_RELEASE = -Wuninitialized
+FLAGS_RELEASE = -Wuninitialized
 
-  INCLUDES += \
-	-I$(includedir) \
+INCLUDES += \
 	-I$(includedir)/smartmet \
-	-I$(includedir)/mysql \
-	-I$(includedir)/jsoncpp
-endif
+	-isystem $(includedir)/mysql \
+	-isystem $(includedir)/jsoncpp
 
 ifeq ($(TSAN), yes)
   FLAGS += -fsanitize=thread
