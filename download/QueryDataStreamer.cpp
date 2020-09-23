@@ -7,7 +7,7 @@
 #include "QueryDataStreamer.h"
 
 #include <newbase/NFmiQueryData.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 
 #include <string>
 
@@ -154,7 +154,7 @@ std::string QDStreamer::getChunk()
     }
     catch (...)
     {
-      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
+      Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -169,7 +169,7 @@ std::string QDStreamer::getChunk()
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -220,7 +220,7 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

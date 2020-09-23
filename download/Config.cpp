@@ -7,7 +7,7 @@
 #include "Config.h"
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 #include <stdexcept>
 
 using namespace std;
@@ -38,7 +38,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
       libconfig::Setting& settings = itsConfig.lookup(optName);
 
       if (!settings.isGroup())
-        throw Spine::Exception(
+        throw Fmi::Exception(
             BCP,
             "Producer settings for dls must be stored in groups delimited by {}: line " +
                 boost::lexical_cast<std::string>(settings.getSourceLine()));
@@ -55,7 +55,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
             libconfig::Setting& setting = settings[i];
 
             if (!setting.isArray())
-              throw Spine::Exception(BCP,
+              throw Fmi::Exception(BCP,
                                      optName + "." + paramName +
                                          " must be an array in dls configuration file line " +
                                          boost::lexical_cast<string>(setting.getSourceLine()));
@@ -101,7 +101,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
             libconfig::Setting& formatSettings = itsConfig.lookup(optName);
 
             if (!formatSettings.isGroup())
-              throw Spine::Exception(
+              throw Fmi::Exception(
                   BCP,
                   optName + " must be an array in dls configuration file line " +
                       boost::lexical_cast<string>(formatSettings.getSourceLine()));
@@ -117,7 +117,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
           else if (paramName == "datum")
           {
             if (!Plugin::Download::Datum::parseDatumShift(settings[i], currentSettings.datumShift))
-              throw Spine::Exception(BCP,
+              throw Fmi::Exception(BCP,
                                      "Invalid datum in dls configuration file line " +
                                          boost::lexical_cast<string>(settings.getSourceLine()));
           }
@@ -127,7 +127,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
           }
           else
           {
-            throw Spine::Exception(BCP,
+            throw Fmi::Exception(BCP,
                                    string("Unrecognized parameter '") + paramName +
                                        "' in dls configuration on line " +
                                        boost::lexical_cast<string>(settings[i].getSourceLine()));
@@ -135,21 +135,21 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
         }
         catch (const libconfig::ParseException& e)
         {
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  string("DLS configuration error ' ") + e.getError() +
                                      "' with variable '" + paramName + "' on line " +
                                      boost::lexical_cast<string>(e.getLine()));
         }
         catch (const libconfig::ConfigException&)
         {
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  string("DLS configuration error with variable '") + paramName +
                                      "' on line " +
                                      boost::lexical_cast<string>(settings[i].getSourceLine()));
         }
         catch (const exception& e)
         {
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  e.what() + string(" (line number ") +
                                      boost::lexical_cast<string>(settings[i].getSourceLine()) +
                                      ")");
@@ -177,7 +177,7 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -201,7 +201,7 @@ void Config::setEnvSettings()
       try
       {
         if (!settings.isGroup())
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  env + " must be an array in dls configuration file om line " +
                                      boost::lexical_cast<string>(settings.getSourceLine()));
 
@@ -215,21 +215,21 @@ void Config::setEnvSettings()
       }
       catch (const libconfig::ParseException& e)
       {
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                string("DLS configuration error ' ") + e.getError() +
                                    "' with variable '" + env + "' on line " +
                                    boost::lexical_cast<string>(e.getLine()));
       }
       catch (const libconfig::ConfigException&)
       {
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                string("DLS configuration error with variable '") + env +
                                    "' on line " +
                                    boost::lexical_cast<string>(settings[i].getSourceLine()));
       }
       catch (const exception& e)
       {
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                e.what() + string(" (line number ") +
                                    boost::lexical_cast<string>(settings[i].getSourceLine()) + ")");
       }
@@ -237,7 +237,7 @@ void Config::setEnvSettings()
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -260,7 +260,7 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
       libconfig::Setting& producers = itsConfig.lookup("producers");
 
       if (!producers.isGroup())
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "producers must be a group in dls configuration file line " +
                                    boost::lexical_cast<string>(producers.getSourceLine()));
     }
@@ -284,7 +284,7 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
     libconfig::Setting& enabled = itsConfig.lookup("producers.enabled");
 
     if (!enabled.isArray())
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "producers.enabled must be an array in dls configuration file line " +
                                  boost::lexical_cast<string>(enabled.getSourceLine()));
 
@@ -319,14 +319,14 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
     }
 
     if (itsProducers.empty())
-      throw Spine::Exception(BCP, "No producers defined/enabled: datablock!");
+      throw Fmi::Exception(BCP, "No producers defined/enabled: datablock!");
 
     // Check the default producer exists
 
     itsDefaultProducer = itsProducers.find(defaultProducer);
 
     if (itsDefaultProducer == itsProducers.end())
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP, "Default producer '" + defaultProducer + "' not enabled in dls producers!");
 
     // Set given variables to environment
@@ -335,7 +335,7 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -355,7 +355,7 @@ Config::Config(const string& configfile)
   try
   {
     if (configfile.empty())
-      throw Spine::Exception(BCP, "DLS configuration file name is empty!");
+      throw Fmi::Exception(BCP, "DLS configuration file name is empty!");
 
     itsConfig.readFile(configfile.c_str());
 
@@ -387,7 +387,7 @@ Config::Config(const string& configfile)
          hasMax = itsConfig.exists("grib2.tablesversion.max");
 
     if (hasMin != hasMax)
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "Neither or both grib2.tablesversion.min and "
                              "grib2.tablesversion.max must be given in DLS "
                              "configuration");
@@ -398,7 +398,7 @@ Config::Config(const string& configfile)
       itsConfig.lookupValue("grib2.tablesversion.max", itsGrib2TablesVersionMax);
 
       if (itsGrib2TablesVersionMin > itsGrib2TablesVersionMax)
-        throw Spine::Exception(
+        throw Fmi::Exception(
             BCP,
             "Invalid DLS configuration: grib2.tablesversion.min must be less than or equal to "
             "grib2.tablesversion.max");
@@ -422,10 +422,10 @@ Config::Config(const string& configfile)
       {
         libconfig::Setting& enabled = itsConfig.lookup("packing.enabled");
         if (!enabled.isArray())
-          throw Spine::Exception(BCP, "packing.enabled must be an array");
+          throw Fmi::Exception(BCP, "packing.enabled must be an array");
 
         if (enabled.getLength() == 0)
-          throw Spine::Exception(BCP, "packing.enabled must not be an empty array");
+          throw Fmi::Exception(BCP, "packing.enabled must not be an empty array");
 
         for (auto i = 0; i < enabled.getLength(); ++i)
           itsEnabledPackingTypes.insert(enabled[i]);
@@ -437,7 +437,7 @@ Config::Config(const string& configfile)
       {
         libconfig::Setting& disabled = itsConfig.lookup("packing.disabled");
         if (!disabled.isArray())
-          throw Spine::Exception(BCP, "packing.disabled must be an array");
+          throw Fmi::Exception(BCP, "packing.disabled must be an array");
 
         for (auto i = 0; i < disabled.getLength(); ++i)
           itsDisabledPackingTypes.insert(disabled[i]);
@@ -452,7 +452,7 @@ Config::Config(const string& configfile)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -471,7 +471,7 @@ void Config::init(Engine::Querydata::Engine* querydata)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -495,11 +495,11 @@ const Producer& Config::getProducer(const string& name) const
     if (defaultProducerName() == "")
       return itsProducers.begin()->second;
 
-    throw Spine::Exception(BCP, "Unknown producer: " + name);
+    throw Fmi::Exception(BCP, "Unknown producer: " + name);
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -539,11 +539,11 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
       return p->second;
     }
 
-    throw Spine::Exception(BCP, "Unknown producer: " + name).disableStackTrace();
+    throw Fmi::Exception(BCP, "Unknown producer: " + name).disableStackTrace();
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
