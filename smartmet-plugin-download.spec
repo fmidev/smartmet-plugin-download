@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.8.21
+Version: 20.9.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -17,22 +17,22 @@ BuildRequires: gdal-devel >= 1.11.4
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 0.10.5
 BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.8.21
-BuildRequires: smartmet-library-macgyver-devel >= 20.8.21
-BuildRequires: smartmet-library-newbase-devel >= 20.8.21
+BuildRequires: smartmet-library-spine-devel >= 20.9.23
+BuildRequires: smartmet-library-macgyver-devel >= 20.9.18
+BuildRequires: smartmet-library-newbase-devel >= 20.9.11
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.8.21
+BuildRequires: smartmet-engine-querydata-devel >= 20.9.23
 BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
 Requires: eccodes
 Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.8.21
-Requires: smartmet-library-spine >= 20.8.21
-Requires: smartmet-library-newbase >= 20.8.21
-Requires: smartmet-engine-querydata >= 20.8.21
-Requires: smartmet-server >= 20.8.21
+Requires: smartmet-library-macgyver >= 20.9.18
+Requires: smartmet-library-spine >= 20.9.23
+Requires: smartmet-library-newbase >= 20.9.11
+Requires: smartmet-engine-querydata >= 20.9.23
+Requires: smartmet-server >= 20.9.23
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -66,6 +66,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Sep 23 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.23-1.fmi
+- Use Fmi::Exception instead of Spine::Exception
+
 * Fri Aug 21 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.21-1.fmi
 - Upgrade to fmt 6.2
 

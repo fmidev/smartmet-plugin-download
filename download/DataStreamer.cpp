@@ -22,7 +22,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <macgyver/StringConversion.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 #include <string>
 
 #include <sys/types.h>
@@ -81,11 +81,11 @@ void ResMgr::createArea(string &projection)
     area = NFmiAreaFactory::Create(projection);
 
     if (!area.get())
-      throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -103,7 +103,7 @@ const NFmiArea *ResMgr::getArea()
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 // ----------------------------------------------------------------------
@@ -119,11 +119,11 @@ void ResMgr::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
     grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));
 
     if (!grid.get())
-      throw Spine::Exception(BCP, "Internal: could not create grid");
+      throw Fmi::Exception(BCP, "Internal: could not create grid");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -150,7 +150,7 @@ bool ResMgr::hasGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -172,7 +172,7 @@ NFmiGrid *ResMgr::getGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -195,7 +195,7 @@ OGRSpatialReference *ResMgr::cloneCS(const OGRSpatialReference &SRS)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -218,7 +218,7 @@ OGRSpatialReference *ResMgr::cloneGeogCS(const OGRSpatialReference &SRS)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -243,7 +243,7 @@ OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialRefer
       if (isGeometrySRS)
       {
         if (!(geometrySRS = toSRS->Clone()))
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
           spatialReferences.push_back(geometrySRS);
@@ -256,7 +256,7 @@ OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialRefer
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -317,7 +317,7 @@ static FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
     if ((!isSurfaceLevel(levelType)) && (!isHybridLevel(levelType)) &&
         (!isPressureLevel(levelType)) && (!isHeightOrDepthLevel(levelType)))
     {
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "Internal: Unrecognized level type '" +
                                  boost::lexical_cast<string>(levelType) + "' for producer '" +
                                  producer + "'");
@@ -344,7 +344,7 @@ static FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -376,7 +376,7 @@ static bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -402,14 +402,14 @@ double getProjParam(const OGRSpatialReference &srs,
       if (ignoreErr)
         return defaultValue;
       else
-        throw Spine::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
+        throw Fmi::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
     }
 
     return v;
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -440,7 +440,7 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -492,14 +492,14 @@ void DataStreamer::checkDataTimeStep()
       // n minutes
       ;
     else
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "Invalid data timestep (" +
                                  boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
                                  itsReqParams.producer + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -564,12 +564,12 @@ void DataStreamer::generateValidTimeList(
     itsDataTimes = Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
 
     if (itsDataTimes.empty())
-      throw Spine::Exception(BCP, "No valid times in the requested time period")
+      throw Fmi::Exception(BCP, "No valid times in the requested time period")
           .disableStackTrace();
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -633,7 +633,7 @@ void DataStreamer::setLevels(const Query &query)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -670,7 +670,7 @@ void DataStreamer::setParams(const Spine::OptionParsers::ParameterList &params,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -691,7 +691,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
     // Get grid's origo
 
     if (!q->isGrid())
-      throw Spine::Exception(BCP, "Nongrid data for producer + '" + itsReqParams.producer + "'");
+      throw Fmi::Exception(BCP, "Nongrid data for producer + '" + itsReqParams.producer + "'");
 
     const NFmiGrid &grid = q->grid();
 
@@ -715,7 +715,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
       if (!itsValScaling.empty())
         itsValScaling.pop_front();
       else
-        throw Spine::Exception(BCP, "Internal error in skipping missing parameters");
+        throw Fmi::Exception(BCP, "Internal error in skipping missing parameters");
     }
 
     if (!hasData)
@@ -803,7 +803,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -864,7 +864,7 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -891,7 +891,7 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -914,7 +914,7 @@ void DataStreamer::getLLBBox(Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -964,11 +964,11 @@ void DataStreamer::setSteppedGridSize()
     }
 
     if ((itsNX < 2) || (itsNY < 2))
-      throw Spine::Exception(BCP, "Minimum gridsize is 2x2, adjust bbox and/or gridstep");
+      throw Fmi::Exception(BCP, "Minimum gridsize is 2x2, adjust bbox and/or gridstep");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1000,7 +1000,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
           fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second * 1000))));
 
       if ((gridSizeX <= 1) || (gridSizeY <= 1))
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "Invalid gridsize for producer '" + itsReqParams.producer + "'");
 
       // Must use constant grid size for querydata output; set calculated absolute gridsize
@@ -1036,7 +1036,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1062,7 +1062,7 @@ std::string DataStreamer::getGridCenterBBoxStr(bool useNativeProj, const NFmiGri
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1090,7 +1090,7 @@ void DataStreamer::setNativeGridResolution(const NFmiArea &nativeArea,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1125,7 +1125,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       boost::shared_ptr<NFmiArea> a = NFmiAreaFactory::Create(projection);
       NFmiArea *area = a.get();
       if (!area)
-        throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+        throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
 
       NFmiPoint bl(area->BottomLeftLatLon());
       NFmiPoint tr(area->TopRightLatLon());
@@ -1162,7 +1162,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
 
     if ((cropping.bottomLeftX >= cropping.topRightX) ||
         (cropping.bottomLeftY >= cropping.topRightY))
-      throw Spine::Exception(BCP, "Bounding box does not intersect the grid").disableStackTrace();
+      throw Fmi::Exception(BCP, "Bounding box does not intersect the grid").disableStackTrace();
 
     cropping.gridSizeX = ((cropping.topRightX - cropping.bottomLeftX) + 1);
     cropping.gridSizeY = ((cropping.topRightY - cropping.bottomLeftY) + 1);
@@ -1184,7 +1184,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1219,7 +1219,7 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
         {nullptr, A_Native, false, false, false}};
 
     if (!projection)
-      throw Spine::Exception(BCP, "Projection name is undefined");
+      throw Fmi::Exception(BCP, "Projection name is undefined");
 
     string proj(projection);
 
@@ -1234,11 +1234,11 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
         break;
       }
 
-    throw Spine::Exception(BCP, "Unsupported projection '" + proj + "'");
+    throw Fmi::Exception(BCP, "Unsupported projection '" + proj + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1268,14 +1268,14 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     // qd projected (or latlon/geographic) cs
 
     if ((err = qdProjectedSrs.SetFromUserInput(area->WKT().c_str())) != OGRERR_NONE)
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "transform: srs.Set(WKT) error " + boost::lexical_cast<string>(err));
 
     // qd geographic cs
 
     qdLLSrsPtr = itsResMgr.cloneGeogCS(qdProjectedSrs);
     if (!qdLLSrsPtr)
-      throw Spine::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
+      throw Fmi::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
 
     // Helmert transformation parameters for wgs84 output
 
@@ -1298,7 +1298,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       // Epsg projection
       //
       if ((err = wgs84PrSrsPtr->importFromEPSG(itsReqParams.epsgCode)) != OGRERR_NONE)
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "transform: srs.importFromEPSG(" +
                                    boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
                                    boost::lexical_cast<string>(err));
@@ -1312,14 +1312,14 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       if (!(wgs84PrSrsPtr = (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
                                  ? itsResMgr.cloneCS(qdProjectedSrs)
                                  : itsResMgr.cloneGeogCS(qdProjectedSrs))))
-        throw Spine::Exception(BCP, "transform: qdsrs.clone() failed");
+        throw Fmi::Exception(BCP, "transform: qdsrs.clone() failed");
     }
 
     // If selected set wgs84 geographic output cs
 
     if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
       if ((err = wgs84PrSrsPtr->SetWellKnownGeogCS("WGS84")) != OGRERR_NONE)
-        throw Spine::Exception(
+        throw Fmi::Exception(
             BCP, "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
 
     // If projected output cs, get geographic output cs
@@ -1331,7 +1331,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
             getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
 
       if (!(wgs84LLSrsPtr = itsResMgr.cloneGeogCS(*wgs84PrSrsPtr)))
-        throw Spine::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
+        throw Fmi::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
     }
     else if (itsReqParams.projType == P_Epsg)
     {
@@ -1357,7 +1357,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResMgr.getCoordinateTransformation(
         qdLLSrsPtr, wgs84PrSrsPtr, ((itsReqParams.projType == P_Epsg) && (!wgs84ProjLL)));
     if (!qdLL2Wgs84Prct)
-      throw Spine::Exception(BCP, "transform: OGRCreateCoordinateTransformation(qd,wgs84) failed");
+      throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(qd,wgs84) failed");
 
     typedef NFmiDataMatrix<float>::size_type sz_t;
     double xc, yc;
@@ -1372,7 +1372,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         yc = p.Y();
 
         if (!(qdLL2Wgs84Prct->Transform(1, &xc, &yc)))
-          throw Spine::Exception(BCP, "transform: Transform(qd,wgs84) failed");
+          throw Fmi::Exception(BCP, "transform: Transform(qd,wgs84) failed");
 
         p = NFmiPoint(xc, yc);
       }
@@ -1389,12 +1389,12 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     OGRCoordinateTransformation *wgs84Pr2QDLLct =
         itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, qdLLSrsPtr);
     if (!wgs84Pr2QDLLct)
-      throw Spine::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,qd) failed");
+      throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,qd) failed");
 
     OGRCoordinateTransformation *wgs84Pr2LLct = nullptr;
     if ((!wgs84ProjLL) &&
         (!(wgs84Pr2LLct = itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
     srcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
@@ -1430,7 +1430,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         double tyc = yc;
 
         if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
-          throw Spine::Exception(BCP, "transform: Transform(wgs84,qd) failed");
+          throw Fmi::Exception(BCP, "transform: Transform(wgs84,qd) failed");
 
         srcLatLons[x][y] = NFmiPoint(txc, tyc);
 
@@ -1444,7 +1444,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
             tyc = yc;
 
             if (!(wgs84Pr2LLct->Transform(1, &txc, &tyc)))
-              throw Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
+              throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
             if (y == 0)
               itsBoundingBox.bottomLeft = NFmiPoint(txc, tyc);
@@ -1468,7 +1468,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           tyc = yc;
 
           if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
-            throw Spine::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
+            throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
           tgtLatLons[x][y] = NFmiPoint(txc, tyc);
         }
@@ -1480,7 +1480,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1541,7 +1541,7 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1588,7 +1588,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1645,7 +1645,7 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1689,7 +1689,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q, bool
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1714,7 +1714,7 @@ void DataStreamer::createQD(const NFmiGrid &g)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1733,7 +1733,7 @@ const NFmiArea &getGridArea(const NFmiGrid &grid)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1753,7 +1753,7 @@ static void valBufDeleter(float *ptr)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1814,9 +1814,9 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       bool isSubParamUsed = q->isSubParamUsed();
 
       if (!q->param(kFmiWindUMS))
-        throw Spine::Exception(BCP, "Data does not contain Wind U-component");
+        throw Fmi::Exception(BCP, "Data does not contain Wind U-component");
       if (!q->param(kFmiWindVMS))
-        throw Spine::Exception(BCP, "Data does not contain Wind V-component");
+        throw Fmi::Exception(BCP, "Data does not contain Wind V-component");
 
       q->setIsSubParamUsed(isSubParamUsed);
 
@@ -1838,7 +1838,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       // Get U values
 
       if (!q->param(kFmiWindUMS))
-        throw Spine::Exception(BCP, "Internal error: could not switch to parameter U");
+        throw Fmi::Exception(BCP, "Internal error: could not switch to parameter U");
       q->setIsSubParamUsed(isSubParamUsed);
 
       valBuf uValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
@@ -1866,7 +1866,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
           if ((*uPtr != kFloatMissing) && (*vPtr != kFloatMissing))
           {
             if (!wantedGrid.Index(wantedGrid.Index(x, y)))
-              throw Spine::Exception(BCP, "Internal error: could not set grid index");
+              throw Fmi::Exception(BCP, "Internal error: could not set grid index");
 
             double azimuth1 = sourceArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
             double azimuth2 = targetArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
@@ -1882,7 +1882,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
         }
 
       if (!q->param(id))
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "Internal error: could not switch to parameter " +
                                    boost::lexical_cast<std::string>(id));
       q->setIsSubParamUsed(isSubParamUsed);
@@ -1937,7 +1937,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1962,7 +1962,7 @@ bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
     bool hasNextLevel = q->nextLevel();
 
     if (!hasNextLevel)
-      throw Spine::Exception(BCP, "isLevelAvailable: internal: no levels in data");
+      throw Fmi::Exception(BCP, "isLevelAvailable: internal: no levels in data");
 
     if (isSurfaceLevel(levelType))
     {
@@ -2007,7 +2007,7 @@ bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -2042,10 +2042,10 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       //
       if ((itsReqParams.areaClassId == A_RotLatLon) ||
           ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiRotatedLatLonArea)))
-        throw Spine::Exception(BCP, "Rotated latlon not supported when using gdal transformation");
+        throw Fmi::Exception(BCP, "Rotated latlon not supported when using gdal transformation");
       else if ((itsReqParams.areaClassId == A_Mercator) ||
                ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
-        throw Spine::Exception(BCP, "Mercator not supported when using gdal transformation");
+        throw Fmi::Exception(BCP, "Mercator not supported when using gdal transformation");
 
       return;
     }
@@ -2137,7 +2137,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
           cropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);
         }
         else
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  "Unrecognized projection '" + projection + "' for producer '" +
                                      itsReqParams.producer + "'");
       }
@@ -2145,7 +2145,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -2187,7 +2187,7 @@ void DataStreamer::createGrid(const NFmiArea &area,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -2278,7 +2278,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
       if (numValues > itsCfg.getMaxRequestDataValues())
       {
-        throw Spine::Exception(
+        throw Fmi::Exception(
             BCP,
             "Too much data requested (" + Fmi::to_string(numValues) + " values, max " +
                 Fmi::to_string(itsCfg.getMaxRequestDataValues()) +
@@ -2335,7 +2335,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -2361,7 +2361,7 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
         itsScalingIterator++;
 
         if (itsScalingIterator == itsValScaling.end())
-          throw Spine::Exception(BCP, "nextParam: internal: No more scaling data");
+          throw Fmi::Exception(BCP, "nextParam: internal: No more scaling data");
       }
 
       if (q->param(itsParamIterator->number()))
@@ -2379,7 +2379,7 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -2645,7 +2645,7 @@ void DataStreamer::extractData(string &chunk)
         // instead of 'chunk' by the upper level (e.g. the format specific getChunk() method).
 
         if ((itsGridValues.NX() == 0) || (itsGridValues.NY() == 0))
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  "Extract data: internal: Query returned no data for producer '" +
                                      itsReqParams.producer + "'");
 
@@ -2664,7 +2664,7 @@ void DataStreamer::extractData(string &chunk)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
