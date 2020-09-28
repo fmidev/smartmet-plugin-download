@@ -13,11 +13,11 @@
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <fmt/format.h>
 #include <gis/ProjInfo.h>
+#include <macgyver/Exception.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
 #include <newbase/NFmiTimeList.h>
-#include <spine/Exception.h>
 #include <sys/types.h>
 #include <string>
 #include <unistd.h>
@@ -52,7 +52,7 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
     grib_context *c = grib_context_get_default();
     itsGribHandle = grib_handle_new_from_samples(c, itsGrib1Flag ? "GRIB1" : "GRIB2");
     if (!itsGribHandle)
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              string("Could not get handle for grib") + (itsGrib1Flag ? "1" : "2"));
 
     // Set tables version for grib2
@@ -62,7 +62,7 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -137,12 +137,12 @@ void GribStreamer::scanningDirections(long &iNegative, long &jPositive) const
         break;
 
       default:
-        throw Spine::Exception(BCP, "Unknown grid scanning mode");
+        throw Fmi::Exception(BCP, "Unknown grid scanning mode");
     }
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 #pragma clang diagnostic pop
 }
@@ -186,7 +186,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -202,7 +202,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
   try
   {
     if (itsResources.getGeometrySRS())
-      throw Spine::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
+      throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
     BBoxCorners rotLLBBox;
 #ifdef WGS84
@@ -211,7 +211,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     auto opt_plon = area->ProjInfo().getDouble("o_lon_p");
 
     if (*opt_plon != 0)
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
 
     double slon = *opt_plon;
@@ -244,7 +244,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 #endif
 
     if (slon)
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
 
     gset(itsGribHandle, "typeOfGrid", "rotated_ll");
@@ -274,11 +274,10 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     gset(itsGribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
     gset(itsGribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
 
-    // DUMP(itsGribHandle, "geography");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -363,22 +362,22 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
     if (!itsGrib1Flag)
       gset(itsGribHandle, "LaDInDegrees", lat_ts);
     else if (lat_ts != 60)
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP,
           "GRIB1 true latitude can only be 60 for polar stereographic projections with grib_api "
           "library");
 
     if (lat_0 != 90 && lat_0 != -90)
-      throw Spine::Exception(BCP, "GRIB format supports only polar stereographic projections");
+      throw Fmi::Exception(BCP, "GRIB format supports only polar stereographic projections");
 
     if (lat_0 != 90)
-      throw Spine::Exception(BCP, "Only N-pole polar stereographic projections are supported");
+      throw Fmi::Exception(BCP, "Only N-pole polar stereographic projections are supported");
 
     // DUMP(itsGribHandle,"geography");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -424,7 +423,7 @@ void GribStreamer::setMercatorGeometryToGrib() const
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -466,7 +465,7 @@ void GribStreamer::setNamedSettingsToGrib() const
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -503,19 +502,19 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
         setMercatorGeometryToGrib();
         break;
       case kNFmiProjArea:
-        throw Spine::Exception(BCP, "Generic PROJ.4 projections not supported yet");
+        throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
       case kNFmiEquiDistArea:
-        throw Spine::Exception(BCP, "Equidistant projection is not supported by GRIB");
+        throw Fmi::Exception(BCP, "Equidistant projection is not supported by GRIB");
       case kNFmiGnomonicArea:
-        throw Spine::Exception(BCP, "Gnomonic projection is not supported by GRIB");
+        throw Fmi::Exception(BCP, "Gnomonic projection is not supported by GRIB");
       case kNFmiPKJArea:
-        throw Spine::Exception(BCP, "PKJ projection is not supported by GRIB");
+        throw Fmi::Exception(BCP, "PKJ projection is not supported by GRIB");
       case kNFmiYKJArea:
-        throw Spine::Exception(BCP, "YKJ projection is not supported by GRIB");
+        throw Fmi::Exception(BCP, "YKJ projection is not supported by GRIB");
       case kNFmiKKJArea:
-        throw Spine::Exception(BCP, "KKJ projection is not supported by GRIB");
+        throw Fmi::Exception(BCP, "KKJ projection is not supported by GRIB");
       default:
-        throw Spine::Exception(BCP, "Unsupported projection in input data");
+        throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }
 
     // Set packing type
@@ -555,7 +554,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -645,7 +644,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     else if (isDepthLevel(itsLevelType, level))
       levelTypeStr = DepthLevel;
     else
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(itsLevelType));
 
     if (!centre.empty())
@@ -662,7 +661,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -702,7 +701,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
       long timeStep = ((itsReqParams.timeStep > 0) ? itsReqParams.timeStep : itsDataTimeStep);
 
       if (timeStep <= 0)
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
                                    " for producer '" + itsReqParams.producer + "'");
 
@@ -712,7 +711,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
              (pTable[paramIdx].itsPeriodLengthMinutes % itsDataTimeStep)) ||
             ((timeStep >= minutesInDay) && (pTable[paramIdx].itsPeriodLengthMinutes != timeStep)) ||
             (timeStep > minutesInMonth))
-          throw Spine::Exception(
+          throw Fmi::Exception(
               BCP,
               "Aggregate period length " +
                   boost::lexical_cast<string>(pTable[paramIdx].itsPeriodLengthMinutes) +
@@ -840,7 +839,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -856,7 +855,7 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   try
   {
     if (timeStepInMinutes <= 0)
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "adjustToTimeStep: Invalid data timestep " +
                                  boost::lexical_cast<string>(timeStepInMinutes));
 
@@ -877,7 +876,7 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -961,7 +960,7 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -987,13 +986,13 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
     if (mesg_len == 0)
-      throw Spine::Exception(BCP, "Empty grib message returned");
+      throw Fmi::Exception(BCP, "Empty grib message returned");
 
     return string((const char *)mesg, mesg_len);
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1051,7 +1050,7 @@ std::string GribStreamer::getChunk()
     }
     catch (...)
     {
-      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
+      Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -1064,7 +1063,7 @@ std::string GribStreamer::getChunk()
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1100,7 +1099,7 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

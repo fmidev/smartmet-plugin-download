@@ -13,7 +13,7 @@
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 #include <spine/Thread.h>
 
 namespace
@@ -104,7 +104,7 @@ std::string NetCdfStreamer::getChunk()
           itsStream.open(itsFilename, ifstream::in | ifstream::binary);
 
           if (!itsStream)
-            throw Spine::Exception(BCP, "Unable to open file stream");
+            throw Fmi::Exception(BCP, "Unable to open file stream");
         }
 
         if (!itsStream.eof())
@@ -129,7 +129,7 @@ std::string NetCdfStreamer::getChunk()
     }
     catch (...)
     {
-      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
+      Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsRequest.getURI());
 
       std::cerr << exception.getStackTrace();
@@ -142,7 +142,7 @@ std::string NetCdfStreamer::getChunk()
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -166,11 +166,11 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
     if (dim)
       return dim;
 
-    throw Spine::Exception(BCP, "Failed to add dimension ('" + dimName + "')");
+    throw Fmi::Exception(BCP, "Failed to add dimension ('" + dimName + "')");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -196,11 +196,11 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
     if (var)
       return var;
 
-    throw Spine::Exception(BCP, "Failed to add variable ('" + varName + "')");
+    throw Fmi::Exception(BCP, "Failed to add variable ('" + varName + "')");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -234,7 +234,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(string dimName,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -251,11 +251,11 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
   try
   {
     if (!((resource)->add_att(attrName.c_str(), attrValue)))
-      throw Spine::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
+      throw Fmi::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -294,12 +294,12 @@ int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
       return t1.date().year() - t2.date().year();
     }
 
-    throw Spine::Exception(BCP,
+    throw Fmi::Exception(BCP,
                            "Invalid time step length " + boost::lexical_cast<string>(timeStep));
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -350,7 +350,7 @@ void NetCdfStreamer::addTimeDimension()
       timeStep = 1;
     }
     else
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
                                  " for producer '" + itsReqParams.producer + "'");
 
@@ -364,7 +364,7 @@ void NetCdfStreamer::addTimeDimension()
       long period = getTimeOffset(timeIter->utc_time(), startTime, timeStep);
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
                                    boost::lexical_cast<string>(times[timeSize - 1]) +
                                    " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
@@ -393,11 +393,11 @@ void NetCdfStreamer::addTimeDimension()
     addAttribute(itsTimeVar, "units", timeUnitDef.c_str());
 
     if (!itsTimeVar->put(times, timeSize))
-      throw Spine::Exception(BCP, "Failed to store validtimes");
+      throw Fmi::Exception(BCP, "Failed to store validtimes");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -430,7 +430,7 @@ string getPeriodName(long periodLengthInMinutes)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -454,15 +454,15 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
     int times[itsTimeDim->size()];
     itsTimeVar->get(times, itsTimeDim->size());
 
-    if (!tVar->put(times, itsTimeDim->size()))
-      throw Spine::Exception(BCP, "Failed to store validtimes");
+    if (!itsTimeVar->put(times, itsTimeDim->size()))
+      throw Fmi::Exception(BCP, "Failed to store validtimes");
 
     addAttribute(tVar, "long_name", "time");
     addAttribute(tVar, "calendar", "gregorian");
 
     boost::shared_ptr<NcAtt> uAtt(itsTimeVar->get_att("units"));
     if (!uAtt)
-      throw Spine::Exception(BCP, "Failed to get time unit attribute");
+      throw Fmi::Exception(BCP, "Failed to get time unit attribute");
 
     boost::shared_ptr<NcValues> uVal(uAtt->values());
     char *u;
@@ -470,7 +470,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
 
     if ((!uVal) || (!(u = (char *)uVal->base())) ||
         ((uLen = (uVal->num() * uVal->bytes_for_one())) < 1))
-      throw Spine::Exception(BCP, "Failed to get time unit attribute value");
+      throw Fmi::Exception(BCP, "Failed to get time unit attribute value");
 
     string unit(u, uLen);
     addAttribute(tVar, "units", unit.c_str());
@@ -479,7 +479,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -541,11 +541,11 @@ void NetCdfStreamer::addLevelDimension()
     }
 
     if (!levelVar->put(levels, itsDataLevels.size()))
-      throw Spine::Exception(BCP, "Failed to store levels");
+      throw Fmi::Exception(BCP, "Failed to store levels");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -570,7 +570,7 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -612,7 +612,7 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -661,7 +661,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         setStereographicGeometry(area, crsVar);
         break;
       default:
-        throw Spine::Exception(BCP, "Unsupported projection in input data");
+        throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }
 
     // Store y/x and/or lat/lon dimensions and coordinate variables, cropping the grid if manual
@@ -736,10 +736,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         worldX[x] = wX;
 
       if (!yVar->put(worldY, itsNY))
-        throw Spine::Exception(BCP, "Failed to store y -coordinates");
+        throw Fmi::Exception(BCP, "Failed to store y -coordinates");
 
       if (!xVar->put(worldX, itsNX))
-        throw Spine::Exception(BCP, "Failed to store x -coordinates");
+        throw Fmi::Exception(BCP, "Failed to store x -coordinates");
 
       latVar = addVariable("lat", ncFloat, &(*itsYDim), &(*itsXDim));
       lonVar = addVariable("lon", ncFloat, &(*itsYDim), &(*itsXDim));
@@ -756,9 +756,9 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         }
 
       if (!latVar->put(lat, itsNY, itsNX))
-        throw Spine::Exception(BCP, "Failed to store latitude(y,x) coordinates");
+        throw Fmi::Exception(BCP, "Failed to store latitude(y,x) coordinates");
       if (!lonVar->put(lon, itsNY, itsNX))
-        throw Spine::Exception(BCP, "Failed to store longitude(y,x) coordinates");
+        throw Fmi::Exception(BCP, "Failed to store longitude(y,x) coordinates");
     }
     else
     {
@@ -778,10 +778,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
                                                                   : itsTargetLatLons.x(x, 0));
 
       if (!latVar->put(lat, itsNY))
-        throw Spine::Exception(BCP, "Failed to store latitude coordinates");
+        throw Fmi::Exception(BCP, "Failed to store latitude coordinates");
 
       if (!lonVar->put(lon, itsNX))
-        throw Spine::Exception(BCP, "Failed to store longitude coordinates");
+        throw Fmi::Exception(BCP, "Failed to store longitude coordinates");
     }
 
     addAttribute(latVar, "standard_name", "latitude");
@@ -801,7 +801,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -852,12 +852,12 @@ ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
       return ptime(date(d.year(), 1, 1));
     }
 
-    throw Spine::Exception(
+    throw Fmi::Exception(
         BCP, "Invalid time period length " + boost::lexical_cast<string>(periodLengthInMinutes));
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -921,7 +921,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
     auto timeBoundsVar = addVariable(name, ncInt, &(*tDim), &(*itsTimeBoundsDim));
 
     if (!timeBoundsVar->put(bounds, itsTimeDim->size(), 2))
-      throw Spine::Exception(BCP, "Failed to store time bounds");
+      throw Fmi::Exception(BCP, "Failed to store time bounds");
 
     // Connect the bounds to the time variable
 
@@ -931,7 +931,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -975,7 +975,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
           else if (j == 0)
             j = i + 1;
           else
-            throw Spine::Exception(BCP,
+            throw Fmi::Exception(BCP,
                                    "Missing gridrelative configuration for parameter " +
                                        boost::lexical_cast<string>(usedParId));
         }
@@ -1037,7 +1037,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1090,7 +1090,7 @@ void NetCdfStreamer::storeParamValues()
         itsVarIterator++;
 
     if (!(*itsVarIterator)->set_cur(itsTimeIndex - 1, itsLevelDim ? itsLevelIndex : -1))
-      throw Spine::Exception(BCP, "Failed to set active netcdf time/level");
+      throw Fmi::Exception(BCP, "Failed to set active netcdf time/level");
 
     long edge1 = 1;                            // Time dimension, edge length 1
     long edge2 = itsLevelDim ? 1 : itsNY;      // Level (edge length 1) or Y dimension
@@ -1098,11 +1098,11 @@ void NetCdfStreamer::storeParamValues()
     long edge4 = itsLevelDim ? itsNX : -1;     // X dimension or n/a
 
     if (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4))
-      throw Spine::Exception(BCP, "Failed to store netcdf variable values");
+      throw Fmi::Exception(BCP, "Failed to store netcdf variable values");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1127,13 +1127,13 @@ void NetCdfStreamer::paramChanged(size_t nextParamOffset)
           itsVarIterator++;
 
         if ((itsVarIterator == itsDataVars.end()) && (itsParamIterator != itsDataParams.end()))
-          throw Spine::Exception(BCP, "paramChanged: internal: No more netcdf variables");
+          throw Fmi::Exception(BCP, "paramChanged: internal: No more netcdf variables");
       }
     }
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -1175,7 +1175,7 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

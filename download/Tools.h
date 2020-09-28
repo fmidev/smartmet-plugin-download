@@ -6,7 +6,7 @@
 #include <ogr_spatialref.h>
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiPoint.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 #include <list>
 #include <string>
 #include <utility>
@@ -74,7 +74,7 @@ boost::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
       size_t nValues = 2 * nPairs;
 
       if (flds.size() != nValues)
-        throw Spine::Exception(
+        throw Fmi::Exception(
             BCP, std::string("Invalid value for parameter '") + param + "': '" + pvs + "'");
 
       std::size_t n;
@@ -84,7 +84,7 @@ boost::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
         boost::trim(flds[n]);
 
         if (flds[n].empty())
-          throw Spine::Exception(
+          throw Fmi::Exception(
               BCP, std::string("Invalid value for parameter '") + param + "': '" + pvs + "'");
       }
 
@@ -103,12 +103,12 @@ boost::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
     {
     }
 
-    throw Spine::Exception(
+    throw Fmi::Exception(
         BCP, std::string("Invalid value for parameter '") + param + "': '" + pvs + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

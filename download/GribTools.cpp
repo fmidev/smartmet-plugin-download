@@ -6,7 +6,7 @@
 
 #include "GribTools.h"
 #include <newbase/NFmiCommentStripper.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 
 #include <boost/lexical_cast.hpp>
 
@@ -33,7 +33,7 @@ void DUMP(grib_handle *grib, const char *ns)
       kiter = grib_keys_iterator_new(grib, GRIB_KEYS_ITERATOR_ALL_KEYS, const_cast<char *>(ns));
 
     if (!kiter)
-      throw SmartMet::Spine::Exception(BCP, "Failed to get iterator for grib keys");
+      throw Fmi::Exception(BCP, "Failed to get iterator for grib keys");
 
     const int MAX_STRING_LEN = 1024;
     char buffer[MAX_STRING_LEN];
@@ -83,7 +83,7 @@ void DUMP(grib_handle *grib, const char *ns)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -103,7 +103,7 @@ void DUMP(grib_handle *grib)
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -117,13 +117,13 @@ long get_long(grib_handle *g, const char *name)
   {
     long value;
     if (grib_get_long(g, name, &value))
-      throw SmartMet::Spine::Exception(
+      throw Fmi::Exception(
           BCP, "Failed to get long value for name '" + std::string(name) + "'!");
     return value;
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -132,7 +132,7 @@ double get_double(grib_handle * g, const char * name)
 {
   double value;
   if(grib_get_double(g, name, &value))
-	throw SmartMet::Spine::Exception(BCP,"Failed to get double value for name '" + name + "'!");
+	throw Fmi::Exception(BCP,"Failed to get double value for name '" + name + "'!");
   return value;
 }
 #endif
@@ -142,13 +142,13 @@ void gset(grib_handle *g, const char *name, double value)
   try
   {
     if (grib_set_double(g, name, value))
-      throw SmartMet::Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                                        "Failed to set '" + std::string(name) + "' to value '" +
                                            boost::lexical_cast<std::string>(value) + "'!");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -157,13 +157,13 @@ void gset(grib_handle *g, const char *name, long value)
   try
   {
     if (grib_set_long(g, name, value))
-      throw SmartMet::Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                                        "Failed to set '" + std::string(name) + "' to value '" +
                                            boost::lexical_cast<std::string>(value) + "'!");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -172,13 +172,13 @@ void gset(grib_handle *g, const char *name, unsigned long value)
   try
   {
     if (grib_set_long(g, name, value))
-      throw SmartMet::Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                                        "Failed to set '" + std::string(name) + "' to value '" +
                                            boost::lexical_cast<std::string>(value) + "'!");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -187,13 +187,13 @@ void gset(grib_handle *g, const char *name, int value)
   try
   {
     if (grib_set_long(g, name, value))
-      throw SmartMet::Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                                        "Failed to set '" + std::string(name) + "' to value '" +
                                            boost::lexical_cast<std::string>(value) + "'!");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -203,12 +203,12 @@ void gset(grib_handle *g, const char *name, const char *value)
   {
     size_t len = strlen(value);
     if (grib_set_string(g, name, value, &len))
-      throw SmartMet::Spine::Exception(
+      throw Fmi::Exception(
           BCP, "Failed to set '" + std::string(name) + "' to value '" + std::string(value) + "'!");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -218,11 +218,11 @@ void gset(grib_handle *g, const char *name, const std::string &value)
   {
     size_t len = value.size();
     if (grib_set_string(g, name, value.c_str(), &len))
-      throw SmartMet::Spine::Exception(
+      throw Fmi::Exception(
           BCP, "Failed to set '" + std::string(name) + "' to value '" + std::string(value) + "'!");
   }
   catch (...)
   {
-    throw SmartMet::Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }

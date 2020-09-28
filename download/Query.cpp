@@ -8,7 +8,7 @@
 #include "Config.h"
 
 #include <spine/Convenience.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 #include <spine/OptionParsers.h>
 
 #include <macgyver/StringConversion.h>
@@ -47,7 +47,7 @@ Query::Query(const Spine::HTTP::Request& req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -66,7 +66,7 @@ void Query::parseTimeZone(const Spine::HTTP::Request& theReq)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -102,7 +102,7 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

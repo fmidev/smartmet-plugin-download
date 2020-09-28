@@ -9,7 +9,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <macgyver/StringConversion.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 
 #include <fstream>
 
@@ -89,7 +89,7 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -105,14 +105,14 @@ unsigned long asUInt64(const std::string& name, const Json::Value& json, uint ar
     if (json.isUInt64())
       return json.asUInt64();
 
-    throw Spine::Exception(BCP,
+    throw Fmi::Exception(BCP,
                            "'" + name + "': uint64 value expected at array index " +
                                Fmi::to_string(arrayIndex) + ", got value " + json.asString() +
                                " instead");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -123,12 +123,12 @@ unsigned int asUInt(const std::string& name, const Json::Value& json, uint array
     if (json.isUInt())
       return json.asUInt();
 
-    throw Spine::Exception(
+    throw Fmi::Exception(
         BCP, "'" + name + "': uint value expected at array index " + Fmi::to_string(arrayIndex));
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -139,12 +139,12 @@ float asFloat(const std::string& name, const Json::Value& json, uint arrayIndex)
     if (json.isDouble())
       return json.asFloat();
 
-    throw Spine::Exception(
+    throw Fmi::Exception(
         BCP, "'" + name + "': float value expected at array index " + Fmi::to_string(arrayIndex));
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -159,12 +159,12 @@ std::string asString(const std::string& name, const Json::Value& json, uint arra
     if (json.isString())
       return json.asString();
 
-    throw Spine::Exception(
+    throw Fmi::Exception(
         BCP, "'" + name + "': string value expected at array index " + Fmi::to_string(arrayIndex));
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -212,7 +212,7 @@ bool readGribParamConfigField(const std::string& name,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -247,7 +247,7 @@ bool readNetCdfParamConfigField(const std::string& name,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -269,18 +269,18 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
 
     std::ifstream in(configFilePath.c_str());
     if (!in)
-      throw Spine::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
+      throw Fmi::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
 
     std::string content;
     content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 
     if (!reader.parse(content, theJson))
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "Failed to parse '" + configFilePath.string() +
                                  "': " + reader.getFormattedErrorMessages());
 
     if (!theJson.isArray())
-      throw Spine::Exception(BCP, "Parameter configuration must contain an array of JSON objects");
+      throw Fmi::Exception(BCP, "Parameter configuration must contain an array of JSON objects");
 
     // Iterate through all the objects
 
@@ -291,7 +291,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
       const Json::Value& paramJson = theJson[i];
 
       if (!paramJson.isObject())
-        throw Spine::Exception(BCP, "JSON object expected at array index " + Fmi::to_string(i));
+        throw Fmi::Exception(BCP, "JSON object expected at array index " + Fmi::to_string(i));
 
       ParamChangeItem p;
       std::string paramName;
@@ -302,7 +302,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
       {
         const Json::Value& json = paramJson[name];
         if (json.isArray() || json.isObject())
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  name + ": value is neither a string nor a number at array index " +
                                      Fmi::to_string(i));
 
@@ -329,7 +329,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
         // Handle format specific settings
         //
         else if (!fmtConfigFunc(name, json, p, i))
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  std::string(grib ? "Grib" : "Netcdf") +
                                      " parameter configuration does not have a setting named '" +
                                      name + "'!");
@@ -352,7 +352,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

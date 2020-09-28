@@ -72,14 +72,14 @@ double getProjParam(const OGRSpatialReference &srs,
       if (ignoreErr)
         return defaultValue;
       else
-        throw Spine::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
+        throw Fmi::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
     }
 
     return v;
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -104,7 +104,7 @@ FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
     if ((!isSurfaceLevel(levelType)) && (!isHybridLevel(levelType)) &&
         (!isPressureLevel(levelType)) && (!isHeightOrDepthLevel(levelType)))
     {
-      throw Spine::Exception(BCP,
+      throw Fmi::Exception(BCP,
                              "Internal: Unrecognized level type '" +
                                  boost::lexical_cast<string>(levelType) + "' for producer '" +
                                  producer + "'");
@@ -131,7 +131,7 @@ FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -163,7 +163,7 @@ bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

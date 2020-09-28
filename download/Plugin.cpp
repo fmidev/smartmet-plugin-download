@@ -19,7 +19,11 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <cmath>
 #include <cpl_conv.h>
+#include <iostream>
+#include <limits>
+#include <macgyver/Exception.h>
 #include <macgyver/HelmertTransformation.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
@@ -27,13 +31,9 @@
 #include <macgyver/TimeZoneFactory.h>
 #include <newbase/NFmiQueryData.h>
 #include <spine/Convenience.h>
-#include <spine/Exception.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMet.h>
 #include <spine/Table.h>
-#include <cmath>
-#include <iostream>
-#include <limits>
 #include <stdexcept>
 
 using namespace std;
@@ -71,7 +71,7 @@ bool special(const Spine::Parameter &theParam)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -132,7 +132,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
                 boost::lexical_cast<EpsgCode>(proj.substr(strlen(projections[i].proj)));
 
             if ((err = srs.importFromEPSG(reqParams.epsgCode)) != OGRERR_NONE)
-              throw Spine::Exception(BCP,
+              throw Fmi::Exception(BCP,
                                      "srs.importFromEPSG(" +
                                          boost::lexical_cast<string>(reqParams.epsgCode) +
                                          ") error " + boost::lexical_cast<string>(err));
@@ -165,11 +165,11 @@ static ProjType getProjectionType(ReqParams &reqParams)
         }
       }
 
-    throw Spine::Exception(BCP, "Unsupported projection '" + reqParams.projection + "'");
+    throw Fmi::Exception(BCP, "Unsupported projection '" + reqParams.projection + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -194,7 +194,7 @@ string getRequestParam(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -211,7 +211,7 @@ int getRequestInt(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -228,7 +228,7 @@ unsigned long getRequestUInt(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -247,7 +247,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     if (!reqParams.producer.empty())
     {
       if ((!model.empty()) && (model != reqParams.producer))
-        throw Spine::Exception(BCP, "Cannot specify model and producer simultaneously");
+        throw Fmi::Exception(BCP, "Cannot specify model and producer simultaneously");
     }
     else
       reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
@@ -255,7 +255,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     const Producer &producer = config.getProducer(reqParams.producer, qEngine);
 
     if (reqParams.producer.empty())
-      throw Spine::Exception(BCP, "No producer");
+      throw Fmi::Exception(BCP, "No producer");
 
     // Time related parameters. Detect special value 'data'.
 
@@ -290,7 +290,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     reqParams.datum = getRequestParam(req, producer, "datum", "");
 
     if (!Datum::parseDatumShift(reqParams.datum, reqParams.datumShift))
-      throw Spine::Exception(BCP, "Invalid datum selected");
+      throw Fmi::Exception(BCP, "Invalid datum selected");
 
     // Projection, bounding and grid size/step
 
@@ -318,7 +318,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       // Grid center lon,lat and width and height in km; lon,lat,width,height
       //
       if (reqParams.bboxRect)
-        throw Spine::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
+        throw Fmi::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
 
       reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
     }
@@ -333,7 +333,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       // Grid cell size; width,height in km
       //
       if (reqParams.gridSizeXY)
-        throw Spine::Exception(BCP, "Cannot specify gridsize and gridresolution simultaneously");
+        throw Fmi::Exception(BCP, "Cannot specify gridsize and gridresolution simultaneously");
 
       reqParams.gridResolutionXY =
           nPairsOfValues<double>(reqParams.gridResolution, "gridresolution", 1);
@@ -358,12 +358,12 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else if (reqParams.format == "QD")
       reqParams.outputFormat = QD;
     else if (reqParams.format.empty())
-      throw Spine::Exception(BCP, "No format selected");
+      throw Fmi::Exception(BCP, "No format selected");
     else
-      throw Spine::Exception(BCP, "Invalid format selected");
+      throw Fmi::Exception(BCP, "Invalid format selected");
 
     if ((reqParams.outputFormat == QD) && (!reqParams.gridStep.empty()))
-      throw Spine::Exception(BCP, "Cannot specify gridstep when using qd format");
+      throw Fmi::Exception(BCP, "Cannot specify gridstep when using qd format");
 
     // Packing type for grib. Set to grib as given (converted to lowercase only)
 
@@ -373,12 +373,12 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     if (!reqParams.packing.empty())
     {
       if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
-        throw Spine::Exception(BCP, "Packing can be specified with grib format only")
+        throw Fmi::Exception(BCP, "Packing can be specified with grib format only")
             .addParameter("packing", reqParams.packing);
 
       auto msg = config.packingErrorMessage(reqParams.packing);
       if (!msg.empty())
-        throw Spine::Exception(BCP, msg).addParameter("packing", reqParams.packing);
+        throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
     }
 
     // Tables version for grib2
@@ -395,7 +395,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
       if ((grib2TablesVersionMax > 0) && ((reqParams.grib2TablesVersion < grib2TablesVersionMin) ||
                                           (reqParams.grib2TablesVersion > grib2TablesVersionMax)))
-        throw Spine::Exception(BCP,
+        throw Fmi::Exception(BCP,
                                "'tablesversion' must be between " +
                                    Fmi::to_string(grib2TablesVersionMin) + " and " +
                                    Fmi::to_string(grib2TablesVersionMax));
@@ -410,7 +410,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -442,7 +442,7 @@ static bool getScaleFactorAndOffset(signed long id,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -511,7 +511,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -559,7 +559,7 @@ static string getDownloadFileName(const string &producer,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -615,12 +615,12 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     }
 
     if (knownParams.empty())
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP,
           "initStreamer: No known parameters available for producer '" + reqParams.producer + "'");
 
     if ((reqParams.outputFormat != QD) && (scaling.size() != knownParams.size()))
-      throw Spine::Exception(BCP, "initStreamer: internal: Parameter/scaling data mismatch");
+      throw Fmi::Exception(BCP, "initStreamer: internal: Parameter/scaling data mismatch");
 
     ds->setParams(knownParams, scaling);
 
@@ -682,7 +682,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     // levels, parameters and time range
 
     if (!ds->hasRequestedData(producer))
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP, "initStreamer: No data available for producer '" + reqParams.producer + "'");
 
     // Download file name
@@ -702,7 +702,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -735,7 +735,7 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -791,7 +791,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
     {
       // Catching all exceptions
 
-      Spine::Exception exception(BCP, "Request processing exception!", nullptr);
+      Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", theRequest.getURI());
       exception.addParameter("ClientIP", theRequest.getClientIP());
       exception.printError();
@@ -818,7 +818,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -841,7 +841,7 @@ Plugin::Plugin(Spine::Reactor *theReactor, const char *theConfig)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -861,25 +861,25 @@ void Plugin::init()
 
     auto *engine = itsReactor->getSingleton("Querydata", nullptr);
     if (!engine)
-      throw Spine::Exception(BCP, "Querydata engine unavailable");
+      throw Fmi::Exception(BCP, "Querydata engine unavailable");
     itsQEngine = reinterpret_cast<Engine::Querydata::Engine *>(engine);
 
     /* GeoEngine */
 
     engine = itsReactor->getSingleton("Geonames", nullptr);
     if (!engine)
-      throw Spine::Exception(BCP, "Geonames engine unavailable");
+      throw Fmi::Exception(BCP, "Geonames engine unavailable");
     itsGeoEngine = reinterpret_cast<Engine::Geonames::Engine *>(engine);
 
     itsConfig.init(itsQEngine);
 
     if (!itsReactor->addContentHandler(
             this, "/download", boost::bind(&Plugin::callRequestHandler, this, _1, _2, _3)))
-      throw Spine::Exception(BCP, "Failed to register download content handler");
+      throw Fmi::Exception(BCP, "Failed to register download content handler");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

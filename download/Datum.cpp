@@ -10,7 +10,7 @@
 
 #include <macgyver/HelmertTransformation.h>
 #include <macgyver/StringConversion.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -77,7 +77,7 @@ static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -96,7 +96,7 @@ bool parseDatumShift(const string& setting, DatumShift& datumShift)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -115,7 +115,7 @@ bool isDatumShiftToWGS84(DatumShift datumShift)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -142,7 +142,7 @@ void getHelmertTransformationParameters(DatumShift datumShift,
 
     double R0 = SRS.GetSemiMajor(&err);
     if (err != OGRERR_NONE)
-      throw Spine::Exception(
+      throw Fmi::Exception(
           BCP,
           "getTransformationParameters: GetSemiMajor() error " + boost::lexical_cast<string>(err));
 
@@ -191,12 +191,12 @@ void getHelmertTransformationParameters(DatumShift datumShift,
           transformationParameters[i] = 0.0;
     }
 
-    throw Spine::Exception(
+    throw Fmi::Exception(
         BCP, "getTransformationParameters: invalid '+towgs84' parameter '" + towgs84 + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 

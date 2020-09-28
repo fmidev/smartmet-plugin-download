@@ -1,7 +1,7 @@
 #include "Resources.h"
 #include <boost/stacktrace.hpp>
 #include <newbase/NFmiAreaFactory.h>
-#include <spine/Exception.h>
+#include <macgyver/Exception.h>
 
 namespace SmartMet
 {
@@ -24,11 +24,11 @@ void Resources::createArea(const std::string &projection,
     area = NFmiAreaFactory::CreateFromCorners(projection, bottomLeft, topRight);
 
     if (!area.get())
-      throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -49,11 +49,11 @@ void Resources::createArea(const std::string &projection,
         projection, center, 2 * 1000 * widthKM, 2 * 1000 * heightKM);
 
     if (!area.get())
-      throw Spine::Exception(BCP, "Could not create projection '" + projection + "'");
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -71,7 +71,7 @@ const NFmiArea *Resources::getArea()
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 // ----------------------------------------------------------------------
@@ -87,11 +87,11 @@ void Resources::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY
     grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));
 
     if (!grid.get())
-      throw Spine::Exception(BCP, "Internal: could not create grid");
+      throw Fmi::Exception(BCP, "Internal: could not create grid");
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -118,7 +118,7 @@ bool Resources::hasGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -140,7 +140,7 @@ NFmiGrid *Resources::getGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSiz
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -163,7 +163,7 @@ OGRSpatialReference *Resources::cloneCS(const OGRSpatialReference &SRS)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -186,7 +186,7 @@ OGRSpatialReference *Resources::cloneGeogCS(const OGRSpatialReference &SRS)
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
@@ -211,7 +211,7 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
       if (isGeometrySRS)
       {
         if (!(geometrySRS = toSRS->Clone()))
-          throw Spine::Exception(BCP,
+          throw Fmi::Exception(BCP,
                                  "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
           spatialReferences.push_back(geometrySRS);
@@ -224,7 +224,7 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
   }
   catch (...)
   {
-    throw Spine::Exception::Trace(BCP, "Operation failed!");
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
 
