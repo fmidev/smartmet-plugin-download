@@ -26,10 +26,14 @@ ifneq "$(wildcard /usr/include/boost169)" ""
   LIBS += -L/usr/lib64/boost169
 endif
 
-INCLUDES += \
-	-I../download \
-	-I/usr/include/smartmet \
-	-I/usr/gdal30/include
+ifneq "$(wildcard /usr/gdal30/include)" ""
+  INCLUDES += -isystem /usr/gdal30/include
+  LIBS += -L/usr/gdal30/lib
+else
+  INCLUDES += -isystem /usr/include/gdal
+endif
+
+INCLUDES += -I ../download -I /usr/include/smartmet
 
 LIBS +=	-lsmartmet-spine \
 	-lsmartmet-newbase \
