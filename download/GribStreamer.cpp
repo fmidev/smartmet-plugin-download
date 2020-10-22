@@ -1270,7 +1270,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
     int i = 0;
 
-    auto dataValues = gridQuery.mQueryParameterList.front().mValueList.front().mValueVector;
+    auto dataValues = gridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
 
     for (y = y0; (y < yN); y += yStep)
       for (x = x0; (x < xN); x += xStep, i++)

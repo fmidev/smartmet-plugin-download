@@ -1477,7 +1477,7 @@ void NetCdfStreamer::storeParamValues()
     }
     else
     {
-      auto dataValues = itsGridQuery.mQueryParameterList.front().mValueList.front().mValueVector;
+      auto dataValues = itsGridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
 
       for (y = y0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, i++)

@@ -4183,7 +4183,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
   {
     // Can't rely on returned query status, check first if got any data
 
-    auto vVec = gridQuery.mQueryParameterList.front().mValueList.front().mValueVector;
+    auto vVec = gridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
 
     if (vVec.size() == 0)
       return false;
@@ -4308,7 +4308,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
     // Ensemble
 
     itsGridMetaData.gridEnsemble =
-        gridQuery.mQueryParameterList.front().mValueList.front().mForecastNumber;
+        gridQuery.mQueryParameterList.front().mValueList.front()->mForecastNumber;
 
     return true;
   }
