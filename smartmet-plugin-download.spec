@@ -39,10 +39,10 @@ Requires: boost169-system
 Requires: boost169-thread
 BuildRequires: netcdf-cxx-devel
 Requires: netcdf-cxx
-
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
+#TestRequires: smartmet-test-data >= 20.6.30
 
 %description
 SmartMet Download Plugin
