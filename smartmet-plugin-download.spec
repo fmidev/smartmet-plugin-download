@@ -42,7 +42,16 @@ Requires: netcdf-cxx
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
+#TestRequires: boost169-devel
+#TestRequires: gcc-c++
 #TestRequires: smartmet-test-data >= 20.6.30
+#TestRequires: smartmet-library-newbase-devel >= 20.9.29
+#TestRequires: smartmet-engine-querydata-devel >= 20.9.23
+#TestRequires: libconfig-devel
+#TestRequires: smartmet-library-spine-devel >= 20.9.23
+#TestRequires: smartmet-engine-geonames-devel
+#TestRequires: zlib
+#TestRequires: bzip2-libs
 
 %description
 SmartMet Download Plugin
