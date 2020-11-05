@@ -64,13 +64,21 @@ all: $(PROG)
 clean:
 	rm -f $(PROG) *~
 
+ifdef CI
+test: $(PROG) fminames
+else
 test: $(PROG)
+endif
 	@echo Running tests:
 	@mkdir -p tmp failures
 	@rm -f tmp/* failures/*
 	@for prog in $(PROG); do \
 	  ./$$prog; \
 	done
+
+fminames:
+        @sed -i -e 's/"smartmet-test"/"localhost"/g' cnf/*.conf
+        @/usr/share/smartmet/test/db/init-and-start.sh && /usr/share/smartmet/test/db/install-test-db.sh > /dev/null
 
 $(PROG) : % : %.cpp Makefile ../download.so
 	$(CXX) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)
