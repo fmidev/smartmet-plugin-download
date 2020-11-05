@@ -43,18 +43,18 @@ Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: boost169-devel
+#TestRequires: bzip2-devel
 #TestRequires: gcc-c++
+#TestRequires: libconfig-devel
+#TestRequires: smartmet-engine-geonames-devel
+#TestRequires: smartmet-engine-querydata-devel >= 20.9.23
+#TestRequires: smartmet-library-newbase-devel >= 20.9.29
+#TestRequires: smartmet-library-spine-devel >= 20.9.23
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
-#TestRequires: smartmet-library-newbase-devel >= 20.9.29
-#TestRequires: smartmet-engine-querydata-devel >= 20.9.23
-#TestRequires: libconfig-devel
-#TestRequires: smartmet-library-spine-devel >= 20.9.23
-#TestRequires: smartmet-engine-geonames-devel
-#TestRequires: zlib
-#TestRequires: bzip2-libs
+#TestRequires: wgrib
+#TestRequires: wgrib2
 #TestRequires: zlib-devel
-#TestRequires: bzip2-devel
 
 %description
 SmartMet Download Plugin
