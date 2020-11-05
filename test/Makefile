@@ -19,12 +19,6 @@ endif
 
 CFLAGS = -DUNIX -O0 -g $(FLAGS)
 
-ifeq ($(processor), x86_64)
-  libdir = $(PREFIX)/lib64
-else
-  libdir = $(PREFIX)/lib
-endif
-
 # Boost 1.69
 
 ifneq "$(wildcard /usr/include/boost169)" ""
