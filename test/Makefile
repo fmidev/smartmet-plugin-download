@@ -72,9 +72,9 @@ endif
 	@echo Running tests:
 	@mkdir -p tmp failures
 	@rm -f tmp/* failures/*
-	@for prog in $(PROG); do \
-	  ./$$prog; \
-	done
+	@for prog in $(PROG); do ./$$prog; done
+	@test `find . -name \*.err | wc -l` = "0" || ( echo ; echo "The following tests have errors:" ; \
+	  for i in *.err ; do echo `basename $$i .err`; done ; rm -f *.err ; false )
 
 fminames:
 	@sed -i -e 's/"smartmet-test"/"localhost"/g' cnf/*.conf
