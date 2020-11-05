@@ -52,6 +52,8 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-geonames-devel
 #TestRequires: zlib
 #TestRequires: bzip2-libs
+#TestRequires: zlib-devel
+#TestRequires: bzip2-devel
 
 %description
 SmartMet Download Plugin
