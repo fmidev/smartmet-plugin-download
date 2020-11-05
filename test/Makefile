@@ -77,8 +77,8 @@ endif
 	done
 
 fminames:
-        @sed -i -e 's/"smartmet-test"/"localhost"/g' cnf/*.conf
-        @/usr/share/smartmet/test/db/init-and-start.sh && /usr/share/smartmet/test/db/install-test-db.sh > /dev/null
+	@sed -i -e 's/"smartmet-test"/"localhost"/g' cnf/*.conf
+	@/usr/share/smartmet/test/db/init-and-start.sh && /usr/share/smartmet/test/db/install-test-db.sh > /dev/null
 
 $(PROG) : % : %.cpp Makefile ../download.so
 	$(CXX) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)
