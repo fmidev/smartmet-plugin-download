@@ -18,9 +18,9 @@ name	= Meteor
 
 Time information on the querydata:
 
-Origin time	= 2013092004 local time
-First time	= 2013091709 local time
-Last time	= 2013091718 local time
+Origin time	= 2013092001 UTC
+First time	= 2013091706 UTC
+Last time	= 2013091715 UTC
 Time step	= 180 minutes
 Timesteps	= 4
 
