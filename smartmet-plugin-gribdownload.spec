@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.11.30
+Version: 20.12.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -21,12 +21,12 @@ BuildRequires: libconfig >= 1.7.2
 BuildRequires: smartmet-library-spine-devel >= 20.11.23
 BuildRequires: smartmet-library-macgyver-devel >= 20.11.24
 BuildRequires: smartmet-library-newbase-devel >= 20.11.30
-BuildRequires: smartmet-library-grid-content-devel >= 20.11.30
-BuildRequires: smartmet-library-grid-files-devel >= 20.11.24
+BuildRequires: smartmet-library-grid-content-devel >= 20.12.3
+BuildRequires: smartmet-library-grid-files-devel >= 20.12.3
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 20.10.6
 BuildRequires: smartmet-engine-geonames-devel >= 20.10.28
-BuildRequires: smartmet-engine-grid-devel >= 20.11.30
+BuildRequires: smartmet-engine-grid-devel >= 20.12.3
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal >= 1.11.4
@@ -70,6 +70,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Thu Dec  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.3-1.fmi
+- Repackaged due to library ABI changes
+
 * Mon Nov 30 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.11.30-1.fmi
 - Repackaged due to grid-content library API changes
 
