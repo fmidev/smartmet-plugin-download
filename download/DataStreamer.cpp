@@ -2549,7 +2549,7 @@ void DataStreamer::extractData(string &chunk)
         NFmiMetTime mt(itsTimeIterator->utc_time());
 
         // Set target projection geometry data (to 'itsBoundingBox' and 'dX'/'dY' members) and if
-        // using gdal/proj4 projection,
+        // using proj4 projection,
         // transform target projection grid coordinates to 'srcLatLons' -member to get the grid
         // values.
 
@@ -2634,7 +2634,7 @@ void DataStreamer::extractData(string &chunk)
             q->pressureValues(itsGridValues, mt, level);
         }
         else
-          // Using gdal/proj4 projection.
+          // Using proj4 projection.
           //
           q->values(srcLatLons, itsGridValues, mt, exactLevel ? kFloatMissing : level);
 

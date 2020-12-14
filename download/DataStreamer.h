@@ -19,7 +19,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <gdal/ogr_spatialref.h>
+#include <ogr_spatialref.h>
 
 typedef std::list<std::pair<float, float>> Scaling;
 
