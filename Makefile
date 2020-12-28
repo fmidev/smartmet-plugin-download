@@ -19,7 +19,7 @@ LIBS += -L$(libdir) $(REQUIRED_LIBS) \
 	-lboost_iostreams \
 	-lboost_system \
 	-lbz2 -lz \
-	-leccodes \
+	-leccodes -leccodes_memfs \
 	-lnetcdf_c++
 
 # What to install
