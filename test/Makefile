@@ -29,7 +29,7 @@ test: $(PROG) fminames
 else
 test: $(PROG)
 endif
-	@mkdir -p failures
+	@mkdir -p failures tmp
 	@./PluginTest -c cnf/reactor.conf
 	@test -f PluginTest.err && mv PluginTest.err sqlite.err || echo All tests passed
 	@printf "\n"
