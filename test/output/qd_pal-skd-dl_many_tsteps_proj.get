@@ -36,7 +36,7 @@ bbox			= [-1011765.33 5448739.55 5704496.71 8077711.91]
 
 fmiarea	= latlon:-9.09871,51.3,49,72.6421
 wktarea	= GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]]
-proj4	= +proj=longlat +a=6371220 +b=6371220 +no_defs 
+proj4	= +proj=longlat +R=6371220 +no_defs
 
 top	= 0
 left	= 0
