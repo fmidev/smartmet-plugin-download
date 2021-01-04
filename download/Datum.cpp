@@ -17,7 +17,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <gdal/ogr_spatialref.h>
+#include <ogr_spatialref.h>
 
 #include <vector>
 

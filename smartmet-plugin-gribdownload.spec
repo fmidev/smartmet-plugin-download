@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.12.3
+Version: 21.1.4
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -14,28 +14,28 @@ BuildRequires: rpm-build
 BuildRequires: gcc-c++
 BuildRequires: make
 BuildRequires: boost169-devel
-BuildRequires: gdal-devel >= 1.11.4
+BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
-BuildRequires: jsoncpp-devel >= 0.10.5
+BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
-BuildRequires: smartmet-library-spine-devel >= 20.11.23
-BuildRequires: smartmet-library-macgyver-devel >= 20.11.24
-BuildRequires: smartmet-library-newbase-devel >= 20.11.30
-BuildRequires: smartmet-library-grid-content-devel >= 20.12.3
-BuildRequires: smartmet-library-grid-files-devel >= 20.12.3
+BuildRequires: smartmet-library-spine-devel >= 20.12.30
+BuildRequires: smartmet-library-macgyver-devel >= 20.12.15
+BuildRequires: smartmet-library-newbase-devel >= 20.12.15
+BuildRequires: smartmet-library-grid-content-devel >= 21.1.4
+BuildRequires: smartmet-library-grid-files-devel >= 21.1.4
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.10.6
-BuildRequires: smartmet-engine-geonames-devel >= 20.10.28
-BuildRequires: smartmet-engine-grid-devel >= 20.12.3
+BuildRequires: smartmet-engine-querydata-devel >= 20.12.30
+BuildRequires: smartmet-engine-geonames-devel >= 20.12.28
+BuildRequires: smartmet-engine-grid-devel >= 21.1.4
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
-Requires: gdal >= 1.11.4
+Requires: gdal32
 Requires: eccodes
-Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.11.24
-Requires: smartmet-library-spine >= 20.11.23
-Requires: smartmet-library-newbase >= 20.11.30
-Requires: smartmet-engine-querydata >= 20.10.6
+Requires: jsoncpp >= 1.8.4
+Requires: smartmet-library-macgyver >= 20.12.15
+Requires: smartmet-library-spine >= 20.12.30
+Requires: smartmet-library-newbase >= 20.12.15
+Requires: smartmet-engine-querydata >= 20.12.30
 Requires: smartmet-server >= 20.10.28
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -70,6 +70,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Mon Jan  4 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.4-1.fmi
+- Ported to GDAL 3.2
+
 * Thu Dec  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.3-1.fmi
 - Repackaged due to library ABI changes
 

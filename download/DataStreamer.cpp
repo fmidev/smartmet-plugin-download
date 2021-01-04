@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <unordered_set>
 
-#include <gdal/ogr_geometry.h>
+#include <ogr_geometry.h>
 
 static const long maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return
 static const long maxMsgChunks = 30;  // Max # of data chunks collected and returned as one chunk
@@ -4089,7 +4089,7 @@ void DataStreamer::getGridBBox(QueryServer::Query &gridQuery)
     double lat[] = { psEnvelope.MinY, psEnvelope.MaxY };
     int pabSuccess[2];
 
-    int status = ct->TransformEx(2, lon, lat, nullptr, pabSuccess);
+    int status = ct->Transform(2, lon, lat, nullptr, pabSuccess);
 
     if (!(status && pabSuccess[0] && pabSuccess[1]))
       throw Fmi::Exception(BCP,"Failed to transform bbox to llbbox: " + itsReqParams.projection);
@@ -4149,7 +4149,7 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
 
     OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&regLLSRS, rotLLSRS);
 
-    int status = ct->TransformEx(coords.size(), rotLons, rotLats, nullptr, pabSuccess);
+    int status = ct->Transform(coords.size(), rotLons, rotLats, nullptr, pabSuccess);
 
     if (status != 0)
       for (size_t n = 0; (n < coords.size()); n++, pabSuccess++)

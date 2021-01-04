@@ -43,7 +43,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include <gdal/cpl_conv.h>
+#include <cpl_conv.h>
 
 using namespace std;
 using namespace boost::posix_time;

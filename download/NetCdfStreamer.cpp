@@ -1075,7 +1075,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       double yc[] = { coords[0].y(), coords[coords.size() - 1].y() };
       int pabSuccess[2];
 
-      int status = ct->TransformEx(2, xc, yc, nullptr, pabSuccess);
+      int status = ct->Transform(2, xc, yc, nullptr, pabSuccess);
 
       if (!(status && pabSuccess[0] && pabSuccess[1]))
         throw Fmi::Exception(BCP,"Failed to transform llbbox to bbox: " + itsGridMetaData.crs);
