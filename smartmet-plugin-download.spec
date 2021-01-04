@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 20.12.15
+Version: 20.12.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -14,7 +14,7 @@ BuildRequires: bzip2-devel
 BuildRequires: eccodes-devel
 BuildRequires: gcc-c++
 BuildRequires: gdal32-devel
-BuildRequires: jsoncpp-devel >= 0.10.5
+BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
 BuildRequires: make
 BuildRequires: netcdf-cxx-devel
@@ -25,19 +25,19 @@ BuildRequires: smartmet-engine-geonames-devel
 BuildRequires: smartmet-engine-querydata-devel >= 20.12.15
 BuildRequires: smartmet-library-macgyver-devel >= 20.12.15
 BuildRequires: smartmet-library-newbase-devel >= 20.12.15
-BuildRequires: smartmet-library-spine-devel >= 20.12.15
+BuildRequires: smartmet-library-spine-devel >= 20.12.30
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
 Requires: boost169-thread
 Requires: eccodes
 Requires: gdal32
-Requires: jsoncpp >= 0.10.5
+Requires: jsoncpp >= 1.8.4
 Requires: netcdf-cxx
 Requires: smartmet-engine-querydata >= 20.12.15
 Requires: smartmet-library-macgyver >= 20.12.15
 Requires: smartmet-library-newbase >= 20.12.15
-Requires: smartmet-library-spine >= 20.12.15
+Requires: smartmet-library-spine >= 20.12.30
 Requires: smartmet-server >= 20.10.28
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
@@ -80,6 +80,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Wed Dec 30 2020 Andris Pavenis <andris.pavenis@fmi.fi> - 20.12.30-1.fmi
+- Rebuild due to jsoncpp upgrade for RHEL7
+
 * Tue Dec 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.15-1.fmi
 - Upgrade to pgdg12
 
