@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.1.4
+Version: 21.1.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -18,25 +18,25 @@ BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
-BuildRequires: smartmet-library-spine-devel >= 20.12.30
-BuildRequires: smartmet-library-macgyver-devel >= 20.12.15
-BuildRequires: smartmet-library-newbase-devel >= 20.12.15
-BuildRequires: smartmet-library-grid-content-devel >= 21.1.4
-BuildRequires: smartmet-library-grid-files-devel >= 21.1.4
+BuildRequires: smartmet-library-spine-devel >= 21.1.5
+BuildRequires: smartmet-library-macgyver-devel >= 21.1.5
+BuildRequires: smartmet-library-newbase-devel >= 21.1.5
+BuildRequires: smartmet-library-grid-content-devel >= 21.1.11
+BuildRequires: smartmet-library-grid-files-devel >= 21.1.11
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 20.12.30
-BuildRequires: smartmet-engine-geonames-devel >= 20.12.28
-BuildRequires: smartmet-engine-grid-devel >= 21.1.4
+BuildRequires: smartmet-engine-geonames-devel >= 21.1.5
+BuildRequires: smartmet-engine-grid-devel >= 21.1.11
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
-Requires: smartmet-library-macgyver >= 20.12.15
-Requires: smartmet-library-spine >= 20.12.30
-Requires: smartmet-library-newbase >= 20.12.15
+Requires: smartmet-library-macgyver >= 21.1.5
+Requires: smartmet-library-spine >= 21.1.5
+Requires: smartmet-library-newbase >= 21.1.5
 Requires: smartmet-engine-querydata >= 20.12.30
-Requires: smartmet-server >= 20.10.28
+Requires: smartmet-server >= 21.1.5
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -70,6 +70,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Mon Jan 11 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.11-1.fmi
+- Repackaged due to grid-files API changes
+
 * Mon Jan  4 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.4-1.fmi
 - Ported to GDAL 3.2
 
