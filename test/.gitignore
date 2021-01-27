@@ -1,2 +1,4 @@
-tmp
-failures
+/tmp
+/failures
+/tmp-geonames-db.log
+/tmp-geonames-db

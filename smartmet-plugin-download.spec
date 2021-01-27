@@ -47,16 +47,20 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: eccodes
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
-#TestRequires: smartmet-engine-geonames-devel
-#TestRequires: smartmet-engine-querydata-devel >= 21.1.14
-#TestRequires: smartmet-library-newbase-devel >= 21.1.14
-#TestRequires: smartmet-library-spine-devel >= 20.12.15
+#TestRequires: smartmet-engine-geonames
+#TestRequires: smartmet-engine-querydata >= 21.1.14
+#TestRequires: smartmet-library-macgyver-devel >= 21.1.14
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
+
+# makefile.inc side effect (otherwise fails on top level Makefile)
+#TestRequires: gdal32-devel
+#TestRequires: jsoncpp-devel
+#TestRequires: ctpp2-decel
 
 %description
 SmartMet Download Plugin
