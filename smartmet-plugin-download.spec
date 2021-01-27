@@ -60,7 +60,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 # makefile.inc side effect (otherwise fails on top level Makefile)
 #TestRequires: gdal32-devel
 #TestRequires: jsoncpp-devel
-#TestRequires: ctpp2-decel
+#TestRequires: ctpp2-devel
 
 %description
 SmartMet Download Plugin
