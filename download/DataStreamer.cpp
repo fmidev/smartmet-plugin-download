@@ -3670,7 +3670,7 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelId
     nativeResolution = (!nativeArea);  // Use 'data' crs if area not given
 
   gridQuery.mAnalysisTime = to_iso_string(itsGridMetaData.gridOriginTime);
-  gridQuery.mForecastTimeList.insert(to_iso_string(itsTimeIterator->utc_time()));
+  gridQuery.mForecastTimeList.insert(toTimeT(itsTimeIterator->utc_time()));
 
   gridQuery.mSearchType = QueryServer::Query::SearchType::TimeSteps;
   gridQuery.mTimezone = "UTC";
