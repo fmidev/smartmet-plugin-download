@@ -9,11 +9,11 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
+#include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiStereographicArea.h>
-#include <macgyver/Exception.h>
 #include <spine/Thread.h>
 
 namespace
@@ -293,8 +293,7 @@ int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
       return t1.date().year() - t2.date().year();
     }
 
-    throw Fmi::Exception(BCP,
-                           "Invalid time step length " + boost::lexical_cast<string>(timeStep));
+    throw Fmi::Exception(BCP, "Invalid time step length " + boost::lexical_cast<string>(timeStep));
   }
   catch (...)
   {
@@ -350,8 +349,8 @@ void NetCdfStreamer::addTimeDimension()
     }
     else
       throw Fmi::Exception(BCP,
-                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                                 " for producer '" + itsReqParams.producer + "'");
+                           "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                               " for producer '" + itsReqParams.producer + "'");
 
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
@@ -364,11 +363,11 @@ void NetCdfStreamer::addTimeDimension()
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
         throw Fmi::Exception(BCP,
-                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                                   boost::lexical_cast<string>(times[timeSize - 1]) +
-                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
-                                   " timestep " + boost::lexical_cast<string>(timeStep) +
-                                   ") for producer '" + itsReqParams.producer + "'");
+                             "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
+                                 boost::lexical_cast<string>(times[timeSize - 1]) + " (validtime " +
+                                 Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
+                                 boost::lexical_cast<string>(timeStep) + ") for producer '" +
+                                 itsReqParams.producer + "'");
 
       times[timeSize] = period;
     }
@@ -716,10 +715,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
       NFmiPoint p0 =
           ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToWorldXY(x0, y0)
-                                                                      : tgtWorldXYs[x0][y0]);
+                                                                      : tgtWorldXYs(x0, y0));
       NFmiPoint pN = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
-                          : tgtWorldXYs[xN - 1][yN - 1]);
+                          : tgtWorldXYs(xN - 1, yN - 1));
 
       double worldY[itsNY], worldX[itsNX];
       double wY = p0.Y(), wX = p0.X();
@@ -745,7 +744,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         {
           const NFmiPoint p =
               ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToLatLon(x, y)
-                                                                          : tgtLatLons[x][y]);
+                                                                          : tgtLatLons(x, y));
 
           lat[n] = p.Y();
           lon[n] = p.X();
@@ -766,12 +765,12 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
         lat[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
                       ? grid->GridToLatLon(0, y).Y()
-                      : tgtLatLons[0][y].Y());
+                      : tgtLatLons.y(0, y));
 
       for (x = x0, n = 0; (x < xN); x += xStep, n++)
         lon[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
                       ? grid->GridToLatLon(x, 0).X()
-                      : tgtLatLons[x][0].X());
+                      : tgtLatLons.x(x, 0));
 
       if (!latVar->put(lat, itsNY))
         throw Fmi::Exception(BCP, "Failed to store latitude coordinates");
@@ -974,8 +973,8 @@ void NetCdfStreamer::addParameters(bool relative_uv)
             j = i + 1;
           else
             throw Fmi::Exception(BCP,
-                                   "Missing gridrelative configuration for parameter " +
-                                       boost::lexical_cast<string>(usedParId));
+                                 "Missing gridrelative configuration for parameter " +
+                                     boost::lexical_cast<string>(usedParId));
         }
 
       if ((i >= pTable.size()) && (j > 0))

@@ -21,8 +21,8 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
-#include <macgyver/StringConversion.h>
 #include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
 #include <string>
 
 #include <sys/types.h>
@@ -57,7 +57,7 @@ ResMgr::~ResMgr()
   {
     OGRCoordinateTransformation::DestroyCT(ct);
   }
-  
+
   // Delete cloned srs:s
   //
   // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
@@ -244,7 +244,7 @@ OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialRefer
       {
         if (!(geometrySRS = toSRS->Clone()))
           throw Fmi::Exception(BCP,
-                                 "getCoordinateTransformation: OGRSpatialReference cloning failed");
+                               "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
           spatialReferences.push_back(geometrySRS);
       }
@@ -318,9 +318,9 @@ static FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
         (!isPressureLevel(levelType)) && (!isHeightOrDepthLevel(levelType)))
     {
       throw Fmi::Exception(BCP,
-                             "Internal: Unrecognized level type '" +
-                                 boost::lexical_cast<string>(levelType) + "' for producer '" +
-                                 producer + "'");
+                           "Internal: Unrecognized level type '" +
+                               boost::lexical_cast<string>(levelType) + "' for producer '" +
+                               producer + "'");
     }
 
     positiveLevels = true;
@@ -493,9 +493,9 @@ void DataStreamer::checkDataTimeStep()
       ;
     else
       throw Fmi::Exception(BCP,
-                             "Invalid data timestep (" +
-                                 boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
-                                 itsReqParams.producer + "'");
+                           "Invalid data timestep (" +
+                               boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
+                               itsReqParams.producer + "'");
   }
   catch (...)
   {
@@ -564,8 +564,7 @@ void DataStreamer::generateValidTimeList(
     itsDataTimes = Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
 
     if (itsDataTimes.empty())
-      throw Fmi::Exception(BCP, "No valid times in the requested time period")
-          .disableStackTrace();
+      throw Fmi::Exception(BCP, "No valid times in the requested time period").disableStackTrace();
   }
   catch (...)
   {
@@ -818,49 +817,41 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 {
   try
   {
-    auto shared_latlons = q->latLonCache();
-    const auto &llc = *shared_latlons;
+    const auto &area = q->area();
+    const auto &grid = q->grid();
 
     double blLon = 0.0, blLat = 0.0, trLon = 0.0, trLat = 0.0;
     size_t gridSizeX = q->grid().XNumber(), gridSizeY = q->grid().YNumber();
 
     // Loop all columns of first and last row and first and last columns of other rows.
 
-    for (size_t y = 1, n = 0, dx = (gridSizeX - 1); (y <= gridSizeY); y++, n++)
-      for (size_t x = 1; (x <= gridSizeX);)
+    bool first = true;
+    for (std::size_t y = 0, dx = gridSizeX - 1; y < gridSizeY; y++)
+      for (std::size_t x = 0; x < gridSizeX;)
       {
-        const NFmiPoint &p = llc[n];
+        const NFmiPoint p = area.ToLatLon(grid.GridToXY(NFmiPoint(x, y)));
+
         auto px = p.X(), py = p.Y();
 
-        if (n == 0)
+        if (first)
         {
+          first = false;
           blLon = trLon = px;
           blLat = trLat = py;
         }
         else
         {
-          if (px < blLon)
-            blLon = px;
-          else if (px > trLon)
-            trLon = px;
-
-          if (py < blLat)
-            blLat = py;
-          else if (py > trLat)
-            trLat = py;
+          blLon = std::min(px, blLon);
+          trLon = std::max(px, trLon);
+          blLat = std::min(py, blLat);
+          trLat = std::max(py, trLat);
         }
 
-        size_t dn = (((y == 1) || (y == gridSizeY)) ? 1 : dx);
-
+        size_t dn = (((y == 0) || (y == gridSizeY - 1)) ? 1 : dx);
         x += dn;
-        if (x <= gridSizeX)
-          n += dn;
       }
 
-    itsRegBoundingBox = BBoxCorners();
-
-    (*itsRegBoundingBox).bottomLeft = NFmiPoint(blLon, blLat);
-    (*itsRegBoundingBox).topRight = NFmiPoint(trLon, trLat);
+    itsRegBoundingBox = BBoxCorners{NFmiPoint(blLon, blLat), NFmiPoint(trLon, trLat)};
   }
   catch (...)
   {
@@ -1000,8 +991,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea &area,
           fabs(ceil(area.WorldXYHeight() / ((*itsReqParams.gridResolutionXY)[0].second * 1000))));
 
       if ((gridSizeX <= 1) || (gridSizeY <= 1))
-        throw Fmi::Exception(BCP,
-                               "Invalid gridsize for producer '" + itsReqParams.producer + "'");
+        throw Fmi::Exception(BCP, "Invalid gridsize for producer '" + itsReqParams.producer + "'");
 
       // Must use constant grid size for querydata output; set calculated absolute gridsize
 
@@ -1269,7 +1259,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     if ((err = qdProjectedSrs.SetFromUserInput(area->WKT().c_str())) != OGRERR_NONE)
       throw Fmi::Exception(BCP,
-                             "transform: srs.Set(WKT) error " + boost::lexical_cast<string>(err));
+                           "transform: srs.Set(WKT) error " + boost::lexical_cast<string>(err));
 
     // qd geographic cs
 
@@ -1299,9 +1289,9 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       //
       if ((err = wgs84PrSrsPtr->importFromEPSG(itsReqParams.epsgCode)) != OGRERR_NONE)
         throw Fmi::Exception(BCP,
-                               "transform: srs.importFromEPSG(" +
-                                   boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
-                                   boost::lexical_cast<string>(err));
+                             "transform: srs.importFromEPSG(" +
+                                 boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
+                                 boost::lexical_cast<string>(err));
     }
     else if ((!Datum::isDatumShiftToWGS84(itsReqParams.datumShift)) ||
              ((itsReqParams.projType != P_LatLon) && (itsReqParams.projType != P_RotLatLon) &&
@@ -1319,8 +1309,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
       if ((err = wgs84PrSrsPtr->SetWellKnownGeogCS("WGS84")) != OGRERR_NONE)
-        throw Fmi::Exception(
-            BCP, "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
+        throw Fmi::Exception(BCP,
+                             "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
 
     // If projected output cs, get geographic output cs
 
@@ -1394,18 +1384,19 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     OGRCoordinateTransformation *wgs84Pr2LLct = nullptr;
     if ((!wgs84ProjLL) &&
         (!(wgs84Pr2LLct = itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
-      throw Fmi::Exception(BCP,
-                             "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
+      throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
-    srcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-    const sz_t xs = srcLatLons.NX(), ys = srcLatLons.NY();
-    const sz_t xN = xs - 1, yN = ys - 1;
+    srcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+    const sz_t xs = srcLatLons.width();
+    const sz_t ys = srcLatLons.height();
+    const sz_t xN = xs - 1;
+    const sz_t yN = ys - 1;
     sz_t x, y;
 
     if (itsReqParams.outputFormat == NetCdf)
     {
-      tgtLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-      tgtWorldXYs.Resize(itsReqGridSizeX, itsReqGridSizeY);
+      tgtLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+      tgtWorldXYs = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
     }
 
     itsDX = ((tr.X() - bl.X()) / xN);
@@ -1419,7 +1410,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           (((y == 0) && (yc <= -89.999)) || ((y == yN) && (yc >= 89.999))))
       {
         for (x = 0; x < xs; x++, xc += itsDX)
-          srcLatLons[x][y] = NFmiPoint(xc, ((y == 0) ? -90.0 : 90.0));
+          srcLatLons.set(x, y, xc, (y == 0) ? -90.0 : 90.0);
 
         continue;
       }
@@ -1432,7 +1423,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
           throw Fmi::Exception(BCP, "transform: Transform(wgs84,qd) failed");
 
-        srcLatLons[x][y] = NFmiPoint(txc, tyc);
+        srcLatLons.set(x, y, txc, tyc);
 
         if (!wgs84ProjLL)
         {
@@ -1456,7 +1447,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           {
             // Output cs world xy coordinates for netcdf output
             //
-            tgtWorldXYs[x][y] = NFmiPoint(xc, yc);
+            tgtWorldXYs.set(x, y, xc, yc);
           }
         }
 
@@ -1470,7 +1461,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
             throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
-          tgtLatLons[x][y] = NFmiPoint(txc, tyc);
+          tgtLatLons.set(x, y, txc, tyc);
         }
       }
     }
@@ -1560,7 +1551,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
     if (allLevels)
     {
       auto info = q->info();
-      return NFmiVPlaceDescriptor(((NFmiQueryInfo *) &(*info))->VPlaceDescriptor());
+      return NFmiVPlaceDescriptor(((NFmiQueryInfo *)&(*info))->VPlaceDescriptor());
     }
 
     auto old_idx = q->levelIndex();
@@ -1599,8 +1590,8 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-NFmiParamDescriptor DataStreamer::makeParamDescriptor(Engine::Querydata::Q q,
-                                                      const std::list<FmiParameterName> &currentParams) const
+NFmiParamDescriptor DataStreamer::makeParamDescriptor(
+    Engine::Querydata::Q q, const std::list<FmiParameterName> &currentParams) const
 {
   try
   {
@@ -1666,7 +1657,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q, bool
     if (nativeTimes)
     {
       auto info = q->info();
-      return NFmiTimeDescriptor(((NFmiQueryInfo *) &(*info))->TimeDescriptor());
+      return NFmiTimeDescriptor(((NFmiQueryInfo *)&(*info))->TimeDescriptor());
     }
 
     NFmiMetTime ot = q->originTime();
@@ -1883,8 +1874,8 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
 
       if (!q->param(id))
         throw Fmi::Exception(BCP,
-                               "Internal error: could not switch to parameter " +
-                                   boost::lexical_cast<std::string>(id));
+                             "Internal error: could not switch to parameter " +
+                                 boost::lexical_cast<std::string>(id));
       q->setIsSubParamUsed(isSubParamUsed);
     }
     else if (demValues && waterFlags)
@@ -1919,7 +1910,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       if (!mt)
         tc = q->calcTimeCache(q->validTime());
 
-      q->landscapeCachedInterpolation(itsGridValues, locCache, tc, demMatrix, waterFlagMatrix);
+      itsGridValues = q->landscapeCachedInterpolation(locCache, tc, demMatrix, waterFlagMatrix);
     }
     else
     {
@@ -2138,8 +2129,8 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
         }
         else
           throw Fmi::Exception(BCP,
-                                 "Unrecognized projection '" + projection + "' for producer '" +
-                                     itsReqParams.producer + "'");
+                               "Unrecognized projection '" + projection + "' for producer '" +
+                                   itsReqParams.producer + "'");
       }
     }
   }
@@ -2289,8 +2280,13 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
         auto logValues = itsCfg.getLogRequestDataValues();
 
         if ((logValues > 0) && (numValues > logValues))
-          fprintf(stderr, "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
-                  numValues, itsDataParams.size(), itsDataLevels.size(), itsDataTimes.size(), gs,
+          fprintf(stderr,
+                  "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
+                  numValues,
+                  itsDataParams.size(),
+                  itsDataLevels.size(),
+                  itsDataTimes.size(),
+                  gs,
                   itsRequest.getURI().c_str());
       }
 
@@ -2372,7 +2368,8 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
 
     // In-memory qd needs to be reloaded if it does not contain current parameter
 
-    if ((itsParamIterator != itsDataParams.end()) && itsCPQ && (!itsCPQ->param(itsParamIterator->number())))
+    if ((itsParamIterator != itsDataParams.end()) && itsCPQ &&
+        (!itsCPQ->param(itsParamIterator->number())))
       itsCPQ.reset();
 
     paramChanged(nextParamOffset);
@@ -2391,7 +2388,8 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
  */
 // ----------------------------------------------------------------------
 
-Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const
+Engine::Querydata::Q DataStreamer::getCurrentParamQ(
+    const std::list<FmiParameterName> &currentParams) const
 {
   NFmiParamDescriptor paramDescriptor = makeParamDescriptor(itsQ, currentParams);
   auto srcInfo = itsQ->info();
@@ -2400,8 +2398,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameter
                          srcInfo->TimeDescriptor(),
                          srcInfo->HPlaceDescriptor(),
                          srcInfo->VPlaceDescriptor(),
-                         itsQ->infoVersion()
-                        );
+                         itsQ->infoVersion());
 
   boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
   NFmiFastQueryInfo dstInfo(data.get());
@@ -2414,7 +2411,8 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(const std::list<FmiParameter
     for (dstInfo.ResetLocation(), srcInfo->ResetLocation();
          dstInfo.NextLocation() && srcInfo->NextLocation();)
     {
-      for (dstInfo.ResetLevel(), srcInfo->ResetLevel(); dstInfo.NextLevel() && srcInfo->NextLevel();)
+      for (dstInfo.ResetLevel(), srcInfo->ResetLevel();
+           dstInfo.NextLevel() && srcInfo->NextLevel();)
       {
         for (dstInfo.ResetTime(), srcInfo->ResetTime(); dstInfo.NextTime() && srcInfo->NextTime();)
         {
@@ -2555,7 +2553,7 @@ void DataStreamer::extractData(string &chunk)
 
         coordTransform(q, area);
 
-        if (! itsMultiFile)
+        if (!itsMultiFile)
         {
           if (!itsCPQ)
           {
@@ -2580,7 +2578,7 @@ void DataStreamer::extractData(string &chunk)
               // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
             }
 
-            itsCPQ = getCurrentParamQ(currentParams); 
+            itsCPQ = getCurrentParamQ(currentParams);
           }
 
           // Set level index from main data, time index gets set (or is not used) below
@@ -2611,32 +2609,31 @@ void DataStreamer::extractData(string &chunk)
                 // ('cropMan' was not set by the call to getAreaAndGrid())
                 //
                 cropping.cropMan = cropping.crop;
-                q->values(itsGridValues, mt, demValues, waterFlags);
+                itsGridValues = q->values(mt, demValues, waterFlags);
               }
             }
             else
             {
               if (cropping.cropped && (!cropping.cropMan))
-                q->croppedValues(itsGridValues,
-                                 cropping.bottomLeftX,
-                                 cropping.bottomLeftY,
-                                 cropping.topRightX,
-                                 cropping.topRightY,
-                                 demValues,
-                                 waterFlags);
+                itsGridValues = q->croppedValues(cropping.bottomLeftX,
+                                                 cropping.bottomLeftY,
+                                                 cropping.topRightX,
+                                                 cropping.topRightY,
+                                                 demValues,
+                                                 waterFlags);
               else
-                q->values(itsGridValues, demValues, waterFlags);
+                itsGridValues = q->values(demValues, waterFlags);
             }
           }
           else if (nonNativeGrid)
-            q->pressureValues(itsGridValues, *grid, mt, level, q->isRelativeUV());
+            itsGridValues = q->pressureValues(*grid, mt, level, q->isRelativeUV());
           else
-            q->pressureValues(itsGridValues, mt, level);
+            itsGridValues = q->pressureValues(mt, level);
         }
         else
           // Using proj4 projection.
           //
-          q->values(srcLatLons, itsGridValues, mt, exactLevel ? kFloatMissing : level);
+          itsGridValues = q->values(srcLatLons, mt, exactLevel ? kFloatMissing : level);
 
         // Load the data chunk from 'itsGridValues'.
         //
@@ -2646,8 +2643,8 @@ void DataStreamer::extractData(string &chunk)
 
         if ((itsGridValues.NX() == 0) || (itsGridValues.NY() == 0))
           throw Fmi::Exception(BCP,
-                                 "Extract data: internal: Query returned no data for producer '" +
-                                     itsReqParams.producer + "'");
+                               "Extract data: internal: Query returned no data for producer '" +
+                                   itsReqParams.producer + "'");
 
         getDataChunk(q, area, grid, level, mt, itsGridValues, chunk);
 
