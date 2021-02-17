@@ -15,10 +15,10 @@ remove_underscores = true;
 locale = "fi_FI.UTF-8";
 
 # DEM data. If this is omitted, the dem value will always be NaN
-demdir = "/smartmet/share/gis/rasters/viewfinder";
+demdir = "/usr/share/smartmet/test/data/gis/rasters/viewfinder";
 
 #Landcover
-landcoverdir = "/smartmet/share/gis/rasters/globcover";
+landcoverdir = "/usr/share/smartmet/test/data/gis/rasters/globcover";
 
 # Database settings.
 

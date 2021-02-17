@@ -1,70 +1,66 @@
-PROG = $(patsubst %.cpp,%,$(wildcard *Test.cpp))
+PROG = PluginTest
 
-FLAGS = -std=c++11 -Wall -W -Wno-unused-parameter
+REQUIRES = gdal configpp
 
-EXTRAFLAGS = -Werror -pedantic -Wpointer-arith -Wcast-qual \
-	-Wcast-align -Wwrite-strings -Wconversion -Winline \
-	-Wctor-dtor-privacy -Wnon-virtual-dtor -Wno-pmf-conversions \
-	-Wsign-promo -Wchar-subscripts -Wold-style-cast \
-	-Wshadow -Woverloaded-virtual
+include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
-DIFFICULTFLAGS = -Weffc++ -Wunreachable-code -Wredundant-decls
+CFLAGS = -DUNIX -O0 -g $(FLAGS) -Wno-unknown-pragmas
 
-ifeq ($(TSAN), yes)
-  FLAGS += -fsanitize=thread
-endif
-ifeq ($(ASAN), yes)
-  FLAGS += -fsanitize=address -fsanitize=pointer-compare -fsanitize=pointer-subtract -fsanitize=undefined -fsanitize-address-use-after-scope
-endif
+INCLUDES += \
+	-I ../download
 
-CC = g++
-CFLAGS = -DUNIX -O0 -g $(FLAGS)
-
-# Boost 1.69
-
-ifneq "$(wildcard /usr/include/boost169)" ""
-  INCLUDES += -I/usr/include/boost169
-  LIBS += -L/usr/lib64/boost169
-endif
-
-INCLUDES += -I ../download -I /usr/include/smartmet
-
-LIBS +=	-lsmartmet-spine \
-	-lsmartmet-newbase \
+LIBS += $(REQUIRED_LIBS) \
+	-lsmartmet-spine  \
 	-lsmartmet-macgyver \
+	-lsmartmet-newbase \
 	-lboost_date_time \
 	-lboost_thread \
 	-lboost_filesystem \
 	-lboost_iostreams \
 	-lboost_system \
-	-lconfig++ \
-	-lbz2 -lz \
-	-leccodes \
-	-lgdal \
-	-lpthread
-
-OBS =	../obj/Config.o \
-		../obj/DataStreamer.o \
-		../obj/Datum.o \
-		../obj/GribStreamer.o \
-		../obj/GribTools.o \
-		../obj/NetCdfStreamer.o \
-		../obj/Plugin.o \
-		../obj/QueryDataStreamer.o \
-		../obj/Query.o
+	-lpthread -ldl
 
 all: $(PROG)
-
 clean:
 	rm -f $(PROG) *~
 
-test: $(PROG)
-	@echo Running tests:
-	@mkdir -p tmp failures
-	@rm -f tmp/* failures/*
-	@for prog in $(PROG); do \
-	  ./$$prog; \
-	done
+TEST_PREPARE_TARGETS := cnf/geonames.conf
+TEST_FINISH_TARGETS := .dummy
+ifdef CI
+GEONAMES_HOST_EDIT := sed -e 's/"smartmet-test"/"localhost"/g'
+TEST_PREPARE_TARGETS += start-geonames-db
+TEST_FINISH_TARGETS += stop-geonames-db
+else
+GEONAMES_HOST_EDIT := cat
+META_CONF_EDIT := cat
+endif
 
-$(PROG) : % : %.cpp Makefile ../download.so
-	$(CC) $(CFLAGS) -o $@ $@.cpp $(INCLUDES) $(LIBS)
+TEST_DB_DIR := tmp-geonames-db
+TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
+
+test: $(TEST_PREPARE_TARGETS)
+	@rm -rf failures tmp
+	@mkdir -p failures tmp
+	ok=true; smartmet-plugin-test $(TESTER_PARAM) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
+
+cnf/geonames.conf: cnf/geonames.conf.in .dummy
+	$(GEONAMES_HOST_EDIT) $< >$@
+
+geonames-database:
+	@-$(MAKE) stop-geonames-db
+	rm -rf tmp-geonames-db
+	if ! /usr/share/smartmet/test/db/create-local-db.sh $(TEST_DB_DIR) >tmp-geonames-db.log 2>&1 ; then \
+	    cat tmp-geonames-db.log; \
+	    false; \
+	fi
+
+start-geonames-db: geonames-database
+	/usr/share/smartmet/test/db/test-db-ctl.sh $(TEST_DB_DIR) start -w
+
+stop-geonames-db:
+	-/usr/share/smartmet/test/db/test-db-ctl.sh $(TEST_DB_DIR) stop -w
+
+.dummy:
+	true
+
+.PHONY: geonames.conf

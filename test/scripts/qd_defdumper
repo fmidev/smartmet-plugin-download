@@ -7,7 +7,7 @@ if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
 fi
 
 if [ $# -eq 1 ]; then
-  qdinfo -a -q $1
+  qdinfo -a -T -q $1
 else
   qd=$1
   dumper=$2

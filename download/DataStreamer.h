@@ -8,7 +8,7 @@
 
 #include "Config.h"
 #include "Query.h"
-
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/querydata/Model.h>
 #include <engines/querydata/ValidTimeList.h>
@@ -21,6 +21,8 @@
 #include <newbase/NFmiRotatedLatLonArea.h>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
+
+//#include <gis/CoordinateMatrix.h>
 
 #include <ogr_spatialref.h>
 
@@ -184,10 +186,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   bool itsPositiveLevels;        // true if (depth) levels are positive
   Query::Levels itsDataLevels;
 
-  BBoxCorners itsBoundingBox;             // Target projection latlon bounding box
-  NFmiDataMatrix<NFmiPoint> srcLatLons;   // Source grid latlons
-  NFmiDataMatrix<NFmiPoint> tgtLatLons;   // Target grid latlons
-  NFmiDataMatrix<NFmiPoint> tgtWorldXYs;  // Target grid projected coordinates
+  BBoxCorners itsBoundingBox;               // Target projection latlon bounding box
+  Fmi::CoordinateMatrix itsSrcLatLons;      // Source grid latlons
+  Fmi::CoordinateMatrix itsTargetLatLons;   // Target grid latlons
+  Fmi::CoordinateMatrix itsTargetWorldXYs;  // Target grid projected coordinates
   size_t itsReqGridSizeX;
   size_t itsReqGridSizeY;
   size_t itsNX;
@@ -223,8 +225,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   size_t itsTimeIndex;
   size_t itsLevelIndex;
 
-  Engine::Querydata::Q itsQ;	// Q for input querydata file
-  Engine::Querydata::Q itsCPQ;	// Q for in-memory querydata object containing current parameter
+  Engine::Querydata::Q itsQ;    // Q for input querydata file
+  Engine::Querydata::Q itsCPQ;  // Q for in-memory querydata object containing current parameter
   boost::posix_time::ptime itsOriginTime;
   boost::posix_time::ptime itsFirstDataTime;
   boost::posix_time::ptime itsLastDataTime;
@@ -320,12 +322,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q,
-                                            bool allLevels = false) const;
-  NFmiParamDescriptor makeParamDescriptor(Engine::Querydata::Q q,
-                                          const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
-  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q,
-                                        bool nativeTimes = false);
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q, bool allLevels = false) const;
+  NFmiParamDescriptor makeParamDescriptor(
+      Engine::Querydata::Q q,
+      const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
+  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q, bool nativeTimes = false);
 
   Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
 

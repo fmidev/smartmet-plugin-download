@@ -3,16 +3,13 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.2.3
+Version: 21.2.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: rpm-build
-BuildRequires: gcc-c++
-BuildRequires: make
 BuildRequires: boost169-devel
 BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
@@ -41,12 +38,37 @@ Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
 Requires: boost169-thread
-BuildRequires: netcdf-cxx-devel
+Requires: eccodes
+Requires: gdal32
+Requires: jsoncpp >= 1.8.4
 Requires: netcdf-cxx
-
+Requires: smartmet-engine-querydata >= 21.2.15
+Requires: smartmet-library-macgyver >= 21.1.25
+Requires: smartmet-library-newbase >= 21.2.15
+Requires: smartmet-library-spine >= 21.2.5
+Requires: smartmet-server >= 21.1.14
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
+#TestRequires: boost169-devel
+#TestRequires: bzip2-devel
+#TestRequires: eccodes
+#TestRequires: gcc-c++
+#TestRequires: libconfig-devel
+#TestRequires: smartmet-engine-geonames
+#TestRequires: smartmet-engine-querydata >= 21.2.15
+#TestRequires: smartmet-library-macgyver-devel >= 21.1.25
+#TestRequires: smartmet-qdtools >= 20.11.10
+#TestRequires: smartmet-test-data >= 20.6.30
+#TestRequires: smartmet-test-db >= 20.11.3
+#TestRequires: wgrib
+#TestRequires: wgrib2
+#TestRequires: zlib-devel
+
+# makefile.inc side effect (otherwise fails on top level Makefile)
+#TestRequires: gdal32-devel
+#TestRequires: jsoncpp-devel
+#TestRequires: ctpp2-devel
 
 %description
 SmartMet Download Plugin
@@ -70,6 +92,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Wed Feb 17 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.2.17-1.fmi
+- Merge from master
+
+* Mon Feb 15 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.15-1.fmi
+- Updated to use new interpolation APIs
+
 * Wed Feb  3 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.3-1.fmi
 - Use time_t in the GRIB-engine calls
 
@@ -88,6 +116,12 @@ rm -rf $RPM_BUILD_ROOT
 * Mon Jan  4 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.4-1.fmi
 - Ported to GDAL 3.2
 
+* Wed Dec 30 2020 Andris Pavenis <andris.pavenis@fmi.fi> - 20.12.30-1.fmi
+- Rebuild due to jsoncpp upgrade for RHEL7
+
+* Tue Dec 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.15-1.fmi
+- Upgrade to pgdg12
+
 * Thu Dec  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.3-1.fmi
 - Repackaged due to library ABI changes
 
@@ -105,6 +139,9 @@ rm -rf $RPM_BUILD_ROOT
 
 * Wed Oct  7 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.7-1.fmi
 - Repackaged due to library ABI changes
+
+* Tue Oct  6 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.6-1.fmi
+- Enable sensible relative libconfig include paths
 
 * Thu Oct  1 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.1-1.fmi
 - Repackaged due to library ABI changes

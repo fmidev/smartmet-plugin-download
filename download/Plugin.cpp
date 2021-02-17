@@ -396,7 +396,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       reqParams.projType = getProjectionType(reqParams);
 
     if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::None))
-      // gdal/proj4 needed for projection
+      // proj4 needed for projection
       //
       reqParams.datumShift = Datum::FMI;
 

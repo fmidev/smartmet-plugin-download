@@ -22,6 +22,7 @@
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
+#include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/Exception.h>
 #include <string>
@@ -60,7 +61,7 @@ ResMgr::~ResMgr()
   {
     OGRCoordinateTransformation::DestroyCT(ct);
   }
-  
+
   // Delete cloned srs:s
   //
   // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
@@ -257,7 +258,7 @@ OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialRefer
       {
         if (!(geometrySRS = toSRS->Clone()))
           throw Fmi::Exception(BCP,
-                                 "getCoordinateTransformation: OGRSpatialReference cloning failed");
+                               "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
           spatialReferences.push_back(geometrySRS);
       }
@@ -331,9 +332,9 @@ static FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
         (!isPressureLevel(levelType)) && (!isHeightOrDepthLevel(levelType)))
     {
       throw Fmi::Exception(BCP,
-                             "Internal: Unrecognized level type '" +
-                                 boost::lexical_cast<string>(levelType) + "' for producer '" +
-                                 producer + "'");
+                           "Internal: Unrecognized level type '" +
+                               boost::lexical_cast<string>(levelType) + "' for producer '" +
+                               producer + "'");
     }
 
     positiveLevels = true;
@@ -516,9 +517,9 @@ void DataStreamer::checkDataTimeStep(long timeStep)
       ;
     else
       throw Fmi::Exception(BCP,
-                             "Invalid data timestep (" +
-                                 boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
-                                 itsReqParams.producer + "'");
+                           "Invalid data timestep (" +
+                               boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
+                               itsReqParams.producer + "'");
   }
   catch (...)
   {
@@ -1698,49 +1699,41 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 {
   try
   {
-    auto shared_latlons = q->latLonCache();
-    const auto &llc = *shared_latlons;
+    const auto &area = q->area();
+    const auto &grid = q->grid();
 
     double blLon = 0.0, blLat = 0.0, trLon = 0.0, trLat = 0.0;
     size_t gridSizeX = q->grid().XNumber(), gridSizeY = q->grid().YNumber();
 
     // Loop all columns of first and last row and first and last columns of other rows.
 
-    for (size_t y = 1, n = 0, dx = (gridSizeX - 1); (y <= gridSizeY); y++, n++)
-      for (size_t x = 1; (x <= gridSizeX);)
+    bool first = true;
+    for (std::size_t y = 0, dx = gridSizeX - 1; y < gridSizeY; y++)
+      for (std::size_t x = 0; x < gridSizeX;)
       {
-        const NFmiPoint &p = llc[n];
+        const NFmiPoint p = area.ToLatLon(grid.GridToXY(NFmiPoint(x, y)));
+
         auto px = p.X(), py = p.Y();
 
-        if (n == 0)
+        if (first)
         {
+          first = false;
           blLon = trLon = px;
           blLat = trLat = py;
         }
         else
         {
-          if (px < blLon)
-            blLon = px;
-          else if (px > trLon)
-            trLon = px;
-
-          if (py < blLat)
-            blLat = py;
-          else if (py > trLat)
-            trLat = py;
+          blLon = std::min(px, blLon);
+          trLon = std::max(px, trLon);
+          blLat = std::min(py, blLat);
+          trLat = std::max(py, trLat);
         }
 
-        size_t dn = (((y == 1) || (y == gridSizeY)) ? 1 : dx);
-
+        size_t dn = (((y == 0) || (y == gridSizeY - 1)) ? 1 : dx);
         x += dn;
-        if (x <= gridSizeX)
-          n += dn;
       }
 
-    itsRegBoundingBox = BBoxCorners();
-
-    (*itsRegBoundingBox).bottomLeft = NFmiPoint(blLon, blLat);
-    (*itsRegBoundingBox).topRight = NFmiPoint(trLon, trLat);
+    itsRegBoundingBox = BBoxCorners{NFmiPoint(blLon, blLat), NFmiPoint(trLon, trLat)};
   }
   catch (...)
   {
@@ -2126,7 +2119,7 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
  * \brief Coordinate transformation from querydata 'datum'/projection to
  * 		requested projection with or without datum shift to wgs84
  *
- *		The transformed coordinates are stored to 'srcLatLons' -member;
+ *		The transformed coordinates are stored to 'itsSrcLatLons' -member;
  *		they are used to get the data from the source grid.
  *
  *		Target projection's bounding box is set to 'itsBoundingBox' -member.
@@ -2276,15 +2269,17 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       throw Fmi::Exception(BCP,
                              "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
-    srcLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-    const sz_t xs = srcLatLons.NX(), ys = srcLatLons.NY();
-    const sz_t xN = xs - 1, yN = ys - 1;
+    itsSrcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+    const sz_t xs = itsSrcLatLons.width();
+    const sz_t ys = itsSrcLatLons.height();
+    const sz_t xN = xs - 1;
+    const sz_t yN = ys - 1;
     sz_t x, y;
 
     if (itsReqParams.outputFormat == NetCdf)
     {
-      tgtLatLons.Resize(itsReqGridSizeX, itsReqGridSizeY);
-      tgtWorldXYs.Resize(itsReqGridSizeX, itsReqGridSizeY);
+      itsTargetLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+      itsTargetWorldXYs = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
     }
 
     itsDX = ((tr.X() - bl.X()) / xN);
@@ -2298,7 +2293,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           (((y == 0) && (yc <= -89.999)) || ((y == yN) && (yc >= 89.999))))
       {
         for (x = 0; x < xs; x++, xc += itsDX)
-          srcLatLons[x][y] = NFmiPoint(xc, ((y == 0) ? -90.0 : 90.0));
+          itsSrcLatLons.set(x, y, xc, (y == 0) ? -90.0 : 90.0);
 
         continue;
       }
@@ -2311,7 +2306,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
           throw Fmi::Exception(BCP, "transform: Transform(wgs84,qd) failed");
 
-        srcLatLons[x][y] = NFmiPoint(txc, tyc);
+        itsSrcLatLons.set(x, y, txc, tyc);
 
         if (!wgs84ProjLL)
         {
@@ -2335,7 +2330,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           {
             // Output cs world xy coordinates for netcdf output
             //
-            tgtWorldXYs[x][y] = NFmiPoint(xc, yc);
+            itsTargetWorldXYs.set(x, y, xc, yc);
           }
         }
 
@@ -2349,7 +2344,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
           if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
             throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
 
-          tgtLatLons[x][y] = NFmiPoint(txc, tyc);
+          itsTargetLatLons.set(x, y, txc, tyc);
         }
       }
     }
@@ -2406,7 +2401,7 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
       }
       else
       {
-        // Transform the coordinates to 'srcLatLons' -member
+        // Transform the coordinates to 'itsSrcLatLons' -member
         //
         setTransformedCoordinates(q, area);
       }
@@ -2798,7 +2793,7 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       if (!mt)
         tc = q->calcTimeCache(q->validTime());
 
-      q->landscapeCachedInterpolation(itsGridValues, locCache, tc, demMatrix, waterFlagMatrix);
+      itsGridValues = q->landscapeCachedInterpolation(locCache, tc, demMatrix, waterFlagMatrix);
     }
     else
     {
@@ -3486,7 +3481,7 @@ void DataStreamer::extractData(string &chunk)
 
         // Set target projection geometry data (to 'itsBoundingBox' and 'dX'/'dY' members) and if
         // using gdal/proj4 projection,
-        // transform target projection grid coordinates to 'srcLatLons' -member to get the grid
+        // transform target projection grid coordinates to 'itsSrcLatLons' -member to get the grid
         // values.
 
         coordTransform(q, area);
@@ -3547,32 +3542,31 @@ void DataStreamer::extractData(string &chunk)
                 // ('cropMan' was not set by the call to getAreaAndGrid())
                 //
                 cropping.cropMan = cropping.crop;
-                q->values(itsGridValues, mt, demValues, waterFlags);
+                itsGridValues = q->values(mt, demValues, waterFlags);
               }
             }
             else
             {
               if (cropping.cropped && (!cropping.cropMan))
-                q->croppedValues(itsGridValues,
-                                 cropping.bottomLeftX,
-                                 cropping.bottomLeftY,
-                                 cropping.topRightX,
-                                 cropping.topRightY,
-                                 demValues,
-                                 waterFlags);
+                itsGridValues = q->croppedValues(cropping.bottomLeftX,
+                                                 cropping.bottomLeftY,
+                                                 cropping.topRightX,
+                                                 cropping.topRightY,
+                                                 demValues,
+                                                 waterFlags);
               else
-                q->values(itsGridValues, demValues, waterFlags);
+                itsGridValues = q->values(demValues, waterFlags);
             }
           }
           else if (nonNativeGrid)
-            q->pressureValues(itsGridValues, *grid, mt, level, q->isRelativeUV());
+            itsGridValues = q->pressureValues(*grid, mt, level, q->isRelativeUV());
           else
-            q->pressureValues(itsGridValues, mt, level);
+            itsGridValues = q->pressureValues(mt, level);
         }
         else
           // Using gdal/proj4 projection.
           //
-          q->values(srcLatLons, itsGridValues, mt, exactLevel ? kFloatMissing : level);
+          itsGridValues = q->values(itsSrcLatLons, mt, exactLevel ? kFloatMissing : level);
 
         // Load the data chunk from 'itsGridValues'.
         //

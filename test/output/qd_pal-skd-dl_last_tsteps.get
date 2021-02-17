@@ -18,9 +18,9 @@ name	= Meteor
 
 Time information on the querydata:
 
-Origin time	= 2013092015 local time
-First time	= 2013091715 local time
-Last time	= 2013091718 local time
+Origin time	= 2013092012 UTC
+First time	= 2013091712 UTC
+Last time	= 2013091715 UTC
 Time step	= 60 minutes
 Timesteps	= 4
 
@@ -35,8 +35,8 @@ center lonlat		= 19.96,62.2843
 bbox			= [-1010040.82 1005949.88 -4051052.47 -1814781.62]
 
 fmiarea	= stereographic,20,90,60:6,51.3,49,70.2
-wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60.0],PARAMETER["central_meridian",20.0],UNIT["Metre",1.0]]
-proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +k=1 +x_0=0 +y_0=0 +a=6371220 +b=6371220 +units=m +no_defs 
+wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
+proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
 
 top	= 0
 left	= 0

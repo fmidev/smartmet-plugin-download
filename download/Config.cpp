@@ -357,6 +357,11 @@ Config::Config(const string& configfile)
     if (configfile.empty())
       throw Fmi::Exception(BCP, "DLS configuration file name is empty!");
 
+    // Enable sensible relative include paths
+    boost::filesystem::path p = configfile;
+    p.remove_filename();
+    itsConfig.setIncludeDir(p.c_str());
+
     itsConfig.readFile(configfile.c_str());
 
     itsConfig.lookupValue("gribconfig", itsGribConfig);

@@ -24,7 +24,7 @@ namespace Datum
 typedef enum
 {
   None,            // No datum transformation. Using newbase projection.
-  FMI,             // No datum transformation. Using gdal/proj4 projection.
+  FMI,             // No datum transformation. Using proj4 projection.
   EPSG,            // Output datum wgs84 using default scaling if implied by epsg projection
   WGS84,           // Output datum wgs84 using default scaling (same as HPDefaultScale)
   HPNoScale,       // Using no scaling when getting Helmert transformation parameters.
