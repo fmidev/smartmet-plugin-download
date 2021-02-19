@@ -3,7 +3,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.2.17
+Version: 21.2.19
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -15,24 +15,24 @@ BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
-BuildRequires: smartmet-library-spine-devel >= 21.1.29
+BuildRequires: smartmet-library-spine-devel >= 21.2.5
 BuildRequires: smartmet-library-macgyver-devel >= 21.1.25
-BuildRequires: smartmet-library-newbase-devel >= 21.1.22
+BuildRequires: smartmet-library-newbase-devel >= 21.2.18
 BuildRequires: smartmet-library-grid-content-devel >= 21.2.3
-BuildRequires: smartmet-library-grid-files-devel >= 21.2.3
+BuildRequires: smartmet-library-grid-files-devel >= 21.2.15
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.1.25
-BuildRequires: smartmet-engine-geonames-devel >= 21.1.25
-BuildRequires: smartmet-engine-grid-devel >= 21.2.3
+BuildRequires: smartmet-engine-querydata-devel >= 21.2.18
+BuildRequires: smartmet-engine-geonames-devel >= 21.2.18
+BuildRequires: smartmet-engine-grid-devel >= 21.2.16
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: smartmet-library-macgyver >= 21.1.25
-Requires: smartmet-library-spine >= 21.1.29
-Requires: smartmet-library-newbase >= 21.1.22
-Requires: smartmet-engine-querydata >= 21.1.25
+Requires: smartmet-library-spine >= 21.2.5
+Requires: smartmet-library-newbase >= 21.2.18
+Requires: smartmet-engine-querydata >= 21.2.18
 Requires: smartmet-server >= 21.1.14
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -42,9 +42,9 @@ Requires: eccodes
 Requires: gdal32
 Requires: jsoncpp >= 1.8.4
 Requires: netcdf-cxx
-Requires: smartmet-engine-querydata >= 21.2.15
+Requires: smartmet-engine-querydata >= 21.2.18
 Requires: smartmet-library-macgyver >= 21.1.25
-Requires: smartmet-library-newbase >= 21.2.15
+Requires: smartmet-library-newbase >= 21.2.18
 Requires: smartmet-library-spine >= 21.2.5
 Requires: smartmet-server >= 21.1.14
 Provides: %{SPECNAME}
@@ -56,7 +56,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
-#TestRequires: smartmet-engine-querydata >= 21.2.15
+#TestRequires: smartmet-engine-querydata >= 21.2.18
 #TestRequires: smartmet-library-macgyver-devel >= 21.1.25
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
@@ -92,6 +92,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Fri Feb 19 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.19-1.fmi
+- Repackaged
+
 * Wed Feb 17 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.2.17-1.fmi
 - Merge from master
 
