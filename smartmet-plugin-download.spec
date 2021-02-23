@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.2.15
+Version: 21.2.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -22,9 +22,9 @@ BuildRequires: netcdf-cxx-devel
 BuildRequires: netcdf-devel
 BuildRequires: rpm-build
 BuildRequires: smartmet-engine-geonames-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.2.15
+BuildRequires: smartmet-engine-querydata-devel >= 21.2.20
 BuildRequires: smartmet-library-macgyver-devel >= 21.1.25
-BuildRequires: smartmet-library-newbase-devel >= 21.2.15
+BuildRequires: smartmet-library-newbase-devel >= 21.2.20
 BuildRequires: smartmet-library-spine-devel >= 21.2.5
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -34,9 +34,9 @@ Requires: eccodes
 Requires: gdal32
 Requires: jsoncpp >= 1.8.4
 Requires: netcdf-cxx
-Requires: smartmet-engine-querydata >= 21.2.15
+Requires: smartmet-engine-querydata >= 21.2.20
 Requires: smartmet-library-macgyver >= 21.1.25
-Requires: smartmet-library-newbase >= 21.2.15
+Requires: smartmet-library-newbase >= 21.2.20
 Requires: smartmet-library-spine >= 21.2.5
 Requires: smartmet-server >= 21.1.14
 Provides: %{SPECNAME}
@@ -48,7 +48,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
-#TestRequires: smartmet-engine-querydata >= 21.2.15
+#TestRequires: smartmet-engine-querydata >= 21.2.20
 #TestRequires: smartmet-library-macgyver-devel >= 21.1.25
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
@@ -84,6 +84,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/%{DIRNAME}.so
 
 %changelog
+* Tue Feb 23 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.23-1.fmi
+- Fixed HIRLAM downloads to work
+
 * Mon Feb 15 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.15-1.fmi
 - Updated to use new interpolation APIs
 
