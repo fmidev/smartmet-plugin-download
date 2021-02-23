@@ -7,25 +7,21 @@
 #include "GribStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-
+#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/foreach.hpp>
+#include <boost/interprocess/sync/lock_options.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 #include <macgyver/Exception.h>
-
+#include <macgyver/StringConversion.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
+#include <newbase/NFmiRotatedLatLonArea.h>
 #include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiTimeList.h>
-
-#include <boost/foreach.hpp>
-#include <string>
-
 #include <sys/types.h>
+#include <string>
 #include <unistd.h>
-
-#include <boost/interprocess/sync/lock_options.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-
-#include "boost/date_time/gregorian/gregorian.hpp"
 
 static const long gribMissingValue = 9999;
 
@@ -201,18 +197,16 @@ void GribStreamer::setLatlonGeometryToGrib() const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
+void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *area) const
 {
   try
   {
     if (itsResMgr.getGeometrySRS())
       throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
-    const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
-
     BBoxCorners rotLLBBox;
-    rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
-    rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
+    rotLLBBox.bottomLeft = area->ToRotLatLon(itsBoundingBox.bottomLeft);
+    rotLLBBox.topRight = area->ToRotLatLon(itsBoundingBox.topRight);
 
     gset(gribHandle, "typeOfGrid", "rotated_ll");
 
@@ -239,11 +233,16 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     gset(gribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
     gset(gribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
 
-    if (a.SouthernPole().X() != 0)
+    auto pole = area->SouthernPole();
+    if (pole.X() != 0)
+    {
       throw Fmi::Exception(
-          BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
+          BCP, "GRIB does not support rotated latlon areas where longitude is also rotated")
+          .addParameter("Southern pole longitude", Fmi::to_string(pole.X()))
+          .addParameter("Southern pole latitude", Fmi::to_string(pole.Y()));
+    }
 
-    gset(gribHandle, "latitudeOfSouthernPoleInDegrees", a.SouthernPole().Y());
+    gset(gribHandle, "latitudeOfSouthernPoleInDegrees", pole.Y());
 
     // DUMP(gribHandle, "geography");
   }
@@ -278,7 +277,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
+void GribStreamer::setStereographicGeometryToGrib(const NFmiStereographicArea *area) const
 {
   try
   {
@@ -305,11 +304,9 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     if (!geometrySRS)
     {
-      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
-
-      lon_0 = a.CentralLongitude();
-      lat_0 = a.CentralLatitude();
-      lat_ts = a.TrueLatitude();
+      lon_0 = area->CentralLongitude();
+      lat_0 = area->CentralLatitude();
+      lat_ts = area->TrueLatitude();
     }
     else
     {
@@ -464,10 +461,10 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
         setLatlonGeometryToGrib();
         break;
       case kNFmiRotatedLatLonArea:
-        setRotatedLatlonGeometryToGrib(area);
+        setRotatedLatlonGeometryToGrib(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
         break;
       case kNFmiStereographicArea:
-        setStereographicGeometryToGrib(area);
+        setStereographicGeometryToGrib(dynamic_cast<const NFmiStereographicArea *>(area));
         break;
       case kNFmiMercatorArea:
         setMercatorGeometryToGrib();
@@ -670,8 +667,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 
       if (timeStep <= 0)
         throw Fmi::Exception(BCP,
-                               "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                                   " for producer '" + itsReqParams.producer + "'");
+                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                 " for producer '" + itsReqParams.producer + "'");
 
       if (pTable[paramIdx].itsPeriodLengthMinutes > 0)
       {
@@ -824,8 +821,8 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   {
     if (timeStepInMinutes <= 0)
       throw Fmi::Exception(BCP,
-                             "adjustToTimeStep: Invalid data timestep " +
-                                 boost::lexical_cast<string>(timeStepInMinutes));
+                           "adjustToTimeStep: Invalid data timestep " +
+                               boost::lexical_cast<string>(timeStepInMinutes));
 
     if ((timeStepInMinutes == 60) || (timeStepInMinutes == 180) || (timeStepInMinutes == 360) ||
         (timeStepInMinutes == 720))

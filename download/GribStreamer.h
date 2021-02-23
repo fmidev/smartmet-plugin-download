@@ -8,9 +8,11 @@
 
 #include "DataStreamer.h"
 #include "GribTools.h"
-
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
+
+class NFmiRotatedLatLonArea;
+class NFmiStereographicArea;
 
 namespace SmartMet
 {
@@ -49,8 +51,8 @@ class GribStreamer : public DataStreamer
   void scanningDirections(long& iNegative, long& jPositive) const;
 
   void setLatlonGeometryToGrib() const;
-  void setRotatedLatlonGeometryToGrib(const NFmiArea* Area) const;
-  void setStereographicGeometryToGrib(const NFmiArea* Area) const;
+  void setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea* Area) const;
+  void setStereographicGeometryToGrib(const NFmiStereographicArea* Area) const;
   void setMercatorGeometryToGrib() const;
   void setNamedSettingsToGrib() const;
   void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
