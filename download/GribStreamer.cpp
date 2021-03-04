@@ -262,8 +262,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *a
     if (southernPoleLon != 0)
       throw Fmi::Exception(
           BCP, "GRIB does not support rotated latlon areas where longitude is also rotated")
-          .addParameter("Southern pole longitude", Fmi::to_string(pole.X()))
-          .addParameter("Southern pole latitude", Fmi::to_string(pole.Y()));
+          .addParameter("Southern pole longitude", Fmi::to_string(southernPoleLon))
+          .addParameter("Southern pole latitude", Fmi::to_string(southernPoleLat));
 
     gset(gribHandle, "latitudeOfSouthernPoleInDegrees", southernPoleLat);
 
