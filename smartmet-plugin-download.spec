@@ -1,8 +1,9 @@
 %define DIRNAME download
+%define DIRNAME gribdownload
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.2.23
+Version: 21.3.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -10,22 +11,29 @@ URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: boost169-devel
-BuildRequires: bzip2-devel
-BuildRequires: eccodes-devel
-BuildRequires: gcc-c++
 BuildRequires: gdal32-devel
+BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
-BuildRequires: make
-BuildRequires: netcdf-cxx-devel
-BuildRequires: netcdf-cxx-devel
+BuildRequires: smartmet-library-spine-devel >= 21.3.1
+BuildRequires: smartmet-library-macgyver-devel >= 21.2.25
+BuildRequires: smartmet-library-newbase-devel >= 21.3.2
+BuildRequires: smartmet-library-grid-content-devel >= 21.3.3
+BuildRequires: smartmet-library-grid-files-devel >= 21.2.25
 BuildRequires: netcdf-devel
-BuildRequires: rpm-build
-BuildRequires: smartmet-engine-geonames-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.2.20
-BuildRequires: smartmet-library-macgyver-devel >= 21.1.25
-BuildRequires: smartmet-library-newbase-devel >= 21.2.20
-BuildRequires: smartmet-library-spine-devel >= 21.2.5
+BuildRequires: smartmet-engine-querydata-devel >= 21.3.2
+BuildRequires: smartmet-engine-geonames-devel >= 21.2.18
+BuildRequires: smartmet-engine-grid-devel >= 21.3.3
+BuildRequires: netcdf-cxx-devel
+BuildRequires: bzip2-devel
+Requires: gdal32
+Requires: eccodes
+Requires: jsoncpp >= 1.8.4
+Requires: smartmet-library-macgyver >= 21.2.25
+Requires: smartmet-library-spine >= 21.3.1
+Requires: smartmet-library-newbase >= 21.3.2
+Requires: smartmet-engine-querydata >= 21.3.2
+Requires: smartmet-server >= 21.1.14
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -34,10 +42,10 @@ Requires: eccodes
 Requires: gdal32
 Requires: jsoncpp >= 1.8.4
 Requires: netcdf-cxx
-Requires: smartmet-engine-querydata >= 21.2.20
-Requires: smartmet-library-macgyver >= 21.1.25
-Requires: smartmet-library-newbase >= 21.2.20
-Requires: smartmet-library-spine >= 21.2.5
+Requires: smartmet-engine-querydata >= 21.3.2
+Requires: smartmet-library-macgyver >= 21.2.25
+Requires: smartmet-library-newbase >= 21.3.2
+Requires: smartmet-library-spine >= 21.3.1
 Requires: smartmet-server >= 21.1.14
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
@@ -48,8 +56,8 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
-#TestRequires: smartmet-engine-querydata >= 21.2.20
-#TestRequires: smartmet-library-macgyver-devel >= 21.1.25
+#TestRequires: smartmet-engine-querydata >= 21.3.2
+#TestRequires: smartmet-library-macgyver-devel >= 21.2.25
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
@@ -81,17 +89,41 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(0775,root,root,0775)
-%{_datadir}/smartmet/plugins/%{DIRNAME}.so
+%{_datadir}/smartmet/plugins/gribdownload.so
 
 %changelog
+* Wed Mar  3 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.3.3-1.fmi
+- Grid-engine may now be disabled
+
 * Tue Feb 23 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.23-1.fmi
 - Fixed HIRLAM downloads to work
+
+* Fri Feb 19 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.19-1.fmi
+- Repackaged
+
+* Wed Feb 17 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.2.17-1.fmi
+- Merge from master
 
 * Mon Feb 15 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.15-1.fmi
 - Updated to use new interpolation APIs
 
+* Wed Feb  3 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.2.3-1.fmi
+- Use time_t in the GRIB-engine calls
+
+* Wed Jan 27 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.27-1.fmi
+- Repackaged due to base library ABI changes
+
+* Tue Jan 19 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.19-1.fmi
+- Repackaged due to base library ABI changes
+
 * Thu Jan 14 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.14-1.fmi
 - Repackaged smartmet to resolve debuginfo issues
+
+* Mon Jan 11 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.11-1.fmi
+- Repackaged due to grid-files API changes
+
+* Mon Jan  4 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.1.4-1.fmi
+- Ported to GDAL 3.2
 
 * Wed Dec 30 2020 Andris Pavenis <andris.pavenis@fmi.fi> - 20.12.30-1.fmi
 - Rebuild due to jsoncpp upgrade for RHEL7
@@ -99,14 +131,71 @@ rm -rf $RPM_BUILD_ROOT
 * Tue Dec 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.15-1.fmi
 - Upgrade to pgdg12
 
+* Thu Dec  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.12.3-1.fmi
+- Repackaged due to library ABI changes
+
+* Mon Nov 30 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.11.30-1.fmi
+- Repackaged due to grid-content library API changes
+
+* Tue Nov 24 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.11.24-1.fmi
+- Repackaged due to library ABI changes
+
+* Thu Oct 22 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.22-1.fmi
+- Use new GRIB library API
+
+* Thu Oct 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.15-1.fmi
+- Repackaged due to library ABI changes
+
+* Wed Oct  7 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.7-1.fmi
+- Repackaged due to library ABI changes
+
 * Tue Oct  6 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.6-1.fmi
 - Enable sensible relative libconfig include paths
+
+* Thu Oct  1 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.10.1-1.fmi
+- Repackaged due to library ABI changes
 
 * Wed Sep 23 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.23-1.fmi
 - Use Fmi::Exception instead of Spine::Exception
 
+* Fri Sep 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.18-1.fmi
+- Repackaged due to library ABI changes
+
+* Tue Sep 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.15-1.fmi
+- Repackaged due to library ABI changes
+
+* Mon Sep 14 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.14-1.fmi
+- Repackaged due to library ABI changes
+
+* Mon Sep  7 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.7-1.fmi
+- Repackaged due to library ABI changes
+
+* Mon Aug 31 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.31-1.fmi
+- Repackaged due to library ABI changes
+
 * Fri Aug 21 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.21-1.fmi
 - Upgrade to fmt 6.2
+
+* Tue Aug 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.18-1.fmi
+- Repackaged due to grid library ABI changes
+
+* Fri Aug 14 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.14-1.fmi
+- Repackaged due to grid library ABI changes
+
+* Mon Jun 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.6.15-1.fmi
+- Renamed .so to enable simultaneous installation of download and gribdownload
+
+* Mon Jun  8 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.6.8-1.fmi
+- Repackaged due to base library changes
+
+* Mon May 25 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.25-1.fmi
+- Some bugfixes. New release version
+
+* Fri May 15 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.15-1.fmi
+- Create enseble dimension only when applicable
+- Added lock protecting netcdf metadata generation for grid data (not thread safe)
+- Added grid support
+- Added GRIB multifile property
 
 * Wed May 13 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.13-1.fmi
 - Repackaged since Spine Parameter class ABI changed
@@ -114,11 +203,17 @@ rm -rf $RPM_BUILD_ROOT
 * Fri May  8 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.8-1.fmi
 - Fixed bug in netcdf output when skipping missing querydata parameters (BS-1823)
 
+* Thu Apr 30 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.30-1.fmi
+- Repackaged due to base library API changes
+
 * Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
 - Upgraded to Boost 1.69
 
 * Wed Apr  8 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.8-1.fmi
 - Protect the entire NetCDF metadata generation section with a mutex for thread safety
+
+* Fri Apr  3 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.3-1.fmi
+- Repackaged due to library API changes
 
 * Thu Apr  2 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.2-1.fmi
 - Fixed NetCDF mutex to be a global variable instead of a class member variable

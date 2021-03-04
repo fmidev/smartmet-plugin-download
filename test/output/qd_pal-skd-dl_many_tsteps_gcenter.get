@@ -27,14 +27,14 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-top left lonlat		= 21.4041,61.7993
-top right lonlat	= 29.1223,61.461
-bottom left lonlat	= 21.2474,58.4246
-bottom right lonlat	= 28.1182,58.1283
-center lonlat		= 24.9762,60.005
-bbox			= [73177.1736 479383.436 -3360654.76 -2985449.84]
+top left lonlat		= 21.4113,61.9354
+top right lonlat	= 29.1677,61.5952
+bottom left lonlat	= 21.2419,58.2907
+bottom right lonlat	= 28.0827,57.9959
+center lonlat		= 24.9763,60.005
+bbox			= [73179.8422 479387.793 -3375665.88 -2970438.92]
 
-fmiarea	= stereographic,20,90,60:21.2474,58.4246,29.1223,61.461
+fmiarea	= stereographic,20,90,60:21.2419,58.2907,29.1677,61.5952
 wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
 proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
 
@@ -44,13 +44,13 @@ right	= 1
 bottom	= 1
 
 xnumber		= 28
-ynumber		= 26
+ynumber		= 28
 dx		= 14.5074 km
-dy		= 14.431 km
+dy		= 14.4724 km
 
-xywidth		= 406.206 km
-xyheight	= 375.205 km
-aspectratio	= 1.08263
+xywidth		= 406.208 km
+xyheight	= 405.227 km
+aspectratio	= 1.00242
 
 central longitude	= 20
 central latitude	= 90

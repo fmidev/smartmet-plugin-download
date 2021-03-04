@@ -1,5 +1,5 @@
 SUBNAME = download
-SPEC = smartmet-plugin-$(SUBNAME)
+SPEC = smartmet-plugin-grib$(SUBNAME)
 INCDIR = smartmet/plugins/$(SUBNAME)
 
 REQUIRES = gdal jsoncpp
@@ -24,7 +24,7 @@ LIBS += -L$(libdir) $(REQUIRED_LIBS) \
 
 # What to install
 
-LIBFILE = $(SUBNAME).so
+LIBFILE = grib$(SUBNAME).so
 
 # Compilation directories
 
@@ -50,11 +50,11 @@ profile: all
 
 $(LIBFILE): $(OBJS)
 	$(CXX) $(LDFLAGS) -shared -rdynamic -o $(LIBFILE) $(OBJS) $(LIBS)
-	@echo Checking $(LIBFILE) for unresolved references
-	@if ldd -r $(LIBFILE) 2>&1 | c++filt | grep ^undefined\ symbol | grep -v SmartMet::Engine:: ; \
-		then rm -v $(LIBFILE); \
-		exit 1; \
-	fi
+#@echo Checking $(LIBFILE) for unresolved references
+#@if ldd -r $(LIBFILE) 2>&1 | c++filt | grep ^undefined\ symbol | grep -v SmartMet::Engine:: ; \
+#	then rm -v $(LIBFILE); \
+#	exit 1; \
+#fi
 
 clean: 
 	rm -f $(LIBFILE) *~ $(SUBNAME)/*~

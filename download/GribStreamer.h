@@ -26,8 +26,7 @@ class GribStreamer : public DataStreamer
   GribStreamer(const Spine::HTTP::Request& req,
                const Config& config,
                const Producer& producer,
-               OutputFormat outputFormat,
-               unsigned int grib2TablesVersion = 0);
+               const ReqParams &reqParams);
   virtual ~GribStreamer();
 
   virtual std::string getChunk();
@@ -39,6 +38,14 @@ class GribStreamer : public DataStreamer
                             const NFmiMetTime& mt,
                             NFmiDataMatrix<float>& values,
                             std::string& chunk);
+
+  // Grid support
+  //
+
+  virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
+                                int level,
+                                const NFmiMetTime& mt,
+                                std::string& chunk);
 
  private:
   GribStreamer();
@@ -54,6 +61,7 @@ class GribStreamer : public DataStreamer
   void setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea* Area) const;
   void setStereographicGeometryToGrib(const NFmiStereographicArea* Area) const;
   void setMercatorGeometryToGrib() const;
+  void setLambertConformalGeometryToGrib() const;
   void setNamedSettingsToGrib() const;
   void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
   void setLevelAndParameterToGrib(int level,
@@ -76,6 +84,23 @@ class GribStreamer : public DataStreamer
                              const NFmiDataMatrix<float>& values,
                              float scale,
                              float offset);
+
+  // Grid support
+  //
+
+  void setGridOrigo(const QueryServer::Query &gridQuery);
+  void setGridGeometryToGrib(const QueryServer::Query &gridQuery);
+  void addGridValuesToGrib(const QueryServer::Query &gridQuery,
+                           const NFmiMetTime& vTime,
+                           int level,
+                           float scale,
+                           float offset);
+  std::string getGridGribMessage(const QueryServer::Query &gridQuery,
+                                 int level,
+                                 const NFmiMetTime &mt,
+                                 float scale,
+                                 float offset);
+
 };
 
 }  // namespace Download
