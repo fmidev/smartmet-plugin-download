@@ -1,5 +1,4 @@
 %define DIRNAME download
-%define DIRNAME gribdownload
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
@@ -89,7 +88,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(0775,root,root,0775)
-%{_datadir}/smartmet/plugins/gribdownload.so
+%{_datadir}/smartmet/plugins/download.so
 
 %changelog
 * Wed Mar  3 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.3.3-1.fmi
