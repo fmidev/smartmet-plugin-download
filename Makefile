@@ -1,5 +1,5 @@
 SUBNAME = download
-SPEC = smartmet-plugin-grib$(SUBNAME)
+SPEC = smartmet-plugin-$(SUBNAME)
 INCDIR = smartmet/plugins/$(SUBNAME)
 
 REQUIRES = gdal jsoncpp
@@ -24,7 +24,7 @@ LIBS += -L$(libdir) $(REQUIRED_LIBS) \
 
 # What to install
 
-LIBFILE = grib$(SUBNAME).so
+LIBFILE = $(SUBNAME).so
 
 # Compilation directories
 
