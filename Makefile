@@ -1,10 +1,12 @@
 SUBNAME = download
-SPEC = smartmet-plugin-grib$(SUBNAME)
+SPEC = smartmet-plugin-$(SUBNAME)
 INCDIR = smartmet/plugins/$(SUBNAME)
 
 REQUIRES = gdal jsoncpp
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
+
+FLAGS += -Wno-vla -Wno-variadic-macros -Wno-deprecated-declarations -Wno-unknown-pragmas
 
 # Compiler options
 
@@ -24,7 +26,7 @@ LIBS += -L$(libdir) $(REQUIRED_LIBS) \
 
 # What to install
 
-LIBFILE = grib$(SUBNAME).so
+LIBFILE = $(SUBNAME).so
 
 # Compilation directories
 
