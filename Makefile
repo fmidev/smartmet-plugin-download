@@ -6,6 +6,8 @@ REQUIRES = gdal jsoncpp
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
+FLAGS += -Wno-vla -Wno-variadic-macros -Wno-deprecated-declarations -Wno-unknown-pragmas
+
 # Compiler options
 
 DEFINES = -DUNIX -D_REENTRANT

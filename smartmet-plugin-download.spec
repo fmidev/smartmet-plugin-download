@@ -83,8 +83,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Fri Mar  5 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.3.5-1.fmi
-- Repackaged (grid support added)
+* Fri Mar  5 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.3.5-1.fmi
+- Merged grib-branch to master
 
 * Wed Mar  3 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.3.3-1.fmi
 - Grid-engine may now be disabled
