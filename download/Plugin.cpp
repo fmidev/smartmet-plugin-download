@@ -324,8 +324,13 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
                              "', 'querydata' or 'grid' expected");
 
-    if ((!gridEngine) && (reqParams.source == "grid"))
-      throw Fmi::Exception(BCP, "Grid data is not available");
+    if (reqParams.source == "grid")
+    {
+      if (!gridEngine)
+        throw Fmi::Exception(BCP, "Grid data is not available");
+      else if (!(gridEngine->isEnabled()))
+        throw Fmi::Exception(BCP, "Grid data is disabled");
+    }
 
     // Producer is speficied using 'model' or 'producer' keyword.
 
