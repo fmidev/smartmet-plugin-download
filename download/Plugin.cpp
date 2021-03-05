@@ -324,7 +324,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
                              "', 'querydata' or 'grid' expected");
 
-    if (reqParams.source == "grid")
+    if (reqParams.dataSource == Grid)
     {
       if (!gridEngine)
         throw Fmi::Exception(BCP, "Grid data is not available");
@@ -460,7 +460,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       reqParams.outputFormat = NetCdf;
     else if (reqParams.format == "QD")
     {
-      if (reqParams.source == "grid")
+      if (reqParams.dataSource == Grid)
         throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
 
       reqParams.outputFormat = QD;
