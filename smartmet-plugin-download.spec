@@ -10,6 +10,7 @@ URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: boost169-devel
+BuildRequires: gcc-c++
 BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
