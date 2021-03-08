@@ -1563,7 +1563,7 @@ bool DataStreamer::hasRequestedData(const Producer &producer, Query &query, ptim
 {
   try
   {
-    if (itsReqParams.source == "grid")
+    if (itsReqParams.dataSource == Grid)
       return hasRequestedGridData(producer, query, originTime, startTime, endTime);
 
     auto q = itsQ;
@@ -3380,7 +3380,7 @@ void DataStreamer::extractData(string &chunk)
 
     chunk.clear();
 
-    if (itsReqParams.source == "grid")
+    if (itsReqParams.dataSource == Grid)
     {
       extractGridData(chunk);
       return;

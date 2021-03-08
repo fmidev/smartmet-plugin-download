@@ -263,7 +263,8 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
   {
     // Read and parse the JSON formatted configuration
 
-    Json::Reader reader;
+    Json::CharReaderBuilder charReaderBuilder;
+    std::unique_ptr<Json::CharReader> reader(charReaderBuilder.newCharReader());
     Json::Value theJson;
     std::vector<ParamChangeItem> paramChangeTable;
 
@@ -271,13 +272,11 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
     if (!in)
       throw Fmi::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
 
-    std::string content;
+    std::string content, errors;
     content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 
-    if (!reader.parse(content, theJson))
-      throw Fmi::Exception(BCP,
-                             "Failed to parse '" + configFilePath.string() +
-                                 "': " + reader.getFormattedErrorMessages());
+    if (!reader->parse(content.c_str(), content.c_str() + content.size(), &theJson, &errors))
+      throw Fmi::Exception(BCP, "Failed to parse '" + configFilePath.string() + "': " + errors);
 
     if (!theJson.isArray())
       throw Fmi::Exception(BCP, "Parameter configuration must contain an array of JSON objects");

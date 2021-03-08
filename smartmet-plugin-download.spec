@@ -38,15 +38,7 @@ Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
 Requires: boost169-thread
-Requires: eccodes
-Requires: gdal32
-Requires: jsoncpp >= 1.8.4
 Requires: netcdf-cxx
-Requires: smartmet-engine-querydata >= 21.3.4
-Requires: smartmet-library-macgyver >= 21.2.25
-Requires: smartmet-library-newbase >= 21.3.2
-Requires: smartmet-library-spine >= 21.3.1
-Requires: smartmet-server >= 21.1.14
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
