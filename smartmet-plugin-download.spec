@@ -48,6 +48,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
+#TestRequires: smartmet-engine-grid >= 21.3.3
 #TestRequires: smartmet-engine-querydata >= 21.3.4
 #TestRequires: smartmet-library-macgyver-devel >= 21.2.25
 #TestRequires: smartmet-qdtools >= 20.11.10
