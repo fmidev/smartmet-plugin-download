@@ -62,6 +62,7 @@ class GribStreamer : public DataStreamer
   void setStereographicGeometryToGrib(const NFmiStereographicArea* Area) const;
   void setMercatorGeometryToGrib() const;
   void setLambertConformalGeometryToGrib() const;
+  void setLambertAzimuthalEqualAreaGeometryToGrib() const;
   void setNamedSettingsToGrib() const;
   void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
   void setLevelAndParameterToGrib(int level,

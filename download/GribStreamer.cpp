@@ -228,7 +228,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *a
     }
     else
     {
-      rotLLBBox = *itsGridMetaData.rotLLBBox;
+      rotLLBBox = *(itsGridMetaData.targetBBox);
 
       southernPoleLat = itsGridMetaData.southernPoleLat;
       southernPoleLon = itsGridMetaData.southernPoleLon;
@@ -446,7 +446,7 @@ void GribStreamer::setMercatorGeometryToGrib() const
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Set grib lambert projection metadata
+ * \brief Set grib lambert conformal projection metadata
  *
  */
 // ----------------------------------------------------------------------
@@ -512,6 +512,67 @@ void GribStreamer::setLambertConformalGeometryToGrib() const
     gset(gribHandle, "Latin2InDegrees", latin2);
 
     // DUMP(gribHandle,"geography");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set grib lambert equal area projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::setLambertAzimuthalEqualAreaGeometryToGrib() const
+{
+  try
+  {
+    if (grib1)
+      throw Fmi::Exception(BCP, "LAEA is not supported in grib1 format");
+
+    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+
+    if (!geometrySRS)
+      throw Fmi::Exception(BCP, "SRS is not set");
+
+    gset(gribHandle, "typeOfGrid", "lambert_azimuthal_equal_area");
+
+    // Note: grib2 longitude 0-360
+
+    double lon = itsBoundingBox.bottomLeft.X();
+
+    if ((!grib1) && (lon < 0))
+      lon += 360;
+
+    gset(gribHandle, "longitudeOfFirstGridPointInDegrees", lon);
+    gset(gribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+
+    gset(gribHandle, "Nx", itsNX);
+    gset(gribHandle, "Ny", itsNY);
+
+    gset(gribHandle, "DxInMetres", fabs(itsDX));
+    gset(gribHandle, "DyInMetres", fabs(itsDY));
+
+    long iNegative, jPositive;
+
+    scanningDirections(iNegative, jPositive);
+
+    gset(gribHandle, "jScansPositively", jPositive);
+    gset(gribHandle, "iScansNegatively", iNegative);
+
+    double lat_ts = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
+    double lon_0 = getProjParam(*geometrySRS, SRS_PP_LONGITUDE_OF_CENTER);
+
+    if ((!grib1) && (lon_0 < 0))
+      lon_0 += 360;
+
+    gset(gribHandle, "standardParallelInDegrees", lat_ts);
+    gset(gribHandle, "centralLongitudeInDegrees", lon_0);
+
+    DUMP(gribHandle,"geography");
   }
   catch (...)
   {
@@ -718,6 +779,9 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
         break;
       case T::GridProjectionValue::LambertConformal:
         setLambertConformalGeometryToGrib();
+        break;
+      case T::GridProjectionValue::LambertAzimuthalEqualArea:
+        setLambertAzimuthalEqualAreaGeometryToGrib();
         break;
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
