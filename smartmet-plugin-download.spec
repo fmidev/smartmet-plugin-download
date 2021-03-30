@@ -10,6 +10,7 @@ URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: boost169-devel
+BuildRequires: gcc-c++
 BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
@@ -47,6 +48,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
+#TestRequires: smartmet-engine-grid >= 21.3.3
 #TestRequires: smartmet-engine-querydata >= 21.3.4
 #TestRequires: smartmet-library-macgyver-devel >= 21.2.25
 #TestRequires: smartmet-qdtools >= 20.11.10

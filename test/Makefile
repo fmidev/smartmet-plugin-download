@@ -24,10 +24,12 @@ all: $(PROG)
 clean:
 	rm -f $(PROG) *~
 
+TEST_DB_DIR := $(shell pwd)/tmp-geonames-db
+
 TEST_PREPARE_TARGETS := cnf/geonames.conf
 TEST_FINISH_TARGETS := .dummy
 ifdef CI
-GEONAMES_HOST_EDIT := sed -e 's/"smartmet-test"/"localhost"/g'
+GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
 TEST_PREPARE_TARGETS += start-geonames-db
 TEST_FINISH_TARGETS += stop-geonames-db
 else
@@ -35,7 +37,6 @@ GEONAMES_HOST_EDIT := cat
 META_CONF_EDIT := cat
 endif
 
-TEST_DB_DIR := tmp-geonames-db
 TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
 
 test: $(TEST_PREPARE_TARGETS)
