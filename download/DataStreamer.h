@@ -22,17 +22,18 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-//#include <gis/CoordinateMatrix.h>
-
 #include <ogr_spatialref.h>
 
 typedef std::list<std::pair<float, float>> Scaling;
 
-typedef struct
+struct BBoxCorners
 {
+  BBoxCorners() { };
+  BBoxCorners(const NFmiPoint &bl, const NFmiPoint &tr) : bottomLeft(bl), topRight(tr) { };
+
   NFmiPoint bottomLeft;
   NFmiPoint topRight;
-} BBoxCorners;
+};
 
 #define BOTTOMLEFT 0
 #define TOPRIGHT 1
@@ -398,7 +399,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     boost::optional<double> flattening;	    //
     std::string flatteningStr;		    //
     bool relativeUV;			    // QueryServer::Query grid.original.relativeUV
-    boost::optional<BBoxCorners> rotLLBBox; // QueryServer::Query grid.bbox for rotlat
+    boost::optional<BBoxCorners> targetBBox;// target projection native coordinate bbox
     double southernPoleLat;		    // wkt p4 EXTENSION o_lat_p
     double southernPoleLon;		    // wkt p4 EXTENSION o_lon_p
     std::unique_ptr<double> rotLongitudes;  // rotated coords for rotlat grid
@@ -454,11 +455,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                             const Query &query,
                             FmiLevelType mappingLevelType,
                             int level) const;
-  bool buildGridQuery(SmartMet::QueryServer::Query&, T::ParamLevelIdType gridLevelType, int level);
+  void buildGridQuery(SmartMet::QueryServer::Query&, T::ParamLevelIdType gridLevelType, int level);
   void getGridLLBBox();
   std::string getGridLLBBoxStr();
   void setGridSize(size_t gridSizeX, size_t gridSizeY);
-  void getGridBBox(QueryServer::Query &gridQuery);
+  void getGridBBox();
   void getGridProjection(const QueryServer::Query &gridQuery);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
   bool getGridQueryInfo(const QueryServer::Query &gridQuery);
