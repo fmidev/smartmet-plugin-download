@@ -8,6 +8,9 @@
 #include "Datum.h"
 #include "Plugin.h"
 
+#include <gis/ProjInfo.h>
+#include <gis/SpatialReference.h>
+
 #include <newbase/NFmiAreaFactory.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
@@ -32,6 +35,8 @@
 #include <unordered_set>
 
 #include <ogr_geometry.h>
+
+#include <grid-files/identification/GridDef.h>
 
 static const long maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return
 static const long maxMsgChunks = 30;  // Max # of data chunks collected and returned as one chunk
@@ -3606,10 +3611,15 @@ void DataStreamer::extractData(string &chunk)
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelIdType gridLevelType,
+void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelIdType gridLevelType,
                                   int level)
 {
-  bool nativeArea = false;
+  // If reprojecting and bbox/area is not given, get target bbox
+
+  bool nativeArea = (!(itsReqParams.bboxRect || itsReqParams.gridCenterLL));
+
+  if ((!itsReqParams.projection.empty()) && nativeArea)
+    getGridBBox();
 
   if (itsReqParams.bboxRect)
   {
@@ -3639,18 +3649,22 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelId
     gridQuery.mAttributeList.addAttribute("grid.metricWidth", gridMetricWidth);
     gridQuery.mAttributeList.addAttribute("grid.metricHeight", gridMetricHeight);
   }
-  else
-    nativeArea = true;
 
-  bool nativeResolution = false;
+  bool nativeResolution = (itsReqParams.gridSize.empty() && (!itsReqParams.gridResolutionXY));
 
   if (itsReqParams.gridSizeXY)
   {
-    string gridWidth = Fmi::to_string((*itsReqParams.gridSizeXY)[0].first);
-    string gridHeight = Fmi::to_string((*itsReqParams.gridSizeXY)[0].second);
+    itsReqGridSizeX = (*itsReqParams.gridSizeXY)[0].first;
+    itsReqGridSizeY = (*itsReqParams.gridSizeXY)[0].second;
 
-    gridQuery.mAttributeList.addAttribute("grid.width", gridWidth);
-    gridQuery.mAttributeList.addAttribute("grid.height", gridHeight);
+    if (!itsReqParams.gridSize.empty())
+    {
+      string gridWidth = Fmi::to_string(itsReqGridSizeX);
+      string gridHeight = Fmi::to_string(itsReqGridSizeY);
+
+      gridQuery.mAttributeList.addAttribute("grid.width", gridWidth);
+      gridQuery.mAttributeList.addAttribute("grid.height", gridHeight);
+    }
   }
   else if (itsReqParams.gridResolutionXY)
   {
@@ -3660,8 +3674,6 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelId
     gridQuery.mAttributeList.addAttribute("grid.cell.width", gridCellWidth);
     gridQuery.mAttributeList.addAttribute("grid.cell.height", gridCellHeight);
   }
-  else
-    nativeResolution = (!nativeArea);  // Use 'data' crs if area not given
 
   gridQuery.mAnalysisTime = to_iso_string(itsGridMetaData.gridOriginTime);
   gridQuery.mForecastTimeList.insert(toTimeT(itsTimeIterator->utc_time()));
@@ -3687,33 +3699,26 @@ bool DataStreamer::buildGridQuery(QueryServer::Query &gridQuery, T::ParamLevelId
   queryParam.mTimeInterpolationMethod = -1;
   queryParam.mLevelInterpolationMethod = -1;
 
-  // If reprojecting and bbox/area is not given, query without data first to get the bbox
-
-  bool queryBBox = false, getCoordinates = (itsReqParams.outputFormat == NetCdf);
-
   if (itsReqParams.projection.empty())
-    gridQuery.mAttributeList.addAttribute("grid.crs", nativeResolution ? "crop" : "data");
-  else if (nativeArea)
   {
-    // Reprojecting and bbox/area is not given; query without data first to get the bbox
+    auto crs = (((!nativeArea) && nativeResolution) ? "crop" : "data");
+    gridQuery.mAttributeList.addAttribute("grid.crs", crs);
 
-    gridQuery.mAttributeList.addAttribute("grid.crs", "data");
-    queryBBox = getCoordinates = true;
+    if (nativeArea && nativeResolution)
+      gridQuery.mAttributeList.addAttribute("grid.size", "1");
   }
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
 
-  if (getCoordinates)
+  if (itsReqParams.outputFormat == NetCdf)
   {
-    // Get grid coordinates when reprojecting and bbox/area is not given or for netcdf output
+    // Get grid coordinates for netcdf output
 
     queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates); // |
 //                       QueryServer::QueryParameter::Flags::NoReturnValues);
   }
 
   gridQuery.mQueryParameterList.push_back(queryParam);
-
-  return queryBBox;
 }
 
 // ----------------------------------------------------------------------
@@ -3734,7 +3739,7 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
     if (crsAttr && (crsAttr->mValue == "crop"))
     {
       attr = "grid.original.crs";
-      crsAttr = gridQuery.mAttributeList.getAttribute("grid.original.crs");
+      crsAttr = gridQuery.mAttributeList.getAttribute(attr);
     }
 
     if ((!crsAttr) || crsAttr->mValue.empty())
@@ -3743,15 +3748,10 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
     if (crsAttr->mValue == itsGridMetaData.crs)
       return;
 
-    char wktBuf[crsAttr->mValue.size() + 1];
-    strcpy(wktBuf, crsAttr->mValue.c_str());
-    char *wkt = wktBuf;
+    Fmi::SpatialReference fsrs(crsAttr->mValue);
+    auto &srs = *fsrs;
 
-    OGRSpatialReference srs;
-    OGRErr err = srs.SetFromUserInput(wkt);
-
-    if (err != OGRERR_NONE)
-      throw Fmi::Exception(BCP,"Could not import grid crs: " + crsAttr->mValue);
+    const char *ellipsoidAttr = "SPHEROID";
 
     if (srs.IsProjected())
     {
@@ -3827,8 +3827,12 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
       // Check PROJ4 EXTENSION for rotlat projection;
       // search for +proj=ob_tran, +o_proj=lonlat, nonzero +o_lat_p and +o_lon_p
 
-      itsGridMetaData.projection = srs.GetAttrValue("PROJECTION");
-      auto projection = itsGridMetaData.projection.c_str();
+      auto projection = srs.GetAttrValue("PROJECTION");
+      if (!projection)
+        throw Fmi::Exception(BCP, string(attr) + ": PROJECTION not set");
+
+      itsGridMetaData.projection = projection;
+
       auto p4Extension = srs.GetExtension("PROJCS","PROJ4","");
 
       if (strstr(p4Extension,"+proj=ob_tran") &&
@@ -3881,22 +3885,42 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
         gridProjection = T::GridProjectionValue::Mercator;
       else if (EQUAL(projection, SRS_PT_MERCATOR_2SP))
         gridProjection = T::GridProjectionValue::Mercator;
+      else if (EQUAL(projection, SRS_PT_LAMBERT_AZIMUTHAL_EQUAL_AREA))
+        gridProjection = T::GridProjectionValue::LambertAzimuthalEqualArea;
       else
         throw Fmi::Exception(BCP, "Unsupported projection in input data: " + crsAttr->mValue);
     }
     else if (!srs.IsGeographic())
       throw Fmi::Exception(BCP,"Grid crs is neither projected nor geographic: " + crsAttr->mValue);
+    else if (srs.IsDerivedGeographic())
+    {
+      auto plat = fsrs.projInfo().getDouble("o_lat_p");
+      auto plon = fsrs.projInfo().getDouble("o_lon_p");
+
+      if ((!plat) || (!plon))
+        throw Fmi::Exception(BCP,
+                             "rotlat grid crs is expected to have o_lat_p and o_lon_p: " +
+                             fsrs.projStr()
+                            );
+
+      itsGridMetaData.southernPoleLat = 0 - *plat;
+      itsGridMetaData.southernPoleLon = *plon;
+
+      ellipsoidAttr = "ELLIPSOID";
+
+      gridProjection = T::GridProjectionValue::RotatedLatLon;
+    }
     else
       gridProjection = T::GridProjectionValue::LatLon;
 
     // Spheroid
 
-    auto ellipsoid = srs.GetAttrValue("SPHEROID");
-    auto radiusOrSemiMajor = srs.GetAttrValue("SPHEROID", 1);
-    auto flattening = srs.GetAttrValue("SPHEROID", 2);
+    auto ellipsoid = srs.GetAttrValue(ellipsoidAttr);
+    auto radiusOrSemiMajor = srs.GetAttrValue(ellipsoidAttr, 1);
+    auto flattening = srs.GetAttrValue(ellipsoidAttr, 2);
 
     if (!(ellipsoid && radiusOrSemiMajor))
-      throw Fmi::Exception(BCP, string(attr) + ": SPHEROID not set");
+      throw Fmi::Exception(BCP, string(attr) + ": " + ellipsoidAttr + " not set");
 
     itsGridMetaData.ellipsoid = ellipsoid;
     itsGridMetaData.earthRadiusOrSemiMajorInMeters = Fmi::stod(radiusOrSemiMajor);
@@ -3986,10 +4010,9 @@ void DataStreamer::setGridSize(size_t gridSizeX, size_t gridSizeY)
       ostringstream os;
 
       os << gridSizeX << "," << gridSizeY;
+      string gridSize = os.str();
 
-      itsReqParams.gridSize = os.str();
-      itsReqParams.gridSizeXY =
-          nPairsOfValues<unsigned int>(itsReqParams.gridSize, "gridsize", 1);
+      itsReqParams.gridSizeXY = nPairsOfValues<unsigned int>(gridSize, "gridsize", 1);
     }
   }
   catch (...)
@@ -4005,67 +4028,70 @@ void DataStreamer::setGridSize(size_t gridSizeX, size_t gridSizeY)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getGridBBox(QueryServer::Query &gridQuery)
+void DataStreamer::getGridBBox()
 {
   try
   {
-    // Projection and spheroid
+    auto gridDef =
+        Identification::gridDef.getGrib2DefinitionByGeometryId(itsGridMetaData.geometryId);
 
-    getGridProjection(gridQuery);
+    if (!gridDef)
+      throw Fmi::Exception(BCP, "Native grid definition is unavailable");
 
-    // Grid size
+    // Try to avoid unnecessary projection handling in queryserver if native projection is used;
+    // queryserver may return interpolated/nonnative grid with slightly changed resolution
+    //
+    // This does not catch epsg:nnnn projections, only exact wkt/proj4 crs matches
 
-    auto widthAttr = gridQuery.mAttributeList.getAttribute("grid.width");
-    auto heightAttr = gridQuery.mAttributeList.getAttribute("grid.height");
+    if (
+        (itsReqParams.projection == gridDef->getWKT()) ||
+        (itsReqParams.projection == gridDef->getProj4())
+       )
+    {
+      itsReqParams.projection.clear();
+      return;
+    }
 
-    if ((!widthAttr) || (!heightAttr))
-      throw Fmi::Exception(BCP, "Grid width/height not set in query result");
+    // Currently geometry is fixed
 
-    itsReqGridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
-    itsReqGridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
-
-    // Set/use constant grid size if size/resolution was not set
-
-    setGridSize(itsReqGridSizeX, itsReqGridSizeY);
-
-    // (Native) grid latlon coordinates
-
-    auto coords = gridQuery.mQueryParameterList.front().mCoordinates;
-
-    if (coords.empty())
-      throw Fmi::Exception(BCP,"No coordinates to determine data bbox");
+    if (itsGridMetaData.targetBBox)
+      return;
 
     OGRLinearRing exterior;
+    auto inputSRS = gridDef->getSpatialReference();
+    auto coords = gridDef->getGridOriginalCoordinates();
+    auto it = coords->begin();
+    auto gridSizeX = gridDef->getGridColumnCount();
+    auto gridSizeY = gridDef->getGridRowCount();
 
-    auto inputSRS = itsResMgr.getGeometrySRS();
-    OGRSpatialReference llSRS;
-    llSRS.CopyGeogCSFrom(inputSRS);
+    inputSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+    exterior.assignSpatialReference(inputSRS);
+
+    for (size_t y = 1, dx = (gridSizeX - 1); (y <= gridSizeY); y++, it++)
+      for (size_t x = 1; (x <= gridSizeX); )
+      {
+        exterior.addPoint(it->x(), it->y());
+
+        size_t dn = (((y == 1) || (y == gridSizeY)) ? 1 : dx);
+
+        x += dn;
+
+        if (x <= gridSizeX)
+          it += dn;
+      }
 
     OGRSpatialReference toSRS;
     OGRErr err = toSRS.SetFromUserInput(itsReqParams.projection.c_str());
 
     if (err != OGRERR_NONE)
-      throw Fmi::Exception(BCP,"Failed to initialize srs: " + itsReqParams.projection);
+      throw Fmi::Exception(BCP, "Could not initialize target crs: " + itsReqParams.projection);
 
-    for (size_t y = 1, n = 0, dx = (itsReqGridSizeX - 1); (y <= itsReqGridSizeY); y++, n++)
-      for (size_t x = 1; (x <= itsReqGridSizeX);)
-      {
-        exterior.addPoint(coords[n].x(),coords[n].y());
-
-        size_t dn = (((y == 1) || (y == itsReqGridSizeY)) ? 1 : dx);
-
-        x += dn;
-
-        if (x <= itsReqGridSizeX)
-          n += dn;
-      }
-
-    exterior.assignSpatialReference(&llSRS);
+    inputSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+    toSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     err = exterior.transformTo(&toSRS);
-
     if (err != OGRERR_NONE)
-      throw Fmi::Exception(BCP,"Failed to transform bbox: " + itsReqParams.projection);
+      throw Fmi::Exception(BCP, "Failed to transform bbox: " + itsReqParams.projection);
 
     OGREnvelope psEnvelope;
     exterior.getEnvelope(&psEnvelope);
@@ -4075,28 +4101,36 @@ void DataStreamer::getGridBBox(QueryServer::Query &gridQuery)
                      Fmi::to_string(psEnvelope.MaxX) + "," +
                      Fmi::to_string(psEnvelope.MaxY);
 
-    itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
-
-    OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&toSRS, &llSRS);
+    itsGridMetaData.targetBBox = BBoxCorners(NFmiPoint(psEnvelope.MinX, psEnvelope.MinY),
+                                             NFmiPoint(psEnvelope.MaxX, psEnvelope.MaxY));
 
     double lon[] = { psEnvelope.MinX, psEnvelope.MaxX };
     double lat[] = { psEnvelope.MinY, psEnvelope.MaxY };
-    int pabSuccess[2];
 
-    int status = ct->Transform(2, lon, lat, nullptr, pabSuccess);
+    if (!toSRS.IsGeographic())
+    {
+      OGRSpatialReference llSRS;
+      llSRS.CopyGeogCSFrom(&toSRS);
+      llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-    if (!(status && pabSuccess[0] && pabSuccess[1]))
-      throw Fmi::Exception(BCP,"Failed to transform bbox to llbbox: " + itsReqParams.projection);
+      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&toSRS, &llSRS);
+
+      int pabSuccess[2];
+
+      int status = ct->Transform(2, lon, lat, nullptr, pabSuccess);
+
+      if (!(status && pabSuccess[0] && pabSuccess[1]))
+        throw Fmi::Exception(BCP, "Failed to transform bbox to llbbox: " + itsReqParams.projection);
+    }
 
     bboxStr = Fmi::to_string(lon[0]) + "," +
               Fmi::to_string(lat[0]) + "," +
               Fmi::to_string(lon[1]) + "," +
               Fmi::to_string(lat[1]);
 
-    itsRegBoundingBox = BBoxCorners();
+    itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
 
-    (*itsRegBoundingBox).bottomLeft = NFmiPoint(lon[0], lat[0]);
-    (*itsRegBoundingBox).topRight = NFmiPoint(lon[1], lat[1]);
+    itsRegBoundingBox = BBoxCorners(NFmiPoint(lon[0], lat[0]), NFmiPoint(lon[1], lat[1]));
   }
   catch (...)
   {
@@ -4137,9 +4171,11 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
     }
 
     auto rotLLSRS = itsResMgr.getGeometrySRS();
+    rotLLSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     OGRSpatialReference regLLSRS;
     regLLSRS.CopyGeogCSFrom(rotLLSRS);
+    regLLSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&regLLSRS, rotLLSRS);
 
@@ -4196,11 +4232,24 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     string bboxStr;
 
-    auto attr = (
-                 (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ||
-                 (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon)
-                )
-                ? "grid.bbox" : "grid.llbox";
+    const char *attr;
+
+    if (
+        (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ||
+        (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon)
+       )
+    {
+      if (
+          itsReqParams.projection.empty() &&
+          ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty()))
+         )
+        attr = "grid.crop.bbox";
+      else
+        attr = "grid.bbox";
+    }
+    else
+      attr = "grid.llbox";
+
     auto bboxAttr = gridQuery.mAttributeList.getAttribute(attr);
 
     if (bboxAttr)
@@ -4213,19 +4262,15 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
     if (!bbox)
       throw Fmi::Exception(BCP, string(attr) + " is empty in query result");
 
+    auto bb = BBoxCorners(NFmiPoint((*bbox)[BOTTOMLEFT].first,
+                                    (*bbox)[BOTTOMLEFT].second),
+                          NFmiPoint((*bbox)[TOPRIGHT].first,
+                                    (*bbox)[TOPRIGHT].second));
+
     if (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon)
-    {
-      itsBoundingBox.bottomLeft = NFmiPoint((*bbox)[BOTTOMLEFT].first, (*bbox)[BOTTOMLEFT].second);
-      itsBoundingBox.topRight = NFmiPoint((*bbox)[TOPRIGHT].first, (*bbox)[TOPRIGHT].second);
-    }
+      itsBoundingBox = bb;
     else
-    {
-      itsGridMetaData.rotLLBBox = BBoxCorners();
-      itsGridMetaData.rotLLBBox->bottomLeft = NFmiPoint((*bbox)[BOTTOMLEFT].first,
-                                                        (*bbox)[BOTTOMLEFT].second);
-      itsGridMetaData.rotLLBBox->topRight = NFmiPoint((*bbox)[TOPRIGHT].first,
-                                                      (*bbox)[TOPRIGHT].second);
-    }
+      itsGridMetaData.targetBBox = bb;
 
     // Grid size
 
@@ -4278,6 +4323,28 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     itsDX = Fmi::stod(xResolAttr->mValue.c_str());
     itsDY = Fmi::stod(yResolAttr->mValue.c_str());
+
+    // Adjust resolution by grid step
+    //
+    // TODO: bbox should also be adjusted if axis dimension is not multipe of step
+
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+
+    if (
+        (itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
+        (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon)
+       )
+    {
+      itsDX *= 1000;
+      itsDY *= 1000;
+    }
+
+    if (xStep > 1)
+      itsDX *= xStep;
+
+    if (yStep > 1)
+      itsDY *= yStep;
 
     // Wind component direction
 
@@ -4337,19 +4404,9 @@ void DataStreamer::extractGridData(string &chunk)
 
       itsGridQuery = QueryServer::Query();
 
-      bool queryBBox = buildGridQuery(itsGridQuery, gridLevelType, level);
+      buildGridQuery(itsGridQuery, gridLevelType, level);
 
       int result = itsGridEngine->executeQuery(itsGridQuery);
-
-      if ((result == 0) && queryBBox)
-      {
-        getGridBBox(itsGridQuery);
-
-        itsGridQuery = QueryServer::Query();
-        buildGridQuery(itsGridQuery, gridLevelType, level);
-
-        result = itsGridEngine->executeQuery(itsGridQuery);
-      }
 
       if (result != 0)
       {
