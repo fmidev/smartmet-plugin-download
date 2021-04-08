@@ -177,9 +177,9 @@ void GribStreamer::setLatlonGeometryToGrib() const
     gset(gribHandle, "Nj", itsNY);
 
     double gridCellHeightInDegrees =
-        (itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1);
+        fabs((itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1));
     double gridCellWidthInDegrees =
-        (itsBoundingBox.topRight.X() - itsBoundingBox.bottomLeft.X()) / (itsNX - 1);
+        fabs((itsBoundingBox.topRight.X() - itsBoundingBox.bottomLeft.X()) / (itsNX - 1));
 
     long iNegative, jPositive;
 
