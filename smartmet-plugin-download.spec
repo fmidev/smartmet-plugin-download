@@ -45,6 +45,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: boost169-devel
 #TestRequires: bzip2-devel
 #TestRequires: eccodes
+#TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
