@@ -54,6 +54,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
+#TestRequires: smartmet-engine-grid-test >= 21.3.3
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
