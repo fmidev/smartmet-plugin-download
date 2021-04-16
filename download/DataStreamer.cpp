@@ -579,7 +579,7 @@ DataStreamer::GridMetaData::GridIterator& DataStreamer::GridMetaData::GridIterat
     ds->itsTimeIterator =  ds->itsDataTimes.begin();
     ds->itsTimeIndex = 0;
 
-    auto levelsEnd = ds->itsDataLevels.end();
+    auto levelsEnd = ds->itsSortedDataLevels.end();
 
     if (ds->itsLevelIterator != levelsEnd)
     {
@@ -590,7 +590,7 @@ DataStreamer::GridMetaData::GridIterator& DataStreamer::GridMetaData::GridIterat
         return *this;
     }
 
-    ds->itsLevelIterator = ds->itsDataLevels.begin();
+    ds->itsLevelIterator = ds->itsSortedDataLevels.begin();
     ds->itsLevelIndex = 0;
 
     for (ds->itsParamIterator++; (ds->itsParamIterator != paramsEnd); ds->itsParamIterator++)
@@ -1568,8 +1568,20 @@ bool DataStreamer::hasRequestedData(const Producer &producer, Query &query, ptim
 {
   try
   {
+    bool ret = (itsReqParams.dataSource == Grid)
+               ? hasRequestedGridData(producer, query, originTime, startTime, endTime)
+               : true;
+
+    // Store/sort levels to source data order, needed for qd -output (for qd source)
+
+    for (auto it = itsDataLevels.begin(); (it != itsDataLevels.end()); it++)
+      itsSortedDataLevels.push_back(*it);
+
+    if (!itsRisingLevels)
+      itsSortedDataLevels.sort(std::greater<int>());
+
     if (itsReqParams.dataSource == Grid)
-      return hasRequestedGridData(producer, query, originTime, startTime, endTime);
+      return ret;
 
     auto q = itsQ;
     bool hasData = false;
@@ -3392,8 +3404,8 @@ void DataStreamer::extractData(string &chunk)
     }
 
     auto theParamsEnd = itsDataParams.end();
-    auto theLevelsBegin = itsDataLevels.begin();
-    auto theLevelsEnd = itsDataLevels.end();
+    auto theLevelsBegin = itsSortedDataLevels.begin();
+    auto theLevelsEnd = itsSortedDataLevels.end();
     auto theTimesBegin = itsDataTimes.begin();
     auto theTimesEnd = itsDataTimes.end();
 

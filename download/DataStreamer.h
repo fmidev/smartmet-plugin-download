@@ -186,6 +186,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   FmiLevelType nativeLevelType;  // Native data level type
   bool itsPositiveLevels;        // true if (depth) levels are positive
   Query::Levels itsDataLevels;
+  std::list<int> itsSortedDataLevels; // Levels in source data order (order needed for qd -output)
 
   BBoxCorners itsBoundingBox;               // Target projection latlon bounding box
   Fmi::CoordinateMatrix itsSrcLatLons;      // Source grid latlons
@@ -250,7 +251,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   bool itsUseNativeGridSize;
   bool itsRetainNativeGridResolution;
 
-  Query::Levels::const_iterator itsLevelIterator;
+  std::list<int>::const_iterator itsLevelIterator;
 
   const Engine::Querydata::Engine *itsQEngine;
   const Engine::Grid::Engine *itsGridEngine;
@@ -264,7 +265,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void resetDataSet(bool getFirstChunk)
   {
-    itsLevelIterator = itsDataLevels.begin();
+    itsLevelIterator = itsSortedDataLevels.begin();
     itsParamIterator = itsDataParams.begin();
     itsTimeIterator = itsDataTimes.begin();
     itsScalingIterator = itsValScaling.begin();
