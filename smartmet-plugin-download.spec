@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.5.6
+Version: 21.5.25
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -15,24 +15,24 @@ BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
-BuildRequires: smartmet-library-spine-devel >= 21.4.16
-BuildRequires: smartmet-library-macgyver-devel >= 21.2.25
+BuildRequires: smartmet-library-spine-devel >= 21.5.21
+BuildRequires: smartmet-library-macgyver-devel >= 21.5.21
 BuildRequires: smartmet-library-newbase-devel >= 21.5.6
-BuildRequires: smartmet-library-grid-content-devel >= 21.3.29
-BuildRequires: smartmet-library-grid-files-devel >= 21.4.13
+BuildRequires: smartmet-library-grid-content-devel >= 21.5.25
+BuildRequires: smartmet-library-grid-files-devel >= 21.5.25
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.5.6
-BuildRequires: smartmet-engine-geonames-devel >= 21.4.12
-BuildRequires: smartmet-engine-grid-devel >= 21.4.27
+BuildRequires: smartmet-engine-querydata-devel >= 21.5.21
+BuildRequires: smartmet-engine-geonames-devel >= 21.5.20
+BuildRequires: smartmet-engine-grid-devel >= 21.5.25
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
-Requires: smartmet-library-macgyver >= 21.2.25
-Requires: smartmet-library-spine >= 21.4.16
+Requires: smartmet-library-macgyver >= 21.5.21
+Requires: smartmet-library-spine >= 21.5.21
 Requires: smartmet-library-newbase >= 21.5.6
-Requires: smartmet-engine-querydata >= 21.5.6
+Requires: smartmet-engine-querydata >= 21.5.21
 Requires: smartmet-server >= 21.1.14
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -50,8 +50,8 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig-devel
 #TestRequires: smartmet-engine-geonames
 #TestRequires: smartmet-engine-grid >= 21.3.3
-#TestRequires: smartmet-engine-querydata >= 21.5.6
-#TestRequires: smartmet-library-macgyver-devel >= 21.2.25
+#TestRequires: smartmet-engine-querydata >= 21.5.21
+#TestRequires: smartmet-library-macgyver-devel >= 21.5.21
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
@@ -87,6 +87,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue May 25 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.5.25-1.fmi
+- Repackaged due to API changes in grid-files
+
 * Thu May  6 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.5.6-1.fmi
 - Repackaged due to ABI changes in NFmiAzimuthalArea
 
