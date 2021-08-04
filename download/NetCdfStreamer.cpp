@@ -60,7 +60,7 @@ void NetCdfStreamer::requireNcFile()
   if (ncFile)
     return;
 
-  ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
+  ncFile.reset(new NcFile(file.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
 }
 
 // ----------------------------------------------------------------------
@@ -99,7 +99,6 @@ std::string NetCdfStreamer::getChunk()
 
           // Then outputting the file/data in chunks
 
-          requireNcFile();
           ncFile->close();
 
           ioStream.open(file, ifstream::in | ifstream::binary);
@@ -161,7 +160,6 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
 {
   try
   {
-    requireNcFile();
     auto dim = boost::shared_ptr<NcDim>(ncFile->add_dim(dimName.c_str(), dimSize), dimDeleter);
 
     if (dim)
@@ -191,7 +189,6 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
 {
   try
   {
-    requireNcFile();
     auto var = boost::shared_ptr<NcVar>(
         ncFile->add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4, dim5), varDeleter);
 
@@ -796,7 +793,6 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    requireNcFile();
     addAttribute(ncFile.get(), "Conventions", "CF-1.6");
     addAttribute(ncFile.get(), "title", "<title>");
     addAttribute(ncFile.get(), "institution", "fmi.fi");
@@ -978,7 +974,6 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
   {
     // Conventions
 
-    requireNcFile();
     addAttribute(ncFile.get(), "Conventions", "CF-1.6");
     addAttribute(ncFile.get(), "title", "<title>");
     addAttribute(ncFile.get(), "institution", "fmi.fi");
@@ -1257,7 +1252,6 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     timeDimName = "time_" + pName;
 
-    requireNcFile();
     boost::shared_ptr<NcDim> tDim(ncFile->get_dim(timeDimName.c_str()), dimDeleter);
 
     if (tDim)
@@ -1608,9 +1602,13 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
     if (setMeta)
     {
       // NcFile metadata generation is not thread safe
+
       Spine::WriteLock lock(myFileOpenMutex);
 
+      requireNcFile();
+
       // Set geometry and dimensions
+
       setGeometry(q, area, grid);
 
       // Add parameters
@@ -1649,6 +1647,8 @@ void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
       // NcFile metadata generation is not thread safe
 
       Spine::WriteLock lock(myFileOpenMutex);
+
+      requireNcFile();
 
       // Set geometry and dimensions
 
