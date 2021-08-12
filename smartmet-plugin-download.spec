@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.8.2
+Version: 21.8.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -16,20 +16,20 @@ BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig >= 1.7.2
 BuildRequires: smartmet-library-spine-devel >= 21.7.28
-BuildRequires: smartmet-library-macgyver-devel >= 21.7.28
+BuildRequires: smartmet-library-macgyver-devel >= 21.8.5
 BuildRequires: smartmet-library-newbase-devel >= 21.6.16
 BuildRequires: smartmet-library-grid-content-devel >= 21.8.2
 BuildRequires: smartmet-library-grid-files-devel >= 21.6.8
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 21.8.2
-BuildRequires: smartmet-engine-geonames-devel >= 21.8.2
-BuildRequires: smartmet-engine-grid-devel >= 21.7.8
+BuildRequires: smartmet-engine-geonames-devel >= 21.8.10
+BuildRequires: smartmet-engine-grid-devel >= 21.8.2
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
-Requires: smartmet-library-macgyver >= 21.7.28
+Requires: smartmet-library-macgyver >= 21.8.5
 Requires: smartmet-library-spine >= 21.7.28
 Requires: smartmet-library-newbase >= 21.6.16
 Requires: smartmet-engine-querydata >= 21.8.2
@@ -51,7 +51,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-geonames
 #TestRequires: smartmet-engine-grid >= 21.3.3
 #TestRequires: smartmet-engine-querydata >= 21.8.2
-#TestRequires: smartmet-library-macgyver-devel >= 21.7.28
+#TestRequires: smartmet-library-macgyver-devel >= 21.8.5
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
@@ -87,6 +87,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Aug 12 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.8.12-1.fmi
+- Using 64bit offset format for netcdf output to support files exceeding 2GB
+- Removed some obsolete calls to requireNcFile(). NcFile object is created upon loading first grid, and file operations are valid thereafter
+
 * Mon Aug  2 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.8.2-1.fmi
 - Repackaged since GeoEngine ABI changed by switching to boost::atomic_shared_ptr
 
