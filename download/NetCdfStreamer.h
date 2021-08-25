@@ -19,7 +19,9 @@ namespace Download
 class NetCdfStreamer : public DataStreamer
 {
  public:
-  NetCdfStreamer(const Spine::HTTP::Request &req, const Config &config, const Producer &producer,
+  NetCdfStreamer(const Spine::HTTP::Request &req,
+                 const Config &config,
+                 const Producer &producer,
                  const ReqParams &reqParams);
   virtual ~NetCdfStreamer();
 
@@ -45,20 +47,27 @@ class NetCdfStreamer : public DataStreamer
   NetCdfStreamer();
   void requireNcFile();
 
-  NcError ncError;
-  std::string file;
-  std::unique_ptr<NcFile> ncFile;
-  std::ifstream ioStream;
-  bool isLoaded;
+  NcError itsError;
+  std::string itsFilename;
+  std::unique_ptr<NcFile> itsFile;
+  std::ifstream itsStream;
+  bool itsLoadedFlag;
 
   // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
   // shared_ptr:s)
 
-  boost::shared_ptr<NcDim> ensembleDim, timeDim, timeBoundsDim, levelDim, yDim, xDim, latDim, lonDim;
-  boost::shared_ptr<NcVar> timeVar;
+  boost::shared_ptr<NcDim> itsEnsembleDim;
+  boost::shared_ptr<NcDim> itsTimeDim;
+  boost::shared_ptr<NcDim> itsTimeBoundsDim;
+  boost::shared_ptr<NcDim> itsLevelDim;
+  boost::shared_ptr<NcDim> itsYDim;
+  boost::shared_ptr<NcDim> itsXDim;
+  boost::shared_ptr<NcDim> itsLatDim;
+  boost::shared_ptr<NcDim> itsLonDim;
+  boost::shared_ptr<NcVar> itsTimeVar;
 
-  std::list<NcVar *>::iterator it_Var;
-  std::list<NcVar *> dataVars;
+  std::list<NcVar *>::iterator itsVarIterator;
+  std::list<NcVar *> itsDataVars;
 
   boost::shared_ptr<NcDim> addDimension(std::string dimName, long dimSize);
   boost::shared_ptr<NcVar> addVariable(std::string varName,

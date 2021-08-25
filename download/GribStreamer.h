@@ -26,7 +26,7 @@ class GribStreamer : public DataStreamer
   GribStreamer(const Spine::HTTP::Request& req,
                const Config& config,
                const Producer& producer,
-               const ReqParams &reqParams);
+               const ReqParams& reqParams);
   virtual ~GribStreamer();
 
   virtual std::string getChunk();
@@ -42,7 +42,7 @@ class GribStreamer : public DataStreamer
   // Grid support
   //
 
-  virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
+  virtual void getGridDataChunk(const QueryServer::Query& gridQuery,
                                 int level,
                                 const NFmiMetTime& mt,
                                 std::string& chunk);
@@ -50,10 +50,10 @@ class GribStreamer : public DataStreamer
  private:
   GribStreamer();
 
-  grib_handle* gribHandle;
-  std::vector<double> valueArray;
-  boost::posix_time::ptime gribOriginTime;
-  bool grib1;
+  grib_handle* itsGribHandle;
+  std::vector<double> itsValueArray;
+  boost::posix_time::ptime itsGribOriginTime;
+  bool itsGrib1Flag;
 
   void scanningDirections(long& iNegative, long& jPositive) const;
 
@@ -89,19 +89,18 @@ class GribStreamer : public DataStreamer
   // Grid support
   //
 
-  void setGridOrigo(const QueryServer::Query &gridQuery);
-  void setGridGeometryToGrib(const QueryServer::Query &gridQuery);
-  void addGridValuesToGrib(const QueryServer::Query &gridQuery,
+  void setGridOrigo(const QueryServer::Query& gridQuery);
+  void setGridGeometryToGrib(const QueryServer::Query& gridQuery);
+  void addGridValuesToGrib(const QueryServer::Query& gridQuery,
                            const NFmiMetTime& vTime,
                            int level,
                            float scale,
                            float offset);
-  std::string getGridGribMessage(const QueryServer::Query &gridQuery,
+  std::string getGridGribMessage(const QueryServer::Query& gridQuery,
                                  int level,
-                                 const NFmiMetTime &mt,
+                                 const NFmiMetTime& mt,
                                  float scale,
                                  float offset);
-
 };
 
 }  // namespace Download

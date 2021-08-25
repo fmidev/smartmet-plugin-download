@@ -5,13 +5,10 @@
 // ======================================================================
 
 #include "QueryDataStreamer.h"
-
-#include <newbase/NFmiQueryData.h>
-#include <macgyver/Exception.h>
-
-#include <string>
-
 #include <boost/foreach.hpp>
+#include <macgyver/Exception.h>
+#include <newbase/NFmiQueryData.h>
+#include <string>
 
 using namespace std;
 
@@ -26,7 +23,10 @@ QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Producer &producer,
                        const ReqParams &reqParams)
     : DataStreamer(req, config, producer, reqParams),
-      sendMeta(true), isLoaded(false), currentX(0), currentY(0)
+      sendMeta(true),
+      isLoaded(false),
+      currentX(0),
+      currentY(0)
 {
 }
 
@@ -45,7 +45,7 @@ std::string QDStreamer::getChunk()
   {
     try
     {
-      if (isDone && (!isLoaded))
+      if (itsDoneFlag && (!isLoaded))
       {
         setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
         return "";
@@ -66,7 +66,7 @@ std::string QDStreamer::getChunk()
           itsGrids.push_back(itsGridValues);
         }
 
-        while (!isDone)
+        while (!itsDoneFlag)
         {
           extractData(chunk);
 
@@ -76,7 +76,7 @@ std::string QDStreamer::getChunk()
             it_p = itsParamIterator;
 
           if (chunk.empty())
-            isDone = true;
+            itsDoneFlag = true;
           else if (it_p == itsParamIterator)
             itsGrids.push_back(itsGridValues);
           else
@@ -140,7 +140,7 @@ std::string QDStreamer::getChunk()
       {
         isLoaded = false;
 
-        if (isDone)
+        if (itsDoneFlag)
         {
           // "Backward compatibility - not sure if needed"
           //
@@ -162,7 +162,7 @@ std::string QDStreamer::getChunk()
 
     setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
 
-    isDone = true;
+    itsDoneFlag = true;
     isLoaded = false;
 
     return "";
