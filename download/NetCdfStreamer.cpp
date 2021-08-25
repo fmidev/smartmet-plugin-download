@@ -609,7 +609,7 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
   {
     addAttribute(crsVar, "grid_mapping_name", "latitude_longitude");
 
-    //	OGRSpatialReference * geometrySRS = itsResMgr.getGeometrySRS();
+    //	OGRSpatialReference * geometrySRS = itsResources.getGeometrySRS();
     //
     //	if (geometrySRS) {
     //	}
@@ -655,7 +655,7 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 {
   try
   {
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     double lon_0, lat_0, lat_ts;
 
     if (!geometrySRS)
@@ -695,7 +695,7 @@ void NetCdfStreamer::setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar)
 {
   try
   {
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
     if (!geometrySRS)
       throw Fmi::Exception(BCP, "SRS is not set");
@@ -733,7 +733,7 @@ void NetCdfStreamer::setLambertConformalGeometry(const boost::shared_ptr<NcVar> 
 {
   try
   {
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
     if (!geometrySRS)
       throw Fmi::Exception(BCP, "SRS is not set");
@@ -1062,11 +1062,11 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       //	  faciliates processing of this data by generic applications that don't recognize
       //	  the multidimensional latitude and longitude coordinates."
 
-      auto inputSRS = itsResMgr.getGeometrySRS();
+      auto inputSRS = itsResources.getGeometrySRS();
       OGRSpatialReference llSRS;
       llSRS.CopyGeogCSFrom(inputSRS);
 
-      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&llSRS, inputSRS);
+      OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(&llSRS, inputSRS);
 
       double xc[] = {coords[0].x(), coords[coords.size() - 1].x()};
       double yc[] = {coords[0].y(), coords[coords.size() - 1].y()};

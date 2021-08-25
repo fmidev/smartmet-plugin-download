@@ -207,7 +207,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *a
 
     if (itsReqParams.dataSource == QueryData)
     {
-      if (itsResMgr.getGeometrySRS())
+      if (itsResources.getGeometrySRS())
         throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
       const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
@@ -314,7 +314,7 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiStereographicArea *a
     gset(itsGribHandle, "DxInMetres", fabs(itsDX));
     gset(itsGribHandle, "DyInMetres", fabs(itsDY));
 
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     double lon_0, lat_0, lat_ts;
 
     if (!geometrySRS)
@@ -410,7 +410,7 @@ void GribStreamer::setMercatorGeometryToGrib() const
 
     double lon_0 = 0, lat_ts = 0;
 
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
     if (geometrySRS)
     {
@@ -447,7 +447,7 @@ void GribStreamer::setLambertConformalGeometryToGrib() const
 {
   try
   {
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
     if (!geometrySRS)
       throw Fmi::Exception(BCP, "SRS is not set");
@@ -525,7 +525,7 @@ void GribStreamer::setLambertAzimuthalEqualAreaGeometryToGrib() const
     if (itsGrib1Flag)
       throw Fmi::Exception(BCP, "LAEA is not supported in grib1 format");
 
-    OGRSpatialReference *geometrySRS = itsResMgr.getGeometrySRS();
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
     if (!geometrySRS)
       throw Fmi::Exception(BCP, "SRS is not set");

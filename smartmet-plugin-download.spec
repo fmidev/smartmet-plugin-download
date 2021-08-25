@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.8.17
+Version: 21.8.25
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -87,6 +87,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Aug 25 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.8.25-1.fmi
+- Refactored classes a bit for clarity
+
 * Tue Aug 17 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.8.17-1.fmi
 - Use the new shutdown API
 

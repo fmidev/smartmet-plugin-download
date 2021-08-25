@@ -48,229 +48,6 @@ namespace Download
 template <typename T>
 boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
 
-ResMgr::ResMgr() : area(), grid(), spatialReferences(), transformations(), geometrySRS(nullptr) {}
-
-ResMgr::~ResMgr()
-{
-  // Delete coordinate transformations
-  //
-  BOOST_FOREACH (OGRCoordinateTransformation *ct, transformations)
-  {
-    OGRCoordinateTransformation::DestroyCT(ct);
-  }
-
-  // Delete cloned srs:s
-  //
-  // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
-  //
-  BOOST_FOREACH (OGRSpatialReference *srs, spatialReferences)
-  {
-    OGRSpatialReference::DestroySpatialReference(srs);
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Create area with given projection string
- */
-// ----------------------------------------------------------------------
-
-void ResMgr::createArea(string &projection)
-{
-  try
-  {
-    area = NFmiAreaFactory::Create(projection);
-
-    if (!area.get())
-      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Get current projected area object
- */
-// ----------------------------------------------------------------------
-
-const NFmiArea *ResMgr::getArea()
-{
-  try
-  {
-    return area.get();
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-// ----------------------------------------------------------------------
-/*!
- * \brief (Re)create grid
- */
-// ----------------------------------------------------------------------
-
-void ResMgr::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
-{
-  try
-  {
-    grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));
-
-    if (!grid.get())
-      throw Fmi::Exception(BCP, "Internal: could not create grid");
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Check if suitable grid exists
- */
-// ----------------------------------------------------------------------
-
-bool ResMgr::hasGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
-{
-  try
-  {
-    NFmiGrid *g = grid.get();
-    const NFmiArea *ga = (g ? g->Area() : nullptr);
-
-    if (!(ga && (ga->ClassId() == a.ClassId()) && (g->XNumber() == gridSizeX) &&
-          (g->YNumber() == gridSizeY)))
-    {
-      return false;
-    }
-
-    return true;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Return current grid if it (exists and) matches the area and
- * 	    gridsize given. Otherwise the grid is (re)created.
- */
-// ----------------------------------------------------------------------
-
-NFmiGrid *ResMgr::getGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
-{
-  try
-  {
-    if (!hasGrid(a, gridSizeX, gridSizeY))
-      createGrid(a, gridSizeX, gridSizeY);
-
-    return grid.get();
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Clone spatial reference
- */
-// ----------------------------------------------------------------------
-
-OGRSpatialReference *ResMgr::cloneCS(const OGRSpatialReference &SRS, bool isGeometrySRS)
-{
-  try
-  {
-    OGRSpatialReference *srs = SRS.Clone();
-
-    if (srs)
-    {
-      spatialReferences.push_back(srs);
-
-      if (isGeometrySRS)
-        geometrySRS = srs;
-    }
-
-    return srs;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Clone geographic spatial reference
- */
-// ----------------------------------------------------------------------
-
-OGRSpatialReference *ResMgr::cloneGeogCS(const OGRSpatialReference &SRS, bool isGeometrySRS)
-{
-  try
-  {
-    OGRSpatialReference *srs = SRS.CloneGeogCS();
-
-    if (srs)
-    {
-      spatialReferences.push_back(srs);
-
-      if (isGeometrySRS)
-        geometrySRS = srs;
-    }
-
-    return srs;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Get coordinate transformation
- */
-// ----------------------------------------------------------------------
-
-OGRCoordinateTransformation *ResMgr::getCoordinateTransformation(OGRSpatialReference *fromSRS,
-                                                                 OGRSpatialReference *toSRS,
-                                                                 bool isGeometrySRS)
-{
-  try
-  {
-    OGRCoordinateTransformation *ct = OGRCreateCoordinateTransformation(fromSRS, toSRS);
-
-    if (ct)
-    {
-      // Store the target srs if output geometry will be set from it (instead of using qd's area)
-      //
-      if (isGeometrySRS)
-      {
-        if (!(geometrySRS = toSRS->Clone()))
-          throw Fmi::Exception(BCP,
-                               "getCoordinateTransformation: OGRSpatialReference cloning failed");
-        else
-          spatialReferences.push_back(geometrySRS);
-      }
-
-      transformations.push_back(ct);
-    }
-
-    return ct;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
 // ----------------------------------------------------------------------
 /*!
  * \brief Utility routines for testing querydata's level type
@@ -2135,7 +1912,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     // qd geographic cs
 
-    qdLLSrsPtr = itsResMgr.cloneGeogCS(qdProjectedSrs);
+    qdLLSrsPtr = itsResources.cloneGeogCS(qdProjectedSrs);
     if (!qdLLSrsPtr)
       throw Fmi::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
 
@@ -2172,8 +1949,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       // qd projection
       //
       if (!(wgs84PrSrsPtr = (Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
-                                 ? itsResMgr.cloneCS(qdProjectedSrs)
-                                 : itsResMgr.cloneGeogCS(qdProjectedSrs))))
+                                 ? itsResources.cloneCS(qdProjectedSrs)
+                                 : itsResources.cloneGeogCS(qdProjectedSrs))))
         throw Fmi::Exception(BCP, "transform: qdsrs.clone() failed");
     }
 
@@ -2192,7 +1969,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         itsReqParams.areaClassId =
             getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
 
-      if (!(wgs84LLSrsPtr = itsResMgr.cloneGeogCS(*wgs84PrSrsPtr)))
+      if (!(wgs84LLSrsPtr = itsResources.cloneGeogCS(*wgs84PrSrsPtr)))
         throw Fmi::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
     }
     else if (itsReqParams.projType == P_Epsg)
@@ -2216,7 +1993,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     // the target srs is cloned and stored by resMgr and the srs is used later when setting output
     // geometry.
 
-    OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResMgr.getCoordinateTransformation(
+    OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResources.getCoordinateTransformation(
         qdLLSrsPtr, wgs84PrSrsPtr, ((itsReqParams.projType == P_Epsg) && (!wgs84ProjLL)));
     if (!qdLL2Wgs84Prct)
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(qd,wgs84) failed");
@@ -2249,13 +2026,13 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     // target cs to geographic target cs (to get target grid corner latlons).
 
     OGRCoordinateTransformation *wgs84Pr2QDLLct =
-        itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, qdLLSrsPtr);
+        itsResources.getCoordinateTransformation(wgs84PrSrsPtr, qdLLSrsPtr);
     if (!wgs84Pr2QDLLct)
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,qd) failed");
 
     OGRCoordinateTransformation *wgs84Pr2LLct = nullptr;
     if ((!wgs84ProjLL) &&
-        (!(wgs84Pr2LLct = itsResMgr.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
+        (!(wgs84Pr2LLct = itsResources.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
     itsSrcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
@@ -3039,7 +2816,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
             }
 
             projection = projStr + "|" + bboxStr;
-            itsResMgr.createArea(projection);
+            itsResources.createArea(projection);
           }
 
           cropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);
@@ -3073,7 +2850,7 @@ void DataStreamer::createGrid(const NFmiArea &area,
 {
   try
   {
-    NFmiGrid *grid = itsResMgr.getGrid(area, gridSizeX, gridSizeY);
+    NFmiGrid *grid = itsResources.getGrid(area, gridSizeX, gridSizeY);
 
     if (cropping.crop)
     {
@@ -3148,7 +2925,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     // Note: area is set to the native area or owned by the resource manager; *DO NOT DELETE*
 
-    if (!(*area = itsResMgr.getArea()))
+    if (!(*area = itsResources.getArea()))
       *area = &nativeArea;
 
     if (!itsProjectionChecked)
@@ -3212,7 +2989,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     // Note: grid is set to nullptr or owned by the resource manager; *DO NOT DELETE*
 
-    *grid = itsResMgr.getGrid();
+    *grid = itsResources.getGrid();
 
     if ((!nonNativeGrid) && landscaping && (itsDEMMatrix.NX() == 0))
     {
@@ -3922,7 +3699,7 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
 
     // Clone/save crs
 
-    itsResMgr.cloneCS(srs, true);
+    itsResources.cloneCS(srs, true);
 
     itsGridMetaData.projType = gridProjection;
     itsGridMetaData.crs = crsAttr->mValue;
@@ -4093,7 +3870,7 @@ void DataStreamer::getGridBBox()
       llSRS.CopyGeogCSFrom(&toSRS);
       llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-      OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&toSRS, &llSRS);
+      OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(&toSRS, &llSRS);
 
       int pabSuccess[2];
 
@@ -4150,14 +3927,14 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
       rotLat++;
     }
 
-    auto rotLLSRS = itsResMgr.getGeometrySRS();
+    auto rotLLSRS = itsResources.getGeometrySRS();
     rotLLSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     OGRSpatialReference regLLSRS;
     regLLSRS.CopyGeogCSFrom(rotLLSRS);
     regLLSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-    OGRCoordinateTransformation *ct = itsResMgr.getCoordinateTransformation(&regLLSRS, rotLLSRS);
+    OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(&regLLSRS, rotLLSRS);
 
     int status = ct->Transform(coords.size(), rotLons, rotLats, nullptr, pabSuccess);
 

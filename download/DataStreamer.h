@@ -8,6 +8,7 @@
 
 #include "Config.h"
 #include "Query.h"
+#include "Resources.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
@@ -52,58 +53,6 @@ double getProjParam(const OGRSpatialReference &srs,
                     const char *param,
                     bool ignoreErr = false,
                     double defaultValue = 0.0);
-
-// Resource management
-//
-// ResMgr class is the sole owner and thus responsible for releasing *ALL* objects created by
-// calling its methods:
-//
-// 	createArea() 						NFmiArea object
-// 	getGrid()							NFmiGrid object
-// 	cloneGeogCS(), cloneCS() 			OGRSpatialReference objects
-// 	getCoordinateTransformation()		OGRCoordinateTransformation objects
-//
-// Only one area and/or grid can exist at a given time; old object is released if a new object is
-// created.
-//
-// Note: In download plugin implementation area is created only once (if at all) per processed
-// query. Multiple grid's will
-// be created during execution of a query if the query spans over multiple querydatas, native
-// gridsize or given gridresolution
-// is used and data gridsize changes.
-//
-// Note: OGRSpatialReference object pointed by geometrySRS (if nonnull) is one of the objects in
-// 'spatialReferences' list;
-// the object is *NOT* released using the geometrySRS pointer.
-
-class ResMgr : private boost::noncopyable
-{
- public:
-  ResMgr();
-  ~ResMgr();
-
-  void createArea(std::string &projection);
-  const NFmiArea *getArea();
-
-  NFmiGrid *getGrid(const NFmiArea &a, size_t gsX, size_t gsY);
-  NFmiGrid *getGrid() const { return grid.get(); }
-  OGRSpatialReference *cloneGeogCS(const OGRSpatialReference &, bool isGeometrySRS = false);
-  OGRSpatialReference *cloneCS(const OGRSpatialReference &, bool isGeometrySRS = false);
-  OGRCoordinateTransformation *getCoordinateTransformation(OGRSpatialReference *,
-                                                           OGRSpatialReference *,
-                                                           bool isGeometrySRS = false);
-  OGRSpatialReference *getGeometrySRS() const { return geometrySRS; }
-
- private:
-  boost::shared_ptr<NFmiArea> area;
-  boost::shared_ptr<NFmiGrid> grid;
-  std::list<OGRSpatialReference *> spatialReferences;
-  std::list<OGRCoordinateTransformation *> transformations;
-  OGRSpatialReference *geometrySRS;
-
-  void createGrid(const NFmiArea &a, size_t gsX, size_t gsY);
-  bool hasGrid(const NFmiArea &a, size_t gsX, size_t gsY);
-};
 
 // Data streaming
 //
@@ -168,7 +117,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   const Config &itsCfg;
   ReqParams itsReqParams;
-  ResMgr itsResMgr;
+  Resources itsResources;
   const Producer &itsProducer;
 
   FmiDirection itsGridOrigo;
