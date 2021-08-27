@@ -11,7 +11,7 @@
 
 // Resource management
 //
-// ResMgr class is the sole owner and thus responsible for releasing *ALL* objects created by
+// Resources class is the sole owner and thus responsible for releasing *ALL* objects created by
 // calling its methods:
 //
 //      createArea()                       NFmiArea object
@@ -42,7 +42,7 @@ class Resources : private boost::noncopyable
 {
  public:
   Resources() = default;
-  ~Resources() = default;
+  ~Resources();
 
   void createArea(const std::string &projection,
                   const NFmiPoint &bottomLeft,
@@ -55,8 +55,8 @@ class Resources : private boost::noncopyable
 
   NFmiGrid *getGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);
   NFmiGrid *getGrid() const { return grid.get(); }
-  OGRSpatialReference *cloneGeogCS(const OGRSpatialReference &);
-  OGRSpatialReference *cloneCS(const OGRSpatialReference &);
+  OGRSpatialReference *cloneGeogCS(const OGRSpatialReference &, bool isGeometrySRS = false);
+  OGRSpatialReference *cloneCS(const OGRSpatialReference &, bool isGeometrySRS = false);
   OGRCoordinateTransformation *getCoordinateTransformation(OGRSpatialReference *,
                                                            OGRSpatialReference *,
                                                            bool isGeometrySRS = false);

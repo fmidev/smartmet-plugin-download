@@ -6,6 +6,8 @@ REQUIRES = gdal jsoncpp
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
+FLAGS += -Wno-vla -Wno-variadic-macros -Wno-deprecated-declarations -Wno-unknown-pragmas
+
 # Compiler options
 
 DEFINES = -DUNIX -D_REENTRANT
@@ -50,11 +52,11 @@ profile: all
 
 $(LIBFILE): $(OBJS)
 	$(CXX) $(LDFLAGS) -shared -rdynamic -o $(LIBFILE) $(OBJS) $(LIBS)
-	@echo Checking $(LIBFILE) for unresolved references
-	@if ldd -r $(LIBFILE) 2>&1 | c++filt | grep ^undefined\ symbol | grep -v SmartMet::Engine:: ; \
-		then rm -v $(LIBFILE); \
-		exit 1; \
-	fi
+#@echo Checking $(LIBFILE) for unresolved references
+#@if ldd -r $(LIBFILE) 2>&1 | c++filt | grep ^undefined\ symbol | grep -v SmartMet::Engine:: ; \
+#	then rm -v $(LIBFILE); \
+#	exit 1; \
+#fi
 
 clean: 
 	rm -f $(LIBFILE) *~ $(SUBNAME)/*~
@@ -74,10 +76,13 @@ test:
 objdir:
 	@mkdir -p $(objdir)
 
+# Forcibly lower RPM_BUILD_NCPUs in CircleCI cloud(but not on local builds)
+RPMBUILD=$(shell test "$$CIRCLE_BUILD_NUM" && echo RPM_BUILD_NCPUS=2 rpmbuild || echo rpmbuild)
+
 rpm: clean $(SPEC).spec
 	rm -f $(SPEC).tar.gz # Clean a possible leftover from previous attempt
 	tar -czvf $(SPEC).tar.gz --exclude test --exclude-vcs --transform "s,^,$(SPEC)/," *
-	rpmbuild -tb $(SPEC).tar.gz
+	$(RPMBUILD) -tb $(SPEC).tar.gz
 	rm -f $(SPEC).tar.gz
 
 .SUFFIXES: $(SUFFIXES) .cpp

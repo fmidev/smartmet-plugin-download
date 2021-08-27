@@ -35,8 +35,9 @@ namespace Download
 {
 NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
-                               const Producer &producer)
-    : DataStreamer(req, config, producer),
+                               const Producer &producer,
+                               const ReqParams &reqParams)
+    : DataStreamer(req, config, producer, reqParams),
       itsError(NcError::verbose_nonfatal),
       itsFilename(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) +
                   "_" + boost::lexical_cast<string>(boost::this_thread::get_id())),
@@ -59,7 +60,7 @@ void NetCdfStreamer::requireNcFile()
     return;
 
   itsFile.reset(
-      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Netcdf4Classic));
+      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
 }
 
 // ----------------------------------------------------------------------
@@ -98,7 +99,6 @@ std::string NetCdfStreamer::getChunk()
 
           // Then outputting the file/data in chunks
 
-          requireNcFile();
           itsFile->close();
 
           itsStream.open(itsFilename, ifstream::in | ifstream::binary);
@@ -160,7 +160,6 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSi
 {
   try
   {
-    requireNcFile();
     auto dim = boost::shared_ptr<NcDim>(itsFile->add_dim(dimName.c_str(), dimSize), dimDeleter);
 
     if (dim)
@@ -184,14 +183,18 @@ void varDeleter(NcVar * /* var */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(
-    string varName, NcType dataType, NcDim *dim1, NcDim *dim2, NcDim *dim3, NcDim *dim4)
+boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(string varName,
+                                                     NcType dataType,
+                                                     NcDim *dim1,
+                                                     NcDim *dim2,
+                                                     NcDim *dim3,
+                                                     NcDim *dim4,
+                                                     NcDim *dim5)
 {
   try
   {
-    requireNcFile();
     auto var = boost::shared_ptr<NcVar>(
-        itsFile->add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4), varDeleter);
+        itsFile->add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4, dim5), varDeleter);
 
     if (var)
       return var;
@@ -259,6 +262,20 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
   }
 }
 
+template <typename T1, typename T2>
+void NetCdfStreamer::addAttribute(T1 resource, string attrName, int nValues, T2 *attrValues)
+{
+  try
+  {
+    if (!((resource)->add_att(attrName.c_str(), nValues, attrValues)))
+      throw Fmi::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Get time offset as number of timesteps of given length
@@ -294,8 +311,7 @@ int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
       return t1.date().year() - t2.date().year();
     }
 
-    throw Fmi::Exception(BCP,
-                           "Invalid time step length " + boost::lexical_cast<string>(timeStep));
+    throw Fmi::Exception(BCP, "Invalid time step length " + boost::lexical_cast<string>(timeStep));
   }
   catch (...)
   {
@@ -351,8 +367,8 @@ void NetCdfStreamer::addTimeDimension()
     }
     else
       throw Fmi::Exception(BCP,
-                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                                 " for producer '" + itsReqParams.producer + "'");
+                           "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                               " for producer '" + itsReqParams.producer + "'");
 
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
@@ -365,11 +381,11 @@ void NetCdfStreamer::addTimeDimension()
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
         throw Fmi::Exception(BCP,
-                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                                   boost::lexical_cast<string>(times[timeSize - 1]) +
-                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
-                                   " timestep " + boost::lexical_cast<string>(timeStep) +
-                                   ") for producer '" + itsReqParams.producer + "'");
+                             "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
+                                 boost::lexical_cast<string>(times[timeSize - 1]) + " (validtime " +
+                                 Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
+                                 boost::lexical_cast<string>(timeStep) + ") for producer '" +
+                                 itsReqParams.producer + "'");
 
       times[timeSize] = period;
     }
@@ -436,6 +452,37 @@ string getPeriodName(long periodLengthInMinutes)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Add ensemble dimension
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::addEnsembleDimension()
+{
+  try
+  {
+    // Create dimension only if ensembe is applicable
+
+    if (itsGridMetaData.gridEnsemble < 0)
+      return;
+
+    auto ensembleVar =
+        addCoordVariable("ensemble", 1, ncShort, "ensemble", "", "Ensemble", itsEnsembleDim);
+    //      addCoordVariable("ensemble", 1, ncShort, "realization", "", "E", itsEnsembleDim);
+
+    addAttribute(ensembleVar, "long_name", "Ensemble");
+
+    if (!ensembleVar->put(&itsGridMetaData.gridEnsemble, 1))
+      throw Fmi::Exception(BCP, "Failed to store ensemble");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Add time period length specific time dimension
  *		by copying the 'time' dimension
  */
@@ -454,7 +501,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
     int times[itsTimeDim->size()];
     itsTimeVar->get(times, itsTimeDim->size());
 
-    if (!itsTimeVar->put(times, itsTimeDim->size()))
+    if (!tVar->put(times, itsTimeDim->size()))
       throw Fmi::Exception(BCP, "Failed to store validtimes");
 
     addAttribute(tVar, "long_name", "time");
@@ -576,6 +623,29 @@ void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set rotated latlon projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &crsVar)
+{
+  try
+  {
+    // Note: grid north pole longitude (0 +) 180 works for longitude 0 atleast
+
+    addAttribute(crsVar, "grid_mapping_name", "rotated_latitude_longitude");
+    addAttribute(crsVar, "grid_north_pole_latitude", 0 - itsGridMetaData.southernPoleLat);
+    addAttribute(crsVar, "grid_north_pole_longitude", itsGridMetaData.southernPoleLon + 180);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set stereographic projection metadata
  *
  */
@@ -618,6 +688,103 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set mercator projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar)
+{
+  try
+  {
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if (!geometrySRS)
+      throw Fmi::Exception(BCP, "SRS is not set");
+
+    double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
+
+    addAttribute(crsVar, "grid_mapping_name", "mercator");
+    addAttribute(crsVar, "longitude_of_projection_origin", lon_0);
+
+    if (geometrySRS->FindProjParm(SRS_PP_STANDARD_PARALLEL_1) >= 0)
+    {
+      double lat_ts = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
+      addAttribute(crsVar, "standard_parallel", lat_ts);
+    }
+    else
+    {
+      double scale_factor = getProjParam(*geometrySRS, SRS_PP_SCALE_FACTOR);
+      addAttribute(crsVar, "scale_factor_at_projection_origin", scale_factor);
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set lcc projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar)
+{
+  try
+  {
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if (!geometrySRS)
+      throw Fmi::Exception(BCP, "SRS is not set");
+
+    double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
+    double lat_0 = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
+    double latin1 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
+
+    addAttribute(crsVar, "grid_mapping_name", "lambert_conformal_conic");
+    addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
+    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
+
+    if (EQUAL(itsGridMetaData.projection.c_str(), SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
+    {
+      // http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html
+      // #table-grid-mapping-attributes
+      //
+      // .. with the additional convention that the standard parallel nearest the pole
+      // (N or S) is provided first
+
+      double latin2 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_2);
+      double sp1 = latin1, sp2 = latin2;
+
+      if (((latin1 >= 0) && (latin2 >= 0) && (latin1 < latin2)) ||
+          ((latin1 <= 0) && (latin2 <= 0) && (latin1 > latin2)))
+      {
+        sp1 = latin2;
+        sp2 = latin1;
+      }
+
+      double sp[] = {sp1, sp2};
+
+      addAttribute(crsVar, "standard_parallel", 2, sp);
+    }
+    else
+      addAttribute(crsVar, "standard_parallel", latin1);
+
+    addAttribute(crsVar, "grid_mapping_name", "lambert_conformal_conic");
+    addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
+    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set metadata
  *
  */
@@ -629,7 +796,6 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    requireNcFile();
     addAttribute(itsFile.get(), "Conventions", "CF-1.6");
     addAttribute(itsFile.get(), "title", "<title>");
     addAttribute(itsFile.get(), "institution", "fmi.fi");
@@ -805,6 +971,221 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   }
 }
 
+void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
+{
+  try
+  {
+    // Conventions
+
+    addAttribute(itsFile.get(), "Conventions", "CF-1.6");
+    addAttribute(itsFile.get(), "title", "<title>");
+    addAttribute(itsFile.get(), "institution", "fmi.fi");
+    addAttribute(itsFile.get(), "source", "<producer>");
+
+    // Ensemble dimension
+
+    addEnsembleDimension();
+
+    // Time dimension
+
+    addTimeDimension();
+
+    // Level dimension
+
+    addLevelDimension();
+
+    // Set projection
+
+    auto crsVar = addVariable("crs", ncShort);
+
+    addAttribute(crsVar, "crs_wkt", itsGridMetaData.crs.c_str());
+
+    switch (itsGridMetaData.projType)
+    {
+      case T::GridProjectionValue::LatLon:
+        setLatLonGeometry(nullptr, crsVar);
+        break;
+      case T::GridProjectionValue::RotatedLatLon:
+        setRotatedLatlonGeometry(crsVar);
+        break;
+      case T::GridProjectionValue::PolarStereographic:
+        setStereographicGeometry(nullptr, crsVar);
+        break;
+      case T::GridProjectionValue::Mercator:
+        setMercatorGeometry(crsVar);
+        break;
+      case T::GridProjectionValue::LambertConformal:
+        setLambertConformalGeometry(crsVar);
+        break;
+      default:
+        throw Fmi::Exception(BCP, "Unsupported projection in input data");
+    }
+
+    // Store y/x and/or lat/lon dimensions and coordinate variables
+
+    bool projected = ((itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
+                      (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon));
+
+    size_t x0 = 0, y0 = 0;
+    size_t xN = itsReqGridSizeX, yN = itsReqGridSizeY;
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
+    size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
+           nLon = (projected ? (itsNY * itsNX) : itsNX);
+    std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
+    double *lat = latPtr.get(), *lon = lonPtr.get();
+
+    boost::shared_ptr<NcVar> latVar, lonVar;
+
+    auto coords = gridQuery.mQueryParameterList.front().mCoordinates;
+
+    if (coords.size() != (itsReqGridSizeX * itsReqGridSizeY))
+      throw Fmi::Exception(BCP,
+                           "Number of coordinates (" + Fmi::to_string(coords.size()) +
+                               ") and grid size (" + Fmi::to_string(itsReqGridSizeX) + "/" +
+                               Fmi::to_string(itsReqGridSizeY) + ") mismatch");
+
+    if (projected)
+    {
+      // Store y, x and 2d (y,x) lat/lon coordinates.
+      //
+      // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
+      // 2011):
+      //
+      //	 "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and lev(k).
+      //	  The vertical coordinate is represented by the coordinate variable lev(lev) and
+      //	  the latitude and longitude coordinates are represented by the auxiliary coordinate
+      //	  variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates
+      //	  attribute.
+      //
+      //	  Note that coordinate variables are also defined for the xc and yc dimensions. This
+      //	  faciliates processing of this data by generic applications that don't recognize
+      //	  the multidimensional latitude and longitude coordinates."
+
+      auto inputSRS = itsResources.getGeometrySRS();
+      OGRSpatialReference llSRS;
+      llSRS.CopyGeogCSFrom(inputSRS);
+
+      OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(&llSRS, inputSRS);
+
+      double xc[] = {coords[0].x(), coords[coords.size() - 1].x()};
+      double yc[] = {coords[0].y(), coords[coords.size() - 1].y()};
+      int pabSuccess[2];
+
+      int status = ct->Transform(2, xc, yc, nullptr, pabSuccess);
+
+      if (!(status && pabSuccess[0] && pabSuccess[1]))
+        throw Fmi::Exception(BCP, "Failed to transform llbbox to bbox: " + itsGridMetaData.crs);
+
+      auto yVar =
+          addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);
+      auto xVar =
+          addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", itsXDim);
+
+      NFmiPoint p0(xc[0], yc[0]);
+      NFmiPoint pN(xc[1], yc[1]);
+
+      double worldY[itsNY], worldX[itsNX];
+      double wY = p0.Y(), wX = p0.X();
+      double stepY = yStep * ((itsNY > 1) ? ((pN.Y() - p0.Y()) / (yN - y0 - 1)) : 0.0);
+      double stepX = xStep * ((itsNX > 1) ? ((pN.X() - p0.X()) / (xN - x0 - 1)) : 0.0);
+
+      for (y = 0; (y < itsNY); wY += stepY, y++)
+        worldY[y] = wY;
+      for (x = 0; (x < itsNX); wX += stepX, x++)
+        worldX[x] = wX;
+
+      if (!yVar->put(worldY, itsNY))
+        throw Fmi::Exception(BCP, "Failed to store y -coordinates");
+
+      if (!xVar->put(worldX, itsNX))
+        throw Fmi::Exception(BCP, "Failed to store x -coordinates");
+
+      latVar = addVariable("lat", ncFloat, &(*itsYDim), &(*itsXDim));
+      lonVar = addVariable("lon", ncFloat, &(*itsYDim), &(*itsXDim));
+
+      addAttribute(latVar, "standard_name", "latitude");
+      addAttribute(latVar, "units", "degrees_north");
+      addAttribute(lonVar, "standard_name", "longitude");
+      addAttribute(lonVar, "units", "degrees_east");
+
+      for (y = 0, n = 0; (y < yN); y += yStep)
+        for (x = 0; (x < xN); x += xStep, n++)
+        {
+          auto c = (y * xN) + x;
+          const NFmiPoint p(coords[c].x(), coords[c].y());
+
+          lat[n] = p.Y();
+          lon[n] = p.X();
+        }
+
+      if (!latVar->put(lat, itsNY, itsNX))
+        throw Fmi::Exception(BCP, "Failed to store latitude(y,x) coordinates");
+      if (!lonVar->put(lon, itsNY, itsNX))
+        throw Fmi::Exception(BCP, "Failed to store longitude(y,x) coordinates");
+    }
+    else
+    {
+      // latlon or rotlatlon, grid defined as cartesian product of latitude and longitude axes
+
+      auto latCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                          ? "latitude"
+                          : "grid_latitude";
+      auto latUnit = (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ? "degrees_north"
+                                                                                  : "degrees";
+      auto lonCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                          ? "longitude"
+                          : "grid_longitude";
+      auto lonUnit =
+          (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ? "degrees_east" : "degrees";
+
+      latVar = addCoordVariable("lat", itsNY, ncFloat, latCoord, latUnit, "Lat", itsLatDim);
+      lonVar = addCoordVariable("lon", itsNX, ncFloat, lonCoord, lonUnit, "Lon", itsLonDim);
+
+      if (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+      {
+        for (y = 0, n = 0; (y < yN); y += yStep, n++)
+          lat[n] = coords[y * xN].y();
+
+        for (x = 0, n = 0; (x < xN); x += xStep, n++)
+          lon[n] = coords[x].x();
+      }
+      else
+      {
+        auto rotLat = itsGridMetaData.rotLatitudes.get();
+        auto rotLon = itsGridMetaData.rotLongitudes.get();
+
+        for (y = 0, n = 0; (y < yN); y += yStep, n++)
+          lat[n] = rotLat[y * xN];
+
+        for (x = 0, n = 0; (x < xN); x += xStep, n++)
+          lon[n] = rotLon[x];
+      }
+
+      if (!latVar->put(lat, itsNY))
+        throw Fmi::Exception(BCP, "Failed to store latitude coordinates");
+
+      if (!lonVar->put(lon, itsNX))
+        throw Fmi::Exception(BCP, "Failed to store longitude coordinates");
+    }
+
+    addAttribute(latVar, "long_name", "latitude");
+    addAttribute(lonVar, "long_name", "longitude");
+
+    if (itsGridMetaData.flatteningStr.size() > 0)
+    {
+      addAttribute(crsVar, "semi_major", itsGridMetaData.earthRadiusOrSemiMajorInMeters);
+      addAttribute(crsVar, "inverse_flattening", *itsGridMetaData.flattening);
+    }
+    else
+      addAttribute(crsVar, "earth_radius", itsGridMetaData.earthRadiusOrSemiMajorInMeters);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Get time period start time
@@ -877,7 +1258,6 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     timeDimName = "time_" + pName;
 
-    requireNcFile();
     boost::shared_ptr<NcDim> tDim(itsFile->get_dim(timeDimName.c_str()), dimDeleter);
 
     if (tDim)
@@ -949,10 +1329,13 @@ void NetCdfStreamer::addParameters(bool relative_uv)
     NcDim &yOrLat = (itsYDim ? *itsYDim : *itsLatDim);
     NcDim &xOrLon = (itsYDim ? *itsXDim : *itsLonDim);
 
-    NcDim *dim1;                                            // Time dimension
-    NcDim *dim2 = itsLevelDim ? &(*itsLevelDim) : &yOrLat;  // Level or Y/lat dimension
-    NcDim *dim3 = itsLevelDim ? &yOrLat : &xOrLon;          // Y/lat or X/lon dimension
-    NcDim *dim4 = itsLevelDim ? &xOrLon : nullptr;          // X dimension or n/a
+    NcDim *dimensions[] = {
+        itsEnsembleDim ? &(*itsEnsembleDim) : nullptr,  // Ensemble
+        nullptr,                                        // Time dimension
+        itsLevelDim ? &(*itsLevelDim) : &yOrLat,        // Level or Y/lat
+        itsLevelDim ? &yOrLat : &xOrLon,                // Y/lat or X/lon dimension
+        itsLevelDim ? &xOrLon : nullptr                 // X dimension or n/a
+    };
 
     boost::shared_ptr<NcDim> tDim;
 
@@ -963,7 +1346,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
       string paramName, stdName, longName, unit, timeDimName = "time";
       size_t i, j;
 
-      dim1 = &(*itsTimeDim);
+      dimensions[1] = &(*itsTimeDim);
 
       signed long usedParId = theParam.GetIdent();
 
@@ -976,8 +1359,8 @@ void NetCdfStreamer::addParameters(bool relative_uv)
             j = i + 1;
           else
             throw Fmi::Exception(BCP,
-                                   "Missing gridrelative configuration for parameter " +
-                                       boost::lexical_cast<string>(usedParId));
+                                 "Missing gridrelative configuration for parameter " +
+                                     boost::lexical_cast<string>(usedParId));
         }
 
       if ((i >= pTable.size()) && (j > 0))
@@ -999,21 +1382,37 @@ void NetCdfStreamer::addParameters(bool relative_uv)
                                    ? pTable[i].itsPeriodLengthMinutes
                                    : itsDataTimeStep,
                                timeDimName);
-          dim1 = &(*tDim);
+          dimensions[1] = &(*tDim);
         }
       }
       else
         paramName = theParam.GetName();
+
+      NcDim **dim = dimensions;
+
+      if (!itsEnsembleDim)
+        dim++;
+
+      NcDim *dim1 = *(dim++);
+      NcDim *dim2 = *(dim++);
+      NcDim *dim3 = *(dim++);
+      NcDim *dim4 = *(dim++);
+      NcDim *dim5 = (itsEnsembleDim ? *dim : nullptr);
 
       auto dataVar = addVariable(paramName + "_" + boost::lexical_cast<string>(usedParId),
                                  ncFloat,
                                  dim1,
                                  dim2,
                                  dim3,
-                                 dim4);
+                                 dim4,
+                                 dim5);
+
+      float missingValue =
+          (itsReqParams.dataSource == QueryData) ? kFloatMissing : gribMissingValue;
+
       addAttribute(dataVar, "units", unit.c_str());
-      addAttribute(dataVar, "_FillValue", kFloatMissing);
-      addAttribute(dataVar, "missing_value", kFloatMissing);
+      addAttribute(dataVar, "_FillValue", missingValue);
+      addAttribute(dataVar, "missing_value", missingValue);
       addAttribute(dataVar, "grid_mapping", "crs");
 
       if (!stdName.empty())
@@ -1068,36 +1467,92 @@ void NetCdfStreamer::storeParamValues()
 
     int i = 0;
 
-    for (y = y0; (y < yN); y += yStep)
-      for (x = x0; (x < xN); x += xStep, i++)
-      {
-        auto value = itsGridValues[x][y];
+    if (itsReqParams.dataSource == QueryData)
+    {
+      for (y = y0; (y < yN); y += yStep)
+        for (x = x0; (x < xN); x += xStep, i++)
+        {
+          auto value = itsGridValues[x][y];
 
-        if (value != kFloatMissing)
-          values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
-        else
-          values[i] = value;
-      }
+          if (value != kFloatMissing)
+            values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
+          else
+            values[i] = value;
+        }
+    }
+    else
+    {
+      auto dataValues = itsGridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
+
+      for (y = y0; (y < yN); y += yStep)
+        for (x = x0; (x < xN); x += xStep, i++)
+        {
+          auto c = (y * xN) + x;
+          auto value = dataValues[c];
+
+          if (value != ParamValueMissing)
+            values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
+          else
+            values[i] = gribMissingValue;
+        }
+    }
 
     // Store the values for current parameter/[level/]validtime.
     //
     // First skip variables for missing parameters if any.
     //
-    // Note: timeIndex was incremented after getting the data
+    // Note: with querydata timeIndex was incremented after getting the data
+    //       and ensemble dimension is not used
+
+    auto timeIndex = itsTimeIndex - ((itsReqParams.dataSource == QueryData) ? 1 : 0);
 
     if ((itsVarIterator == itsDataVars.begin()) && (itsParamIterator != itsDataParams.begin()))
       for (auto it_p = itsDataParams.begin(); (it_p != itsParamIterator); it_p++)
+      {
         itsVarIterator++;
 
-    if (!(*itsVarIterator)->set_cur(itsTimeIndex - 1, itsLevelDim ? itsLevelIndex : -1))
-      throw Fmi::Exception(BCP, "Failed to set active netcdf time/level");
+        if (itsVarIterator == itsDataVars.end())
+          throw Fmi::Exception(BCP, "storeParamValues: internal: No more netcdf variables");
+      }
 
-    long edge1 = 1;                            // Time dimension, edge length 1
-    long edge2 = itsLevelDim ? 1 : itsNY;      // Level (edge length 1) or Y dimension
-    long edge3 = itsLevelDim ? itsNY : itsNX;  // Y or X dimension
-    long edge4 = itsLevelDim ? itsNX : -1;     // X dimension or n/a
+    long nX = (long)itsNX, nY = (long)itsNY;
+    long edgeLengths[] = {
+        1,                      // Ensemble dimension, edge length 1
+        1,                      // Time dimension, edge length 1
+        itsLevelDim ? 1 : nY,   // Level (edge length 1) or Y dimension
+        itsLevelDim ? nY : nX,  // Y or X dimension
+        itsLevelDim ? nX : -1   // X dimension or n/a
+    };
+    long *edge = edgeLengths;
+    uint nEdges = (itsLevelDim ? 5 : 4);
 
-    if (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4))
+    if (!itsEnsembleDim)
+    {
+      if (!(*itsVarIterator)->set_cur(timeIndex, itsLevelDim ? itsLevelIndex : -1))
+        throw Fmi::Exception(BCP, "Failed to set active netcdf time/level");
+
+      edge++;
+      nEdges--;
+    }
+    else if (!(*itsVarIterator)->set_cur(0, timeIndex, itsLevelDim ? itsLevelIndex : -1))
+      throw Fmi::Exception(BCP, "Failed to set active netcdf ensemble/time/level");
+
+    long edge1 = *(edge++);
+    long edge2 = *(edge++);
+    long edge3 = *(edge++);
+    long edge4 = *(edge++);
+    long edge5 = (itsEnsembleDim ? *edge : -1);
+
+    // It seems there can be at max 1 missing (-1) edge at the end of parameter edges
+    //
+    // e.g.
+    // n,n,n and n,n,n,-1 are both valid for surface data without ensemble
+    // n,n,n,n and n,n,n,n,-1 are both valid (level data without ensemble or surface data with it)
+
+    if (((nEdges == 3) && (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3))) ||
+        ((nEdges == 4) && (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4))) ||
+        ((nEdges == 5) &&
+         (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4, edge5))))
       throw Fmi::Exception(BCP, "Failed to store netcdf variable values");
   }
   catch (...)
@@ -1157,14 +1612,61 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
     if (itsMetaFlag)
     {
       // NcFile metadata generation is not thread safe
+
       Spine::WriteLock lock(myFileOpenMutex);
 
+      requireNcFile();
+
       // Set geometry and dimensions
+
       setGeometry(q, area, grid);
 
       // Add parameters
 
       addParameters(q->isRelativeUV());
+
+      itsMetaFlag = false;
+    }
+
+    // Data is loaded from 'values'; set nonempty chunk to indicate data is available.
+
+    chunk = " ";
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Load chunk of grid data; called by DataStreamer to get format specific chunk.
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
+                                      int,
+                                      const NFmiMetTime &,
+                                      string &chunk)
+{
+  try
+  {
+    if (itsMetaFlag)
+    {
+      // NcFile metadata generation is not thread safe
+
+      Spine::WriteLock lock(myFileOpenMutex);
+
+      requireNcFile();
+
+      // Set geometry and dimensions
+
+      setGridGeometry(gridQuery);
+
+      // Add parameters
+
+      addParameters(false);
 
       itsMetaFlag = false;
     }

@@ -7,22 +7,23 @@
 #include "GribStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-#include "boost/date_time/gregorian/gregorian.hpp"
+#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/foreach.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <fmt/format.h>
 #include <gis/ProjInfo.h>
 #include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
+#include <newbase/NFmiRotatedLatLonArea.h>
+#include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiTimeList.h>
 #include <sys/types.h>
 #include <string>
 #include <unistd.h>
-
-static const long gribMissingValue = 9999;
 
 using namespace std;
 
@@ -41,9 +42,8 @@ boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *para
 GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
                            const Producer &producer,
-                           OutputFormat outputFormat,
-                           unsigned int grib2TablesVersion)
-    : DataStreamer(req, config, producer), itsGrib1Flag(outputFormat == Grib1)
+                           const ReqParams &reqParams)
+    : DataStreamer(req, config, producer, reqParams), itsGrib1Flag(reqParams.outputFormat == Grib1)
 {
   try
   {
@@ -57,8 +57,9 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
 
     // Set tables version for grib2
 
-    if (grib2TablesVersion > 0)
-      gset(itsGribHandle, "gribMasterTablesVersionNumber", (unsigned long)grib2TablesVersion);
+    if (reqParams.grib2TablesVersion > 0)
+      gset(itsGribHandle,
+             "gribMasterTablesVersionNumber", (unsigned long)reqParams.grib2TablesVersion);
   }
   catch (...)
   {
@@ -168,9 +169,9 @@ void GribStreamer::setLatlonGeometryToGrib() const
     gset(itsGribHandle, "Nj", itsNY);
 
     double gridCellHeightInDegrees =
-        (itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1);
+        fabs((itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1));
     double gridCellWidthInDegrees =
-        (itsBoundingBox.topRight.X() - itsBoundingBox.bottomLeft.X()) / (itsNX - 1);
+        fabs((itsBoundingBox.topRight.X() - itsBoundingBox.bottomLeft.X()) / (itsNX - 1));
 
     long iNegative, jPositive;
 
@@ -197,51 +198,60 @@ void GribStreamer::setLatlonGeometryToGrib() const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
+void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *area) const
 {
   try
   {
-    if (itsResources.getGeometrySRS())
-      throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
+    if (itsReqParams.dataSource == QueryData)
+    {
+      if (itsResources.getGeometrySRS())
+        throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
-    BBoxCorners rotLLBBox;
+      BBoxCorners rotLLBBox;
+
 #ifdef WGS84
+      auto opt_plat = area->ProjInfo().getDouble("o_lat_p");
+      auto opt_plon = area->ProjInfo().getDouble("o_lon_p");
 
-    auto opt_plat = area->ProjInfo().getDouble("o_lat_p");
-    auto opt_plon = area->ProjInfo().getDouble("o_lon_p");
+      if (*opt_plon != 0)
+        throw Fmi::Exception(
+            BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
 
-    if (*opt_plon != 0)
-      throw Fmi::Exception(
-          BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
+      double slon = *opt_plon;
+      double slat = -(*opt_plat);
 
-    double slon = *opt_plon;
-    double slat = -(*opt_plat);
+      auto fmisphere = fmt::format(
+          "+proj=latlong +R={:.0f} +over +towgs84=0,0,0 +no_defs", kRearth);
 
-    auto fmisphere = fmt::format("+proj=latlong +R={:.0f} +over +towgs84=0,0,0 +no_defs", kRearth);
+      auto rotatedsphere = fmt::format(
+          "+to_meter=.0174532925199433 +proj=ob_tran +o_proj=latlong +o_lon_p={} +o_lat_p={} "
+          "+R={:.0f} +over +towgs84=0,0,0 +no_defs",
+          *opt_plon,
+          *opt_plat,
+          kRearth);
 
-    auto rotatedsphere = fmt::format(
-        "+to_meter=.0174532925199433 +proj=ob_tran +o_proj=latlong +o_lon_p={} +o_lat_p={} "
-        "+R={:.0f} +over +towgs84=0,0,0 +no_defs",
-        *opt_plon,
-        *opt_plat,
-        kRearth);
+      std::unique_ptr<NFmiArea> rotatedarea(NFmiArea::CreateFromCorners(
+          fmisphere, rotatedsphere, itsBoundingBox.bottomLeft, itsBoundingBox.topRight));
 
-    std::unique_ptr<NFmiArea> rotatedarea(NFmiArea::CreateFromCorners(
-        fmisphere, rotatedsphere, itsBoundingBox.bottomLeft, itsBoundingBox.topRight));
-
-    rotLLBBox.bottomLeft = rotatedarea->LatLonToWorldXY(itsBoundingBox.bottomLeft);
-    rotLLBBox.topRight = rotatedarea->LatLonToWorldXY(itsBoundingBox.topRight);
-
+      rotLLBBox.bottomLeft = rotatedarea->LatLonToWorldXY(itsBoundingBox.bottomLeft);
+      rotLLBBox.topRight = rotatedarea->LatLonToWorldXY(itsBoundingBox.topRight);
 #else
-    const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
+      const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
 
-    double slon = a.SouthernPole().X();
-    double slat = a.SouthernPole().Y());
+      double slon = a.SouthernPole().X();
+      double slat = a.SouthernPole().Y();
 
-    rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
-    rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
-
+      rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
+      rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
 #endif
+    }
+    else
+    {
+      slon = itsGridMetaData.southernPoleLon;
+      slat = itsGridMetaData.southernPoleLat;
+
+      rotLLBBox = *(itsGridMetaData.targetBBox);
+    }
 
     if (slon)
       throw Fmi::Exception(
@@ -274,6 +284,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
     gset(itsGribHandle, "iDirectionIncrementInDegrees", gridCellWidthInDegrees);
     gset(itsGribHandle, "jDirectionIncrementInDegrees", gridCellHeightInDegrees);
 
+    // DUMP(itsGribHandle, "geography");
   }
   catch (...)
   {
@@ -306,7 +317,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
+void GribStreamer::setStereographicGeometryToGrib(const NFmiStereographicArea *area) const
 {
   try
   {
@@ -325,8 +336,8 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
     gset(itsGribHandle, "Ni", itsNX);
     gset(itsGribHandle, "Nj", itsNY);
 
-    gset(itsGribHandle, "DxInMetres", itsDX);
-    gset(itsGribHandle, "DyInMetres", itsDY);
+    gset(itsGribHandle, "DxInMetres", fabs(itsDX));
+    gset(itsGribHandle, "DyInMetres", fabs(itsDY));
 
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     double lon_0, lat_0, lat_ts;
@@ -394,17 +405,29 @@ void GribStreamer::setMercatorGeometryToGrib() const
   {
     gset(itsGribHandle, "typeOfGrid", "mercator");
 
-    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
+    // Note: grib2 longitude 0-360
+
+    double lon = itsBoundingBox.bottomLeft.X();
+
+    if ((!itsGrib1Flag) && (lon < 0))
+      lon += 360;
+
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", lon);
     gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
 
-    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
+    lon = itsBoundingBox.topRight.X();
+
+    if ((!itsGrib1Flag) && (lon < 0))
+      lon += 360;
+
+    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", lon);
     gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
 
     gset(itsGribHandle, "Ni", itsNX);
     gset(itsGribHandle, "Nj", itsNY);
 
-    gset(itsGribHandle, "DiInMetres", itsDX);
-    gset(itsGribHandle, "DjInMetres", itsDY);
+    gset(itsGribHandle, "DiInMetres", fabs(itsDX));
+    gset(itsGribHandle, "DjInMetres", fabs(itsDY));
 
     long iNegative, jPositive;
 
@@ -413,13 +436,163 @@ void GribStreamer::setMercatorGeometryToGrib() const
     gset(itsGribHandle, "jScansPositively", jPositive);
     gset(itsGribHandle, "iScansNegatively", iNegative);
 
-    double lon_0 = 0;
-    double lat_ts = 0;
+    double lon_0 = 0, lat_ts = 0;
+
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if (geometrySRS)
+    {
+      lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
+
+      if ((!itsGrib1Flag) && (lon_0 < 0))
+        lon_0 += 360;
+
+      if (EQUAL(itsGridMetaData.projection.c_str(), SRS_PT_MERCATOR_2SP))
+      {
+        lat_ts = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
+      }
+    }
 
     gset(itsGribHandle, "orientationOfTheGridInDegrees", lon_0);
     gset(itsGribHandle, "LaDInDegrees", lat_ts);
 
     // DUMP(itsGribHandle,"geography");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set grib lambert conformal projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::setLambertConformalGeometryToGrib() const
+{
+  try
+  {
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if (!geometrySRS)
+      throw Fmi::Exception(BCP, "SRS is not set");
+
+    gset(itsGribHandle, "typeOfGrid", "lambert");
+
+    // Note: grib2 longitude 0-360
+
+    double lon = itsBoundingBox.bottomLeft.X();
+
+    if ((!itsGrib1Flag) && (lon < 0))
+      lon += 360;
+
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", lon);
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+
+    gset(itsGribHandle, "Nx", itsNX);
+    gset(itsGribHandle, "Ny", itsNY);
+
+    gset(itsGribHandle, "DxInMetres", fabs(itsDX));
+    gset(itsGribHandle, "DyInMetres", fabs(itsDY));
+
+    long iNegative, jPositive;
+
+    scanningDirections(iNegative, jPositive);
+
+    gset(itsGribHandle, "jScansPositively", jPositive);
+    gset(itsGribHandle, "iScansNegatively", iNegative);
+
+    double southPoleLon = 0;
+    double southPoleLat = -90;
+
+    gset(itsGribHandle, "longitudeOfSouthernPoleInDegrees", southPoleLon);
+    gset(itsGribHandle, "latitudeOfSouthernPoleInDegrees", southPoleLat);
+
+    double lat_ts = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
+    double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
+
+    if ((!itsGrib1Flag) && (lon_0 < 0))
+      lon_0 += 360;
+
+    gset(itsGribHandle, "LaDInDegrees", lat_ts);
+    gset(itsGribHandle, "LoVInDegrees", lon_0);
+
+    double latin1 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
+    double latin2;
+
+    if (EQUAL(itsGridMetaData.projection.c_str(), SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
+      latin2 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_2);
+    else
+      latin2 = latin1;
+
+    gset(itsGribHandle, "Latin1InDegrees", latin1);
+    gset(itsGribHandle, "Latin2InDegrees", latin2);
+
+    // DUMP(itsGribHandle,"geography");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set grib lambert equal area projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::setLambertAzimuthalEqualAreaGeometryToGrib() const
+{
+  try
+  {
+    if (itsGrib1Flag)
+      throw Fmi::Exception(BCP, "LAEA is not supported in grib1 format");
+
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if (!geometrySRS)
+      throw Fmi::Exception(BCP, "SRS is not set");
+
+    gset(itsGribHandle, "typeOfGrid", "lambert_azimuthal_equal_area");
+
+    // Note: grib2 longitude 0-360
+
+    double lon = itsBoundingBox.bottomLeft.X();
+
+    if ((!itsGrib1Flag) && (lon < 0))
+      lon += 360;
+
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", lon);
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+
+    gset(itsGribHandle, "Nx", itsNX);
+    gset(itsGribHandle, "Ny", itsNY);
+
+    gset(itsGribHandle, "DxInMetres", fabs(itsDX));
+    gset(itsGribHandle, "DyInMetres", fabs(itsDY));
+
+    long iNegative, jPositive;
+
+    scanningDirections(iNegative, jPositive);
+
+    gset(itsGribHandle, "jScansPositively", jPositive);
+    gset(itsGribHandle, "iScansNegatively", iNegative);
+
+    double lat_ts = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
+    double lon_0 = getProjParam(*geometrySRS, SRS_PP_LONGITUDE_OF_CENTER);
+
+    if ((!itsGrib1Flag) && (lon_0 < 0))
+      lon_0 += 360;
+
+    gset(itsGribHandle, "standardParallelInDegrees", lat_ts);
+    gset(itsGribHandle, "centralLongitudeInDegrees", lon_0);
+
+    DUMP(itsGribHandle, "geography");
   }
   catch (...)
   {
@@ -493,10 +666,10 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
         setLatlonGeometryToGrib();
         break;
       case kNFmiRotatedLatLonArea:
-        setRotatedLatlonGeometryToGrib(area);
+        setRotatedLatlonGeometryToGrib(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
         break;
       case kNFmiStereographicArea:
-        setStereographicGeometryToGrib(area);
+        setStereographicGeometryToGrib(dynamic_cast<const NFmiStereographicArea *>(area));
         break;
       case kNFmiMercatorArea:
         setMercatorGeometryToGrib();
@@ -541,6 +714,162 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
                                  : Datum::Grib2::Sphere::Fmi_6371229m)));
 
     if (relative_uv)
+      resolAndCompFlags |= (1 << 3);
+    else
+      resolAndCompFlags &= ~(1 << 3);
+
+    gset(itsGribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
+
+    // Bitmap to flag missing values
+
+    gset(itsGribHandle, "bitmapPresent", 1);
+    gset(itsGribHandle, "missingValue", gribMissingValue);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set grid origo
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::setGridOrigo(const QueryServer::Query &gridQuery)
+{
+  try
+  {
+    auto rXAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseXDirection");
+
+    if ((!rXAttr) || ((rXAttr->mValue != "0") && (rXAttr->mValue != "1")))
+      throw Fmi::Exception::Trace(BCP,
+                                  "grid.original.reverseXDirection is missing or has unkown value");
+
+    auto rYAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseYDirection");
+
+    if ((!rYAttr) || ((rYAttr->mValue != "0") && (rYAttr->mValue != "1")))
+      throw Fmi::Exception::Trace(
+          BCP, "grid.original.reverseYDirection is missing or has unknown value");
+
+    bool iNegative = (rXAttr->mValue == "1");
+    bool jPositive = (rYAttr->mValue == "0");
+
+    if ((!iNegative) && (!jPositive))
+      itsGridOrigo = kTopLeft;
+    else if (iNegative && (!jPositive))
+      itsGridOrigo = kTopRight;
+    else if ((!iNegative) && jPositive)
+      itsGridOrigo = kBottomLeft;
+    else
+      itsGridOrigo = kBottomRight;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set grid grib projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
+{
+  try
+  {
+    setGridOrigo(gridQuery);
+
+    itsValueArray.resize(itsNX * itsNY);
+
+    switch (itsGridMetaData.projType)
+    {
+      case T::GridProjectionValue::LatLon:
+        setLatlonGeometryToGrib();
+        break;
+      case T::GridProjectionValue::RotatedLatLon:
+        setRotatedLatlonGeometryToGrib(nullptr);
+        break;
+      case T::GridProjectionValue::PolarStereographic:
+        setStereographicGeometryToGrib(nullptr);
+        break;
+      case T::GridProjectionValue::Mercator:
+        setMercatorGeometryToGrib();
+        break;
+      case T::GridProjectionValue::LambertConformal:
+        setLambertConformalGeometryToGrib();
+        break;
+      case T::GridProjectionValue::LambertAzimuthalEqualArea:
+        setLambertAzimuthalEqualAreaGeometryToGrib();
+        break;
+      default:
+        throw Fmi::Exception(BCP, "Unsupported projection in input data");
+    }
+
+    // Set packing type
+
+    if (!itsReqParams.packing.empty())
+      gset(itsGribHandle, "packingType", itsReqParams.packing);
+
+    // Set shape of the earth
+
+    long resolAndCompFlags = get_long(itsGribHandle, "resolutionAndComponentFlags");
+
+    if (itsGrib1Flag)
+    {
+      if (itsGridMetaData.flattening)
+        resolAndCompFlags |= (1 << Datum::Sphere::Grib1::WGS84);
+      else
+        resolAndCompFlags &= ~(1 << Datum::Sphere::Grib1::WGS84);
+    }
+    else
+    {
+      uint8_t shapeOfTheEarth;
+
+      if ((itsGridMetaData.ellipsoid == "WGS 84") ||
+          ((itsGridMetaData.flatteningStr == "298.257223563") &&
+           (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6378137) < 0.01)))
+        shapeOfTheEarth = 5;  // WGS84
+      else if ((itsGridMetaData.ellipsoid == "GRS 80") ||
+               ((itsGridMetaData.flatteningStr == "298.257222101") &&
+                (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6378137) < 0.01)))
+        shapeOfTheEarth = 4;  // IAG-GRS80
+      else if (itsGridMetaData.flattening && (fabs(*itsGridMetaData.flattening - 297) < 0.01) &&
+               (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6378160.0) < 0.01))
+        shapeOfTheEarth = 2;  // IAU in 1965
+      else if (itsGridMetaData.flattening)
+        throw Fmi::Exception(BCP,
+                             string("Unsupported ellipsoid in input data: ") +
+                                 Fmi::to_string(itsGridMetaData.earthRadiusOrSemiMajorInMeters) +
+                                 "," + itsGridMetaData.flatteningStr);
+      else if (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6367470.0) < 0.01)
+        shapeOfTheEarth = 0;
+      else if (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6371229.0) < 0.01)
+        shapeOfTheEarth = 6;
+      else
+      {
+        // Spherical with radius specified by data producer
+
+        shapeOfTheEarth = 1;
+      }
+
+      gset(itsGribHandle, "shapeOfTheEarth", shapeOfTheEarth);
+
+      if (shapeOfTheEarth == 1)
+      {
+        gset(itsGribHandle, "scaleFactorOfRadiusOfSphericalEarth", 0.0);
+        gset(itsGribHandle,
+             "scaledValueOfRadiusOfSphericalEarth",
+             itsGridMetaData.earthRadiusOrSemiMajorInMeters);
+      }
+    }
+
+    if (itsGridMetaData.relativeUV)
       resolAndCompFlags |= (1 << 3);
     else
       resolAndCompFlags &= ~(1 << 3);
@@ -702,8 +1031,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 
       if (timeStep <= 0)
         throw Fmi::Exception(BCP,
-                               "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                                   " for producer '" + itsReqParams.producer + "'");
+                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                 " for producer '" + itsReqParams.producer + "'");
 
       if (pTable[paramIdx].itsPeriodLengthMinutes > 0)
       {
@@ -856,8 +1185,8 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   {
     if (timeStepInMinutes <= 0)
       throw Fmi::Exception(BCP,
-                             "adjustToTimeStep: Invalid data timestep " +
-                                 boost::lexical_cast<string>(timeStepInMinutes));
+                           "adjustToTimeStep: Invalid data timestep " +
+                               boost::lexical_cast<string>(timeStepInMinutes));
 
     if ((timeStepInMinutes == 60) || (timeStepInMinutes == 180) || (timeStepInMinutes == 360) ||
         (timeStepInMinutes == 720))
@@ -966,6 +1295,90 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Copy grid data (one level/param/time grid) into grib buffer
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
+                                       const NFmiMetTime &vTime,
+                                       int level,
+                                       float scale,
+                                       float offset)
+{
+  try
+  {
+    // Set named configuration settings
+
+    setNamedSettingsToGrib();
+
+    // Use first validtime as origintime if it is earlier than the origintime.
+    //
+    // Note: originTime is unset (is_not_a_date_time()) when called for first time instant.
+    //
+    //		 If the actual data origintime is used, adjust it backwards to even data timestep;
+    //		 the output validtimes are set as number of timesteps forwards from the origintime.
+
+    ptime oTime = itsGridMetaData.gridOriginTime, validTime = vTime;
+    bool setOriginTime = (itsOriginTime.is_not_a_date_time() || (itsOriginTime != oTime));
+
+    if (setOriginTime)
+    {
+      // Set origintime
+      //
+      itsOriginTime = oTime;
+      itsGribOriginTime =
+          ((validTime < itsOriginTime) ? validTime
+                                       : adjustToTimeStep(itsOriginTime, itsDataTimeStep));
+    }
+
+    // Set level and parameter. Parameter's index in 'ptable' is returned in paramIdx (needed in
+    // setStep())
+
+    NFmiParam param(itsParamIterator->number());
+    const ParamChangeTable &pTable = itsCfg.getParamChangeTable();
+    size_t paramIdx = pTable.size();
+
+    setLevelAndParameterToGrib(level, param, pTable, paramIdx);
+
+    // Set start and end step and step type (for average, cumulative etc. data)
+
+    setStepToGrib(pTable, paramIdx, setOriginTime, validTime);
+
+    // Load the data, cropping the grid/values it if manual cropping is set
+
+    bool cropxy = (cropping.cropped && cropping.cropMan);
+    size_t x0 = (cropxy ? cropping.bottomLeftX : 0), y0 = (cropxy ? cropping.bottomLeftY : 0);
+    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
+           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
+    int i = 0;
+
+    auto dataValues = gridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
+
+    for (y = y0; (y < yN); y += yStep)
+      for (x = x0; (x < xN); x += xStep, i++)
+      {
+        float value = dataValues[i];
+
+        if (value != ParamValueMissing)
+          itsValueArray[i] = (value + offset) / scale;
+        else
+          itsValueArray[i] = gribMissingValue;
+      }
+
+    grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Add given data values and return complete grib message
  */
 // ----------------------------------------------------------------------
@@ -980,6 +1393,37 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
   try
   {
     addValuesToGrib(q, mt, level, values, scale, offset);
+
+    const void *mesg;
+    size_t mesg_len;
+    grib_get_message(itsGribHandle, &mesg, &mesg_len);
+
+    if (mesg_len == 0)
+      throw Fmi::Exception(BCP, "Empty grib message returned");
+
+    return string((const char *)mesg, mesg_len);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add given grid data values and return complete grib message
+ */
+// ----------------------------------------------------------------------
+
+string GribStreamer::getGridGribMessage(const QueryServer::Query &gridQuery,
+                                        int level,
+                                        const NFmiMetTime &mt,
+                                        float scale,
+                                        float offset)
+{
+  try
+  {
+    addGridValuesToGrib(gridQuery, mt, level, scale, offset);
 
     const void *mesg;
     size_t mesg_len;
@@ -1096,6 +1540,39 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
 
     chunk =
         getGribMessage(q, level, mt, values, itsScalingIterator->first, itsScalingIterator->second);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Load chunk of grid data; called by DataStreamer to get format specific chunk.
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
+                                    int level,
+                                    const NFmiMetTime &mt,
+                                    string &chunk)
+{
+  try
+  {
+    if (itsMetaFlag)
+    {
+      // Set geometry
+      //
+      setGridGeometryToGrib(gridQuery);
+      itsMetaFlag = false;
+    }
+
+    // Build and get grib message
+
+    chunk = getGridGribMessage(
+        gridQuery, level, mt, itsScalingIterator->first, itsScalingIterator->second);
   }
   catch (...)
   {

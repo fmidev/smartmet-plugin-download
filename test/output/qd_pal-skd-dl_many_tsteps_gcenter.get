@@ -18,15 +18,16 @@ name	= Meteor
 
 Time information on the querydata:
 
-Origin time	= 2013092004 local time
-First time	= 2013091713 local time
-Last time	= 2013091716 local time
+Origin time	= 2013092001 UTC
+First time	= 2013091710 UTC
+Last time	= 2013091713 UTC
 Time step	= 60 minutes
 Timesteps	= 4
 
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
+<<<<<<< HEAD
 top left lonlat		= 21.429,61.7623
 top right lonlat	= 29.2257,61.4158
 bottom left lonlat	= 21.2572,58.0892
@@ -93,6 +94,18 @@ proj options:
 +towgs84 = "0,0,0,0,0,0,0"
 +units = "m"
 +no_defs
+=======
+top left lonlat		= 21.4113,61.9354
+top right lonlat	= 29.1677,61.5952
+bottom left lonlat	= 21.2419,58.2907
+bottom right lonlat	= 28.0827,57.9959
+center lonlat		= 24.9763,60.005
+bbox			= [73179.8422 479387.793 -3375665.88 -2970438.92]
+
+fmiarea	= stereographic,20,90,60:21.2419,58.2907,29.1677,61.5952
+wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
+proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
+>>>>>>> master
 
 top	= 0
 left	= 0
@@ -101,8 +114,17 @@ bottom	= 1
 
 xnumber		= 28
 ynumber		= 28
+<<<<<<< HEAD
 dx		= 14.67836279 km
 dy		= 14.59785582 km
+=======
+dx		= 14.5074 km
+dy		= 14.4724 km
+
+xywidth		= 406.208 km
+xyheight	= 405.227 km
+aspectratio	= 1.00242
+>>>>>>> master
 
 xywidth		= 410.9941581 km
 xyheight	= 408.7399629 km

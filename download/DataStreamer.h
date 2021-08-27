@@ -12,12 +12,17 @@
 #include "Tools.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
+#include <engines/grid/Engine.h>
 #include <engines/querydata/Model.h>
 #include <gis/CoordinateMatrix.h>
 #include <gis/SpatialReference.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <spine/TimeSeriesGenerator.h>
+#include <engines/querydata/ValidTimeList.h>
+#include <grid-files/grid/Typedefs.h>
+#include <newbase/NFmiRotatedLatLonArea.h>
+#include <ogr_spatialref.h>
 
 namespace SmartMet
 {
@@ -35,10 +40,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   static const long minutesInMonth = 31 * minutesInDay;
   static const long minutesInYear = 365 * minutesInDay;
 
+  DataStreamer(const Spine::HTTP::Request &req,
+               const Config &config,
+               const Producer &producer,
+               const ReqParams &regParams);
   virtual ~DataStreamer();
-  DataStreamer(const Spine::HTTP::Request &req, const Config &config, const Producer &producer);
-
-  void setRequestParams(const ReqParams &rp) { itsReqParams = rp; }
 
   void generateValidTimeList(const Engine::Querydata::Q &q,
                              Query &query,
@@ -46,14 +52,24 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                              boost::posix_time::ptime &sTime,
                              boost::posix_time::ptime &eTime);
 
+  void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
   void setLevels(const Query &query);
   void setParams(const Spine::OptionParsers::ParameterList &params, const Scaling &scaling);
 
   void setEngines(const Engine::Querydata::Engine *theQEngine,
-                  const Engine::Geonames::Engine *theGeoEngine);
-
+                  const Engine::Grid::Engine *theGridEngine,
+                  const Engine::Geonames::Engine *theGeoEngine)
+  {
+    itsQEngine = theQEngine;
+    itsGridEngine = theGridEngine;
+    itsGeoEngine = theGeoEngine;
+  }
   const Config &getConfig() const { return itsCfg; }
-  bool hasRequestedData(const Producer &producer);
+  bool hasRequestedData(const Producer &producer,
+                        Query &query,
+                        boost::posix_time::ptime &oTime,
+                        boost::posix_time::ptime &sTime,
+                        boost::posix_time::ptime &eTime);
 
   void resetDataSet() { resetDataSet(true); }
 
@@ -66,6 +82,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                             const NFmiMetTime &mt,
                             NFmiDataMatrix<float> &values,
                             std::string &chunk) = 0;
+
+  virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
+                                int level,
+                                const NFmiMetTime &mt,
+                                std::string &chunk){};
 
  protected:
   void createQD(const NFmiGrid &g);
@@ -92,6 +113,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   FmiLevelType itsNativeLevelType;  // Native data level type
   bool itsPositiveLevels = false;   // true if (depth) levels are positive
   Query::Levels itsDataLevels;
+  std::list<int> itsSortedDataLevels;  // Levels in source data order (order needed for qd -output)
 
   BBoxCorners itsBoundingBox;               // Target projection latlon bounding box
   Fmi::CoordinateMatrix itsSrcLatLons;      // Source grid latlons
@@ -140,9 +162,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
  private:
   DataStreamer();
+
   void resetDataSet(bool getFirstChunk);
 
-  void checkDataTimeStep();
+  void checkDataTimeStep(long timeStep = -1);
 
   void getBBoxStr(const std::string &bbox);
   void getRegLLBBox(Engine::Querydata::Q q);
@@ -216,6 +239,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Query::Levels::const_iterator itsLevelIterator;
 
   const Engine::Querydata::Engine *itsQEngine = nullptr;
+  const Engine::Grid::Engine *itsGridEngine = nullptr;
   const Engine::Geonames::Engine *itsGeoEngine = nullptr;
   NFmiDataMatrix<float> itsDEMMatrix;
   NFmiDataMatrix<bool> itsWaterFlagMatrix;
@@ -225,6 +249,143 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   bool itsMultiFile = false;
 
   NFmiDataMatrix<NFmiLocationCache> itsLocCache;
+
+  // Grid support
+  //
+
+  class GridMetaData
+  {
+   public:
+    /*
+      1;GROUND;Ground or water surface;
+      2;PRESSURE;Pressure level;
+      3;HYBRID;Hybrid level;
+      4;ALTITUDE;Altitude;
+      5;TOP;Top of atmosphere;
+      6;HEIGHT;Height above ground in meters;
+      7;MEANSEA;Mean sea level;
+      8;ENTATM;Entire atmosphere;
+      9;GROUND_DEPTH;Layer between two depths below land surface;
+      10;DEPTH;Depth below some surface;
+      11;PRESSURE_DELTA;Level at specified pressure difference from ground to level;
+      12;MAXTHETAE;Level where maximum equivalent potential temperature is found;
+      13;HEIGHT_LAYER;Layer between two metric heights above ground;
+      14;DEPTH_LAYER;Layer between two depths below land surface;
+      15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
+      16;MAXWIND;Maximum wind level;
+    */
+    static const T::ParamLevelIdType GridFMILevelTypeNone = 0;
+    static const T::ParamLevelIdType GridFMILevelTypeGround = 1;
+    static const T::ParamLevelIdType GridFMILevelTypePressure = 2;
+    static const T::ParamLevelIdType GridFMILevelTypeHybrid = 3;
+    static const T::ParamLevelIdType GridFMILevelTypeHeight = 6;
+    static const T::ParamLevelIdType GridFMILevelTypeMeanSea = 7;
+    static const T::ParamLevelIdType GridFMILevelTypeEntireAtmosphere = 8;
+    static const T::ParamLevelIdType GridFMILevelTypeDepth = 10;
+
+    class GridIterator
+    {
+     public:
+      GridIterator(GridMetaData *gM) : gridMetaData(gM) { init = true; }
+
+      bool atEnd();
+      bool hasData(T::ParamLevelIdType &gridLevelType, int &level);
+      GridIterator &operator++();
+      GridIterator operator++(int);
+
+     private:
+      bool init;
+      GridMetaData *gridMetaData;
+    };
+
+    GridMetaData(DataStreamer *dS, std::string producerName) : gridIterator(this)
+    {
+      dataStreamer = dS;
+      producer = producerName;
+      paramLevelId = GridFMILevelTypeNone;
+      relativeUV = false;
+    }
+
+    std::string producer;
+    std::string crs;                          // grid.crs/grid.original.crs
+    T::GridProjection projType;               // wkt PROJECTION or p4 EXTENSION
+    std::string projection;                   //
+    std::string ellipsoid;                    // wkt SPHEROID
+    double earthRadiusOrSemiMajorInMeters;    //
+    boost::optional<double> flattening;       //
+    std::string flatteningStr;                //
+    bool relativeUV;                          // QueryServer::Query grid.original.relativeUV
+    boost::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
+    double southernPoleLat;                   // wkt p4 EXTENSION o_lat_p
+    double southernPoleLon;                   // wkt p4 EXTENSION o_lon_p
+    std::unique_ptr<double> rotLongitudes;    // rotated coords for rotlat grid
+    std::unique_ptr<double> rotLatitudes;     //
+
+    typedef std::map<std::string, std::set<std::string>> StringMapSet;
+    typedef StringMapSet OriginTimeTimes;
+    typedef std::map<T::ParamLevel, OriginTimeTimes> LevelOriginTimes;
+    typedef std::map<T::GeometryId, LevelOriginTimes> GeometryLevels;
+    typedef std::map<std::string, GeometryLevels> ParamGeometries;
+
+    ParamGeometries paramGeometries;
+
+    boost::posix_time::ptime originTime;      // Set if fixed (latest non-multifile or given) otime
+    boost::posix_time::ptime gridOriginTime;  // otime of current grid (fixed or latest multifile)
+    T::ForecastNumber gridEnsemble;           // ensemble of current grid
+    T::GeometryId geometryId;
+    StringMapSet originTimeParams;
+    std::map<std::string, std::set<T::ParamLevel>> originTimeLevels;
+    StringMapSet originTimeTimes;
+    std::map<std::string, std::string> paramKeys;
+    std::map<std::string, T::ParamLevelIdType> paramLevelIds;
+    T::ParamLevelIdType paramLevelId;
+
+    boost::posix_time::ptime selectGridLatestValidOriginTime();
+    const std::string &getLatestOriginTime(boost::posix_time::ptime *originTime = NULL,
+                                           const boost::posix_time::ptime *validTime = NULL) const;
+    bool getDataTimeRange(const std::string &originTimeStr,
+                          boost::posix_time::ptime &firstTime,
+                          boost::posix_time::ptime &lastTime,
+                          long &timeStep) const;
+    boost::shared_ptr<SmartMet::Engine::Querydata::ValidTimeList> getDataTimes(
+        const std::string &originTimeStr) const;
+
+    GridIterator &getGridIterator() { return gridIterator; }
+
+   private:
+    DataStreamer *dataStreamer;  // To access chunking loop iterators
+    GridIterator gridIterator;   //
+  };
+
+  void generateGridValidTimeList(Query &query,
+                                 boost::posix_time::ptime &oTime,
+                                 boost::posix_time::ptime &sTime,
+                                 boost::posix_time::ptime &eTime);
+  void setGridLevels(const Producer &producer, const Query &query);
+  bool hasRequestedGridData(const Producer &producer,
+                            Query &query,
+                            boost::posix_time::ptime &oTime,
+                            boost::posix_time::ptime &sTime,
+                            boost::posix_time::ptime &eTime);
+  bool isGridLevelRequested(const Producer &producer,
+                            const Query &query,
+                            FmiLevelType mappingLevelType,
+                            int level) const;
+  void buildGridQuery(SmartMet::QueryServer::Query &, T::ParamLevelIdType gridLevelType, int level);
+  void getGridLLBBox();
+  std::string getGridLLBBoxStr();
+  void setGridSize(size_t gridSizeX, size_t gridSizeY);
+  void getGridBBox();
+  void getGridProjection(const QueryServer::Query &gridQuery);
+  void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
+  bool getGridQueryInfo(const QueryServer::Query &gridQuery);
+  void extractGridData(std::string &chunk);
+
+ protected:
+  static const long gribMissingValue = 9999;
+
+  GridMetaData itsGridMetaData;
+  QueryServer::Query itsGridQuery;
 };
 
 }  // namespace Download

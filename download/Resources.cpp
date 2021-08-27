@@ -9,6 +9,25 @@ namespace Plugin
 {
 namespace Download
 {
+Resources::~Resources()
+{
+  // Delete coordinate transformations
+  //
+  for (OGRCoordinateTransformation *ct : transformations)
+  {
+    OGRCoordinateTransformation::DestroyCT(ct);
+  }
+
+  // Delete cloned srs:s
+  //
+  // Note: If geometrySRS is nonnull, the object pointed by it gets deleted too
+  //
+  for (OGRSpatialReference *srs : spatialReferences)
+  {
+    OGRSpatialReference::DestroySpatialReference(srs);
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Create area with given projection string
@@ -150,14 +169,19 @@ NFmiGrid *Resources::getGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSiz
  */
 // ----------------------------------------------------------------------
 
-OGRSpatialReference *Resources::cloneCS(const OGRSpatialReference &SRS)
+OGRSpatialReference *Resources::cloneCS(const OGRSpatialReference &SRS, bool isGeometrySRS)
 {
   try
   {
     OGRSpatialReference *srs = SRS.Clone();
 
     if (srs)
+    {
       spatialReferences.push_back(srs);
+
+      if (isGeometrySRS)
+        geometrySRS = srs;
+    }
 
     return srs;
   }
@@ -173,14 +197,19 @@ OGRSpatialReference *Resources::cloneCS(const OGRSpatialReference &SRS)
  */
 // ----------------------------------------------------------------------
 
-OGRSpatialReference *Resources::cloneGeogCS(const OGRSpatialReference &SRS)
+OGRSpatialReference *Resources::cloneGeogCS(const OGRSpatialReference &SRS, bool isGeometrySRS)
 {
   try
   {
     OGRSpatialReference *srs = SRS.CloneGeogCS();
 
     if (srs)
+    {
       spatialReferences.push_back(srs);
+
+      if (isGeometrySRS)
+        geometrySRS = srs;
+    }
 
     return srs;
   }

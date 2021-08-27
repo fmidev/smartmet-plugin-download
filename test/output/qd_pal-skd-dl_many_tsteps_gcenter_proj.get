@@ -18,15 +18,16 @@ name	= Meteor
 
 Time information on the querydata:
 
-Origin time	= 2013092004 local time
-First time	= 2013091713 local time
-Last time	= 2013091716 local time
+Origin time	= 2013092001 UTC
+First time	= 2013091710 UTC
+Last time	= 2013091713 UTC
 Time step	= 60 minutes
 Timesteps	= 4
 
 Information on the querydata area:
 
 projection		= NFmiLatLonArea
+<<<<<<< HEAD
 top left lonlat		= 23.2034,61.636
 top right lonlat	= 26.7966,61.636
 bottom left lonlat	= 23.2034,58.0308
@@ -89,6 +90,18 @@ proj options:
 +proj = "eqc"
 +no_defs
 +over
+=======
+top left lonlat		= 23.2014,61.7986
+top right lonlat	= 26.7986,61.7986
+bottom left lonlat	= 23.2014,58.2014
+bottom right lonlat	= 26.7986,58.2014
+center lonlat		= 25,60
+bbox			= [2579967.06 2979971.26 6471923.88 6871928.08]
+
+fmiarea	= latlon:23.2014,58.2014,26.7986,61.7986
+wktarea	= PROJCS["unknown",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1, AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+proj4	= +proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
+>>>>>>> master
 
 top	= 0
 left	= 0

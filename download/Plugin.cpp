@@ -36,6 +36,8 @@
 #include <spine/Table.h>
 #include <stdexcept>
 
+#include <cpl_conv.h>
+
 using namespace std;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
@@ -235,10 +237,32 @@ unsigned long getRequestUInt(const Spine::HTTP::Request &req,
 static const Producer &getRequestParams(const Spine::HTTP::Request &req,
                                         ReqParams &reqParams,
                                         Config &config,
-                                        const Engine::Querydata::Engine &qEngine)
+                                        const Engine::Querydata::Engine &qEngine,
+                                        const Engine::Grid::Engine *gridEngine)
 {
   try
   {
+    // Data source
+
+    static Producer dummyProducer;
+    reqParams.source = getRequestParam(req, dummyProducer, "source", "querydata");
+
+    if (reqParams.source == "querydata")
+      reqParams.dataSource = QueryData;
+    else if (reqParams.source == "grid")
+      reqParams.dataSource = Grid;
+    else
+      throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
+                             "', 'querydata' or 'grid' expected");
+
+    if (reqParams.dataSource == Grid)
+    {
+      if (!gridEngine)
+        throw Fmi::Exception(BCP, "Grid data is not available");
+      else if (!(gridEngine->isEnabled()))
+        throw Fmi::Exception(BCP, "Grid data is disabled");
+    }
+
     // Producer is speficied using 'model' or 'producer' keyword.
 
     string model = getRequestParam(req, config.defaultProducer(), "model", "");
@@ -253,6 +277,15 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
 
     const Producer &producer = config.getProducer(reqParams.producer, qEngine);
+
+    /*
+    TODO: no qEngine dependency with grid data
+
+    const Producer &producer = (reqParams.dataSource == QueryData)
+      ? config.getProducer(reqParams.producer, qEngine)
+      : config.getProducer(reqParams.producer, qEngine);
+//    : dummyProducer;
+    */
 
     if (reqParams.producer.empty())
       throw Fmi::Exception(BCP, "No producer");
@@ -295,7 +328,8 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     // Projection, bounding and grid size/step
 
     reqParams.projection = getRequestParam(req, producer, "projection", "");
-    reqParams.projType = getProjectionType(reqParams);
+    if (reqParams.dataSource == QueryData)
+      reqParams.projType = getProjectionType(reqParams);
 
     if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::DatumShift::None))
       // gdal/proj4 needed for projection
@@ -356,7 +390,12 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else if (reqParams.format == "NETCDF")
       reqParams.outputFormat = NetCdf;
     else if (reqParams.format == "QD")
+    {
+      if (reqParams.dataSource == Grid)
+        throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
+
       reqParams.outputFormat = QD;
+    }
     else if (reqParams.format.empty())
       throw Fmi::Exception(BCP, "No format selected");
     else
@@ -572,6 +611,7 @@ static string getDownloadFileName(const string &producer,
 
 static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Request &req,
                                                           const Engine::Querydata::Engine &qEngine,
+                                                          const Engine::Grid::Engine *gridEngine,
                                                           const Engine::Geonames::Engine *geoEngine,
                                                           Query &query,
                                                           Config &config,
@@ -582,7 +622,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     // Get request parameters.
 
     ReqParams reqParams;
-    const auto &producer = getRequestParams(req, reqParams, config, qEngine);
+    const auto &producer = getRequestParams(req, reqParams, config, qEngine, gridEngine);
 
     // Create format specific streamer and get scaling information for the requested parameters.
     // Unknown (and special) parameters are ignored.
@@ -593,20 +633,19 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
     {
-      ds = boost::shared_ptr<DataStreamer>(new GribStreamer(
-          req, config, producer, reqParams.outputFormat, reqParams.grib2TablesVersion));
+      ds = boost::shared_ptr<DataStreamer>(new GribStreamer(req, config, producer, reqParams));
       getParamConfig(
           config.getParamChangeTable(), query.pOptions.parameters(), knownParams, scaling);
     }
     else if (reqParams.outputFormat == NetCdf)
     {
-      ds = boost::shared_ptr<DataStreamer>(new NetCdfStreamer(req, config, producer));
+      ds = boost::shared_ptr<DataStreamer>(new NetCdfStreamer(req, config, producer, reqParams));
       getParamConfig(
           config.getParamChangeTable(false), query.pOptions.parameters(), knownParams, scaling);
     }
     else
     {
-      ds = boost::shared_ptr<DataStreamer>(new QDStreamer(req, config, producer));
+      ds = boost::shared_ptr<DataStreamer>(new QDStreamer(req, config, producer, reqParams));
 
       BOOST_FOREACH (Spine::Parameter param, query.pOptions.parameters())
       {
@@ -624,13 +663,9 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     ds->setParams(knownParams, scaling);
 
-    // Set request parameters
-
-    ds->setRequestParams(reqParams);
-
     // Set engines
 
-    ds->setEngines(&qEngine, geoEngine);
+    ds->setEngines(&qEngine, gridEngine, geoEngine);
 
     // Get Q object for the producer/origintime
 
@@ -638,21 +673,28 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     Engine::Querydata::Q q;
 
-    if (!reqParams.originTime.empty())
+    if (reqParams.dataSource == QueryData)
     {
-      if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
-        originTime = boost::posix_time::ptime(boost::date_time::pos_infin);
-      else if (reqParams.originTime == "oldest")
-        originTime = boost::posix_time::ptime(boost::date_time::neg_infin);
+      ds->setMultiFile(qEngine.getProducerConfig(reqParams.producer).ismultifile);
+
+      if (!reqParams.originTime.empty())
+      {
+        if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
+          originTime = boost::posix_time::ptime(boost::date_time::pos_infin);
+        else if (reqParams.originTime == "oldest")
+          originTime = boost::posix_time::ptime(boost::date_time::neg_infin);
+        else
+          originTime = Fmi::TimeParser::parse(reqParams.originTime);
+        q = qEngine.get(reqParams.producer, originTime);
+        originTime = q->originTime();
+      }
       else
-        originTime = Fmi::TimeParser::parse(reqParams.originTime);
-      q = qEngine.get(reqParams.producer, originTime);
-      originTime = q->originTime();
+      {
+        q = qEngine.get(reqParams.producer);
+      }
     }
     else
-    {
-      q = qEngine.get(reqParams.producer);
-    }
+      ds->setMultiFile(producer.multiFile);
 
     // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
     // timestep (60m --> data) defaults.
@@ -670,28 +712,36 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     query.tOptions.timeStep = reqParams.timeStep;
     query.tOptions.endTimeData = (reqParams.endTime.empty() && (reqParams.timeStep == 0));
 
-    // Generate list of validtimes for the data to be loaded
+    if (reqParams.dataSource == QueryData)
+    {
+      // Generate list of validtimes for the data to be loaded.
+      // For grid data validtimes are generated after checking data availability
 
-    ds->generateValidTimeList(q, query, originTime, startTime, endTime);
+      ds->generateValidTimeList(q, query, originTime, startTime, endTime);
 
-    // Set request levels
+      // Set request levels.
+      // For grid data levels are set after checking data availability
 
-    ds->setLevels(query);
+      ds->setLevels(query);
+    }
 
     // In order to set response status check if (any) data is available for the requested
     // levels, parameters and time range
 
-    if (!ds->hasRequestedData(producer))
+    if (!ds->hasRequestedData(producer, query, originTime, startTime, endTime))
       throw Fmi::Exception(
           BCP, "initStreamer: No data available for producer '" + reqParams.producer + "'");
 
     // Download file name
 
+    string projection = boost::algorithm::replace_all_copy(reqParams.projection, " ", "_");
+    boost::algorithm::replace_all(projection, ",", ":");
+
     fileName = getDownloadFileName(reqParams.producer,
                                    originTime,
                                    startTime,
                                    endTime,
-                                   reqParams.projection,
+                                   projection,
                                    reqParams.outputFormat);
 
     // Set parameter and level iterators etc. to their start positions
@@ -726,7 +776,7 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
 
     string filename;
     response.setContent(
-        initializeStreamer(req, *itsQEngine, itsGeoEngine, query, itsConfig, filename));
+        initializeStreamer(req, *itsQEngine, itsGridEngine, itsGeoEngine, query, itsConfig, filename));
 
     string mime = "application/octet-stream";
     response.setHeader("Content-type", mime.c_str());
@@ -863,6 +913,11 @@ void Plugin::init()
     if (!engine)
       throw Fmi::Exception(BCP, "Querydata engine unavailable");
     itsQEngine = reinterpret_cast<Engine::Querydata::Engine *>(engine);
+
+    /* GridEngine */
+
+    engine = itsReactor->getSingleton("grid", nullptr);
+    itsGridEngine = reinterpret_cast<Engine::Grid::Engine *>(engine);
 
     /* GeoEngine */
 

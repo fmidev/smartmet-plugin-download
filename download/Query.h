@@ -54,6 +54,7 @@ struct Producer
 {
   std::set<std::string> disabledReqParams;  // Disabled url option names from config
   std::set<int> disabledDataParams;         // Disabled url 'param' option values from config
+  std::set<int> gridDefaultLevels;          // Default 'level' values for grid data from config
 
   NamedSettings namedSettings;  // Named settings ('key = value;') to be set to output (used with
                                 // grib formats only)
@@ -61,11 +62,12 @@ struct Producer
   bool verticalInterpolation;  // Set if vertical interpolation is allowed. Default: false
 
   Plugin::Download::Datum::DatumShift datumShift;  // Datum handling. Default: native
-                                                   // datum (no
-                                                   // shift). See
-                                                   // Datum.h
+                                                   // datum (no shift). See Datum.h
 
-  Producer() {}
+  bool multiFile;  // If set, query can span over multiple grid origintimes
+
+  Producer() : verticalInterpolation(false), multiFile(false) {}
+
   bool disabledReqParam(std::string param) const
   {
     return (disabledReqParams.find(param) != disabledReqParams.end());
@@ -90,6 +92,12 @@ typedef std::map<std::string, Producer> Producers;
  * \brief Request parameters
  */
 // ----------------------------------------------------------------------
+
+typedef enum
+{
+  QueryData,
+  Grid
+} DataSource;
 
 typedef enum
 {
@@ -126,6 +134,11 @@ typedef unsigned long EpsgCode;
 
 struct ReqParams
 {
+  //
+  // Data source
+  //
+  std::string source;
+  DataSource dataSource;
   //
   // Producer name
   //

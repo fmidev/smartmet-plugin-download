@@ -5,13 +5,10 @@
 // ======================================================================
 
 #include "QueryDataStreamer.h"
-
-#include <newbase/NFmiQueryData.h>
-#include <macgyver/Exception.h>
-
-#include <string>
-
 #include <boost/foreach.hpp>
+#include <macgyver/Exception.h>
+#include <newbase/NFmiQueryData.h>
+#include <string>
 
 using namespace std;
 
@@ -23,8 +20,13 @@ namespace Download
 {
 QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Config &config,
-                       const Producer &producer)
-    : DataStreamer(req, config, producer)
+                       const Producer &producer,
+                       const ReqParams &reqParams)
+    : DataStreamer(req, config, producer, reqParams),
+      sendMeta(true),
+      isLoaded(false),
+      currentX(0),
+      currentY(0)
 {
 }
 
