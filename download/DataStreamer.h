@@ -21,7 +21,6 @@
 #include <spine/TimeSeriesGenerator.h>
 #include <engines/querydata/ValidTimeList.h>
 #include <grid-files/grid/Typedefs.h>
-#include <newbase/NFmiRotatedLatLonArea.h>
 #include <ogr_spatialref.h>
 
 namespace SmartMet
@@ -58,12 +57,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void setEngines(const Engine::Querydata::Engine *theQEngine,
                   const Engine::Grid::Engine *theGridEngine,
-                  const Engine::Geonames::Engine *theGeoEngine)
-  {
-    itsQEngine = theQEngine;
-    itsGridEngine = theGridEngine;
-    itsGeoEngine = theGeoEngine;
-  }
+                  const Engine::Geonames::Engine *theGeoEngine);
+
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer,
                         Query &query,
@@ -91,7 +86,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
  protected:
   void createQD(const NFmiGrid &g);
   void extractData(std::string &chunk);
-  virtual void paramChanged() {}
+  virtual void paramChanged(size_t nextParamOffset = 1) {}
 
   const Spine::HTTP::Request &itsRequest;
 
@@ -147,8 +142,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Spine::OptionParsers::ParameterList itsDataParams;
   Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
-
-  virtual void paramChanged(size_t nextParamOffset = 1) {}
 
   long itsDataTimeStep = 0;
   std::size_t itsTimeIndex = 0;
@@ -236,7 +229,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   bool itsUseNativeGridSize = false;
   bool itsRetainNativeGridResolution = false;
 
-  Query::Levels::const_iterator itsLevelIterator;
+  std::list<int>::const_iterator itsLevelIterator;
 
   const Engine::Querydata::Engine *itsQEngine = nullptr;
   const Engine::Grid::Engine *itsGridEngine = nullptr;

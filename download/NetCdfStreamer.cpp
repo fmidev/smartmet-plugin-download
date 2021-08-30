@@ -16,6 +16,10 @@
 #include <macgyver/Exception.h>
 #include <spine/Thread.h>
 
+#ifndef WGS84
+#include <newbase/NFmiStereographicArea.h>
+#endif
+
 namespace
 {
 // NcFile::Open does not seem to be thread safe
@@ -661,12 +665,20 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 
     if (!geometrySRS)
     {
+#ifdef WGS84
       auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
       auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
       auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
       lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
       lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
       lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
+#else
+      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
+
+      lon_0 = a.CentralLongitude();
+      lat_0 = a.CentralLatitude();
+      lat_ts = a.TrueLatitude();
+#endif
     }
     else
     {

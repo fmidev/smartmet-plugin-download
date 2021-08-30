@@ -23,10 +23,10 @@ QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Producer &producer,
                        const ReqParams &reqParams)
     : DataStreamer(req, config, producer, reqParams),
-      sendMeta(true),
-      isLoaded(false),
-      currentX(0),
-      currentY(0)
+      itsMetaFlag(true),
+      itsLoadedFlag(false),
+      itsCurrentX(0),
+      itsCurrentY(0)
 {
 }
 

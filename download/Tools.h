@@ -16,6 +16,9 @@ using Scaling = std::list<std::pair<float, float>>;
 
 struct BBoxCorners
 {
+  BBoxCorners(){};
+  BBoxCorners(const NFmiPoint &bl, const NFmiPoint &tr) : bottomLeft(bl), topRight(tr){};
+
   NFmiPoint bottomLeft;
   NFmiPoint topRight;
 };

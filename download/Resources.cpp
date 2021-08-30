@@ -28,6 +28,8 @@ Resources::~Resources()
   }
 }
 
+#ifdef WGS84
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Create area with given projection string
@@ -75,6 +77,31 @@ void Resources::createArea(const std::string &projection,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+#else
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create area with given projection string
+ */
+// ----------------------------------------------------------------------
+
+void Resources::createArea(const std::string &projection)
+{
+  try
+  {
+    area = NFmiAreaFactory::Create(projection);
+
+    if (!area.get())
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+#endif
 
 // ----------------------------------------------------------------------
 /*!

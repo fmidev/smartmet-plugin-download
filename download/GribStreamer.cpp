@@ -18,12 +18,15 @@
 #include <newbase/NFmiEnumConverter.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
-#include <newbase/NFmiRotatedLatLonArea.h>
-#include <newbase/NFmiStereographicArea.h>
 #include <newbase/NFmiTimeList.h>
 #include <sys/types.h>
 #include <string>
 #include <unistd.h>
+
+#ifndef WGS84
+#include <newbase/NFmiRotatedLatLonArea.h>
+#include <newbase/NFmiStereographicArea.h>
+#endif
 
 using namespace std;
 
@@ -198,16 +201,17 @@ void GribStreamer::setLatlonGeometryToGrib() const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *area) const
+void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 {
   try
   {
+    BBoxCorners rotLLBBox;
+    double slon = 0.0, slat = 0.0;
+
     if (itsReqParams.dataSource == QueryData)
     {
       if (itsResources.getGeometrySRS())
         throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
-
-      BBoxCorners rotLLBBox;
 
 #ifdef WGS84
       auto opt_plat = area->ProjInfo().getDouble("o_lat_p");
@@ -217,8 +221,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *a
         throw Fmi::Exception(
             BCP, "GRIB does not support rotated latlon areas where longitude is also rotated");
 
-      double slon = *opt_plon;
-      double slat = -(*opt_plat);
+      slon = *opt_plon;
+      slat = -(*opt_plat);
 
       auto fmisphere = fmt::format(
           "+proj=latlong +R={:.0f} +over +towgs84=0,0,0 +no_defs", kRearth);
@@ -238,8 +242,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *a
 #else
       const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
 
-      double slon = a.SouthernPole().X();
-      double slat = a.SouthernPole().Y();
+      slon = a.SouthernPole().X();
+      slat = a.SouthernPole().Y();
 
       rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
       rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
@@ -317,7 +321,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea *a
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setStereographicGeometryToGrib(const NFmiStereographicArea *area) const
+void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 {
   try
   {
@@ -344,12 +348,20 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiStereographicArea *a
 
     if (!geometrySRS)
     {
+#ifdef WGS84
       auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
       auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
       auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
       lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
       lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
       lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
+#else
+      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
+
+      lon_0 = a.CentralLongitude();
+      lat_0 = a.CentralLatitude();
+      lat_ts = a.TrueLatitude();
+#endif
     }
     else
     {
@@ -666,16 +678,18 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
         setLatlonGeometryToGrib();
         break;
       case kNFmiRotatedLatLonArea:
-        setRotatedLatlonGeometryToGrib(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
+        setRotatedLatlonGeometryToGrib(area);
         break;
       case kNFmiStereographicArea:
-        setStereographicGeometryToGrib(dynamic_cast<const NFmiStereographicArea *>(area));
+        setStereographicGeometryToGrib(area);
         break;
       case kNFmiMercatorArea:
         setMercatorGeometryToGrib();
         break;
+#ifdef WGS84
       case kNFmiProjArea:
         throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
+#endif
       case kNFmiEquiDistArea:
         throw Fmi::Exception(BCP, "Equidistant projection is not supported by GRIB");
       case kNFmiGnomonicArea:
@@ -823,9 +837,9 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
     if (itsGrib1Flag)
     {
       if (itsGridMetaData.flattening)
-        resolAndCompFlags |= (1 << Datum::Sphere::Grib1::WGS84);
+        resolAndCompFlags |= (1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
       else
-        resolAndCompFlags &= ~(1 << Datum::Sphere::Grib1::WGS84);
+        resolAndCompFlags &= ~(1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
     }
     else
     {
@@ -1031,8 +1045,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 
       if (timeStep <= 0)
         throw Fmi::Exception(BCP,
-                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                                 " for producer '" + itsReqParams.producer + "'");
+                               "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                   " for producer '" + itsReqParams.producer + "'");
 
       if (pTable[paramIdx].itsPeriodLengthMinutes > 0)
       {
@@ -1185,8 +1199,8 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
   {
     if (timeStepInMinutes <= 0)
       throw Fmi::Exception(BCP,
-                           "adjustToTimeStep: Invalid data timestep " +
-                               boost::lexical_cast<string>(timeStepInMinutes));
+                             "adjustToTimeStep: Invalid data timestep " +
+                                 boost::lexical_cast<string>(timeStepInMinutes));
 
     if ((timeStepInMinutes == 60) || (timeStepInMinutes == 180) || (timeStepInMinutes == 360) ||
         (timeStepInMinutes == 720))
@@ -1347,10 +1361,10 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
 
     // Load the data, cropping the grid/values it if manual cropping is set
 
-    bool cropxy = (cropping.cropped && cropping.cropMan);
-    size_t x0 = (cropxy ? cropping.bottomLeftX : 0), y0 = (cropxy ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
