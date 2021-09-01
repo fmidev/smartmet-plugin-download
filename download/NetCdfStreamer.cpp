@@ -160,7 +160,7 @@ void dimDeleter(NcDim * /* dim */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSize)
+boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(const string &dimName, long dimSize)
 {
   try
   {
@@ -187,7 +187,7 @@ void varDeleter(NcVar * /* var */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(string varName,
+boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
                                                      NcType dataType,
                                                      NcDim *dim1,
                                                      NcDim *dim2,
@@ -218,7 +218,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(string varName,
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(string dimName,
+boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(const string &dimName,
                                                           long dimSize,
                                                           NcType dataType,
                                                           string stdName,
@@ -371,8 +371,8 @@ void NetCdfStreamer::addTimeDimension()
     }
     else
       throw Fmi::Exception(BCP,
-                           "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                               " for producer '" + itsReqParams.producer + "'");
+                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                 " for producer '" + itsReqParams.producer + "'");
 
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
@@ -385,11 +385,11 @@ void NetCdfStreamer::addTimeDimension()
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
         throw Fmi::Exception(BCP,
-                             "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                                 boost::lexical_cast<string>(times[timeSize - 1]) + " (validtime " +
-                                 Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
-                                 boost::lexical_cast<string>(timeStep) + ") for producer '" +
-                                 itsReqParams.producer + "'");
+                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
+                                   boost::lexical_cast<string>(times[timeSize - 1]) +
+                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
+                                   " timestep " + boost::lexical_cast<string>(timeStep) +
+                                   ") for producer '" + itsReqParams.producer + "'");
 
       times[timeSize] = period;
     }
@@ -1371,8 +1371,8 @@ void NetCdfStreamer::addParameters(bool relative_uv)
             j = i + 1;
           else
             throw Fmi::Exception(BCP,
-                                 "Missing gridrelative configuration for parameter " +
-                                     boost::lexical_cast<string>(usedParId));
+                                   "Missing gridrelative configuration for parameter " +
+                                       boost::lexical_cast<string>(usedParId));
         }
 
       if ((i >= pTable.size()) && (j > 0))

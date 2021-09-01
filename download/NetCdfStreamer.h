@@ -63,15 +63,15 @@ class NetCdfStreamer : public DataStreamer
   std::list<NcVar *>::iterator itsVarIterator;
   std::list<NcVar *> itsDataVars;
 
-  boost::shared_ptr<NcDim> addDimension(std::string dimName, long dimSize);
-  boost::shared_ptr<NcVar> addVariable(std::string varName,
+  boost::shared_ptr<NcDim> addDimension(const std::string &dimName, long dimSize);
+  boost::shared_ptr<NcVar> addVariable(const std::string &varName,
                                        NcType dataType,
                                        NcDim *dim1 = nullptr,
                                        NcDim *dim2 = nullptr,
                                        NcDim *dim3 = nullptr,
                                        NcDim *dim4 = nullptr,
                                        NcDim *dim5 = nullptr);
-  boost::shared_ptr<NcVar> addCoordVariable(std::string dimName,
+  boost::shared_ptr<NcVar> addCoordVariable(const std::string &dimName,
                                             long dimSize,
                                             NcType dataType,
                                             std::string stdName,
