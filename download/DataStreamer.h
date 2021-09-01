@@ -160,7 +160,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void checkDataTimeStep(long timeStep = -1);
 
-  void getBBoxStr(const std::string &bbox);
+  void getBBox(const std::string &bbox);
   void getRegLLBBox(Engine::Querydata::Q q);
   std::string getRegLLBBoxStr(Engine::Querydata::Q q);
   void getLLBBox(Engine::Querydata::Q q);
@@ -177,7 +177,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void setTransformedCoordinates(Engine::Querydata::Q q, const NFmiArea *area);
   void coordTransform(Engine::Querydata::Q q, const NFmiArea *area);
 
-  std::string getGridCenterBBoxStr(bool usenativeproj, const NFmiGrid &grid) const;
+  std::string getGridCenterBBoxStr() const;
 
   void cachedProjGridValues(Engine::Querydata::Q q,
                             NFmiGrid &wantedGrid,
