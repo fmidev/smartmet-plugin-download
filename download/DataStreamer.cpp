@@ -1674,11 +1674,9 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       //
       // Note: With rotlatlon projection bbox corners are now taken as regular latlons
       //
-      bboxStr = (itsReqParams.gridCenterLL ? getGridCenterBBoxStr() : itsReqParams.origBBox);
-
       string projection =
           boost::algorithm::replace_all_copy(itsReqParams.projection, "rotlatlon", "invrotlatlon") +
-          "|" + bboxStr;
+          "|" + getGridCenterBBoxStr();
 
       boost::shared_ptr<NFmiArea> a = NFmiAreaFactory::Create(projection);
       NFmiArea *area = a.get();
@@ -1707,6 +1705,8 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
     NFmiPoint xy1 = grid.XYToGrid(grid.Area()->NativeToXY(bl));
     NFmiPoint xy2 = grid.XYToGrid(grid.Area()->NativeToXY(tr));
 #else
+    else
+      bboxStr = itsReqParams.origBBox;
 
     itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
 
