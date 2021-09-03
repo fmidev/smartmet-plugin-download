@@ -827,7 +827,11 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     int classId = (itsReqParams.areaClassId != A_Native)
         ? (int) itsReqParams.areaClassId
+#ifdef WGS84
         : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId() : area->ClassId();
+#else
+        : area->ClassId();
+#endif
 
     switch (classId)
     {
@@ -837,6 +841,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       case kNFmiStereographicArea:
         setStereographicGeometry(area, crsVar);
         break;
+#ifdef WGS84
+      case kNFmiProjArea:
+        throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
+#endif
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }
