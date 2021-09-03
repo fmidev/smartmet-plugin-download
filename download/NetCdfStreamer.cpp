@@ -825,12 +825,11 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     auto crsVar = addVariable("crs", ncShort);
 
-    auto classid = area->ClassId();
+    int classId = (itsReqParams.areaClassId != A_Native)
+        ? (int) itsReqParams.areaClassId
+        : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId() : area->ClassId();
 
-    if (itsReqParams.areaClassId != A_Native)
-      classid = itsReqParams.areaClassId;
-
-    switch (classid)
+    switch (classId)
     {
       case kNFmiLatLonArea:
         setLatLonGeometry(area, crsVar);
@@ -845,7 +844,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     // Store y/x and/or lat/lon dimensions and coordinate variables, cropping the grid if manual
     // cropping is set
 
-    bool projected = (classid != kNFmiLatLonArea);
+    bool projected = (classId != kNFmiLatLonArea);
 
     size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0),
            y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
@@ -870,26 +869,14 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
       // 2011):
       //
-      //		 "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and
-      // lev(k).
-      // The
-      // vertical coordinate is
-      //		  represented by the coordinate variable lev(lev) and the latitude and
-      // longitude
-      // coordinates are represented by
-      //		  the auxiliary coordinate variables lat(yc,xc) and lon(yc,xc) which are
-      // identified
-      // by
-      // the
-      // coordinates attribute.
+      // "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and
+      // lev(k). The vertical coordinate is represented by the coordinate variable lev(lev) and
+      // the latitude and longitude coordinates are represented by the auxiliary coordinate
+      // variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates attribute.
       //
-      //		  Note that coordinate variables are also defined for the xc and yc
-      // dimensions. This
-      // faciliates processing of this
-      //		  data by generic applications that don't recognize the multidimensional
-      // latitude
-      // and
-      // longitude coordinates."
+      // Note that coordinate variables are also defined for the xc and yc dimensions. This
+      // faciliates processing of this data by generic applications that don't recognize the
+      // multidimensional latitude and longitude coordinates."
 
       auto yVar =
           addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);

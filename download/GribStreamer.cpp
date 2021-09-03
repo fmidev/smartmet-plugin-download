@@ -665,14 +665,13 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
 {
   try
   {
-    auto classid = area->ClassId();
-
-    if (itsReqParams.areaClassId != A_Native)
-      classid = itsReqParams.areaClassId;
+    int classId = (itsReqParams.areaClassId != A_Native)
+        ? (int) itsReqParams.areaClassId
+        : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId() : area->ClassId();
 
     itsValueArray.resize(itsNX * itsNY);
 
-    switch (classid)
+    switch (classId)
     {
       case kNFmiLatLonArea:
         setLatlonGeometryToGrib();
@@ -686,10 +685,8 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
       case kNFmiMercatorArea:
         setMercatorGeometryToGrib();
         break;
-#ifdef WGS84
       case kNFmiProjArea:
         throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
-#endif
       case kNFmiEquiDistArea:
         throw Fmi::Exception(BCP, "Equidistant projection is not supported by GRIB");
       case kNFmiGnomonicArea:
