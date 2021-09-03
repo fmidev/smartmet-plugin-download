@@ -1214,8 +1214,7 @@ bool DataStreamer::hasRequestedData(
     // Erase leading missing parameters. The first parameter in 'itsDataParams' must be the first
     // valid/existent parameter after the initialization phase.
     // At the end of initialization parameter iterator is set to the start of 'itsDataParams', which
-    // must be the same as itsQ's current parameter
-    // set in loop above; data chunking starts with it
+    // must be the same as itsQ's current parameter set in loop above; data chunking starts with it
 
     if (nMissingParam > 0)
       itsDataParams.erase(itsDataParams.begin(), itsDataParams.begin() + nMissingParam);
@@ -1934,10 +1933,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     // Transform qd grid bottom left and top right latlons to output cs projected coordinates.
     //
     // Note: When getting the transformation object true is passed as last parameter if the target
-    // is
-    // projected epsg srs;
-    // the target srs is cloned and stored by resMgr and the srs is used later when setting output
-    // geometry.
+    // is projected epsg srs; the target srs is cloned and stored by resMgr and the srs is used
+    // later when setting output geometry.
 
     OGRCoordinateTransformation *qdLL2Wgs84Prct = itsResources.getCoordinateTransformation(
         qdLLSrsPtr, wgs84PrSrsPtr, ((itsReqParams.projType == P_Epsg) && (!wgs84ProjLL)));
