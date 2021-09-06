@@ -12,17 +12,12 @@ INCLUDES += \
 LIBS += $(REQUIRED_LIBS) \
 	-lsmartmet-spine  \
 	-lsmartmet-macgyver \
-<<<<<<< HEAD
-	-L/usr/gdal30/lib -lgdal \
-=======
 	-lsmartmet-newbase \
->>>>>>> master
 	-lboost_date_time \
 	-lboost_thread \
 	-lboost_filesystem \
 	-lboost_iostreams \
 	-lboost_system \
-<<<<<<< HEAD
 	-lconfig++ \
 	-lbz2 -lz \
 	-leccodes \
@@ -37,9 +32,6 @@ OBS =	../obj/Config.o \
 		../obj/Plugin.o \
 		../obj/QueryDataStreamer.o \
 		../obj/Query.o
-=======
-	-lpthread -ldl
->>>>>>> master
 
 all: $(PROG)
 clean:
