@@ -27,29 +27,29 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-<<<<<<< HEAD
-top left lonlat		= -9.04577,69.9447
-top right lonlat	= 49,69.9534
-bottom left lonlat	= 6,50.9239
-bottom right lonlat	= 33.9747,50.9279
+top left lonlat		= -9.04584,70.0683
+top right lonlat	= 49,70.077
+bottom left lonlat	= 6,51.1121
+bottom right lonlat	= 33.9747,51.1161
 
-top left WGS84		= -9.04577,70.0681
-top right WGS84		= 49,70.0768
-bottom left WGS84	= 6,51.1119
-bottom right WGS84	= 33.9747,51.1159
-center WGS84		= 19.9815,62.1453
+top left WGS84		= -9.04584,70.0683
+top right WGS84		= 49,70.077
+bottom left WGS84	= 6,51.1121
+bottom right WGS84	= 33.9747,51.1161
+center WGS84		= 19.9814,62.1455
 
-bbox			= [-1020658.41 1018738.17 -4093637.28 -1837852.31]
+bbox			= [-1018404.85 1016486.11 -4084598.77 -1833789.48]
 
-projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371229 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
-wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["unknown",SPHEROID["unknown",6371229,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
+projstr	= +type=crs +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +datum=WGS84
+wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
 
 prettywkt =
 PROJCS["unknown",
     GEOGCS["unknown",
-        DATUM["unknown",
-            SPHEROID["unknown",6371229,0],
-            TOWGS84[0,0,0,0,0,0,0]],
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
         PRIMEM["Greenwich",0,
             AUTHORITY["EPSG","8901"]],
         UNIT["degree",0.0174532925199433,
@@ -73,10 +73,10 @@ IsGeocentric			= 0
 IsLocal				= 0
 IsVertical			= 0
 IsCompound			= 0
-SemiMajor			= 6371229
-SemiMinor			= 6371229
-InvFlattening			= 0
-EPSG				= -1
+SemiMajor			= 6378137
+SemiMinor			= 6356752.314
+InvFlattening			= 298.2572236
+EPSG				= 4326
 
 central_meridian	= 20
 latitude_of_origin	= 60
@@ -84,28 +84,12 @@ false_easting	= 0
 false_northing	= 0
 
 proj options:
-+R = 6371229
 +lat_0 = 90
 +lat_ts = 60
 +lon_0 = 20
-+x_0 = 0
-+y_0 = 0
++datum = "WGS84"
 +proj = "stere"
-+towgs84 = "0,0,0,0,0,0,0"
-+units = "m"
-+no_defs
-=======
-top left lonlat		= -9.09871,70.1814
-top right lonlat	= 49,70.2
-bottom left lonlat	= 6,51.3
-bottom right lonlat	= 33.9455,51.3085
-center lonlat		= 19.96,62.2843
-bbox			= [-1010040.82 1005949.88 -4051052.47 -1814781.62]
-
-fmiarea	= stereographic,20,90,60:6,51.3,49,70.2
-wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
-proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
->>>>>>> master
++type = "crs"
 
 top	= 0
 left	= 0
@@ -114,12 +98,12 @@ bottom	= 1
 
 xnumber		= 135
 ynumber		= 150
-dx		= 15.10664132 km
-dy		= 15.03856642 km
+dx		= 15.07326637 km
+dy		= 15.00539525 km
 
-xywidth		= 2039.396578 km
-xyheight	= 2255.784963 km
-aspectratio	= 0.9040740194
+xywidth		= 2034.890959 km
+xyheight	= 2250.809287 km
+aspectratio	= 0.9040708031
 
 Information on the locations:
 

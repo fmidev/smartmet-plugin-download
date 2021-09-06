@@ -27,29 +27,29 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-<<<<<<< HEAD
-top left lonlat		= 10.8478,71.6234
-top right lonlat	= 38.1622,70.919
-bottom left lonlat	= 14.9017,57.706
-bottom right lonlat	= 30.2964,57.3285
+top left lonlat		= 10.9133,71.7126
+top right lonlat	= 38.0276,71.0219
+bottom left lonlat	= 14.9241,57.9194
+bottom right lonlat	= 30.2454,57.5472
 
-top left WGS84		= 10.8478,71.738
-top right WGS84		= 38.1622,71.0374
-bottom left WGS84	= 14.9017,57.8794
-bottom right WGS84	= 30.2964,57.5029
-center WGS84		= 23.405,64.8492
+top left WGS84		= 10.9133,71.7126
+top right WGS84		= 38.0276,71.0219
+bottom left WGS84	= 14.9241,57.9194
+bottom right WGS84	= 30.2454,57.5472
+center WGS84		= 23.3822,64.8559
 
-bbox			= [-305882.218 622840.727 -3428491.94 -1898601.46]
+bbox			= [-303472.895 617531.655 -3416577.1 -1897456.45]
 
-projstr	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371229 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs
-wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["unknown",SPHEROID["unknown",6371229,0],TOWGS84[0,0,0,0,0,0,0]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
+projstr	= +type=crs +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +datum=WGS84
+wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
 
 prettywkt =
 PROJCS["unknown",
     GEOGCS["unknown",
-        DATUM["unknown",
-            SPHEROID["unknown",6371229,0],
-            TOWGS84[0,0,0,0,0,0,0]],
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
         PRIMEM["Greenwich",0,
             AUTHORITY["EPSG","8901"]],
         UNIT["degree",0.0174532925199433,
@@ -73,10 +73,10 @@ IsGeocentric			= 0
 IsLocal				= 0
 IsVertical			= 0
 IsCompound			= 0
-SemiMajor			= 6371229
-SemiMinor			= 6371229
-InvFlattening			= 0
-EPSG				= -1
+SemiMajor			= 6378137
+SemiMinor			= 6356752.314
+InvFlattening			= 298.2572236
+EPSG				= 4326
 
 central_meridian	= 20
 latitude_of_origin	= 60
@@ -84,28 +84,12 @@ false_easting	= 0
 false_northing	= 0
 
 proj options:
-+R = 6371229
 +lat_0 = 90
 +lat_ts = 60
 +lon_0 = 20
-+x_0 = 0
-+y_0 = 0
++datum = "WGS84"
 +proj = "stere"
-+towgs84 = "0,0,0,0,0,0,0"
-+units = "m"
-+no_defs
-=======
-top left lonlat		= 10.893,71.7092
-top right lonlat	= 38.432,70.9765
-bottom left lonlat	= 14.9169,57.9104
-bottom right lonlat	= 30.4777,57.5164
-center lonlat		= 23.5324,64.8429
-bbox			= [-302937.325 629834.476 -3405691.23 -1889827.63]
-
-fmiarea	= stereographic,20,90,60:14.9169,57.9104,38.432,70.9765
-wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
-proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
->>>>>>> master
++type = "crs"
 
 top	= 0
 left	= 0
@@ -114,12 +98,12 @@ bottom	= 1
 
 xnumber		= 62
 ynumber		= 102
-dx		= 14.97940234 km
-dy		= 14.9989262 km
+dx		= 14.85491209 km
+dy		= 14.89333967 km
 
-xywidth		= 928.7229451 km
-xyheight	= 1529.890472 km
-aspectratio	= 0.6070519177
+xywidth		= 921.0045496 km
+xyheight	= 1519.120646 km
+aspectratio	= 0.6062747892
 
 Information on the locations:
 

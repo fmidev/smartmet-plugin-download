@@ -27,21 +27,20 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= NFmiLatLonArea
-<<<<<<< HEAD
-top left lonlat		= -9.07237,72.5338
-top right lonlat	= 49,72.5338
-bottom left lonlat	= -9.07237,51.1121
-bottom right lonlat	= 49,51.1121
+top left lonlat		= -9.07243,72.6437
+top right lonlat	= 49,72.6437
+bottom left lonlat	= -9.07243,51.3
+bottom right lonlat	= 49,51.3
 
-top left WGS84		= -9.07237,72.5338
-top right WGS84		= 49,72.5338
-bottom left WGS84	= -9.07237,51.1121
-bottom right WGS84	= 49,51.1121
-center WGS84		= 19.9638,61.8229
+top left WGS84		= -9.07243,72.6437
+top right WGS84		= 49,72.6437
+bottom left WGS84	= -9.07243,51.3
+bottom right WGS84	= 49,51.3
+center WGS84		= 19.9638,61.9718
 
-bbox			= [-1009931.61 5454655.05 5689772.95 8074425.68]
+bbox			= [-1009938.29 5454655.05 5710689.88 8086659.69]
 
-projstr	= +proj=eqc +datum=WGS84 +over +no_defs
+projstr	= +type=crs +proj=eqc +datum=WGS84 +wktext +over +no_defs
 wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
 
 prettywkt =
@@ -88,34 +87,24 @@ false_northing	= 0
 proj options:
 +datum = "WGS84"
 +proj = "eqc"
++type = "crs"
 +no_defs
 +over
-=======
-top left lonlat		= -9.09871,72.6421
-top right lonlat	= 49,72.6421
-bottom left lonlat	= -9.09871,51.3
-bottom right lonlat	= 49,51.3
-center lonlat		= 19.9506,61.971
-bbox			= [-1011765.33 5448739.55 5704496.71 8077711.91]
-
-fmiarea	= latlon:-9.09871,51.3,49,72.6421
-wktarea	= PROJCS["unknown",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1, AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
-proj4	= +proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
->>>>>>> master
++wktext
 
 top	= 0
 left	= 0
 right	= 1
 bottom	= 1
 
-xnumber		= 428
-ynumber		= 159
-dx		= 15.10417443 km
-dy		= 14.99781595 km
+xnumber		= 429
+ynumber		= 158
+dx		= 15.06898214 km
+dy		= 15.03778364 km
 
-xywidth		= 6464.586658 km
-xyheight	= 2384.652736 km
-aspectratio	= 2.710913233
+xywidth		= 6464.593337 km
+xyheight	= 2375.969816 km
+aspectratio	= 2.720823006
 
 Information on the locations:
 
