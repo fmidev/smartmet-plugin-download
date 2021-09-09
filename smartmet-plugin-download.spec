@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.8.31
+Version: 21.9.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -88,6 +88,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Sep  9 2021 Andris Pavenis <andris.pavenis@fmi.fi> 21.9.9-1.fmi
+- Repackage due to dependency change (libconfig->libconfig17)
+
 * Tue Aug 31 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.8.31-1.fmi
 - Repackaged due to Spine ABI changes
 
