@@ -27,69 +27,16 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-top left lonlat		= 21.4292,62.0814
-top right lonlat	= 29.2256,61.738
-bottom left lonlat	= 21.2571,58.4335
-bottom right lonlat	= 28.1302,58.1359
+top left lonlat		= 21.4113,61.9354
+top right lonlat	= 29.1677,61.5952
+bottom left lonlat	= 21.2419,58.2907
+bottom right lonlat	= 28.0827,57.9959
+center lonlat		= 24.9763,60.005
+bbox			= [73179.8422 479387.793 -3375665.88 -2970438.92]
 
-top left WGS84		= 21.4292,62.0814
-top right WGS84		= 29.2256,61.738
-bottom left WGS84	= 21.2571,58.4335
-bottom right WGS84	= 28.1302,58.1359
-center WGS84		= 25.011,60.1486
-
-bbox			= [73983.2978 481642.053 -3371450.57 -2965352.27]
-
-projstr	= +type=crs +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +datum=WGS84
-wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
-
-prettywkt =
-PROJCS["unknown",
-    GEOGCS["unknown",
-        DATUM["WGS_1984",
-            SPHEROID["WGS 84",6378137,298.257223563,
-                AUTHORITY["EPSG","7030"]],
-            AUTHORITY["EPSG","6326"]],
-        PRIMEM["Greenwich",0,
-            AUTHORITY["EPSG","8901"]],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]]],
-    PROJECTION["Polar_Stereographic"],
-    PARAMETER["latitude_of_origin",60],
-    PARAMETER["central_meridian",20],
-    PARAMETER["false_easting",0],
-    PARAMETER["false_northing",0],
-    UNIT["metre",1,
-        AUTHORITY["EPSG","9001"]],
-    AXIS["Easting",SOUTH],
-    AXIS["Northing",SOUTH]]
-
-EPSGTreatsAsLatLong		= 0
-EPSGTreatsAsNorthingEasting	= 0
-PrimeMeridian			= 0
-IsGeographic			= 0
-IsProjected			= 1
-IsGeocentric			= 0
-IsLocal				= 0
-IsVertical			= 0
-IsCompound			= 0
-SemiMajor			= 6378137
-SemiMinor			= 6356752.314
-InvFlattening			= 298.2572236
-EPSG				= 4326
-
-central_meridian	= 20
-latitude_of_origin	= 60
-false_easting	= 0
-false_northing	= 0
-
-proj options:
-+lat_0 = 90
-+lat_ts = 60
-+lon_0 = 20
-+datum = "WGS84"
-+proj = "stere"
-+type = "crs"
+fmiarea	= stereographic,20,90,60:21.2419,58.2907,29.1677,61.5952
+wktarea	= PROJCS["FMI_Polar_Stereographic",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],UNIT["Metre",1.0]]
+proj4	= +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
 
 top	= 0
 left	= 0
@@ -98,12 +45,16 @@ bottom	= 1
 
 xnumber		= 28
 ynumber		= 28
-dx		= 14.55924125 km
-dy		= 14.50351079 km
+dx		= 14.5074 km
+dy		= 14.4724 km
 
-xywidth		= 407.6587551 km
-xyheight	= 406.098302 km
-aspectratio	= 1.00384255
+xywidth		= 406.208 km
+xyheight	= 405.227 km
+aspectratio	= 1.00242
+
+central longitude	= 20
+central latitude	= 90
+true latitude		= 60
 
 Information on the locations:
 
