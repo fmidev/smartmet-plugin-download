@@ -18,7 +18,20 @@ LIBS += $(REQUIRED_LIBS) \
 	-lboost_filesystem \
 	-lboost_iostreams \
 	-lboost_system \
-	-lpthread -ldl
+	-lconfig++ \
+	-lbz2 -lz \
+	-leccodes \
+	-lpthread
+
+OBS =	../obj/Config.o \
+		../obj/DataStreamer.o \
+		../obj/Datum.o \
+		../obj/GribStreamer.o \
+		../obj/GribTools.o \
+		../obj/NetCdfStreamer.o \
+		../obj/Plugin.o \
+		../obj/QueryDataStreamer.o \
+		../obj/Query.o
 
 all: $(PROG)
 clean:

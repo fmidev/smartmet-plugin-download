@@ -35,9 +35,11 @@ class QDStreamer : public DataStreamer
   QDStreamer();
 
   std::list<NFmiDataMatrix<float>> itsGrids;  // Stores all loaded data/grids for current parameter
-  bool sendMeta;              // If set, send querydata headers (loading the first chunk)
-  bool isLoaded;              // If set, all data has been loaded (but possibly not sent yet)
-  size_t currentX, currentY;  // Current column and row; the grid cell to start the next chunk
+  bool itsMetaFlag = true;     // If set, send querydata headers (loading the first chunk)
+  bool itsLoadedFlag = false;  // If set, all data has been loaded (but possibly not sent yet)
+
+  std::size_t itsCurrentX = 0;  // Current column and row; the grid cell to start the next chunk
+  std::size_t itsCurrentY = 0;
 };
 
 }  // namespace Download

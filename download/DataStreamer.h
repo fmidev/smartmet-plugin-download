@@ -9,31 +9,19 @@
 #include "Config.h"
 #include "Query.h"
 #include "Resources.h"
+#include "Tools.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Model.h>
-#include <engines/querydata/ValidTimeList.h>
-#include <grid-files/grid/Typedefs.h>
+#include <gis/CoordinateMatrix.h>
+#include <gis/SpatialReference.h>
 #include <newbase/NFmiGrid.h>
-#include <newbase/NFmiRotatedLatLonArea.h>
 #include <spine/HTTP.h>
 #include <spine/TimeSeriesGenerator.h>
+#include <engines/querydata/ValidTimeList.h>
+#include <grid-files/grid/Typedefs.h>
 #include <ogr_spatialref.h>
-
-typedef std::list<std::pair<float, float>> Scaling;
-
-struct BBoxCorners
-{
-  BBoxCorners(){};
-  BBoxCorners(const NFmiPoint &bl, const NFmiPoint &tr) : bottomLeft(bl), topRight(tr){};
-
-  NFmiPoint bottomLeft;
-  NFmiPoint topRight;
-};
-
-#define BOTTOMLEFT 0
-#define TOPRIGHT 1
 
 namespace SmartMet
 {
@@ -41,19 +29,6 @@ namespace Plugin
 {
 namespace Download
 {
-// For external usage
-
-bool isSurfaceLevel(FmiLevelType levelType);
-bool isPressureLevel(FmiLevelType levelType);
-bool isHybridLevel(FmiLevelType levelType);
-bool isHeightOrDepthLevel(FmiLevelType levelType);
-bool isHeightLevel(FmiLevelType levelType, int levelValue);
-bool isDepthLevel(FmiLevelType levelType, int levelValue);
-double getProjParam(const OGRSpatialReference &srs,
-                    const char *param,
-                    bool ignoreErr = false,
-                    double defaultValue = 0.0);
-
 // Data streaming
 //
 
@@ -82,12 +57,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void setEngines(const Engine::Querydata::Engine *theQEngine,
                   const Engine::Grid::Engine *theGridEngine,
-                  const Engine::Geonames::Engine *theGeoEngine)
-  {
-    itsQEngine = theQEngine;
-    itsGridEngine = theGridEngine;
-    itsGeoEngine = theGeoEngine;
-  }
+                  const Engine::Geonames::Engine *theGeoEngine);
+
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer,
                         Query &query,
@@ -113,6 +84,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                 std::string &chunk){};
 
  protected:
+  void createQD(const NFmiGrid &g);
+  void extractData(std::string &chunk);
+  virtual void paramChanged(size_t nextParamOffset = 1) {}
+
   const Spine::HTTP::Request &itsRequest;
 
   const Config &itsCfg;
@@ -127,11 +102,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   unsigned int itsChunkLength;
   unsigned int itsMaxMsgChunks;
 
-  bool itsMetaFlag;
+  bool itsMetaFlag = true;
   FmiLevelType itsLevelType;  // Data level type; height level data with negative levels is stored
                               // as kFmiDepth
   FmiLevelType itsNativeLevelType;  // Native data level type
-  bool itsPositiveLevels;           // true if (depth) levels are positive
+  bool itsPositiveLevels = false;   // true if (depth) levels are positive
   Query::Levels itsDataLevels;
   std::list<int> itsSortedDataLevels;  // Levels in source data order (order needed for qd -output)
 
@@ -139,40 +114,38 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Fmi::CoordinateMatrix itsSrcLatLons;      // Source grid latlons
   Fmi::CoordinateMatrix itsTargetLatLons;   // Target grid latlons
   Fmi::CoordinateMatrix itsTargetWorldXYs;  // Target grid projected coordinates
-  size_t itsReqGridSizeX;
-  size_t itsReqGridSizeY;
-  size_t itsNX;
-  size_t itsNY;
-  double itsDX;
-  double itsDY;
-  struct
+  std::size_t itsReqGridSizeX = 0;
+  std::size_t itsReqGridSizeY = 0;
+  std::size_t itsNX = 0;
+  std::size_t itsNY = 0;
+  double itsDX = 0;
+  double itsDY = 0;
+
+  struct Cropping
   {
-    bool crop;     // Is cropping in use ?
-    bool cropped;  // Is grid cropped ?
-    bool cropMan;  // If set, crop data manually from the grid (CroppedValues() was not used to get
-                   // the data)
-                   //
-                   // For manual cropping:
-                   //
-    int bottomLeftX, bottomLeftY;  // 		Cropped grid bottom left x and y coordinate
-    int topRightX, topRightY;      // 		Cropped grid top right x and y coordinate
-    size_t gridSizeX, gridSizeY;   // 		Cropped grid x and y size
-  } cropping;
+    bool crop = false;     // Is cropping in use ?
+    bool cropped = false;  // Is grid cropped ?
+    bool cropMan = false;  // If set, crop data manually from the grid (CroppedValues() was not used
+                           // to get the data)
+
+    // For manual cropping:
+    int bottomLeftX = 0, bottomLeftY = 0;      // Cropped grid bottom left x and y coordinate
+    int topRightX = 0, topRightY = 0;          // Cropped grid top right x and y coordinate
+    std::size_t gridSizeX = 0, gridSizeY = 0;  // Cropped grid x and y size
+  };
+
+  Cropping itsCropping;
 
   boost::shared_ptr<NFmiQueryData> itsQueryData;
-  void createQD(const NFmiGrid &g);
-
-  void extractData(std::string &chunk);
 
   Spine::OptionParsers::ParameterList::const_iterator itsParamIterator;
   Spine::OptionParsers::ParameterList itsDataParams;
   Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
 
-  virtual void paramChanged(size_t nextParamOffset = 1) {}
-  long itsDataTimeStep;
-  size_t itsTimeIndex;
-  size_t itsLevelIndex;
+  long itsDataTimeStep = 0;
+  std::size_t itsTimeIndex = 0;
+  std::size_t itsLevelIndex = 0;
 
   Engine::Querydata::Q itsQ;    // Q for input querydata file
   Engine::Querydata::Q itsCPQ;  // Q for in-memory querydata object containing current parameter
@@ -183,71 +156,29 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
  private:
   DataStreamer();
 
-  Spine::TimeSeriesGenerator::LocalTimeList::const_iterator itsTimeIterator;
-
-  Scaling itsValScaling;
-
-  boost::optional<BBoxCorners> itsRegBoundingBox;
-
-  bool itsLevelRng;
-  bool itsHeightRng;
-  bool itsRisingLevels;
-  bool itsProjectionChecked;
-  bool itsUseNativeProj;
-  bool itsUseNativeBBox;
-  bool itsUseNativeGridSize;
-  bool itsRetainNativeGridResolution;
-
-  std::list<int>::const_iterator itsLevelIterator;
-
-  const Engine::Querydata::Engine *itsQEngine;
-  const Engine::Grid::Engine *itsGridEngine;
-  const Engine::Geonames::Engine *itsGeoEngine;
-  NFmiDataMatrix<float> itsDEMMatrix;
-  NFmiDataMatrix<bool> itsWaterFlagMatrix;
-
-  std::string itsDataChunk;
-
-  bool itsMultiFile;
-
-  void resetDataSet(bool getFirstChunk)
-  {
-    itsLevelIterator = itsSortedDataLevels.begin();
-    itsParamIterator = itsDataParams.begin();
-    itsTimeIterator = itsDataTimes.begin();
-    itsScalingIterator = itsValScaling.begin();
-
-    itsTimeIndex = itsLevelIndex = 0;
-    if (itsQ)
-      itsQ->resetTime();
-
-    itsDataChunk.clear();
-
-    if (getFirstChunk)
-    {
-      extractData(itsDataChunk);
-    }
-  }
+  void resetDataSet(bool getFirstChunk);
 
   void checkDataTimeStep(long timeStep = -1);
 
+  void getBBox(const std::string &bbox);
   void getRegLLBBox(Engine::Querydata::Q q);
   std::string getRegLLBBoxStr(Engine::Querydata::Q q);
   void getLLBBox(Engine::Querydata::Q q);
 
   void setSteppedGridSize();
-  bool setRequestedGridSize(const NFmiArea &area, size_t nativeGridSizeX, size_t nativeGridSizeY);
+  bool setRequestedGridSize(const NFmiArea &area,
+                            std::size_t nativeGridSizeX,
+                            std::size_t nativeGridSizeY);
   void setNativeGridResolution(const NFmiArea &nativeArea,
-                               size_t nativeGridSizeX,
-                               size_t nativeGridSizeY);
+                               std::size_t nativeGridSizeX,
+                               std::size_t nativeGridSizeY);
   void setCropping(const NFmiGrid &grid);
 
   void setTransformedCoordinates(Engine::Querydata::Q q, const NFmiArea *area);
   void coordTransform(Engine::Querydata::Q q, const NFmiArea *area);
 
-  std::string getGridCenterBBoxStr(bool usenativeproj, const NFmiGrid &grid) const;
+  std::string getGridCenterBBoxStr() const;
 
-  NFmiDataMatrix<NFmiLocationCache> locCache;
   void cachedProjGridValues(Engine::Querydata::Q q,
                             NFmiGrid &wantedGrid,
                             const NFmiMetTime *mt,
@@ -259,11 +190,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void createArea(Engine::Querydata::Q q,
                   const NFmiArea &nativeArea,
                   unsigned long nativeClassId,
-                  size_t nativeGridSizeX,
-                  size_t nativeGridSizeY);
+                  std::size_t nativeGridSizeX,
+                  std::size_t nativeGridSizeY);
   void createGrid(const NFmiArea &area,
-                  size_t nativeGridSizeX,
-                  size_t nativeGridSizeY,
+                  std::size_t nativeGridSizeX,
+                  std::size_t nativeGridSizeY,
                   bool interpolation);
   bool getAreaAndGrid(Engine::Querydata::Q q,
                       bool interpolation,
@@ -280,6 +211,37 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
 
   void nextParam(Engine::Querydata::Q q);
+
+  // data members
+
+  Spine::TimeSeriesGenerator::LocalTimeList::const_iterator itsTimeIterator;
+
+  Scaling itsValScaling;
+
+  boost::optional<BBoxCorners> itsRegBoundingBox;
+
+  bool itsLevelRng = false;
+  bool itsHeightRng = false;
+  bool itsRisingLevels = false;
+  bool itsProjectionChecked = false;
+  bool itsUseNativeProj = false;
+  bool itsUseNativeBBox = false;
+  bool itsUseNativeGridSize = false;
+  bool itsRetainNativeGridResolution = false;
+
+  std::list<int>::const_iterator itsLevelIterator;
+
+  const Engine::Querydata::Engine *itsQEngine = nullptr;
+  const Engine::Grid::Engine *itsGridEngine = nullptr;
+  const Engine::Geonames::Engine *itsGeoEngine = nullptr;
+  NFmiDataMatrix<float> itsDEMMatrix;
+  NFmiDataMatrix<bool> itsWaterFlagMatrix;
+
+  std::string itsDataChunk;
+
+  bool itsMultiFile = false;
+
+  NFmiDataMatrix<NFmiLocationCache> itsLocCache;
 
   // Grid support
   //

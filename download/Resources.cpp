@@ -1,7 +1,7 @@
 #include "Resources.h"
 #include <boost/stacktrace.hpp>
-#include <macgyver/Exception.h>
 #include <newbase/NFmiAreaFactory.h>
+#include <macgyver/Exception.h>
 
 namespace SmartMet
 {
@@ -28,13 +28,65 @@ Resources::~Resources()
   }
 }
 
+#ifdef WGS84
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Create area with given projection string
  */
 // ----------------------------------------------------------------------
 
-void Resources::createArea(std::string &projection)
+void Resources::createArea(const std::string &projection,
+                           const NFmiPoint &bottomLeft,
+                           const NFmiPoint &topRight)
+{
+  try
+  {
+    area = NFmiAreaFactory::CreateFromCorners(projection, bottomLeft, topRight);
+
+    if (!area.get())
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create area with given projection string
+ */
+// ----------------------------------------------------------------------
+
+void Resources::createArea(const std::string &projection,
+                           const NFmiPoint &center,
+                           double widthKM,
+                           double heightKM)
+{
+  try
+  {
+    area = NFmiAreaFactory::CreateFromCenter(
+        projection, center, 2 * 1000 * widthKM, 2 * 1000 * heightKM);
+
+    if (!area.get())
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+#else
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create area with given projection string
+ */
+// ----------------------------------------------------------------------
+
+void Resources::createArea(const std::string &projection)
 {
   try
   {
@@ -48,6 +100,8 @@ void Resources::createArea(std::string &projection)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 /*!
@@ -214,7 +268,7 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
       {
         if (!(geometrySRS = toSRS->Clone()))
           throw Fmi::Exception(BCP,
-                               "getCoordinateTransformation: OGRSpatialReference cloning failed");
+                                 "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
           spatialReferences.push_back(geometrySRS);
       }

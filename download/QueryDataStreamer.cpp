@@ -23,10 +23,10 @@ QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Producer &producer,
                        const ReqParams &reqParams)
     : DataStreamer(req, config, producer, reqParams),
-      sendMeta(true),
-      isLoaded(false),
-      currentX(0),
-      currentY(0)
+      itsMetaFlag(true),
+      itsLoadedFlag(false),
+      itsCurrentX(0),
+      itsCurrentY(0)
 {
 }
 
@@ -45,20 +45,20 @@ std::string QDStreamer::getChunk()
   {
     try
     {
-      if (itsDoneFlag && (!isLoaded))
+      if (itsDoneFlag && (!itsLoadedFlag))
       {
         setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
         return "";
       }
 
-      if (!isLoaded)
+      if (!itsLoadedFlag)
       {
         // Load all data for the next parameter. First store it's first grid (it was loaded in
         // previous call)
         //
         string chunk;
         auto it_p = itsParamIterator;
-        currentX = currentY = 0;
+        itsCurrentX = itsCurrentY = 0;
 
         if (itsGrids.size() > 0)
         {
@@ -82,7 +82,7 @@ std::string QDStreamer::getChunk()
           else
             break;
         }
-        if (!(isLoaded = (itsGrids.size() > 0)))
+        if (!(itsLoadedFlag = (itsGrids.size() > 0)))
         {
           setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
           return "";
@@ -96,12 +96,12 @@ std::string QDStreamer::getChunk()
       size_t valueSize = sizeof(itsGridValues[0][0]);
       long chunkLen = 0;
 
-      if (sendMeta)
+      if (itsMetaFlag)
       {
         // Send querydata headers/metadata
         //
         os << *(itsQueryData->Info());
-        sendMeta = false;
+        itsMetaFlag = false;
 
         // "Backward compatibility when other than floats were supported"
 
@@ -119,10 +119,10 @@ std::string QDStreamer::getChunk()
 
       // Send parameter values
 
-      for (; ((currentY < itsReqGridSizeY) && (chunkLen < itsChunkLength));
-           currentY++, currentX = 0)
+      for (; ((itsCurrentY < itsReqGridSizeY) && (chunkLen < itsChunkLength));
+           itsCurrentY++, itsCurrentX = 0)
       {
-        for (; (currentX < itsReqGridSizeX); currentX++)
+        for (; (itsCurrentX < itsReqGridSizeX); itsCurrentX++)
         {
           // Note: Time is the fastest running querydata dimension; get the values from all grids
           // for
@@ -130,15 +130,15 @@ std::string QDStreamer::getChunk()
           //
           BOOST_FOREACH (auto const &grid, itsGrids)
           {
-            os.write((const char *)&grid[currentX][currentY], valueSize);
+            os.write((const char *)&grid[itsCurrentX][itsCurrentY], valueSize);
             chunkLen += valueSize;
           }
         }
       }
 
-      if (currentY >= itsReqGridSizeY)
+      if (itsCurrentY >= itsReqGridSizeY)
       {
-        isLoaded = false;
+        itsLoadedFlag = false;
 
         if (itsDoneFlag)
         {
@@ -163,7 +163,7 @@ std::string QDStreamer::getChunk()
     setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
 
     itsDoneFlag = true;
-    isLoaded = false;
+    itsLoadedFlag = false;
 
     return "";
   }
@@ -202,15 +202,15 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
 
     chunk = " ";
 
-    if ((!cropping.cropped) || (!cropping.cropMan))
+    if ((!itsCropping.cropped) || (!itsCropping.cropMan))
       return;
 
     // Data must be cropped manually.
 
-    NFmiDataMatrix<float> croppedValues(cropping.gridSizeX, cropping.gridSizeY);
+    NFmiDataMatrix<float> croppedValues(itsCropping.gridSizeX, itsCropping.gridSizeY);
 
-    size_t x0 = cropping.bottomLeftX, y0 = cropping.bottomLeftY;
-    size_t xN = x0 + cropping.gridSizeX, yN = y0 + cropping.gridSizeY, cx, cy, x, y;
+    size_t x0 = itsCropping.bottomLeftX, y0 = itsCropping.bottomLeftY;
+    size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx, cy, x, y;
 
     for (y = y0, cy = 0; (y < yN); y++, cy++)
       for (x = x0, cx = 0; (x < xN); x++, cx++)

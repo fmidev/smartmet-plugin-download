@@ -11,9 +11,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/thread.hpp>
 
-class NFmiRotatedLatLonArea;
-class NFmiStereographicArea;
-
 namespace SmartMet
 {
 namespace Plugin
@@ -58,8 +55,8 @@ class GribStreamer : public DataStreamer
   void scanningDirections(long& iNegative, long& jPositive) const;
 
   void setLatlonGeometryToGrib() const;
-  void setRotatedLatlonGeometryToGrib(const NFmiRotatedLatLonArea* Area) const;
-  void setStereographicGeometryToGrib(const NFmiStereographicArea* Area) const;
+  void setRotatedLatlonGeometryToGrib(const NFmiArea* Area) const;
+  void setStereographicGeometryToGrib(const NFmiArea* Area) const;
   void setMercatorGeometryToGrib() const;
   void setLambertConformalGeometryToGrib() const;
   void setLambertAzimuthalEqualAreaGeometryToGrib() const;
@@ -68,9 +65,9 @@ class GribStreamer : public DataStreamer
   void setLevelAndParameterToGrib(int level,
                                   const NFmiParam& theParam,
                                   const ParamChangeTable& pTable,
-                                  size_t& paramIdx);
+                                  std::size_t& paramIdx);
   void setStepToGrib(const ParamChangeTable& pTable,
-                     size_t paramIdx,
+                     std::size_t paramIdx,
                      bool setOriginTime,
                      const boost::posix_time::ptime& validTime);
   void addValuesToGrib(Engine::Querydata::Q q,

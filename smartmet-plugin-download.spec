@@ -9,6 +9,34 @@ Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+<<<<<<< HEAD
+BuildRequires: rpm-build
+BuildRequires: gcc-c++
+BuildRequires: make
+BuildRequires: fmt-devel
+BuildRequires: gdal30-devel
+BuildRequires: boost169-devel
+BuildRequires: eccodes-devel
+BuildRequires: jsoncpp-devel >= 0.10.5
+BuildRequires: libconfig >= 1.4.9
+BuildRequires: smartmet-library-spine-devel >= 20.10.6
+BuildRequires: smartmet-library-macgyver-devel >= 20.10.5
+BuildRequires: smartmet-library-newbase-devel >= 20.10.2
+BuildRequires: netcdf-devel
+BuildRequires: smartmet-engine-querydata-devel >= 20.10.6
+BuildRequires: smartmet-engine-geonames-devel
+BuildRequires: netcdf-cxx-devel
+BuildRequires: bzip2-devel
+Requires: gdal30
+Requires: eccodes
+Requires: fmt >= 6.2.1
+Requires: jsoncpp >= 0.10.5
+Requires: smartmet-library-macgyver >= 20.10.5
+Requires: smartmet-library-spine >= 20.10.6
+Requires: smartmet-library-newbase >= 20.10.2
+Requires: smartmet-engine-querydata >= 20.10.6
+Requires: smartmet-server >= 20.9.23
+=======
 BuildRequires: boost169-devel
 BuildRequires: gcc-c++
 BuildRequires: gdal32-devel
@@ -35,6 +63,7 @@ Requires: smartmet-library-spine >= 21.9.7
 Requires: smartmet-library-newbase >= 21.6.16
 Requires: smartmet-engine-querydata >= 21.9.7
 Requires: smartmet-server >= 21.6.3
+>>>>>>> master
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -194,6 +223,10 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Sep 23 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.23-1.fmi
 - Use Fmi::Exception instead of Spine::Exception
 
+<<<<<<< HEAD
+* Tue Aug 25 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.25-1.fmi
+- Repackaged due to eccodes upgrade
+=======
 * Fri Sep 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.18-1.fmi
 - Repackaged due to library ABI changes
 
@@ -208,10 +241,15 @@ rm -rf $RPM_BUILD_ROOT
 
 * Mon Aug 31 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.31-1.fmi
 - Repackaged due to library ABI changes
+>>>>>>> master
 
 * Fri Aug 21 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.21-1.fmi
 - Upgrade to fmt 6.2
 
+<<<<<<< HEAD
+* Thu May 28 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.28-1.fmi
+- Ported to use the latest newbase API
+=======
 * Tue Aug 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.18-1.fmi
 - Repackaged due to grid library ABI changes
 
@@ -232,6 +270,7 @@ rm -rf $RPM_BUILD_ROOT
 - Added lock protecting netcdf metadata generation for grid data (not thread safe)
 - Added grid support
 - Added GRIB multifile property
+>>>>>>> master
 
 * Wed May 13 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.13-1.fmi
 - Repackaged since Spine Parameter class ABI changed
@@ -239,8 +278,13 @@ rm -rf $RPM_BUILD_ROOT
 * Fri May  8 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.8-1.fmi
 - Fixed bug in netcdf output when skipping missing querydata parameters (BS-1823)
 
+<<<<<<< HEAD
+* Sun Apr 26 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.26-1.fmi
+- Use Fmi::CoordinateMatrix
+=======
 * Thu Apr 30 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.30-1.fmi
 - Repackaged due to base library API changes
+>>>>>>> master
 
 * Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
 - Upgraded to Boost 1.69
@@ -259,6 +303,12 @@ rm -rf $RPM_BUILD_ROOT
 
 * Thu Mar 19 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.3.19-1.fmi
 - Improved safety of NcFile initialization
+
+* Fri Dec 13 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.12.13-1.fmi
+- Repackaged due to NFmiArea API changes
+
+* Thu Dec 12 2019 Mika Heiskanen <mika.heiskanen@fmi.fi> - 19.12.12-1.fmi
+- Upgrade to GDAL 3.0
 
 * Fri Nov 22 2019 Pertti Kinnia <pertti.kinnia@fmi.fi> - 19.11.22-1.fmi
 - Added config setting 'logrequestdatavalues' (default is 0; no logging). Request is written to stderr if given number of output data values is exceeded

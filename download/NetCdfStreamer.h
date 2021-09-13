@@ -56,28 +56,22 @@ class NetCdfStreamer : public DataStreamer
   // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
   // shared_ptr:s)
 
-  boost::shared_ptr<NcDim> itsEnsembleDim;
-  boost::shared_ptr<NcDim> itsTimeDim;
-  boost::shared_ptr<NcDim> itsTimeBoundsDim;
-  boost::shared_ptr<NcDim> itsLevelDim;
-  boost::shared_ptr<NcDim> itsYDim;
-  boost::shared_ptr<NcDim> itsXDim;
-  boost::shared_ptr<NcDim> itsLatDim;
-  boost::shared_ptr<NcDim> itsLonDim;
+  boost::shared_ptr<NcDim> itsEnsembleDim, itsTimeDim, itsTimeBoundsDim, itsLevelDim, itsYDim,
+      itsXDim, itsLatDim, itsLonDim;
   boost::shared_ptr<NcVar> itsTimeVar;
 
   std::list<NcVar *>::iterator itsVarIterator;
   std::list<NcVar *> itsDataVars;
 
-  boost::shared_ptr<NcDim> addDimension(std::string dimName, long dimSize);
-  boost::shared_ptr<NcVar> addVariable(std::string varName,
+  boost::shared_ptr<NcDim> addDimension(const std::string &dimName, long dimSize);
+  boost::shared_ptr<NcVar> addVariable(const std::string &varName,
                                        NcType dataType,
                                        NcDim *dim1 = nullptr,
                                        NcDim *dim2 = nullptr,
                                        NcDim *dim3 = nullptr,
                                        NcDim *dim4 = nullptr,
                                        NcDim *dim5 = nullptr);
-  boost::shared_ptr<NcVar> addCoordVariable(std::string dimName,
+  boost::shared_ptr<NcVar> addCoordVariable(const std::string &dimName,
                                             long dimSize,
                                             NcType dataType,
                                             std::string stdName,

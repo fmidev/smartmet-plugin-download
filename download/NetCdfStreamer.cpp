@@ -9,12 +9,16 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
-#include <macgyver/Exception.h>
+#include <gis/ProjInfo.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiStereographicArea.h>
+#include <macgyver/Exception.h>
 #include <spine/Thread.h>
+
+#ifndef WGS84
+#include <newbase/NFmiStereographicArea.h>
+#endif
 
 namespace
 {
@@ -59,7 +63,8 @@ void NetCdfStreamer::requireNcFile()
   if (itsFile)
     return;
 
-  itsFile.reset(new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
+  itsFile.reset(
+      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
 }
 
 // ----------------------------------------------------------------------
@@ -155,7 +160,7 @@ void dimDeleter(NcDim * /* dim */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(string dimName, long dimSize)
+boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(const string &dimName, long dimSize)
 {
   try
   {
@@ -182,7 +187,7 @@ void varDeleter(NcVar * /* var */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(string varName,
+boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
                                                      NcType dataType,
                                                      NcDim *dim1,
                                                      NcDim *dim2,
@@ -213,7 +218,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(string varName,
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(string dimName,
+boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(const string &dimName,
                                                           long dimSize,
                                                           NcType dataType,
                                                           string stdName,
@@ -366,8 +371,8 @@ void NetCdfStreamer::addTimeDimension()
     }
     else
       throw Fmi::Exception(BCP,
-                           "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                               " for producer '" + itsReqParams.producer + "'");
+                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                                 " for producer '" + itsReqParams.producer + "'");
 
     Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
@@ -380,11 +385,11 @@ void NetCdfStreamer::addTimeDimension()
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
         throw Fmi::Exception(BCP,
-                             "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                                 boost::lexical_cast<string>(times[timeSize - 1]) + " (validtime " +
-                                 Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
-                                 boost::lexical_cast<string>(timeStep) + ") for producer '" +
-                                 itsReqParams.producer + "'");
+                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
+                                   boost::lexical_cast<string>(times[timeSize - 1]) +
+                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
+                                   " timestep " + boost::lexical_cast<string>(timeStep) +
+                                   ") for producer '" + itsReqParams.producer + "'");
 
       times[timeSize] = period;
     }
@@ -660,11 +665,20 @@ void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
 
     if (!geometrySRS)
     {
+#ifdef WGS84
+      auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
+      auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
+      auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
+      lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
+      lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
+      lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
+#else
       const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
 
       lon_0 = a.CentralLongitude();
       lat_0 = a.CentralLatitude();
       lat_ts = a.TrueLatitude();
+#endif
     }
     else
     {
@@ -811,12 +825,15 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     auto crsVar = addVariable("crs", ncShort);
 
-    auto classid = area->ClassId();
+    int classId = (itsReqParams.areaClassId != A_Native)
+        ? (int) itsReqParams.areaClassId
+#ifdef WGS84
+        : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId() : area->ClassId();
+#else
+        : area->ClassId();
+#endif
 
-    if (itsReqParams.areaClassId != A_Native)
-      classid = itsReqParams.areaClassId;
-
-    switch (classid)
+    switch (classId)
     {
       case kNFmiLatLonArea:
         setLatLonGeometry(area, crsVar);
@@ -824,6 +841,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       case kNFmiStereographicArea:
         setStereographicGeometry(area, crsVar);
         break;
+#ifdef WGS84
+      case kNFmiProjArea:
+        throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
+#endif
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }
@@ -831,12 +852,12 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     // Store y/x and/or lat/lon dimensions and coordinate variables, cropping the grid if manual
     // cropping is set
 
-    bool projected = (classid != kNFmiLatLonArea);
+    bool projected = (classId != kNFmiLatLonArea);
 
-    size_t x0 = (cropping.cropped ? cropping.bottomLeftX : 0),
-           y0 = (cropping.cropped ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0),
+           y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
     size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
@@ -856,26 +877,14 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
       // 2011):
       //
-      //		 "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and
-      // lev(k).
-      // The
-      // vertical coordinate is
-      //		  represented by the coordinate variable lev(lev) and the latitude and
-      // longitude
-      // coordinates are represented by
-      //		  the auxiliary coordinate variables lat(yc,xc) and lon(yc,xc) which are
-      // identified
-      // by
-      // the
-      // coordinates attribute.
+      // "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and
+      // lev(k). The vertical coordinate is represented by the coordinate variable lev(lev) and
+      // the latitude and longitude coordinates are represented by the auxiliary coordinate
+      // variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates attribute.
       //
-      //		  Note that coordinate variables are also defined for the xc and yc
-      // dimensions. This
-      // faciliates processing of this
-      //		  data by generic applications that don't recognize the multidimensional
-      // latitude
-      // and
-      // longitude coordinates."
+      // Note that coordinate variables are also defined for the xc and yc dimensions. This
+      // faciliates processing of this data by generic applications that don't recognize the
+      // multidimensional latitude and longitude coordinates."
 
       auto yVar =
           addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);
@@ -883,9 +892,9 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
           addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", itsXDim);
 
       NFmiPoint p0 =
-          ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToWorldXY(x0, y0)
-                                                                      : itsTargetWorldXYs(x0, y0));
-      NFmiPoint pN = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
+          ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToWorldXY(x0, y0)
+                                                                : itsTargetWorldXYs(x0, y0));
+      NFmiPoint pN = ((itsReqParams.datumShift == Datum::DatumShift::None)
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
                           : itsTargetWorldXYs(xN - 1, yN - 1));
 
@@ -912,8 +921,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         for (x = x0; (x < xN); x += xStep, n++)
         {
           const NFmiPoint p =
-              ((itsReqParams.datumShift == Plugin::Download::Datum::None) ? grid->GridToLatLon(x, y)
-                                                                          : itsTargetLatLons(x, y));
+              ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, y)
+                                                                    : itsTargetLatLons(x, y));
 
           lat[n] = p.Y();
           lon[n] = p.X();
@@ -932,14 +941,14 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", itsLonDim);
 
       for (y = y0, n = 0; (y < yN); y += yStep, n++)
-        lat[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
-                      ? grid->GridToLatLon(0, y).Y()
-                      : itsTargetLatLons.y(0, y));
+        lat[n] =
+            ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(0, y).Y()
+                                                                  : itsTargetLatLons.y(0, y));
 
       for (x = x0, n = 0; (x < xN); x += xStep, n++)
-        lon[n] = ((itsReqParams.datumShift == Plugin::Download::Datum::None)
-                      ? grid->GridToLatLon(x, 0).X()
-                      : itsTargetLatLons.x(x, 0));
+        lon[n] =
+            ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
+                                                                  : itsTargetLatLons.x(x, 0));
 
       if (!latVar->put(lat, itsNY))
         throw Fmi::Exception(BCP, "Failed to store latitude coordinates");
@@ -955,15 +964,13 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     addAttribute(lonVar, "long_name", "longitude");
     addAttribute(lonVar, "units", "degrees_east");
 
-    if (Plugin::Download::Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
     {
-      addAttribute(crsVar, "semi_major", Plugin::Download::Datum::Sphere::NetCdf::WGS84_semiMajor);
-      addAttribute(crsVar,
-                   "inverse_flattening",
-                   Plugin::Download::Datum::Sphere::NetCdf::WGS84_invFlattening);
+      addAttribute(crsVar, "semi_major", Datum::NetCdf::WGS84_semiMajor);
+      addAttribute(crsVar, "inverse_flattening", Datum::NetCdf::WGS84_invFlattening);
     }
     else if (projected)
-      addAttribute(crsVar, "earth_radius", Plugin::Download::Datum::Sphere::NetCdf::Fmi_6371220m);
+      addAttribute(crsVar, "earth_radius", Datum::NetCdf::Fmi_6371220m);
   }
   catch (...)
   {
@@ -1359,8 +1366,8 @@ void NetCdfStreamer::addParameters(bool relative_uv)
             j = i + 1;
           else
             throw Fmi::Exception(BCP,
-                                 "Missing gridrelative configuration for parameter " +
-                                     boost::lexical_cast<string>(usedParId));
+                                   "Missing gridrelative configuration for parameter " +
+                                       boost::lexical_cast<string>(usedParId));
         }
 
       if ((i >= pTable.size()) && (j > 0))
@@ -1456,10 +1463,10 @@ void NetCdfStreamer::storeParamValues()
     //
     // Note: Using heap because buffer size might exceed stack size
 
-    bool cropxy = (cropping.cropped && cropping.cropMan);
-    size_t x0 = (cropxy ? cropping.bottomLeftX : 0), y0 = (cropxy ? cropping.bottomLeftY : 0);
-    size_t xN = (cropping.cropped ? (x0 + cropping.gridSizeX) : itsReqGridSizeX),
-           yN = (cropping.cropped ? (y0 + cropping.gridSizeY) : itsReqGridSizeY);
+    bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
 

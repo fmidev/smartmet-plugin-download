@@ -5,23 +5,11 @@
 // ======================================================================
 
 #include "Plugin.h"
-#include "Query.h"
-
 #include "DataStreamer.h"
 #include "GribStreamer.h"
 #include "NetCdfStreamer.h"
+#include "Query.h"
 #include "QueryDataStreamer.h"
-
-#include <spine/Convenience.h>
-#include <macgyver/Exception.h>
-#include <spine/Reactor.h>
-#include <spine/SmartMet.h>
-#include <spine/Table.h>
-
-#include <macgyver/StringConversion.h>
-#include <macgyver/TimeFormatter.h>
-#include <macgyver/TimeZoneFactory.h>
-
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
@@ -31,16 +19,21 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
-
-#include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiRotatedLatLonArea.h>
-
-#include <macgyver/HelmertTransformation.h>
-#include <macgyver/TimeParser.h>
-
 #include <cmath>
+#include <cpl_conv.h>
 #include <iostream>
 #include <limits>
+#include <macgyver/Exception.h>
+#include <macgyver/HelmertTransformation.h>
+#include <macgyver/StringConversion.h>
+#include <macgyver/TimeFormatter.h>
+#include <macgyver/TimeParser.h>
+#include <macgyver/TimeZoneFactory.h>
+#include <newbase/NFmiQueryData.h>
+#include <spine/Convenience.h>
+#include <spine/Reactor.h>
+#include <spine/SmartMet.h>
+#include <spine/Table.h>
 #include <stdexcept>
 
 #include <cpl_conv.h>
@@ -86,68 +79,6 @@ bool special(const Spine::Parameter &theParam)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Return pairs of values from comma separated string
- */
-// ----------------------------------------------------------------------
-
-template <typename T>
-boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs)
-{
-  try
-  {
-    boost::optional<vector<pair<T, T>>> pvalue;
-    boost::trim(pvs);
-
-    if (pvs.empty())
-      return pvalue;
-
-    try
-    {
-      std::vector<std::string> flds;
-      boost::split(flds, pvs, boost::is_any_of(","));
-      size_t nValues = 2 * nPairs;
-
-      if (flds.size() != nValues)
-        throw Fmi::Exception(
-            BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
-
-      size_t n;
-
-      for (n = 0; (n < nValues); n++)
-      {
-        boost::trim(flds[n]);
-
-        if (flds[n].empty())
-          throw Fmi::Exception(
-              BCP, string("Invalid value for parameter '") + param + "': '" + pvs + "'");
-      }
-
-      vector<pair<T, T>> pvv;
-      size_t np;
-
-      for (np = 0, n = 0; (n < nValues); np++, n += 2)
-        pvv.push_back(
-            make_pair<T, T>(boost::lexical_cast<T>(flds[n]), boost::lexical_cast<T>(flds[n + 1])));
-
-      pvalue = pvv;
-
-      return pvalue;
-    }
-    catch (...)
-    {
-    }
-
-    throw Fmi::Exception(BCP,
-                           string("Invalid value for parameter '") + param + "': '" + pvs + "'");
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Get projection type
  */
 // ----------------------------------------------------------------------
@@ -171,10 +102,10 @@ static ProjType getProjectionType(ReqParams &reqParams)
 
     // If request datum is 'epsg', check epsg projection for implied datum shift to wgs84.
 
-    bool checkDatum = (reqParams.datumShift == Datum::EPSG);
+    bool checkDatum = (reqParams.datumShift == Datum::DatumShift::Epsg);
 
     if (checkDatum)
-      reqParams.datumShift = Datum::None;
+      reqParams.datumShift = Datum::DatumShift::None;
 
     reqParams.areaClassId = A_Native;
 
@@ -213,7 +144,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
               const char *datum = srs.GetAttrValue("DATUM");
 
               if (Fmi::ascii_toupper_copy(string(datum ? datum : "")) == Datum::epsgWGS84DatumName)
-                reqParams.datumShift = Datum::WGS84;
+                reqParams.datumShift = Datum::DatumShift::Wgs84;
             }
 
             if (!srs.IsProjected())
@@ -400,10 +331,10 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     if (reqParams.dataSource == QueryData)
       reqParams.projType = getProjectionType(reqParams);
 
-    if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::None))
-      // proj4 needed for projection
+    if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::DatumShift::None))
+      // gdal/proj4 needed for projection
       //
-      reqParams.datumShift = Datum::FMI;
+      reqParams.datumShift = Datum::DatumShift::Fmi;
 
     reqParams.bbox = reqParams.origBBox = getRequestParam(req, producer, "bbox", "");
     reqParams.gridCenter = getRequestParam(req, producer, "gridcenter", "");

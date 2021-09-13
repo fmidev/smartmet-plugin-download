@@ -45,19 +45,19 @@ static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
     {
       const char* name;
       DatumShift datumShift;
-    } datumShifts[] = {{"None", None},
-                       {"FMI", FMI},
-                       {"EPSG", EPSG},
-                       {"WGS84", WGS84},
-                       {"HPNoScale", HPNoScale},
-                       {"HPNS", HPNoScale},
-                       {"HPDefaultScale", HPDefaultScale},
-                       {"HPDS", HPDefaultScale},
-                       {"HPPreserveEWScale", HPPreserveEWScale},
-                       {"HPPEWS", HPPreserveEWScale},
-                       {"HPPreserveSNScale", HPPreserveSNScale},
-                       {"HPPSNS", HPPreserveSNScale},
-                       {nullptr, None}};
+    } datumShifts[] = {{"None", DatumShift::None},
+                       {"FMI", DatumShift::Fmi},
+                       {"EPSG", DatumShift::Epsg},
+                       {"WGS84", DatumShift::Wgs84},
+                       {"HPNoScale", DatumShift::HPNoScale},
+                       {"HPNS", DatumShift::HPNoScale},
+                       {"HPDefaultScale", DatumShift::HPDefaultScale},
+                       {"HPDS", DatumShift::HPDefaultScale},
+                       {"HPPreserveEWScale", DatumShift::HPPreserveEWScale},
+                       {"HPPEWS", DatumShift::HPPreserveEWScale},
+                       {"HPPreserveSNScale", DatumShift::HPPreserveSNScale},
+                       {"HPPSNS", DatumShift::HPPreserveSNScale},
+                       {nullptr, DatumShift::None}};
 
     string s = boost::trim_copy(Fmi::ascii_tolower_copy(setting));
 
@@ -90,7 +90,7 @@ bool parseDatumShift(const string& setting, DatumShift& datumShift)
     if (!s.empty())
       return datumShiftFromString(setting, datumShift);
 
-    datumShift = None;
+    datumShift = DatumShift::None;
 
     return true;
   }
@@ -111,7 +111,7 @@ bool isDatumShiftToWGS84(DatumShift datumShift)
 {
   try
   {
-    return (datumShift >= WGS84) && (datumShift <= HPPreserveSNScale);
+    return (datumShift >= DatumShift::Wgs84) && (datumShift <= DatumShift::HPPreserveSNScale);
   }
   catch (...)
   {
@@ -148,13 +148,13 @@ void getHelmertTransformationParameters(DatumShift datumShift,
 
     string towgs84;
 
-    if ((datumShift == HPNoScale) || (datumShift == HPPreserveEWScale) ||
-        (datumShift == HPPreserveSNScale))
+    if ((datumShift == DatumShift::HPNoScale) || (datumShift == DatumShift::HPPreserveEWScale) ||
+        (datumShift == DatumShift::HPPreserveSNScale))
     {
       enum Fmi::HelmertTransformation::FmiSphereConvScalingType scalingType =
-          ((datumShift == HPNoScale)
+          ((datumShift == DatumShift::HPNoScale)
                ? Fmi::HelmertTransformation::FMI_SPHERE_NO_SCALING
-               : ((datumShift == HPPreserveEWScale)
+               : ((datumShift == DatumShift::HPPreserveEWScale)
                       ? Fmi::HelmertTransformation::FMI_SPHERE_PRESERVE_EAST_WEST_SCALE
                       : Fmi::HelmertTransformation::FMI_SPHERE_PRESERVE_SOUTH_NORTH_SCALE));
       towgs84 = Fmi::get_fmi_sphere_towgs84_proj4_string(R0, GR * lat0, GR * lon0, scalingType);

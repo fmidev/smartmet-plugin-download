@@ -2,11 +2,11 @@
 
 #include <boost/core/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
+#include <ogr_spatialref.h>
 #include <newbase/NFmiArea.h>
 #include <newbase/NFmiGrid.h>
 #include <newbase/NFmiPoint.h>
 #include <list>
-#include <ogr_spatialref.h>
 #include <string>
 
 // Resource management
@@ -44,10 +44,20 @@ class Resources : private boost::noncopyable
   Resources() = default;
   ~Resources();
 
-  void createArea(std::string &projection);
+#ifdef WGS84
+  void createArea(const std::string &projection,
+                  const NFmiPoint &bottomLeft,
+                  const NFmiPoint &topRight);
+  void createArea(const std::string &projection,
+                  const NFmiPoint &center,
+                  double widthKM,
+                  double heightKM);
+#else
+  void createArea(const std::string &projection);
+#endif
   const NFmiArea *getArea();
 
-  NFmiGrid *getGrid(const NFmiArea &a, size_t gsX, size_t gsY);
+  NFmiGrid *getGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);
   NFmiGrid *getGrid() const { return grid.get(); }
   OGRSpatialReference *cloneGeogCS(const OGRSpatialReference &, bool isGeometrySRS = false);
   OGRSpatialReference *cloneCS(const OGRSpatialReference &, bool isGeometrySRS = false);
@@ -63,8 +73,8 @@ class Resources : private boost::noncopyable
   std::list<OGRCoordinateTransformation *> transformations;
   OGRSpatialReference *geometrySRS = nullptr;
 
-  void createGrid(const NFmiArea &a, size_t gsX, size_t gsY);
-  bool hasGrid(const NFmiArea &a, size_t gsX, size_t gsY);
+  void createGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);
+  bool hasGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);
 };
 
 }  // namespace Download
