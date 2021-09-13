@@ -1,0 +1,122 @@
+
+Info version = 	7
+
+
+The parameters stored in the querydata are:
+
+Number  Name                                    Description                             Interpolation      Precision  Lolimit  Hilimit
+======  ====                                    ===========                             =============      =========  =======  =======
+4       Temperature                             Lämpötila                               Linear                  %.1f   -1e+09    1e+09
+
+There are 1 stored parameters in total
+
+Information on the querydata producer:
+
+id	= 2001
+name	= Meteor
+
+
+Time information on the querydata:
+
+Origin time	= 2013092012 UTC
+First time	= 2013091712 UTC
+Last time	= 2013092918 UTC
+Time step	= 60 minutes
+Timesteps	= 295
+
+Information on the querydata area:
+
+projection		= kNFmiStereographicArea
+top left lonlat		= -9.04584,70.0683
+top right lonlat	= 49,70.077
+bottom left lonlat	= 6,51.1121
+bottom right lonlat	= 33.9747,51.1161
+
+top left WGS84		= -9.04584,70.0683
+top right WGS84		= 49,70.077
+bottom left WGS84	= 6,51.1121
+bottom right WGS84	= 33.9747,51.1161
+center WGS84		= 19.9814,62.1455
+
+bbox			= [-1018404.85 1016486.11 -4084598.77 -1833789.48]
+
+projstr	= +type=crs +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +datum=WGS84
+wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
+
+prettywkt =
+PROJCS["unknown",
+    GEOGCS["unknown",
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
+        PRIMEM["Greenwich",0,
+            AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]]],
+    PROJECTION["Polar_Stereographic"],
+    PARAMETER["latitude_of_origin",60],
+    PARAMETER["central_meridian",20],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]],
+    AXIS["Easting",SOUTH],
+    AXIS["Northing",SOUTH]]
+
+EPSGTreatsAsLatLong		= 0
+EPSGTreatsAsNorthingEasting	= 0
+PrimeMeridian			= 0
+IsGeographic			= 0
+IsProjected			= 1
+IsGeocentric			= 0
+IsLocal				= 0
+IsVertical			= 0
+IsCompound			= 0
+SemiMajor			= 6378137
+SemiMinor			= 6356752.314
+InvFlattening			= 298.2572236
+EPSG				= 4326
+
+central_meridian	= 20
+latitude_of_origin	= 60
+false_easting	= 0
+false_northing	= 0
+
+proj options:
++lat_0 = 90
++lat_ts = 60
++lon_0 = 20
++datum = "WGS84"
++proj = "stere"
++type = "crs"
+
+top	= 0
+left	= 0
+right	= 1
+bottom	= 1
+
+xnumber		= 135
+ynumber		= 150
+dx		= 15.07326637 km
+dy		= 15.00539525 km
+
+xywidth		= 2034.890959 km
+xyheight	= 2250.809287 km
+aspectratio	= 0.9040708031
+
+Information on the locations:
+
+The querydata is in grid form and has no named locations
+
+Level information on the querydata:
+
+Value	TypeId	Type		Name
+=====	======	====		====
+
+0	5000	AnyLevelType	None
+
+There are 1 levels in total
+
+Metadata information:
+

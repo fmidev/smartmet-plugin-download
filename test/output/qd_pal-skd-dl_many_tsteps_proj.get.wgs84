@@ -1,0 +1,123 @@
+
+Info version = 	7
+
+
+The parameters stored in the querydata are:
+
+Number  Name                                    Description                             Interpolation      Precision  Lolimit  Hilimit
+======  ====                                    ===========                             =============      =========  =======  =======
+4       Temperature                             Lämpötila                               Linear                  %.1f   -1e+09    1e+09
+
+There are 1 stored parameters in total
+
+Information on the querydata producer:
+
+id	= 2001
+name	= Meteor
+
+
+Time information on the querydata:
+
+Origin time	= 2013092001 UTC
+First time	= 2013091710 UTC
+Last time	= 2013091713 UTC
+Time step	= 60 minutes
+Timesteps	= 4
+
+Information on the querydata area:
+
+projection		= NFmiLatLonArea
+top left lonlat		= -9.07243,72.6437
+top right lonlat	= 49,72.6437
+bottom left lonlat	= -9.07243,51.3
+bottom right lonlat	= 49,51.3
+
+top left WGS84		= -9.07243,72.6437
+top right WGS84		= 49,72.6437
+bottom left WGS84	= -9.07243,51.3
+bottom right WGS84	= 49,51.3
+center WGS84		= 19.9638,61.9718
+
+bbox			= [-1009938.29 5454655.05 5710689.88 8086659.69]
+
+projstr	= +type=crs +proj=eqc +datum=WGS84 +wktext +over +no_defs
+wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
+
+prettywkt =
+PROJCS["unknown",
+    GEOGCS["unknown",
+        DATUM["WGS_1984",
+            SPHEROID["WGS 84",6378137,298.257223563,
+                AUTHORITY["EPSG","7030"]],
+            AUTHORITY["EPSG","6326"]],
+        PRIMEM["Greenwich",0,
+            AUTHORITY["EPSG","8901"]],
+        UNIT["degree",0.0174532925199433,
+            AUTHORITY["EPSG","9122"]]],
+    PROJECTION["Equirectangular"],
+    PARAMETER["standard_parallel_1",0],
+    PARAMETER["central_meridian",0],
+    PARAMETER["false_easting",0],
+    PARAMETER["false_northing",0],
+    UNIT["metre",1,
+        AUTHORITY["EPSG","9001"]],
+    AXIS["Easting",EAST],
+    AXIS["Northing",NORTH],
+    EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
+
+EPSGTreatsAsLatLong		= 0
+EPSGTreatsAsNorthingEasting	= 0
+PrimeMeridian			= 0
+IsGeographic			= 0
+IsProjected			= 1
+IsGeocentric			= 0
+IsLocal				= 0
+IsVertical			= 0
+IsCompound			= 0
+SemiMajor			= 6378137
+SemiMinor			= 6356752.314
+InvFlattening			= 298.2572236
+EPSG				= 4326
+
+central_meridian	= 0
+standard_parallel_1	= 0
+false_easting	= 0
+false_northing	= 0
+
+proj options:
++datum = "WGS84"
++proj = "eqc"
++type = "crs"
++no_defs
++over
++wktext
+
+top	= 0
+left	= 0
+right	= 1
+bottom	= 1
+
+xnumber		= 429
+ynumber		= 158
+dx		= 15.06898214 km
+dy		= 15.03778364 km
+
+xywidth		= 6464.593337 km
+xyheight	= 2375.969816 km
+aspectratio	= 2.720823006
+
+Information on the locations:
+
+The querydata is in grid form and has no named locations
+
+Level information on the querydata:
+
+Value	TypeId	Type		Name
+=====	======	====		====
+
+0	5000	AnyLevelType	None
+
+There are 1 levels in total
+
+Metadata information:
+
