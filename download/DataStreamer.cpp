@@ -2145,37 +2145,113 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
  */
 // ----------------------------------------------------------------------
 
-NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
-                                                        bool allLevels) const
+NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(
+    Engine::Querydata::Q q, bool requestLevels, bool nativeLevels) const
 {
   try
   {
-    if (allLevels)
+    if (nativeLevels)
     {
       auto info = q->info();
       return NFmiVPlaceDescriptor(((NFmiQueryInfo *)&(*info))->VPlaceDescriptor());
     }
 
-    auto old_idx = q->levelIndex();
-
     NFmiLevelBag lbag;
+    auto levelIndex = q->levelIndex();
+    bool levelInterpolation =
+        (isPressureLevel(itsNativeLevelType) && itsProducer.verticalInterpolation);
+
+    if (requestLevels)
+    {
+      if (levelInterpolation)
+      {
+        for (auto reqLevel = itsDataLevels.begin(); (reqLevel != itsDataLevels.end()); reqLevel++)
+        {
+          lbag.AddLevel(NFmiLevel(itsNativeLevelType, *reqLevel));
+
+          if (itsReqParams.outputFormat != QD)
+          {
+            // Only one level for querydata created for cached projection handling
+            //
+            break;
+          }
+        }
+      }
+      else
+      {
+        for (q->resetLevel(); q->nextLevel();)
+        {
+          if (find(itsDataLevels.begin(), itsDataLevels.end(), q->levelValue()) != itsDataLevels.end())
+          {
+            lbag.AddLevel(q->level());
+
+            if (itsReqParams.outputFormat != QD)
+              break;
+          }
+        }
+
+        if (lbag.GetSize() == 0)
+          throw Fmi::Exception(BCP, "No requested level available in data");
+
+        q->levelIndex(levelIndex);
+      }
+
+      return NFmiVPlaceDescriptor(lbag);
+    }
+
+    // Requested native levels and native levels needed for interpolation
+
+    auto reqLevel = itsSortedDataLevels.begin();
+    boost::optional<NFmiLevel> prevNativeLevel;
 
     for (q->resetLevel(); q->nextLevel();)
     {
-      float value = q->levelValue();
+      bool hasReqLevel = (reqLevel != itsSortedDataLevels.end());
+      bool isNativeLevel = ((!hasReqLevel) || (q->levelValue() == *reqLevel));
+      bool isInterpolatedLevel = (isNativeLevel || (!levelInterpolation))
+          ? (!hasReqLevel)
+          : itsRisingLevels ? (q->levelValue() > *reqLevel) : (q->levelValue() < *reqLevel);
 
-      if (find(itsDataLevels.begin(), itsDataLevels.end(), value) != itsDataLevels.end())
+      if (isInterpolatedLevel && prevNativeLevel)
+        lbag.AddLevel(*prevNativeLevel);
+
+      if (!hasReqLevel)
+        break;
+
+      if (!(isNativeLevel || isInterpolatedLevel))
       {
-        lbag.AddLevel(q->level());
+        // Skip native levels preceeding first requested level
 
-        if (itsReqParams.outputFormat != QD)
-          // Only one level for querydata created for cached projection handling
-          //
-          break;
+        prevNativeLevel = q->level();
+        continue;
       }
+
+      lbag.AddLevel(q->level());
+
+      if (isNativeLevel)
+        prevNativeLevel.reset();
+      else
+        prevNativeLevel = q->level();
+
+      float level1 = 0, level2 = 0;
+
+      // Skip requested levels preceeding current native level
+
+      do
+      {
+        if ((++reqLevel != itsSortedDataLevels.end()) && (!isNativeLevel))
+        {
+          level1 = (itsRisingLevels ? q->levelValue() : *reqLevel);
+          level2 = (itsRisingLevels ? *reqLevel : q->levelValue());
+        }
+      }
+      while ((!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2));
     }
 
-    q->levelIndex(old_idx);
+    if (lbag.GetSize() == 0)
+      throw Fmi::Exception(BCP, "No requested level available in data");
+
+    q->levelIndex(levelIndex);
 
     return NFmiVPlaceDescriptor(lbag);
   }
@@ -2249,7 +2325,8 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(
  */
 // ----------------------------------------------------------------------
 
-NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q, bool nativeTimes)
+NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(
+    Engine::Querydata::Q q, bool requestTimes, bool nativeTimes) const
 {
   try
   {
@@ -2270,7 +2347,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q, bool
     {
       dataTimes.Add(new NFmiMetTime(timeIter->utc_time()));
 
-      if (itsReqParams.outputFormat != QD)
+      if ((!requestTimes) && (itsReqParams.outputFormat != QD))
       {
         // Only one time for querydata created for cached projection handling
         //
@@ -2300,7 +2377,7 @@ void DataStreamer::createQD(const NFmiGrid &g)
     NFmiParamDescriptor pdesc = makeParamDescriptor(itsQ);
     NFmiTimeDescriptor tdesc = makeTimeDescriptor(itsQ);
     NFmiHPlaceDescriptor hdesc = NFmiHPlaceDescriptor(g);
-    NFmiVPlaceDescriptor vdesc = makeVPlaceDescriptor(itsQ);
+    NFmiVPlaceDescriptor vdesc = makeVPlaceDescriptor(itsQ, true);
     NFmiFastQueryInfo qi(pdesc, tdesc, hdesc, vdesc, itsQ->infoVersion());
 
     itsQueryData.reset(NFmiQueryDataUtil::CreateEmptyData(qi));
@@ -3130,43 +3207,67 @@ void DataStreamer::nextParam(Engine::Querydata::Q q)
 Engine::Querydata::Q DataStreamer::getCurrentParamQ(
     const std::list<FmiParameterName> &currentParams) const
 {
-  NFmiParamDescriptor paramDescriptor = makeParamDescriptor(itsQ, currentParams);
-  auto srcInfo = itsQ->info();
-
-  NFmiFastQueryInfo info(paramDescriptor,
-                         srcInfo->TimeDescriptor(),
-                         srcInfo->HPlaceDescriptor(),
-                         srcInfo->VPlaceDescriptor(),
-                         itsQ->infoVersion());
-
-  boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
-  NFmiFastQueryInfo dstInfo(data.get());
-  auto levelIndex = itsQ->levelIndex();
-
-  for (dstInfo.ResetParam(); dstInfo.NextParam();)
+  try
   {
-    srcInfo->Param(dstInfo.Param());
+    NFmiParamDescriptor paramDescriptor = makeParamDescriptor(itsQ, currentParams);
+    NFmiVPlaceDescriptor levelDescriptor = makeVPlaceDescriptor(itsQ);
+    NFmiTimeDescriptor timeDescriptor = makeTimeDescriptor(itsQ, true);
+    auto srcInfo = itsQ->info();
 
-    for (dstInfo.ResetLocation(), srcInfo->ResetLocation();
-         dstInfo.NextLocation() && srcInfo->NextLocation();)
+    NFmiFastQueryInfo info(paramDescriptor,
+                           timeDescriptor,
+                           srcInfo->HPlaceDescriptor(),
+                           levelDescriptor,
+                           itsQ->infoVersion());
+
+    boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
+    NFmiFastQueryInfo dstInfo(data.get());
+    auto levelIndex = itsQ->levelIndex();
+
+    // Establish output timeindexes up front for speed. -1 implies time is not available
+    std::vector<long> timeindexes(timeDescriptor.Size(), -1);
+
+    for (unsigned long i = 0; i < timeDescriptor.Size(); i++)
+      if (dstInfo.TimeIndex(i))
+        if (srcInfo->Time(dstInfo.Time()))
+          timeindexes[i] = srcInfo->TimeIndex();
+
+    for (dstInfo.ResetParam(); dstInfo.NextParam();)
     {
-      for (dstInfo.ResetLevel(), srcInfo->ResetLevel();
-           dstInfo.NextLevel() && srcInfo->NextLevel();)
+      srcInfo->Param(dstInfo.Param());
+
+      for (dstInfo.ResetLocation(), srcInfo->ResetLocation();
+           dstInfo.NextLocation() && srcInfo->NextLocation();)
       {
-        for (dstInfo.ResetTime(), srcInfo->ResetTime(); dstInfo.NextTime() && srcInfo->NextTime();)
+        for (dstInfo.ResetLevel(); dstInfo.NextLevel();)
         {
-          dstInfo.FloatValue(srcInfo->FloatValue());
+          if (srcInfo->Level(*dstInfo.Level()))
+          {
+            for (unsigned long i = 0; i < timeDescriptor.Size(); i++)
+            {
+              if (timeindexes[i] >= 0)
+              {
+                dstInfo.TimeIndex(i);
+                srcInfo->TimeIndex(timeindexes[i]);
+                dstInfo.FloatValue(srcInfo->FloatValue());
+              }
+            }
+          }
         }
       }
     }
+
+    itsQ->levelIndex(levelIndex);
+
+    std::size_t hash = 0;
+    auto model = boost::make_shared<Engine::Querydata::Model>(data, hash);
+
+    return boost::make_shared<Engine::Querydata::QImpl>(model);
   }
-
-  itsQ->levelIndex(levelIndex);
-
-  std::size_t hash = 0;
-  auto model = boost::make_shared<Engine::Querydata::Model>(data, hash);
-
-  return boost::make_shared<Engine::Querydata::QImpl>(model);
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
 }
 
 // ----------------------------------------------------------------------

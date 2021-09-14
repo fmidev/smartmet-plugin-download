@@ -202,13 +202,16 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q, bool allLevels = false) const;
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(
+      Engine::Querydata::Q q, bool requestLevels = false, bool nativeLevels = false) const;
   NFmiParamDescriptor makeParamDescriptor(
       Engine::Querydata::Q q,
       const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
-  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q, bool nativeTimes = false);
+  NFmiTimeDescriptor makeTimeDescriptor(
+      Engine::Querydata::Q q, bool requestTimes = false, bool nativeTimes = false) const;
 
-  Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
+  Engine::Querydata::Q getCurrentParamQ(
+      const std::list<FmiParameterName> &currentParams) const;
 
   void nextParam(Engine::Querydata::Q q);
 
