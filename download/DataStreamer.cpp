@@ -1202,10 +1202,13 @@ bool DataStreamer::hasRequestedData(
 
       nMissingParam++;
 
-      if (!itsValScaling.empty())
-        itsValScaling.pop_front();
-      else
-        throw Fmi::Exception(BCP, "Internal error in skipping missing parameters");
+      if (itsReqParams.outputFormat != QD)
+      {
+        if (!itsValScaling.empty())
+          itsValScaling.pop_front();
+        else
+          throw Fmi::Exception(BCP, "Internal error in skipping missing parameters");
+      }
     }
 
     if (!hasData)
@@ -2165,7 +2168,8 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(
     {
       if (levelInterpolation)
       {
-        for (auto reqLevel = itsDataLevels.begin(); (reqLevel != itsDataLevels.end()); reqLevel++)
+        for (auto reqLevel = itsSortedDataLevels.begin(); (reqLevel != itsSortedDataLevels.end());
+             reqLevel++)
         {
           lbag.AddLevel(NFmiLevel(itsNativeLevelType, *reqLevel));
 
@@ -2181,7 +2185,8 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(
       {
         for (q->resetLevel(); q->nextLevel();)
         {
-          if (find(itsDataLevels.begin(), itsDataLevels.end(), q->levelValue()) != itsDataLevels.end())
+          if (find(itsSortedDataLevels.begin(), itsSortedDataLevels.end(), q->levelValue()) !=
+              itsSortedDataLevels.end())
           {
             lbag.AddLevel(q->level());
 
@@ -3426,9 +3431,11 @@ void DataStreamer::extractData(string &chunk)
             itsCPQ = getCurrentParamQ(currentParams);
           }
 
-          // Set level index from main data, time index gets set (or is not used) below
+          // Set level if not interpolated, time index gets set (or is not used) below
 
-          itsCPQ->levelIndex(itsQ->levelIndex());
+          if (exactLevel)
+            isLevelAvailable(itsCPQ, level, exactLevel);
+
           q = itsCPQ;
         }
 
