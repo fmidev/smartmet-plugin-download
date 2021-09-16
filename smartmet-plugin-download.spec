@@ -2,68 +2,39 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.9.9
+Version: 21.9.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-<<<<<<< HEAD
-BuildRequires: rpm-build
-BuildRequires: gcc-c++
-BuildRequires: make
-BuildRequires: fmt-devel
-BuildRequires: gdal30-devel
-BuildRequires: boost169-devel
-BuildRequires: eccodes-devel
-BuildRequires: jsoncpp-devel >= 0.10.5
-BuildRequires: libconfig >= 1.4.9
-BuildRequires: smartmet-library-spine-devel >= 20.10.6
-BuildRequires: smartmet-library-macgyver-devel >= 20.10.5
-BuildRequires: smartmet-library-newbase-devel >= 20.10.2
-BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 20.10.6
-BuildRequires: smartmet-engine-geonames-devel
-BuildRequires: netcdf-cxx-devel
-BuildRequires: bzip2-devel
-Requires: gdal30
-Requires: eccodes
-Requires: fmt >= 6.2.1
-Requires: jsoncpp >= 0.10.5
-Requires: smartmet-library-macgyver >= 20.10.5
-Requires: smartmet-library-spine >= 20.10.6
-Requires: smartmet-library-newbase >= 20.10.2
-Requires: smartmet-engine-querydata >= 20.10.6
-Requires: smartmet-server >= 20.9.23
-=======
 BuildRequires: boost169-devel
 BuildRequires: gcc-c++
 BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
-BuildRequires: libconfig17 >= 1.7.2
-BuildRequires: smartmet-library-spine-devel >= 21.9.7
-BuildRequires: smartmet-library-macgyver-devel >= 21.8.30
-BuildRequires: smartmet-library-newbase-devel >= 21.6.16
-BuildRequires: smartmet-library-grid-content-devel >= 21.8.18
-BuildRequires: smartmet-library-grid-files-devel >= 21.6.8
+BuildRequires: libconfig17 >= 1.7.3
+BuildRequires: smartmet-library-spine-devel >= 21.9.13
+BuildRequires: smartmet-library-macgyver-devel >= 21.9.13
+BuildRequires: smartmet-library-newbase-devel >= 21.9.14
+BuildRequires: smartmet-library-grid-content-devel >= 21.9.15
+BuildRequires: smartmet-library-grid-files-devel >= 21.9.15
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.9.7
-BuildRequires: smartmet-engine-geonames-devel >= 21.8.30
-BuildRequires: smartmet-engine-grid-devel >= 21.9.7
+BuildRequires: smartmet-engine-querydata-devel >= 21.9.13
+BuildRequires: smartmet-engine-geonames-devel >= 21.9.13
+BuildRequires: smartmet-engine-grid-devel >= 21.9.15
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
-Requires: libconfig17 >= 1.7.2
-Requires: smartmet-library-macgyver >= 21.8.30
-Requires: smartmet-library-spine >= 21.9.7
-Requires: smartmet-library-newbase >= 21.6.16
-Requires: smartmet-engine-querydata >= 21.9.7
-Requires: smartmet-server >= 21.6.3
->>>>>>> master
+Requires: libconfig17 >= 1.7.3
+Requires: smartmet-library-macgyver >= 21.9.13
+Requires: smartmet-library-spine >= 21.9.13
+Requires: smartmet-library-newbase >= 21.9.14
+Requires: smartmet-engine-querydata >= 21.9.13
+Requires: smartmet-server >= 21.9.7
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -80,8 +51,8 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames
 #TestRequires: smartmet-engine-grid >= 21.9.7
-#TestRequires: smartmet-engine-querydata >= 21.9.7
-#TestRequires: smartmet-library-macgyver-devel >= 21.8.30
+#TestRequires: smartmet-engine-querydata >= 21.9.13
+#TestRequires: smartmet-library-macgyver-devel >= 21.9.13
 #TestRequires: smartmet-qdtools >= 20.11.10
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
@@ -117,6 +88,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Sep 16 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.9.16-1.fmi
+- Added WGS84 test results
+- Merge from WGS84 branch
+- Copy data only for needed levels and validtimes when using in-memory qd (BRAINSTORM-2144)
+- Fixed vertical interpolation bug with qd -format output (BRAINSTORM-2147)
+- Bug fix; set in-memory qd level when level is not interpolated (BRAINSTORM-2149)
+- Buf fix; allow missing parameter scaling information with qd -output (BRAINSTORM-2152)
+
 * Thu Sep  9 2021 Andris Pavenis <andris.pavenis@fmi.fi> 21.9.9-1.fmi
 - Repackage due to dependency change (libconfig->libconfig17)
 
