@@ -202,10 +202,6 @@ rm -rf $RPM_BUILD_ROOT
 * Wed Sep 23 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.23-1.fmi
 - Use Fmi::Exception instead of Spine::Exception
 
-<<<<<<< HEAD
-* Tue Aug 25 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.25-1.fmi
-- Repackaged due to eccodes upgrade
-=======
 * Fri Sep 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.9.18-1.fmi
 - Repackaged due to library ABI changes
 
@@ -220,15 +216,10 @@ rm -rf $RPM_BUILD_ROOT
 
 * Mon Aug 31 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.31-1.fmi
 - Repackaged due to library ABI changes
->>>>>>> master
 
 * Fri Aug 21 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.21-1.fmi
 - Upgrade to fmt 6.2
 
-<<<<<<< HEAD
-* Thu May 28 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.28-1.fmi
-- Ported to use the latest newbase API
-=======
 * Tue Aug 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.8.18-1.fmi
 - Repackaged due to grid library ABI changes
 
@@ -241,6 +232,9 @@ rm -rf $RPM_BUILD_ROOT
 * Mon Jun  8 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.6.8-1.fmi
 - Repackaged due to base library changes
 
+* Thu May 28 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.28-1.fmi
+- Ported to use the latest newbase API
+
 * Mon May 25 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.25-1.fmi
 - Some bugfixes. New release version
 
@@ -249,7 +243,6 @@ rm -rf $RPM_BUILD_ROOT
 - Added lock protecting netcdf metadata generation for grid data (not thread safe)
 - Added grid support
 - Added GRIB multifile property
->>>>>>> master
 
 * Wed May 13 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.5.13-1.fmi
 - Repackaged since Spine Parameter class ABI changed
@@ -257,13 +250,11 @@ rm -rf $RPM_BUILD_ROOT
 * Fri May  8 2020 Pertti Kinnia <pertti.kinnia@fmi.fi> - 20.5.8-1.fmi
 - Fixed bug in netcdf output when skipping missing querydata parameters (BS-1823)
 
-<<<<<<< HEAD
-* Sun Apr 26 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.26-1.fmi
-- Use Fmi::CoordinateMatrix
-=======
 * Thu Apr 30 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.30-1.fmi
 - Repackaged due to base library API changes
->>>>>>> master
+
+* Sun Apr 26 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.26-1.fmi
+- Use Fmi::CoordinateMatrix
 
 * Sat Apr 18 2020 Mika Heiskanen <mika.heiskanen@fmi.fi> - 20.4.18-1.fmi
 - Upgraded to Boost 1.69
