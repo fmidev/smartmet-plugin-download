@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.9.16
+Version: 21.9.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -88,6 +88,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Sep 23 2021 Andris Pavēnis <andris.pavenis@fmi.fi> 21.9.23-1.fmi
+- Repackage to prepare for moving libconfig to different directory
+
 * Thu Sep 16 2021 Pertti Kinnia <pertti.kinnia@fmi.fi> - 21.9.16-1.fmi
 - Added WGS84 test results
 - Merge from WGS84 branch
