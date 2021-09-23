@@ -2,7 +2,7 @@ SUBNAME = download
 SPEC = smartmet-plugin-$(SUBNAME)
 INCDIR = smartmet/plugins/$(SUBNAME)
 
-REQUIRES = gdal jsoncpp
+REQUIRES = gdal jsoncpp configpp
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
@@ -12,10 +12,11 @@ FLAGS += -Wno-vla -Wno-variadic-macros -Wno-deprecated-declarations -Wno-unknown
 
 DEFINES = -DUNIX -D_REENTRANT
 
-LIBS += -L$(libdir) $(REQUIRED_LIBS) \
+LIBS += -L$(libdir) \
 	-lsmartmet-spine \
 	-lsmartmet-newbase \
 	-lsmartmet-macgyver \
+	 $(REQUIRED_LIBS) \
 	-lboost_date_time \
 	-lboost_thread \
 	-lboost_iostreams \
