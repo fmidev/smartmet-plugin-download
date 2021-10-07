@@ -270,14 +270,14 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
       15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
       16;MAXWIND;Maximum wind level;
     */
-    static const T::ParamLevelIdType GridFMILevelTypeNone = 0;
-    static const T::ParamLevelIdType GridFMILevelTypeGround = 1;
-    static const T::ParamLevelIdType GridFMILevelTypePressure = 2;
-    static const T::ParamLevelIdType GridFMILevelTypeHybrid = 3;
-    static const T::ParamLevelIdType GridFMILevelTypeHeight = 6;
-    static const T::ParamLevelIdType GridFMILevelTypeMeanSea = 7;
-    static const T::ParamLevelIdType GridFMILevelTypeEntireAtmosphere = 8;
-    static const T::ParamLevelIdType GridFMILevelTypeDepth = 10;
+    static const T::ParamLevelId GridFMILevelTypeNone = 0;
+    static const T::ParamLevelId GridFMILevelTypeGround = 1;
+    static const T::ParamLevelId GridFMILevelTypePressure = 2;
+    static const T::ParamLevelId GridFMILevelTypeHybrid = 3;
+    static const T::ParamLevelId GridFMILevelTypeHeight = 6;
+    static const T::ParamLevelId GridFMILevelTypeMeanSea = 7;
+    static const T::ParamLevelId GridFMILevelTypeEntireAtmosphere = 8;
+    static const T::ParamLevelId GridFMILevelTypeDepth = 10;
 
     class GridIterator
     {
@@ -285,7 +285,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
       GridIterator(GridMetaData *gM) : gridMetaData(gM) { init = true; }
 
       bool atEnd();
-      bool hasData(T::ParamLevelIdType &gridLevelType, int &level);
+      bool hasData(T::ParamLevelId &gridLevelType, int &level);
       GridIterator &operator++();
       GridIterator operator++(int);
 
@@ -333,8 +333,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     std::map<std::string, std::set<T::ParamLevel>> originTimeLevels;
     StringMapSet originTimeTimes;
     std::map<std::string, std::string> paramKeys;
-    std::map<std::string, T::ParamLevelIdType> paramLevelIds;
-    T::ParamLevelIdType paramLevelId;
+    std::map<std::string, T::ParamLevelId> paramLevelIds;
+    T::ParamLevelId paramLevelId;
 
     boost::posix_time::ptime selectGridLatestValidOriginTime();
     const std::string &getLatestOriginTime(boost::posix_time::ptime *originTime = NULL,
@@ -367,7 +367,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                             const Query &query,
                             FmiLevelType mappingLevelType,
                             int level) const;
-  void buildGridQuery(SmartMet::QueryServer::Query &, T::ParamLevelIdType gridLevelType, int level);
+  void buildGridQuery(SmartMet::QueryServer::Query &, T::ParamLevelId gridLevelType, int level);
   void getGridLLBBox();
   std::string getGridLLBBoxStr();
   void setGridSize(size_t gridSizeX, size_t gridSizeY);
