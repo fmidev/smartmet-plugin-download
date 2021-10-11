@@ -274,7 +274,7 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelIdType &gridLevelType,
+bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLevelType,
                                                        int &level)
 {
   try
@@ -963,7 +963,7 @@ bool DataStreamer::hasRequestedGridData(
 
             auto const &pm = paramMapping.mMapping;
 
-            if ((pm.mParameterLevelIdType == T::ParamLevelIdTypeValue::FMI) &&
+            if (/*(pm.mParameterLevelIdType == T::ParamLevelIdTypeValue::FMI) &&*/
                 ((pm.mParameterLevelId == GridMetaData::GridFMILevelTypeGround) ||
                  (pm.mParameterLevelId == GridMetaData::GridFMILevelTypePressure) ||
                  (pm.mParameterLevelId == GridMetaData::GridFMILevelTypeHybrid) ||
@@ -3526,7 +3526,7 @@ void DataStreamer::extractData(string &chunk)
 // ----------------------------------------------------------------------
 
 void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
-                                  T::ParamLevelIdType gridLevelType,
+                                  T::ParamLevelId gridLevelType,
                                   int level)
 {
   // If reprojecting and bbox/area is not given, get target bbox
@@ -3600,7 +3600,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
 
   queryParam.mParam = itsGridMetaData.paramKeys.find(itsParamIterator->name())->second;
-  queryParam.mParameterLevelIdType = T::ParamLevelIdTypeValue::FMI;
+  //queryParam.mParameterLevelIdType = T::ParamLevelIdTypeValue::FMI;
   queryParam.mParameterLevelId = gridLevelType;
   queryParam.mParameterLevel = ((itsLevelType == kFmiPressureLevel) ? level * 100 : level);
 
@@ -4294,7 +4294,7 @@ void DataStreamer::extractGridData(string &chunk)
     {
       // Parameter specific level type and level for surface data
 
-      T::ParamLevelIdType gridLevelType;
+      T::ParamLevelId gridLevelType;
       int level;
 
       if (!gridIterator.hasData(gridLevelType, level))
