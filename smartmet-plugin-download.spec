@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.10.4
+Version: 21.10.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -15,23 +15,23 @@ BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 21.9.17
-BuildRequires: smartmet-library-macgyver-devel >= 21.9.21
+BuildRequires: smartmet-library-spine-devel >= 21.10.11
+BuildRequires: smartmet-library-macgyver-devel >= 21.10.4
 BuildRequires: smartmet-library-newbase-devel >= 21.9.22
-BuildRequires: smartmet-library-grid-content-devel >= 21.10.4
-BuildRequires: smartmet-library-grid-files-devel >= 21.10.4
+BuildRequires: smartmet-library-grid-content-devel >= 21.10.11
+BuildRequires: smartmet-library-grid-files-devel >= 21.10.11
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 21.9.13
 BuildRequires: smartmet-engine-geonames-devel >= 21.9.28
-BuildRequires: smartmet-engine-grid-devel >= 21.10.4
+BuildRequires: smartmet-engine-grid-devel >= 21.10.11
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 21.9.21
-Requires: smartmet-library-spine >= 21.9.17
+Requires: smartmet-library-macgyver >= 21.10.4
+Requires: smartmet-library-spine >= 21.10.11
 Requires: smartmet-library-newbase >= 21.9.22
 Requires: smartmet-engine-querydata >= 21.9.13
 Requires: smartmet-server >= 21.9.7
@@ -89,6 +89,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Oct 11 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.10.11-1.fmi
+- Simplified grid storage structures
+
 * Mon Oct  4 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.10.4-1.fmi
 - Repackaged due to grid-files ABI changes
 
