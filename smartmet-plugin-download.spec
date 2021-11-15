@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.10.29
+Version: 21.11.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -15,15 +15,15 @@ BuildRequires: gdal32-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 21.10.18
+BuildRequires: smartmet-library-spine-devel >= 21.11.10
 BuildRequires: smartmet-library-macgyver-devel >= 21.10.4
-BuildRequires: smartmet-library-newbase-devel >= 21.10.13
-BuildRequires: smartmet-library-grid-content-devel >= 21.10.29
-BuildRequires: smartmet-library-grid-files-devel >= 21.10.29
+BuildRequires: smartmet-library-newbase-devel >= 21.11.15
+BuildRequires: smartmet-library-grid-content-devel >= 21.11.15
+BuildRequires: smartmet-library-grid-files-devel >= 21.11.15
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 21.9.13
 BuildRequires: smartmet-engine-geonames-devel >= 21.9.28
-BuildRequires: smartmet-engine-grid-devel >= 21.10.29
+BuildRequires: smartmet-engine-grid-devel >= 21.11.15
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal32
@@ -31,8 +31,8 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 21.10.4
-Requires: smartmet-library-spine >= 21.10.18
-Requires: smartmet-library-newbase >= 21.10.13
+Requires: smartmet-library-spine >= 21.11.10
+Requires: smartmet-library-newbase >= 21.11.15
 Requires: smartmet-engine-querydata >= 21.9.13
 Requires: smartmet-server >= 21.9.7
 Requires: boost169-date-time
@@ -89,6 +89,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Nov 15 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.11.15-1.fmi
+- Repackaged due to ABI changes in base grid libraries
+
 * Fri Oct 29 2021 Mika Heiskanen <mika.heiskanen@fmi.fi> - 21.10.29-1.fmi
 - Repackaged due to ABI changes in base grid libraries
 
