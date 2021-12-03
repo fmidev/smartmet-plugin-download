@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.11.15
+Version: 21.12.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -11,29 +11,29 @@ Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: boost169-devel
 BuildRequires: gcc-c++
-BuildRequires: gdal32-devel
+BuildRequires: gdal33-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 21.11.10
-BuildRequires: smartmet-library-macgyver-devel >= 21.10.4
-BuildRequires: smartmet-library-newbase-devel >= 21.11.15
-BuildRequires: smartmet-library-grid-content-devel >= 21.11.15
-BuildRequires: smartmet-library-grid-files-devel >= 21.11.15
+BuildRequires: smartmet-library-spine-devel >= 21.12.2
+BuildRequires: smartmet-library-macgyver-devel >= 21.12.1
+BuildRequires: smartmet-library-newbase-devel >= 21.12.1
+BuildRequires: smartmet-library-grid-content-devel >= 21.12.2
+BuildRequires: smartmet-library-grid-files-devel >= 21.12.2
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.9.13
-BuildRequires: smartmet-engine-geonames-devel >= 21.9.28
-BuildRequires: smartmet-engine-grid-devel >= 21.11.15
+BuildRequires: smartmet-engine-querydata-devel >= 21.12.2
+BuildRequires: smartmet-engine-geonames-devel >= 21.12.2
+BuildRequires: smartmet-engine-grid-devel >= 21.12.2
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
-Requires: gdal32
+Requires: gdal33
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 21.10.4
-Requires: smartmet-library-spine >= 21.11.10
-Requires: smartmet-library-newbase >= 21.11.15
-Requires: smartmet-engine-querydata >= 21.9.13
+Requires: smartmet-library-macgyver >= 21.12.1
+Requires: smartmet-library-spine >= 21.12.2
+Requires: smartmet-library-newbase >= 21.12.1
+Requires: smartmet-engine-querydata >= 21.12.2
 Requires: smartmet-server >= 21.9.7
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -49,21 +49,21 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames
-#TestRequires: smartmet-engine-grid >= 21.9.7
-#TestRequires: smartmet-engine-querydata >= 21.9.13
-#TestRequires: smartmet-utils-devel
-#TestRequires: smartmet-library-spine-plugin-test
-#TestRequires: smartmet-qdtools >= 20.11.10
+#TestRequires: smartmet-engine-geonames >= 21.12.2
+#TestRequires: smartmet-engine-grid >= 21.12.2
+#TestRequires: smartmet-engine-querydata >= 21.12.2
+#TestRequires: smartmet-utils-devel >= 21.11.23
+#TestRequires: smartmet-library-spine-plugin-test >= 21.12.2
+#TestRequires: smartmet-qdtools >= 20.12.2
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 20.11.3
-#TestRequires: smartmet-engine-grid-test >= 21.3.3
+#TestRequires: smartmet-engine-grid-test >= 21.12.2
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
 
 # makefile.inc side effect (otherwise fails on top level Makefile)
-#TestRequires: gdal32-devel
+#TestRequires: gdal33-devel
 #TestRequires: jsoncpp-devel
 #TestRequires: ctpp2-devel
 
