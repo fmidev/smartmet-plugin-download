@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 21.12.7
+Version: 22.1.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -15,26 +15,26 @@ BuildRequires: gdal33-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 21.12.2
-BuildRequires: smartmet-library-macgyver-devel >= 21.12.1
-BuildRequires: smartmet-library-newbase-devel >= 21.12.1
-BuildRequires: smartmet-library-grid-content-devel >= 21.12.2
-BuildRequires: smartmet-library-grid-files-devel >= 21.12.2
+BuildRequires: smartmet-library-spine-devel >= 22.1.5
+BuildRequires: smartmet-library-macgyver-devel >= 22.1.10
+BuildRequires: smartmet-library-newbase-devel >= 21.12.7
+BuildRequires: smartmet-library-grid-content-devel >= 22.1.13
+BuildRequires: smartmet-library-grid-files-devel >= 22.1.13
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 21.12.2
-BuildRequires: smartmet-engine-geonames-devel >= 21.12.2
-BuildRequires: smartmet-engine-grid-devel >= 21.12.2
+BuildRequires: smartmet-engine-querydata-devel >= 22.1.3
+BuildRequires: smartmet-engine-geonames-devel >= 22.1.10
+BuildRequires: smartmet-engine-grid-devel >= 22.1.13
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal33
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 21.12.1
-Requires: smartmet-library-spine >= 21.12.2
-Requires: smartmet-library-newbase >= 21.12.1
-Requires: smartmet-engine-querydata >= 21.12.2
-Requires: smartmet-server >= 21.9.7
+Requires: smartmet-library-macgyver >= 22.1.10
+Requires: smartmet-library-spine >= 22.1.5
+Requires: smartmet-library-newbase >= 21.12.7
+Requires: smartmet-engine-querydata >= 22.1.3
+Requires: smartmet-server >= 21.11.25
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -51,7 +51,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 21.12.2
 #TestRequires: smartmet-engine-grid >= 21.12.2
-#TestRequires: smartmet-engine-querydata >= 21.12.2
+#TestRequires: smartmet-engine-querydata >= 22.1.3
 #TestRequires: smartmet-utils-devel >= 21.11.23
 #TestRequires: smartmet-library-spine-plugin-test >= 21.12.2
 #TestRequires: smartmet-qdtools >= 20.12.2
@@ -89,6 +89,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Jan 13 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.1.13-1.fmi
+- Added netcdf YKJ support for querydata source
+
 * Tue Dec  7 2021 Andris Pavēnis <andris.pavenis@fmi.fi> 21.12.7-1.fmi
 - Update to postgresql 13 and gdal 3.3
 
