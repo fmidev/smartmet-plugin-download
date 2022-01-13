@@ -18,6 +18,7 @@
 
 #ifndef WGS84
 #include <newbase/NFmiStereographicArea.h>
+#include <newbase/NFmiYKJArea.h>
 #endif
 
 namespace
@@ -738,6 +739,35 @@ void NetCdfStreamer::setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set YKJ (transverse mercator) projection metadata
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar)
+{
+  try
+  {
+    const double lon_0 = 27;		   // SRS_PP_CENTRAL_MERIDIAN
+    const double lat_0 = 0;		   // SRS_PP_LATITUDE_OF_ORIGIN
+    const double false_easting = 3500000;  // SRS_PP_FALSE_EASTING
+
+    addAttribute(crsVar, "grid_mapping_name", "transverse_mercator");
+    addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
+    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
+    addAttribute(crsVar, "false_easting", false_easting);
+
+    Fmi::SpatialReference YKJ(2393);
+    addAttribute(crsVar, "crs_wkt", Fmi::OGR::exportToWkt(*YKJ).c_str());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set lcc projection metadata
  *
  */
@@ -840,6 +870,9 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
         break;
       case kNFmiStereographicArea:
         setStereographicGeometry(area, crsVar);
+        break;
+      case kNFmiYKJArea:
+        setYKJGeometry(crsVar);
         break;
 #ifdef WGS84
       case kNFmiProjArea:
@@ -964,13 +997,18 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     addAttribute(lonVar, "long_name", "longitude");
     addAttribute(lonVar, "units", "degrees_east");
 
-    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    // For YKJ wkt is set, do not set CF spheroid attributes
+
+    if (classId != kNFmiYKJArea)
     {
-      addAttribute(crsVar, "semi_major", Datum::NetCdf::WGS84_semiMajor);
-      addAttribute(crsVar, "inverse_flattening", Datum::NetCdf::WGS84_invFlattening);
+      if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+      {
+        addAttribute(crsVar, "semi_major", Datum::NetCdf::WGS84_semiMajor);
+        addAttribute(crsVar, "inverse_flattening", Datum::NetCdf::WGS84_invFlattening);
+      }
+      else if (projected)
+        addAttribute(crsVar, "earth_radius", Datum::NetCdf::Fmi_6371220m);
     }
-    else if (projected)
-      addAttribute(crsVar, "earth_radius", Datum::NetCdf::Fmi_6371220m);
   }
   catch (...)
   {

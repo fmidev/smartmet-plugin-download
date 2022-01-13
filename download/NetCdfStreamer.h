@@ -93,6 +93,7 @@ class NetCdfStreamer : public DataStreamer
   void setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setStereographicGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
   void setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar);
+  void setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
