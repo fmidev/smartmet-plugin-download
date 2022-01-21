@@ -11,29 +11,29 @@ Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: boost169-devel
 BuildRequires: gcc-c++
-BuildRequires: gdal33-devel
+BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.1.5
-BuildRequires: smartmet-library-macgyver-devel >= 22.1.10
-BuildRequires: smartmet-library-newbase-devel >= 21.12.7
-BuildRequires: smartmet-library-grid-content-devel >= 22.1.13
-BuildRequires: smartmet-library-grid-files-devel >= 22.1.13
+BuildRequires: smartmet-library-spine-devel >= 21.1.21
+BuildRequires: smartmet-library-macgyver-devel >= 21.1.21
+BuildRequires: smartmet-library-newbase-devel >= 21.1.21
+BuildRequires: smartmet-library-grid-content-devel >= 21.1.21
+BuildRequires: smartmet-library-grid-files-devel >= 21.1.21
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.1.3
-BuildRequires: smartmet-engine-geonames-devel >= 22.1.10
-BuildRequires: smartmet-engine-grid-devel >= 22.1.13
+BuildRequires: smartmet-engine-querydata-devel >= 21.1.21
+BuildRequires: smartmet-engine-geonames-devel >= 21.1.21
+BuildRequires: smartmet-engine-grid-devel >= 21.1.21
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
-Requires: gdal33
+Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 22.1.10
-Requires: smartmet-library-spine >= 22.1.5
-Requires: smartmet-library-newbase >= 21.12.7
-Requires: smartmet-engine-querydata >= 22.1.3
+Requires: smartmet-library-macgyver >= 21.1.21
+Requires: smartmet-library-spine >= 21.1.21
+Requires: smartmet-library-newbase >= 21.1.21
+Requires: smartmet-engine-querydata >= 21.1.21
 Requires: smartmet-server >= 21.11.25
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -49,21 +49,21 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 21.12.2
-#TestRequires: smartmet-engine-grid >= 21.12.2
-#TestRequires: smartmet-engine-querydata >= 22.1.3
-#TestRequires: smartmet-utils-devel >= 21.11.23
-#TestRequires: smartmet-library-spine-plugin-test >= 21.12.2
-#TestRequires: smartmet-qdtools >= 20.12.2
+#TestRequires: smartmet-engine-geonames >= 21.1.21
+#TestRequires: smartmet-engine-grid >= 21.1.21
+#TestRequires: smartmet-engine-querydata >= 21.1.21
+#TestRequires: smartmet-utils-devel >= 22.1.20
+#TestRequires: smartmet-library-spine-plugin-test >= 21.1.21
+#TestRequires: smartmet-qdtools >= 21.1.21
 #TestRequires: smartmet-test-data >= 20.6.30
-#TestRequires: smartmet-test-db >= 20.11.3
-#TestRequires: smartmet-engine-grid-test >= 21.12.2
+#TestRequires: smartmet-test-db >= 21.1.21
+#TestRequires: smartmet-engine-grid-test >= 21.1.21
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
 
 # makefile.inc side effect (otherwise fails on top level Makefile)
-#TestRequires: gdal33-devel
+#TestRequires: gdal34-devel
 #TestRequires: jsoncpp-devel
 #TestRequires: ctpp2-devel
 
