@@ -98,6 +98,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
                                       {"rotlatlon", A_RotLatLon},
                                       {"stereographic", A_PolarStereoGraphic},
                                       {"mercator", A_Mercator},
+                                      {"ykj", A_TransverseMercator},
                                       {nullptr, A_Native}};
 
     // If request datum is 'epsg', check epsg projection for implied datum shift to wgs84.
