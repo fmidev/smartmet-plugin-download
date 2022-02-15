@@ -42,10 +42,12 @@ void Resources::createArea(const std::string &projection,
 {
   try
   {
-    area = NFmiAreaFactory::CreateFromCorners(projection, bottomLeft, topRight);
+    auto area = NFmiAreaFactory::CreateFromCorners(projection, bottomLeft, topRight);
 
     if (!area.get())
       throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+
+    areas.push_back(area);
   }
   catch (...)
   {
@@ -66,11 +68,13 @@ void Resources::createArea(const std::string &projection,
 {
   try
   {
-    area = NFmiAreaFactory::CreateFromCenter(
+    auto area = NFmiAreaFactory::CreateFromCenter(
         projection, center, 2 * 1000 * widthKM, 2 * 1000 * heightKM);
 
     if (!area.get())
       throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+
+    areas.push_back(area);
   }
   catch (...)
   {
@@ -86,14 +90,18 @@ void Resources::createArea(const std::string &projection,
  */
 // ----------------------------------------------------------------------
 
-void Resources::createArea(const std::string &projection)
+const NFmiArea *Resources::createArea(const std::string &projection)
 {
   try
   {
-    area = NFmiAreaFactory::Create(projection);
+    auto area = NFmiAreaFactory::Create(projection);
 
     if (!area.get())
       throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+
+    areas.push_back(area);
+
+    return area.get();
   }
   catch (...)
   {
@@ -113,7 +121,7 @@ const NFmiArea *Resources::getArea()
 {
   try
   {
-    return area.get();
+    return areas.empty() ? nullptr : areas.back().get();
   }
   catch (...)
   {

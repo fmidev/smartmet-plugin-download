@@ -53,7 +53,7 @@ class Resources : private boost::noncopyable
                   double widthKM,
                   double heightKM);
 #else
-  void createArea(const std::string &projection);
+  const NFmiArea *createArea(const std::string &projection);
 #endif
   const NFmiArea *getArea();
 
@@ -67,7 +67,7 @@ class Resources : private boost::noncopyable
   OGRSpatialReference *getGeometrySRS() const { return geometrySRS; }
 
  private:
-  boost::shared_ptr<NFmiArea> area;
+  std::list<boost::shared_ptr<NFmiArea>> areas;
   boost::shared_ptr<NFmiGrid> grid;
   std::list<OGRSpatialReference *> spatialReferences;
   std::list<OGRCoordinateTransformation *> transformations;
