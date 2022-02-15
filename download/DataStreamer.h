@@ -162,6 +162,15 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void getBBox(const std::string &bbox);
   void getRegLLBBox(Engine::Querydata::Q q);
+  void getBBox(Engine::Querydata::Q q,
+               const NFmiArea &sourceArea,
+               OGRSpatialReference &targetSRS);
+  void getRegLLBBox(Engine::Querydata::Q q,
+                    const NFmiArea &sourceArea,
+                    OGRSpatialReference &targetSRS);
+  std::string getRegLLBBoxStr(Engine::Querydata::Q q,
+                              const NFmiArea &sourceArea,
+                              const std::string &projection);
   std::string getRegLLBBoxStr(Engine::Querydata::Q q);
   void getLLBBox(Engine::Querydata::Q q);
 
