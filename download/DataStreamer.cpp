@@ -3104,10 +3104,16 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
 #ifdef WGS84
       getRegLLBBox(q);
 #else
+#if 0
+      // Transform projected target bbox from projected to projected, then to latlon
+
       if (itsReqParams.projType == P_LatLon)
         bboxStr = getRegLLBBoxStr(q);
       else
         bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
+#else
+      bboxStr = getRegLLBBoxStr(q);
+#endif
 #endif
 
       if (itsReqParams.projType == P_LatLon)
