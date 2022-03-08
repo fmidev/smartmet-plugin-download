@@ -9,20 +9,16 @@
 
 #include "Datum.h"
 
+#include <boost/optional.hpp>
+#include <boost/shared_ptr.hpp>
 #include <engines/querydata/Engine.h>
+#include <macgyver/TimeFormatter.h>
+#include <newbase/NFmiPoint.h>
 #include <spine/HTTP.h>
 #include <spine/Location.h>
 #include <spine/OptionParsers.h>
 #include <spine/Parameter.h>
-#include <spine/TimeSeriesGeneratorOptions.h>
-#include <spine/ValueFormatter.h>
-
-#include <macgyver/TimeFormatter.h>
-#include <newbase/NFmiPoint.h>
-
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
-
+#include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <list>
 #include <locale>
 #include <map>
@@ -82,7 +78,7 @@ struct Producer
   NamedSettings::const_iterator namedSettingsEnd() const { return (namedSettings.end()); }
 #ifdef USE_QENGINE_CONFIG
   boost::optional<const Engine::Querydata::ProducerConfig &> qEngineProducerConfig;
-#endif  
+#endif
 };
 
 typedef std::map<std::string, Producer> Producers;
@@ -247,7 +243,7 @@ class Query
   std::string timeZone;
 
   Spine::OptionParsers::ParameterOptions pOptions;
-  Spine::TimeSeriesGeneratorOptions tOptions;
+  TimeSeries::TimeSeriesGeneratorOptions tOptions;
 
  private:
   Query();

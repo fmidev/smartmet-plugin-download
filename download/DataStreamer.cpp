@@ -133,9 +133,9 @@ void DataStreamer::checkDataTimeStep(long timeStep)
       ;
     else
       throw Fmi::Exception(BCP,
-                             "Invalid data timestep (" +
-                                 boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
-                                 itsReqParams.producer + "'");
+                           "Invalid data timestep (" +
+                               boost::lexical_cast<string>(itsDataTimeStep) + ") for producer '" +
+                               itsReqParams.producer + "'");
   }
   catch (...)
   {
@@ -274,8 +274,7 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLevelType,
-                                                       int &level)
+bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLevelType, int &level)
 {
   try
   {
@@ -670,17 +669,18 @@ void DataStreamer::generateGridValidTimeList(Query &query, ptime &oTime, ptime &
 
     bool hasTimeStep = (query.tOptions.timeStep && (*query.tOptions.timeStep > 0));
 
-    if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::TimeSteps) && (!hasTimeStep))
-      query.tOptions.mode = Spine::TimeSeriesGeneratorOptions::DataTimes;
+    if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::TimeSteps) &&
+        (!hasTimeStep))
+      query.tOptions.mode = TimeSeries::TimeSeriesGeneratorOptions::DataTimes;
 
-    if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::DataTimes) ||
+    if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::DataTimes) ||
         query.tOptions.startTimeData || query.tOptions.endTimeData)
     {
       query.tOptions.setDataTimes(itsGridMetaData.getDataTimes(originTimeStr), false);
     }
 
     auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(query.timeZone);
-    itsDataTimes = Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
+    itsDataTimes = TimeSeries::TimeSeriesGenerator::generate(query.tOptions, tz);
 
     if (itsDataTimes.empty())
       throw Fmi::Exception(BCP, "No valid times in the requested time period").disableStackTrace();
@@ -738,17 +738,18 @@ void DataStreamer::generateValidTimeList(
 
     bool hasTimeStep = (query.tOptions.timeStep && (*query.tOptions.timeStep > 0));
 
-    if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::TimeSteps) && (!hasTimeStep))
-      query.tOptions.mode = Spine::TimeSeriesGeneratorOptions::DataTimes;
+    if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::TimeSteps) &&
+        (!hasTimeStep))
+      query.tOptions.mode = TimeSeries::TimeSeriesGeneratorOptions::DataTimes;
 
-    if ((query.tOptions.mode == Spine::TimeSeriesGeneratorOptions::DataTimes) ||
+    if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::DataTimes) ||
         query.tOptions.startTimeData || query.tOptions.endTimeData)
     {
       query.tOptions.setDataTimes(q->validTimes(), q->isClimatology());
     }
 
     auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(query.timeZone);
-    itsDataTimes = Spine::TimeSeriesGenerator::generate(query.tOptions, tz);
+    itsDataTimes = TimeSeries::TimeSeriesGenerator::generate(query.tOptions, tz);
 
     if (itsDataTimes.empty())
       throw Fmi::Exception(BCP, "No valid times in the requested time period").disableStackTrace();
@@ -1425,14 +1426,12 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
     OGRErr err;
 
     if ((err = sourceSRS.SetFromUserInput(sourceArea.ProjStr().c_str())) != OGRERR_NONE)
-      throw Fmi::Exception(BCP,
-                             "srs.Set(ProjStr) error " +
-                                 boost::lexical_cast<string>(err));
+      throw Fmi::Exception(BCP, "srs.Set(ProjStr) error " + boost::lexical_cast<string>(err));
 
     sourceSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-    OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(
-        &sourceSRS, &targetSRS);
+    OGRCoordinateTransformation *ct =
+        itsResources.getCoordinateTransformation(&sourceSRS, &targetSRS);
     if (!ct)
       throw Fmi::Exception(BCP, "OGRCreateCoordinateTransformation failed");
 
@@ -1448,7 +1447,7 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
     bool first = true;
 
     for (y = 1, yc = worldRect.Bottom(); (y <= gridSizeY); y++, yc += dY)
-      for (x = 1, xc = worldRect.Left(); (x <= gridSizeX); )
+      for (x = 1, xc = worldRect.Left(); (x <= gridSizeX);)
       {
         double txc = xc, tyc = yc;
 
@@ -1506,16 +1505,15 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q,
 
       if ((err = sourceSRS.importFromWkt(sourceArea.WKT().c_str())) != OGRERR_NONE)
         throw Fmi::Exception(BCP,
-                               "srs.importFromWKT(" +
-                                   sourceArea.WKT()+ ") error " +
-                                   boost::lexical_cast<string>(err));
+                             "srs.importFromWKT(" + sourceArea.WKT() + ") error " +
+                                 boost::lexical_cast<string>(err));
 
       OGRSpatialReference *targetLLSRS = itsResources.cloneGeogCS(sourceSRS);
 
       targetLLSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-      OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(
-          &targetSRS, targetLLSRS);
+      OGRCoordinateTransformation *ct =
+          itsResources.getCoordinateTransformation(&targetSRS, targetLLSRS);
 
       if (!ct)
         throw Fmi::Exception(BCP, "OGRCreateCoordinateTransformation failed");
@@ -1556,10 +1554,9 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q,
     auto targetArea = itsResources.createArea(targetProjection);
 
     if ((err = targetSRS.importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
-      throw Fmi::Exception(BCP,
-                             "srs.importFromWKT(" +
-                                 targetArea->WKT()+ ") error " +
-                                 boost::lexical_cast<string>(err));
+      throw Fmi::Exception(
+          BCP,
+          "srs.importFromWKT(" + targetArea->WKT() + ") error " + boost::lexical_cast<string>(err));
 
     getRegLLBBox(q, sourceArea, targetSRS);
 
@@ -2020,8 +2017,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     if ((err = qdProjectedSrs.SetFromUserInput(area->ProjStr().c_str())) != OGRERR_NONE)
       throw Fmi::Exception(BCP,
-                             "transform: srs.Set(ProjStr) error " +
-                                 boost::lexical_cast<string>(err));
+                           "transform: srs.Set(ProjStr) error " + boost::lexical_cast<string>(err));
 
     qdProjectedSrs.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
@@ -2068,9 +2064,9 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       size_t bboxPos = areaStr.find(":");
 
       if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (areaStr.length() - 1)))
-        throw Fmi::Exception(BCP,
-                               "Unrecognized area '" + areaStr + "' for producer '" +
-                                   itsReqParams.producer + "'");
+        throw Fmi::Exception(
+            BCP,
+            "Unrecognized area '" + areaStr + "' for producer '" + itsReqParams.producer + "'");
 
       auto sourceProjection = areaStr.substr(0, bboxPos);
 
@@ -2102,9 +2098,9 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       //
       if ((err = wgs84PrSrsPtr->importFromEPSG(itsReqParams.epsgCode)) != OGRERR_NONE)
         throw Fmi::Exception(BCP,
-                               "transform: srs.importFromEPSG(" +
-                                   boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
-                                   boost::lexical_cast<string>(err));
+                             "transform: srs.importFromEPSG(" +
+                                 boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
+                                 boost::lexical_cast<string>(err));
 
       if (wgs84PrSrsPtr->IsProjected())
         itsReqParams.areaClassId =
@@ -2126,9 +2122,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
       if ((err = wgs84PrSrsPtr->importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
         throw Fmi::Exception(BCP,
-                               "srs.importFromWKT(" +
-                                   targetArea->WKT()+ ") error " +
-                                   boost::lexical_cast<string>(err));
+                             "srs.importFromWKT(" + targetArea->WKT() + ") error " +
+                                 boost::lexical_cast<string>(err));
     }
 
     wgs84PrSrsPtr->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
@@ -2137,8 +2132,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
       if ((err = wgs84PrSrsPtr->SetWellKnownGeogCS("WGS84")) != OGRERR_NONE)
-        throw Fmi::Exception(
-            BCP, "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
+        throw Fmi::Exception(BCP,
+                             "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
 
     // If projected output cs, get geographic output cs
 
@@ -2359,8 +2354,9 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
  */
 // ----------------------------------------------------------------------
 
-NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(
-    Engine::Querydata::Q q, bool requestLevels, bool nativeLevels) const
+NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
+                                                        bool requestLevels,
+                                                        bool nativeLevels) const
 {
   try
   {
@@ -2424,9 +2420,9 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(
     {
       bool hasReqLevel = (reqLevel != itsSortedDataLevels.end());
       bool isNativeLevel = ((!hasReqLevel) || (q->levelValue() == *reqLevel));
-      bool isInterpolatedLevel = (isNativeLevel || (!levelInterpolation))
-          ? (!hasReqLevel)
-          : itsRisingLevels ? (q->levelValue() > *reqLevel) : (q->levelValue() < *reqLevel);
+      bool isInterpolatedLevel = (isNativeLevel || (!levelInterpolation)) ? (!hasReqLevel)
+                                 : itsRisingLevels ? (q->levelValue() > *reqLevel)
+                                                   : (q->levelValue() < *reqLevel);
 
       if (isInterpolatedLevel && prevNativeLevel)
         lbag.AddLevel(*prevNativeLevel);
@@ -2460,8 +2456,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(
           level1 = (itsRisingLevels ? q->levelValue() : *reqLevel);
           level2 = (itsRisingLevels ? *reqLevel : q->levelValue());
         }
-      }
-      while ((!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2));
+      } while ((!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2));
     }
 
     if (lbag.GetSize() == 0)
@@ -2541,8 +2536,9 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(
  */
 // ----------------------------------------------------------------------
 
-NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(
-    Engine::Querydata::Q q, bool requestTimes, bool nativeTimes) const
+NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q,
+                                                    bool requestTimes,
+                                                    bool nativeTimes) const
 {
   try
   {
@@ -2556,7 +2552,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(
     }
 
     NFmiMetTime ot = q->originTime();
-    Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
+    TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     NFmiTimeList dataTimes;
 
     for (; (timeIter != itsDataTimes.end()); timeIter++)
@@ -2769,8 +2765,8 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
 
       if (!q->param(id))
         throw Fmi::Exception(BCP,
-                               "Internal error: could not switch to parameter " +
-                                   boost::lexical_cast<std::string>(id));
+                             "Internal error: could not switch to parameter " +
+                                 boost::lexical_cast<std::string>(id));
       q->setIsSubParamUsed(isSubParamUsed);
     }
     else if (demValues && waterFlags)
@@ -3016,7 +3012,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
           ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiRotatedLatLonArea)))
         throw Fmi::Exception(BCP, "Rotated latlon not supported when using gdal transformation");
       else if ((itsReqParams.areaClassId == A_Mercator) ||
-          ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
+               ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
         throw Fmi::Exception(BCP, "Mercator not supported when using gdal transformation");
 
       return;
@@ -3028,7 +3024,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
         itsReqParams.gridCenter.empty() && itsUseNativeGridSize)
       return;
 
-    // Clear the projection request if it is identical to the data:
+      // Clear the projection request if it is identical to the data:
 
 #ifdef WGS84
     if (projectionMatches(itsReqParams.projection, nativeArea))
@@ -3055,8 +3051,8 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
 
     if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (projection.length() - 1)))
       throw Fmi::Exception(BCP,
-                             "Unrecognized projection '" + projection + "' for producer '" +
-                                 itsReqParams.producer + "'");
+                           "Unrecognized projection '" + projection + "' for producer '" +
+                               itsReqParams.producer + "'");
 
     projStr = projection.substr(0, bboxPos);
     bboxStr = projection.substr(bboxPos + 1);
@@ -3134,7 +3130,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       if (!itsReqParams.bbox.empty())
       {
         // bbox from the request or set by setCropping()
-#ifdef WGS84 
+#ifdef WGS84
         getBBox(itsReqParams.bbox);
         itsResources.createArea(
             projStr, itsRegBoundingBox->bottomLeft, itsRegBoundingBox->topRight);
@@ -3144,7 +3140,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       }
       else if (!itsReqParams.gridCenter.empty())
       {
-#ifdef WGS84 
+#ifdef WGS84
         NFmiPoint center((*itsReqParams.gridCenterLL)[0].first,
                          (*itsReqParams.gridCenterLL)[0].second);
         auto width = (*itsReqParams.gridCenterLL)[1].first;
@@ -3158,7 +3154,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       }
       else
       {
-#ifdef WGS84 
+#ifdef WGS84
         getRegLLBBox(q);
         itsResources.createArea(
             projStr, itsRegBoundingBox->bottomLeft, itsRegBoundingBox->topRight);
@@ -3715,8 +3711,8 @@ void DataStreamer::extractData(string &chunk)
 
         if ((itsGridValues.NX() == 0) || (itsGridValues.NY() == 0))
           throw Fmi::Exception(BCP,
-                                 "Extract data: internal: Query returned no data for producer '" +
-                                     itsReqParams.producer + "'");
+                               "Extract data: internal: Query returned no data for producer '" +
+                                   itsReqParams.producer + "'");
 
         getDataChunk(q, area, grid, level, mt, itsGridValues, chunk);
 
@@ -3820,7 +3816,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
 
   queryParam.mParam = itsGridMetaData.paramKeys.find(itsParamIterator->name())->second;
-  //queryParam.mParameterLevelIdType = T::ParamLevelIdTypeValue::FMI;
+  // queryParam.mParameterLevelIdType = T::ParamLevelIdTypeValue::FMI;
   queryParam.mParameterLevelId = gridLevelType;
   queryParam.mParameterLevel = ((itsLevelType == kFmiPressureLevel) ? level * 100 : level);
 

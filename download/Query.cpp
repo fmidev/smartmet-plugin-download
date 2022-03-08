@@ -6,17 +6,14 @@
 
 #include "Query.h"
 #include "Config.h"
-
-#include <spine/Convenience.h>
-#include <macgyver/Exception.h>
-#include <spine/OptionParsers.h>
-
-#include <macgyver/StringConversion.h>
-#include <newbase/NFmiPoint.h>
-
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/foreach.hpp>
+#include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
+#include <newbase/NFmiPoint.h>
+#include <spine/Convenience.h>
+#include <spine/OptionParsers.h>
 
 using namespace std;
 

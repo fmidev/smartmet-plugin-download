@@ -14,13 +14,13 @@
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Model.h>
+#include <engines/querydata/ValidTimeList.h>
 #include <gis/CoordinateMatrix.h>
 #include <gis/SpatialReference.h>
+#include <grid-files/grid/Typedefs.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
-#include <spine/TimeSeriesGenerator.h>
-#include <engines/querydata/ValidTimeList.h>
-#include <grid-files/grid/Typedefs.h>
+#include <timeseries/TimeSeriesGenerator.h>
 #include <ogr_spatialref.h>
 
 namespace SmartMet
@@ -140,7 +140,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   Spine::OptionParsers::ParameterList::const_iterator itsParamIterator;
   Spine::OptionParsers::ParameterList itsDataParams;
-  Spine::TimeSeriesGenerator::LocalTimeList itsDataTimes;
+  TimeSeries::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
 
   long itsDataTimeStep = 0;
@@ -162,9 +162,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void getBBox(const std::string &bbox);
   void getRegLLBBox(Engine::Querydata::Q q);
-  void getBBox(Engine::Querydata::Q q,
-               const NFmiArea &sourceArea,
-               OGRSpatialReference &targetSRS);
+  void getBBox(Engine::Querydata::Q q, const NFmiArea &sourceArea, OGRSpatialReference &targetSRS);
   void getRegLLBBox(Engine::Querydata::Q q,
                     const NFmiArea &sourceArea,
                     OGRSpatialReference &targetSRS);
@@ -211,22 +209,23 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(
-      Engine::Querydata::Q q, bool requestLevels = false, bool nativeLevels = false) const;
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q,
+                                            bool requestLevels = false,
+                                            bool nativeLevels = false) const;
   NFmiParamDescriptor makeParamDescriptor(
       Engine::Querydata::Q q,
       const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
-  NFmiTimeDescriptor makeTimeDescriptor(
-      Engine::Querydata::Q q, bool requestTimes = false, bool nativeTimes = false) const;
+  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q,
+                                        bool requestTimes = false,
+                                        bool nativeTimes = false) const;
 
-  Engine::Querydata::Q getCurrentParamQ(
-      const std::list<FmiParameterName> &currentParams) const;
+  Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
 
   void nextParam(Engine::Querydata::Q q);
 
   // data members
 
-  Spine::TimeSeriesGenerator::LocalTimeList::const_iterator itsTimeIterator;
+  TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator itsTimeIterator;
 
   Scaling itsValScaling;
 

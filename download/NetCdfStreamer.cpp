@@ -10,10 +10,10 @@
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <gis/ProjInfo.h>
+#include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
-#include <macgyver/Exception.h>
 #include <spine/Thread.h>
 
 #ifndef WGS84
@@ -64,8 +64,7 @@ void NetCdfStreamer::requireNcFile()
   if (itsFile)
     return;
 
-  itsFile.reset(
-      new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
+  itsFile.reset(new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
 }
 
 // ----------------------------------------------------------------------
@@ -372,10 +371,10 @@ void NetCdfStreamer::addTimeDimension()
     }
     else
       throw Fmi::Exception(BCP,
-                             "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
-                                 " for producer '" + itsReqParams.producer + "'");
+                           "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
+                               " for producer '" + itsReqParams.producer + "'");
 
-    Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
+    TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time();
     size_t timeSize = 0;
     int times[itsDataTimes.size()];
@@ -386,11 +385,11 @@ void NetCdfStreamer::addTimeDimension()
 
       if ((timeSize > 0) && (times[timeSize - 1] >= period))
         throw Fmi::Exception(BCP,
-                               "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
-                                   boost::lexical_cast<string>(times[timeSize - 1]) +
-                                   " (validtime " + Fmi::to_iso_string(timeIter->utc_time()) +
-                                   " timestep " + boost::lexical_cast<string>(timeStep) +
-                                   ") for producer '" + itsReqParams.producer + "'");
+                             "Invalid time offset " + boost::lexical_cast<string>(period) + "/" +
+                                 boost::lexical_cast<string>(times[timeSize - 1]) + " (validtime " +
+                                 Fmi::to_iso_string(timeIter->utc_time()) + " timestep " +
+                                 boost::lexical_cast<string>(timeStep) + ") for producer '" +
+                                 itsReqParams.producer + "'");
 
       times[timeSize] = period;
     }
@@ -748,8 +747,8 @@ void NetCdfStreamer::setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar)
 {
   try
   {
-    const double lon_0 = 27;		   // SRS_PP_CENTRAL_MERIDIAN
-    const double lat_0 = 0;		   // SRS_PP_LATITUDE_OF_ORIGIN
+    const double lon_0 = 27;               // SRS_PP_CENTRAL_MERIDIAN
+    const double lat_0 = 0;                // SRS_PP_LATITUDE_OF_ORIGIN
     const double false_easting = 3500000;  // SRS_PP_FALSE_EASTING
 
     addAttribute(crsVar, "grid_mapping_name", "transverse_mercator");
@@ -855,12 +854,12 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     auto crsVar = addVariable("crs", ncShort);
 
-    int classId = (itsReqParams.areaClassId != A_Native)
-        ? (int) itsReqParams.areaClassId
+    int classId = (itsReqParams.areaClassId != A_Native) ? (int)itsReqParams.areaClassId
 #ifdef WGS84
-        : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId() : area->ClassId();
+                  : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId()
+                                                       : area->ClassId();
 #else
-        : area->ClassId();
+                                                         : area->ClassId();
 #endif
 
     switch (classId)
@@ -1320,7 +1319,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     // Determine and store time bounds
 
-    Spine::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
+    TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     ptime startTime = itsDataTimes.front().utc_time(), vt;
     int bounds[2 * itsTimeDim->size()];
     size_t i = 0;
@@ -1404,8 +1403,8 @@ void NetCdfStreamer::addParameters(bool relative_uv)
             j = i + 1;
           else
             throw Fmi::Exception(BCP,
-                                   "Missing gridrelative configuration for parameter " +
-                                       boost::lexical_cast<string>(usedParId));
+                                 "Missing gridrelative configuration for parameter " +
+                                     boost::lexical_cast<string>(usedParId));
         }
 
       if ((i >= pTable.size()) && (j > 0))
