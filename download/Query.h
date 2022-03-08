@@ -121,6 +121,7 @@ typedef enum
   P_StereoGraphic,
   P_Mercator,
   P_TransverseMercator,
+  P_LambertConformalConic,
   P_Epsg
 } ProjType;
 typedef enum
@@ -130,7 +131,8 @@ typedef enum
   A_RotLatLon = kNFmiRotatedLatLonArea,
   A_PolarStereoGraphic = kNFmiStereographicArea,
   A_Mercator = kNFmiMercatorArea,
-  A_TransverseMercator = kNFmiYKJArea
+  A_TransverseMercator = kNFmiYKJArea,
+  A_LambertConformalConic = kNFmiLambertConformalConicArea
 } AreaClassId;
 typedef unsigned long EpsgCode;
 
