@@ -89,12 +89,18 @@ class NetCdfStreamer : public DataStreamer
                                             boost::shared_ptr<NcVar> &tVar);
   void addLevelDimension();
 
-  void setLatLonGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
+  void setSpheroidAndWKT(const boost::shared_ptr<NcVar> &crsVar,
+                         OGRSpatialReference *geometrySRS,
+                         const std::string &areaWKT = "");
+
+  void setLatLonGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &crsVar);
-  void setStereographicGeometry(const NFmiArea *area, const boost::shared_ptr<NcVar> &crsVar);
+  void setStereographicGeometry(const boost::shared_ptr<NcVar> &crsVar,
+                                const NFmiArea *area = nullptr);
   void setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar);
   void setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar);
-  void setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar);
+  void setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar,
+                                   const NFmiArea *area = nullptr);
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
   boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);

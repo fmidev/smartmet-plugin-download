@@ -603,22 +603,51 @@ void NetCdfStreamer::addLevelDimension()
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set spheroid and wkt attributes
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setSpheroidAndWKT(const boost::shared_ptr<NcVar> &crsVar,
+                                       OGRSpatialReference *geometrySRS,
+                                       const string &areaWKT)
+{
+  try
+  {
+    string srsWKT = (geometrySRS ? getWKT(geometrySRS) : ""), ellipsoid;
+    const string &WKT = (geometrySRS ? srsWKT : areaWKT);
+    double radiusOrSemiMajor, invFlattening;
+
+    extractSpheroidFromGeom(geometrySRS, areaWKT, ellipsoid, radiusOrSemiMajor, invFlattening);
+
+    if (invFlattening > 0)
+    {
+      addAttribute(crsVar, "semi_major", radiusOrSemiMajor);
+      addAttribute(crsVar, "inverse_flattening", invFlattening);
+    }
+    else
+      addAttribute(crsVar, "earth_radius", radiusOrSemiMajor);
+
+    addAttribute(crsVar, "crs_wkt", WKT.c_str());
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set latlon projection metadata
  *
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLatLonGeometry(const NFmiArea * /* area */,
-                                       const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setLatLonGeometry(const boost::shared_ptr<NcVar> &crsVar)
 {
   try
   {
     addAttribute(crsVar, "grid_mapping_name", "latitude_longitude");
-
-    //	OGRSpatialReference * geometrySRS = itsResources.getGeometrySRS();
-    //
-    //	if (geometrySRS) {
-    //	}
   }
   catch (...)
   {
@@ -656,13 +685,16 @@ void NetCdfStreamer::setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &cr
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setStereographicGeometry(const NFmiArea *area,
-                                              const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setStereographicGeometry(const boost::shared_ptr<NcVar> &crsVar,
+                                              const NFmiArea *area)
 {
   try
   {
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     double lon_0, lat_0, lat_ts;
+
+    if ((!geometrySRS) && (!area))
+      throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
 
     if (!geometrySRS)
     {
@@ -757,8 +789,7 @@ void NetCdfStreamer::setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar)
     addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
     addAttribute(crsVar, "false_easting", false_easting);
 
-    Fmi::SpatialReference YKJ(2393);
-    addAttribute(crsVar, "crs_wkt", Fmi::OGR::exportToWkt(*YKJ).c_str());
+    setSpheroidAndWKT(crsVar, Fmi::SpatialReference(2393).get());
   }
   catch (...)
   {
@@ -773,14 +804,31 @@ void NetCdfStreamer::setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar,
+                                                 const NFmiArea *area)
 {
   try
   {
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+    OGRSpatialReference areaSRS;
+
+    if ((!geometrySRS) && (!area))
+      throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
 
     if (!geometrySRS)
-      throw Fmi::Exception(BCP, "SRS is not set");
+    {
+      OGRErr err;
+
+      if ((err = areaSRS.importFromWkt(area->WKT().c_str())) != OGRERR_NONE)
+        throw Fmi::Exception(BCP,
+                               "srs.importFromWKT(" + area->WKT() + ") error " +
+                                   boost::lexical_cast<string>(err));
+       geometrySRS = &areaSRS;
+    }
+
+    auto projection = geometrySRS->GetAttrValue("PROJECTION");
+    if (!projection)
+      throw Fmi::Exception(BCP, "Geometry PROJECTION not set");
 
     double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
     double lat_0 = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
@@ -790,7 +838,7 @@ void NetCdfStreamer::setLambertConformalGeometry(const boost::shared_ptr<NcVar> 
     addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
     addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
 
-    if (EQUAL(itsGridMetaData.projection.c_str(), SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
+    if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
     {
       // http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html
       // #table-grid-mapping-attributes
@@ -866,13 +914,16 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     switch (classId)
     {
       case kNFmiLatLonArea:
-        setLatLonGeometry(area, crsVar);
+        setLatLonGeometry(crsVar);
         break;
       case kNFmiStereographicArea:
-        setStereographicGeometry(area, crsVar);
+        setStereographicGeometry(crsVar, area);
         break;
       case kNFmiYKJArea:
         setYKJGeometry(crsVar);
+        break;
+      case kNFmiLambertConformalConicArea:
+        setLambertConformalGeometry(crsVar, area);
         break;
 #ifdef WGS84
       case kNFmiProjArea:
@@ -997,18 +1048,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     addAttribute(lonVar, "long_name", "longitude");
     addAttribute(lonVar, "units", "degrees_east");
 
-    // For YKJ wkt is set, do not set CF spheroid attributes
+    // For YKJ spheroid is already set from epsg:2393
 
     if (classId != kNFmiYKJArea)
-    {
-      if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
-      {
-        addAttribute(crsVar, "semi_major", Datum::NetCdf::WGS84_semiMajor);
-        addAttribute(crsVar, "inverse_flattening", Datum::NetCdf::WGS84_invFlattening);
-      }
-      else if (projected)
-        addAttribute(crsVar, "earth_radius", Datum::NetCdf::Fmi_6371220m);
-    }
+      setSpheroidAndWKT(crsVar, itsResources.getGeometrySRS(), area->WKT());
   }
   catch (...)
   {
@@ -1041,20 +1084,19 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
 
     // Set projection
 
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
     auto crsVar = addVariable("crs", ncShort);
-
-    addAttribute(crsVar, "crs_wkt", itsGridMetaData.crs.c_str());
 
     switch (itsGridMetaData.projType)
     {
       case T::GridProjectionValue::LatLon:
-        setLatLonGeometry(nullptr, crsVar);
+        setLatLonGeometry(crsVar);
         break;
       case T::GridProjectionValue::RotatedLatLon:
         setRotatedLatlonGeometry(crsVar);
         break;
       case T::GridProjectionValue::PolarStereographic:
-        setStereographicGeometry(nullptr, crsVar);
+        setStereographicGeometry(crsVar);
         break;
       case T::GridProjectionValue::Mercator:
         setMercatorGeometry(crsVar);
@@ -1107,11 +1149,11 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       //	  faciliates processing of this data by generic applications that don't recognize
       //	  the multidimensional latitude and longitude coordinates."
 
-      auto inputSRS = itsResources.getGeometrySRS();
       OGRSpatialReference llSRS;
-      llSRS.CopyGeogCSFrom(inputSRS);
+      llSRS.CopyGeogCSFrom(geometrySRS);
 
-      OGRCoordinateTransformation *ct = itsResources.getCoordinateTransformation(&llSRS, inputSRS);
+      OGRCoordinateTransformation *ct =
+          itsResources.getCoordinateTransformation(&llSRS, geometrySRS);
 
       double xc[] = {coords[0].x(), coords[coords.size() - 1].x()};
       double yc[] = {coords[0].y(), coords[coords.size() - 1].y()};
@@ -1217,13 +1259,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     addAttribute(latVar, "long_name", "latitude");
     addAttribute(lonVar, "long_name", "longitude");
 
-    if (itsGridMetaData.flatteningStr.size() > 0)
-    {
-      addAttribute(crsVar, "semi_major", itsGridMetaData.earthRadiusOrSemiMajorInMeters);
-      addAttribute(crsVar, "inverse_flattening", *itsGridMetaData.flattening);
-    }
-    else
-      addAttribute(crsVar, "earth_radius", itsGridMetaData.earthRadiusOrSemiMajorInMeters);
+    setSpheroidAndWKT(crsVar, geometrySRS);
   }
   catch (...)
   {
