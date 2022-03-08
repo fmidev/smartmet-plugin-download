@@ -274,11 +274,15 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
       //
       if (isGeometrySRS)
       {
-        if (!(geometrySRS = toSRS->Clone()))
+        OGRSpatialReference *srs;
+
+        if (!(srs = toSRS->Clone()))
           throw Fmi::Exception(BCP,
                                  "getCoordinateTransformation: OGRSpatialReference cloning failed");
         else
-          spatialReferences.push_back(geometrySRS);
+          spatialReferences.push_back(srs);
+
+        geometrySRS = srs;
       }
 
       transformations.push_back(ct);

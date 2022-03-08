@@ -153,6 +153,81 @@ void GribStreamer::scanningDirections(long &iNegative, long &jPositive) const
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set shape of the earth
+ *
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::setShapeOfTheEarth(const NFmiArea *area)
+{
+  try
+  {
+    string ellipsoid;
+    double radiusOrSemiMajor, invFlattening;
+
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if ((!geometrySRS) && (!area))
+      throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
+
+    const string WKT = (geometrySRS ? "" : area->WKT());
+
+    extractSpheroidFromGeom(geometrySRS, WKT, ellipsoid, radiusOrSemiMajor, invFlattening);
+
+    long resolAndCompFlags = get_long(itsGribHandle, "resolutionAndComponentFlags");
+
+    if (itsGrib1Flag)
+    {
+      if (invFlattening > 0)
+        resolAndCompFlags |= (1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
+      else
+        resolAndCompFlags &= ~(1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
+
+      gset(itsGribHandle, "resolutionAndComponentFlags", resolAndCompFlags);
+    }
+    else
+    {
+      uint8_t shapeOfTheEarth;
+
+      if (ellipsoid == "WGS 84")
+        shapeOfTheEarth = 5;  // WGS84
+      else if (ellipsoid == "GRS 1980")
+        shapeOfTheEarth = 4;  // IAG-GRS80
+      else if ((fabs(invFlattening - 297) < 0.01) && (fabs(radiusOrSemiMajor - 6378160.0) < 0.01))
+        shapeOfTheEarth = 2;  // IAU in 1965
+      else if (invFlattening > 0)
+        throw Fmi::Exception(BCP,
+                             string("Unsupported ellipsoid in input data: ") +
+                                 Fmi::to_string(radiusOrSemiMajor) +
+                                 "," + Fmi::to_string(invFlattening));
+      else if (fabs(radiusOrSemiMajor - 6367470.0) < 0.01)
+        shapeOfTheEarth = 0;
+      else if (fabs(radiusOrSemiMajor - 6371229.0) < 0.01)
+        shapeOfTheEarth = 6;
+      else
+      {
+        // Spherical with radius specified by data producer
+
+        shapeOfTheEarth = 1;
+      }
+
+      gset(itsGribHandle, "shapeOfTheEarth", shapeOfTheEarth);
+
+      if (shapeOfTheEarth == 1)
+      {
+        gset(itsGribHandle, "scaleFactorOfRadiusOfSphericalEarth", 0.0);
+        gset(itsGribHandle, "scaledValueOfRadiusOfSphericalEarth", radiusOrSemiMajor);
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set grib latlon projection metadata
  */
 // ----------------------------------------------------------------------
@@ -210,7 +285,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 
     if (itsReqParams.dataSource == QueryData)
     {
-      if (itsResources.getGeometrySRS())
+      if (!area)
         throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
 
 #ifdef WGS84
@@ -242,8 +317,23 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 #else
       const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
 
-      slon = a.SouthernPole().X();
-      slat = a.SouthernPole().Y();
+      if (itsResources.getGeometrySRS())
+      {
+        auto srs = Fmi::SpatialReference(*itsResources.getGeometrySRS());
+        auto opt_plon = srs.projInfo().getDouble("o_lon_p");
+        auto opt_plat = srs.projInfo().getDouble("o_lat_p");
+
+        if ((!opt_plon) || (!opt_plat))
+          throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: no pole data");
+
+        slon = *opt_plon;
+        slat = *opt_plat;
+      }
+      else
+      {
+        slon = a.SouthernPole().X();
+        slat = a.SouthernPole().Y();
+      }
 
       rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
       rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
@@ -483,14 +573,26 @@ void GribStreamer::setMercatorGeometryToGrib() const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setLambertConformalGeometryToGrib() const
+void GribStreamer::setLambertConformalGeometryToGrib(const NFmiArea *area) const
 {
   try
   {
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+    OGRSpatialReference areaSRS;
+
+    if ((!geometrySRS) && (!area))
+      throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
 
     if (!geometrySRS)
-      throw Fmi::Exception(BCP, "SRS is not set");
+    {
+      OGRErr err;
+
+      if ((err = areaSRS.importFromWkt(area->WKT().c_str())) != OGRERR_NONE)
+        throw Fmi::Exception(BCP,
+                               "srs.importFromWKT(" + area->WKT() + ") error " +
+                                   boost::lexical_cast<string>(err));
+       geometrySRS = &areaSRS;
+    }
 
     gset(itsGribHandle, "typeOfGrid", "lambert");
 
@@ -526,22 +628,31 @@ void GribStreamer::setLambertConformalGeometryToGrib() const
     double lat_ts = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
     double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
 
-    if ((!itsGrib1Flag) && (lon_0 < 0))
-      lon_0 += 360;
-
-    gset(itsGribHandle, "LaDInDegrees", lat_ts);
-    gset(itsGribHandle, "LoVInDegrees", lon_0);
+    auto projection = geometrySRS->GetAttrValue("PROJECTION");
+    if (!projection)
+      throw Fmi::Exception(BCP, "Geometry PROJECTION not set");
 
     double latin1 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
     double latin2;
 
-    if (EQUAL(itsGridMetaData.projection.c_str(), SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
+    if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
       latin2 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_2);
     else
       latin2 = latin1;
 
     gset(itsGribHandle, "Latin1InDegrees", latin1);
     gset(itsGribHandle, "Latin2InDegrees", latin2);
+
+    // Error with grib1 if setting LaDInDegrees (meps: to latin1) atleast if projection
+    // truely is SP1 (latin2 == latin1)
+
+    if ((!itsGrib1Flag) && (lon_0 < 0))
+      lon_0 += 360;
+
+    if (!itsGrib1Flag)
+      gset(itsGribHandle, "LaDInDegrees", ((latin2 == latin1) ? latin1 : lat_ts));
+
+    gset(itsGribHandle, "LoVInDegrees", lon_0);
 
     // DUMP(itsGribHandle,"geography");
   }
@@ -689,6 +800,9 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
       case kNFmiMercatorArea:
         setMercatorGeometryToGrib();
         break;
+      case kNFmiLambertConformalConicArea:
+        setLambertConformalGeometryToGrib(area);
+        break;
 #ifdef WGS84
       case kNFmiProjArea:
         throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
@@ -712,23 +826,13 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
     if (!itsReqParams.packing.empty())
       gset(itsGribHandle, "packingType", itsReqParams.packing);
 
-    // Set shape of the earth depending on the datum
+    // Set shape of the earth
+
+    setShapeOfTheEarth(area);
+
+    // Set wind component relativeness
 
     long resolAndCompFlags = get_long(itsGribHandle, "resolutionAndComponentFlags");
-
-    if (itsGrib1Flag)
-    {
-      if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
-        resolAndCompFlags |= (1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
-      else
-        resolAndCompFlags &= ~(1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
-    }
-    else
-      gset(itsGribHandle,
-           "shapeOfTheEarth",
-           static_cast<int>((Datum::isDatumShiftToWGS84(itsReqParams.datumShift)
-                                 ? Datum::Grib2::Sphere::Wgs84
-                                 : Datum::Grib2::Sphere::Fmi_6371229m)));
 
     if (relative_uv)
       resolAndCompFlags |= (1 << 3);
@@ -810,10 +914,10 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
         setLatlonGeometryToGrib();
         break;
       case T::GridProjectionValue::RotatedLatLon:
-        setRotatedLatlonGeometryToGrib(nullptr);
+        setRotatedLatlonGeometryToGrib();
         break;
       case T::GridProjectionValue::PolarStereographic:
-        setStereographicGeometryToGrib(nullptr);
+        setStereographicGeometryToGrib();
         break;
       case T::GridProjectionValue::Mercator:
         setMercatorGeometryToGrib();
@@ -835,56 +939,11 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 
     // Set shape of the earth
 
+    setShapeOfTheEarth();
+
+    // Set wind component relativeness
+
     long resolAndCompFlags = get_long(itsGribHandle, "resolutionAndComponentFlags");
-
-    if (itsGrib1Flag)
-    {
-      if (itsGridMetaData.flattening)
-        resolAndCompFlags |= (1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
-      else
-        resolAndCompFlags &= ~(1 << static_cast<int>(Datum::Grib1::Sphere::Wgs84));
-    }
-    else
-    {
-      uint8_t shapeOfTheEarth;
-
-      if ((itsGridMetaData.ellipsoid == "WGS 84") ||
-          ((itsGridMetaData.flatteningStr == "298.257223563") &&
-           (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6378137) < 0.01)))
-        shapeOfTheEarth = 5;  // WGS84
-      else if ((itsGridMetaData.ellipsoid == "GRS 80") ||
-               ((itsGridMetaData.flatteningStr == "298.257222101") &&
-                (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6378137) < 0.01)))
-        shapeOfTheEarth = 4;  // IAG-GRS80
-      else if (itsGridMetaData.flattening && (fabs(*itsGridMetaData.flattening - 297) < 0.01) &&
-               (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6378160.0) < 0.01))
-        shapeOfTheEarth = 2;  // IAU in 1965
-      else if (itsGridMetaData.flattening)
-        throw Fmi::Exception(BCP,
-                             string("Unsupported ellipsoid in input data: ") +
-                                 Fmi::to_string(itsGridMetaData.earthRadiusOrSemiMajorInMeters) +
-                                 "," + itsGridMetaData.flatteningStr);
-      else if (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6367470.0) < 0.01)
-        shapeOfTheEarth = 0;
-      else if (fabs(itsGridMetaData.earthRadiusOrSemiMajorInMeters - 6371229.0) < 0.01)
-        shapeOfTheEarth = 6;
-      else
-      {
-        // Spherical with radius specified by data producer
-
-        shapeOfTheEarth = 1;
-      }
-
-      gset(itsGribHandle, "shapeOfTheEarth", shapeOfTheEarth);
-
-      if (shapeOfTheEarth == 1)
-      {
-        gset(itsGribHandle, "scaleFactorOfRadiusOfSphericalEarth", 0.0);
-        gset(itsGribHandle,
-             "scaledValueOfRadiusOfSphericalEarth",
-             itsGridMetaData.earthRadiusOrSemiMajorInMeters);
-      }
-    }
 
     if (itsGridMetaData.relativeUV)
       resolAndCompFlags |= (1 << 3);
