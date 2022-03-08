@@ -155,7 +155,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
             }
             */
 
-#ifndef EPSGGEOGCS_AS_NBLATLON
+#ifndef EPSGGEOGCS
 
             // Legacy behaviour (just to enable cropping), handling e.g. epsg:4326 as newbase latlon
 
