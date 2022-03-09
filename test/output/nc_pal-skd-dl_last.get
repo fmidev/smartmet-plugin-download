@@ -13,7 +13,8 @@ variables:
 		crs:straight_vertical_longitude_from_pole = 20. ;
 		crs:latitude_of_projection_origin = 90. ;
 		crs:standard_parallel = 60. ;
-		crs:earth_radius = 6371220.f ;
+		crs:earth_radius = 6371220. ;
+		crs:crs_wkt = "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],UNIT[\"Metre\",1.0]]" ;
 	float y(y) ;
 		y:standard_name = "projection_y_coordinate" ;
 		y:units = "m" ;
