@@ -153,6 +153,14 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   boost::posix_time::ptime itsFirstDataTime;
   boost::posix_time::ptime itsLastDataTime;
 
+  std::string getWKT(OGRSpatialReference *geometrySRS) const;
+  void extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
+                               const std::string &areaWKT,
+                               std::string &ellipsoid,
+                               double &radiusOrSemiMajor,
+                               double &invFlattening,
+                               const char *crsName = "crs");
+
  private:
   DataStreamer();
 
@@ -163,6 +171,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getBBox(const std::string &bbox);
   void getRegLLBBox(Engine::Querydata::Q q);
   void getBBox(Engine::Querydata::Q q, const NFmiArea &sourceArea, OGRSpatialReference &targetSRS);
+  void getBBox(Engine::Querydata::Q q,
+               const NFmiArea &sourceArea,
+               OGRSpatialReference &targetSRS,
+               OGRSpatialReference *targetLLSRS);
   void getRegLLBBox(Engine::Querydata::Q q,
                     const NFmiArea &sourceArea,
                     OGRSpatialReference &targetSRS);
@@ -314,10 +326,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     std::string crs;                          // grid.crs/grid.original.crs
     T::GridProjection projType;               // wkt PROJECTION or p4 EXTENSION
     std::string projection;                   //
-    std::string ellipsoid;                    // wkt SPHEROID
-    double earthRadiusOrSemiMajorInMeters;    //
-    boost::optional<double> flattening;       //
-    std::string flatteningStr;                //
     bool relativeUV;                          // QueryServer::Query grid.original.relativeUV
     boost::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
     double southernPoleLat;                   // wkt p4 EXTENSION o_lat_p

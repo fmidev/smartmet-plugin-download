@@ -99,6 +99,7 @@ static ProjType getProjectionType(ReqParams &reqParams)
                                       {"stereographic", A_PolarStereoGraphic},
                                       {"mercator", A_Mercator},
                                       {"ykj", A_TransverseMercator},
+                                      {"lcc", A_LambertConformalConic},
                                       {nullptr, A_Native}};
 
     // If request datum is 'epsg', check epsg projection for implied datum shift to wgs84.
@@ -140,6 +141,11 @@ static ProjType getProjectionType(ReqParams &reqParams)
                                          boost::lexical_cast<string>(reqParams.epsgCode) +
                                          ") error " + boost::lexical_cast<string>(err));
 
+            /* Explicit datum shift hasn't been, and should not be used
+             *
+             * Should check for "World Geodetic System 1984", not "WGS 84", and test if
+             * reqParams.datumShift is set by request
+
             if (checkDatum)
             {
               const char *datum = srs.GetAttrValue("DATUM");
@@ -147,6 +153,11 @@ static ProjType getProjectionType(ReqParams &reqParams)
               if (Fmi::ascii_toupper_copy(string(datum ? datum : "")) == Datum::epsgWGS84DatumName)
                 reqParams.datumShift = Datum::DatumShift::Wgs84;
             }
+            */
+
+#ifndef EPSGGEOGCS
+
+            // Legacy behaviour (just to enable cropping), handling e.g. epsg:4326 as newbase latlon
 
             if (!srs.IsProjected())
             {
@@ -154,11 +165,13 @@ static ProjType getProjectionType(ReqParams &reqParams)
               return getProjectionType(reqParams);
             }
 
+#endif
+
             return P_Epsg;
           }
           catch (...)
           {
-            break;
+            throw;
           }
         }
         else

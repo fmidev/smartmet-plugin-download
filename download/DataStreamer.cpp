@@ -1411,7 +1411,7 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get projected or latlon bbox for target projection
+ * \brief Get projected or latlon source area bbox for target projection
  *
  */
 // ----------------------------------------------------------------------
@@ -1483,7 +1483,100 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get latlon bbox for target projection
+ * \brief Get projected or latlon source area bbox or requested bbox for target projection
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getBBox(Engine::Querydata::Q q,
+                           const NFmiArea &sourceArea,
+                           OGRSpatialReference &targetSRS,
+                           OGRSpatialReference *targetLLSRS)
+{
+  try
+  {
+    if (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty())
+    {
+      getBBox(q, sourceArea, targetSRS);
+      return;
+    }
+
+    OGRCoordinateTransformation *LL2Prct = nullptr;
+
+    if (targetLLSRS)
+    {
+      if (!(LL2Prct = itsResources.getCoordinateTransformation(targetLLSRS, &targetSRS)))
+        throw Fmi::Exception(BCP, "OGRCreateCoordinateTransformation failed");
+    }
+
+    double blX, blY, trX, trY;
+
+    if (itsReqParams.bbox.empty())
+    {
+      if (!targetLLSRS)
+        throw Fmi::Exception(BCP, "gridcenter not supported with geographic epsg cs");
+
+      double xc = (*itsReqParams.gridCenterLL)[0].first;
+      double yc = (*itsReqParams.gridCenterLL)[0].second;
+
+      if (!(LL2Prct->Transform(1, &xc, &yc)))
+        throw Fmi::Exception(BCP, "Transform failed");
+
+      double width = (*itsReqParams.gridCenterLL)[1].first;
+      double height = (*itsReqParams.gridCenterLL)[1].second;
+
+      blX = xc - (width / 2);
+      blY = yc - (height / 2);
+      trX = xc + (width / 2);
+      trY = yc + (height / 2);
+    }
+    else
+    {
+      getBBox(itsReqParams.bbox);
+
+      blX = (*itsRegBoundingBox).bottomLeft.X();
+      blY = (*itsRegBoundingBox).bottomLeft.Y();
+      trX = (*itsRegBoundingBox).topRight.X();
+      trY = (*itsRegBoundingBox).topRight.Y();
+
+      if (targetLLSRS)
+      {
+        double c[] = { blX,blY, blX,trY, trX,trY, trX,blY };
+        double *x = c, *y = c + 1;
+
+        for (int i = 0; (i < 4); i++, x += 2, y += 2)
+        {
+          if (!(LL2Prct->Transform(1, x, y)))
+            throw Fmi::Exception(BCP, "Transform failed");
+
+          if (i == 0)
+          {
+            blX = trX = *x;
+            blY = trY = *y;
+          }
+          else
+          {
+            if (*x < blX) blX = *x;
+            else if (*x > trX) trX = *x;
+
+            if (*y < blY) blY = *y;
+            else if (*y > trY) trY = *y;
+          }
+        }
+      }
+    }
+
+    itsBoundingBox = BBoxCorners{NFmiPoint(blX, blY), NFmiPoint(trX, trY)};
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get source area latlon bbox for target projection
  *
  */
 // ----------------------------------------------------------------------
@@ -1500,15 +1593,7 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q,
 
     if (targetSRS.IsProjected())
     {
-      OGRSpatialReference sourceSRS;
-      OGRErr err;
-
-      if ((err = sourceSRS.importFromWkt(sourceArea.WKT().c_str())) != OGRERR_NONE)
-        throw Fmi::Exception(BCP,
-                             "srs.importFromWKT(" + sourceArea.WKT() + ") error " +
-                                 boost::lexical_cast<string>(err));
-
-      OGRSpatialReference *targetLLSRS = itsResources.cloneGeogCS(sourceSRS);
+      OGRSpatialReference *targetLLSRS = itsResources.cloneGeogCS(targetSRS);
 
       targetLLSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
@@ -1964,6 +2049,8 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
         //		{ SRS_PT_MERCATOR_2SP,			A_Mercator,
         // true,	true,	true	},
         {SRS_PT_TRANSVERSE_MERCATOR, A_TransverseMercator, false, false, true},
+        {SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP, A_LambertConformalConic, true, true, true},
+        {SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP, A_LambertConformalConic, true, true, true},
         {nullptr, A_Native, false, false, false}};
 
     if (!projection)
@@ -2015,9 +2102,9 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     // qd projected (or latlon/geographic) cs
 
-    if ((err = qdProjectedSrs.SetFromUserInput(area->ProjStr().c_str())) != OGRERR_NONE)
+    if ((err = qdProjectedSrs.importFromWkt(area->WKT().c_str())) != OGRERR_NONE)
       throw Fmi::Exception(BCP,
-                           "transform: srs.Set(ProjStr) error " + boost::lexical_cast<string>(err));
+                           "transform: srs.Import(WKT) error " + boost::lexical_cast<string>(err));
 
     qdProjectedSrs.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
@@ -2038,6 +2125,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
       qdLLSrsPtr->SetTOWGS84(htp[0], htp[1], htp[2], htp[3], htp[4], htp[5], htp[6]);
     }
+//  else
+//    qdLLSrsPtr->SetTOWGS84(0, 0, 0, 0, 0, 0, 0);
 
     OGRSpatialReference wgs84ProjectedSrs, *wgs84PrSrsPtr = &wgs84ProjectedSrs,
                                            *wgs84LLSrsPtr = &wgs84ProjectedSrs;
@@ -2047,33 +2136,30 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 #else
     // Guess this is for newbase eqc (latlon) instead of testing isProjected
 
-    bool qdProjLL =
-        ((area->AreaStr().find("rotlatlon") == 0) || (area->AreaStr().find("latlon") == 0));
+    bool qdProjLL = (area->AreaStr().find("rotlatlon") == 0);
 #endif
 
-    string targetProjection = itsReqParams.projection;
     bool useNativeBBox = (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty());
     bool useNativeResolution = ((!itsReqParams.gridSizeXY) && (!itsReqParams.gridResolutionXY));
+
     auto sourceArea = area;
+    const auto areaStr = sourceArea->AreaStr();
+    size_t bboxPos = areaStr.find(":");
+
+    if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (areaStr.length() - 1)))
+      throw Fmi::Exception(BCP,
+                             "Unrecognized area '" + areaStr + "' for producer '" +
+                                 itsReqParams.producer + "'");
+
+    string sourceProjection = areaStr.substr(0, bboxPos);
 
     if ((!useNativeBBox) || (!useNativeResolution))
     {
       // Get bbox'ed source area and/or grid size
 
-      const auto areaStr = area->AreaStr();
-      size_t bboxPos = areaStr.find(":");
-
-      if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (areaStr.length() - 1)))
-        throw Fmi::Exception(
-            BCP,
-            "Unrecognized area '" + areaStr + "' for producer '" + itsReqParams.producer + "'");
-
-      auto sourceProjection = areaStr.substr(0, bboxPos);
-
       if (!useNativeBBox)
       {
         auto bbox = (itsReqParams.bbox.empty() ? getGridCenterBBoxStr() : itsReqParams.bbox);
-
         sourceArea = itsResources.createArea(sourceProjection + "|" + bbox);
       }
 
@@ -2085,9 +2171,6 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         itsReqGridSizeX = ceil(xScale * itsReqGridSizeX);
         itsReqGridSizeY = ceil(yScale * itsReqGridSizeY);
       }
-
-      if (targetProjection.empty())
-        targetProjection = sourceProjection;
 
       setRequestedGridSize(*sourceArea, itsReqGridSizeX, itsReqGridSizeY);
     }
@@ -2102,75 +2185,63 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
                                  boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
                                  boost::lexical_cast<string>(err));
 
-      if (wgs84PrSrsPtr->IsProjected())
+      if (!(wgs84ProjLL = (!(wgs84PrSrsPtr->IsProjected()))))
         itsReqParams.areaClassId =
             getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
       else
         itsReqParams.areaClassId = A_LatLon;
     }
-    else if (itsReqParams.projection.empty() && useNativeBBox)
-    {
-      // Native projection
-      //
-      wgs84ProjectedSrs = qdProjectedSrs;
-    }
     else
     {
       // qd projection
       //
-      auto targetArea = itsResources.createArea(targetProjection);
+      if (itsReqParams.projection.empty() || (sourceProjection.find(itsReqParams.projection) == 0))
+      {
+        // Native
 
-      if ((err = wgs84PrSrsPtr->importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
-        throw Fmi::Exception(BCP,
-                             "srs.importFromWKT(" + targetArea->WKT() + ") error " +
-                                 boost::lexical_cast<string>(err));
+        wgs84ProjectedSrs = qdProjectedSrs;
+        wgs84ProjLL = qdProjLL;
+      }
+      else
+      {
+        auto targetArea = itsResources.createArea(itsReqParams.projection);
+
+        if ((err = wgs84PrSrsPtr->importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
+          throw Fmi::Exception(BCP,
+                                 "srs.importFromWKT(" + targetArea->WKT() + ") error " +
+                                     boost::lexical_cast<string>(err));
+
+        wgs84ProjLL = (targetArea->AreaStr().find("rotlatlon") == 0);
+      }
     }
+
+    // Clone/store target cs to be used later when setting output geometry
+
+    if (!(wgs84PrSrsPtr = itsResources.cloneCS(wgs84ProjectedSrs, true)))
+      throw Fmi::Exception(BCP, "transform: wgs84.cloneCS() failed");
 
     wgs84PrSrsPtr->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     // If selected set wgs84 geographic output cs
 
-    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+    if ((itsReqParams.projType != P_Epsg) && Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
       if ((err = wgs84PrSrsPtr->SetWellKnownGeogCS("WGS84")) != OGRERR_NONE)
         throw Fmi::Exception(BCP,
                              "transform: srs.Set(WGS84) error " + boost::lexical_cast<string>(err));
 
     // If projected output cs, get geographic output cs
 
-    if (!(wgs84ProjLL = (!(wgs84PrSrsPtr->IsProjected()))))
+    if (!wgs84ProjLL)
     {
-      if (itsReqParams.projType == P_Epsg)
-        itsReqParams.areaClassId =
-            getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
-
       if (!(wgs84LLSrsPtr = itsResources.cloneGeogCS(*wgs84PrSrsPtr)))
         throw Fmi::Exception(BCP, "transform: wgs84.cloneGeogCS() failed");
 
       wgs84LLSrsPtr->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
-      getBBox(q, *sourceArea, *wgs84PrSrsPtr);
-    }
-    else
-    {
-      // Output not projected, getting the data using native (projected or latlon) qd projection
-      // (setting latlon geometry does not reference the qd native area object).
-      //
-      // If data is projected, get latlon bounding box.
-      //
-      if (!qdProjLL)
-        getLLBBox(q);
     }
 
-    // If the target crs is projected, clone/store it to be used later when setting output geometry
+    // Get native area or requested bbox/gridcenter bounding
 
-    if (!wgs84ProjLL)
-      itsResources.cloneCS(*wgs84PrSrsPtr, true);
-
-    typedef NFmiDataMatrix<float>::size_type sz_t;
-    double xc, yc;
-
-    NFmiPoint bl = itsBoundingBox.bottomLeft;
-    NFmiPoint tr = itsBoundingBox.topRight;
+    getBBox(q, *sourceArea, *wgs84PrSrsPtr, !wgs84ProjLL ? wgs84LLSrsPtr : nullptr);
 
     // Transform output cs grid cell projected (or latlon) coordinates to qd latlons.
     //
@@ -2186,6 +2257,12 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     if ((!wgs84ProjLL) &&
         (!(wgs84Pr2LLct = itsResources.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
+
+    typedef NFmiDataMatrix<float>::size_type sz_t;
+    double xc, yc;
+
+    NFmiPoint bl = itsBoundingBox.bottomLeft;
+    NFmiPoint tr = itsBoundingBox.topRight;
 
     itsSrcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
     const sz_t xs = itsSrcLatLons.width();
@@ -2340,6 +2417,83 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
         itsDY *= (*(itsReqParams.gridStepXY))[0].second;
       }
     }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get wkt from geometry
+ *
+ */
+// ----------------------------------------------------------------------
+
+string DataStreamer::getWKT(OGRSpatialReference *geometrySRS) const
+{
+  try
+  {
+    OGRErr err;
+    const char* const papszOptions[] = { "FORMAT=WKT2", nullptr };
+    char *ppszResult;
+
+    if ((err = geometrySRS->exportToWkt(&ppszResult, papszOptions)) != OGRERR_NONE)
+      throw Fmi::Exception(BCP, "exportToWkt error " + boost::lexical_cast<string>(err));
+
+    string WKT = ppszResult;
+    CPLFree(ppszResult);
+
+    return WKT;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Extract spheroid from geometry
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
+                                           const string &areaWKT,
+                                           string &ellipsoid,
+                                           double &radiusOrSemiMajor,
+                                           double &invFlattening,
+                                           const char *crsName)
+{
+  try
+  {
+    OGRSpatialReference areaSRS;
+    auto &srs = (geometrySRS ? *geometrySRS : areaSRS);
+
+    if (!geometrySRS)
+    {
+      OGRErr err;
+
+      if ((err = areaSRS.importFromWkt(areaWKT.c_str())) != OGRERR_NONE)
+        throw Fmi::Exception(BCP,
+                               "srs.importFromWKT(" +
+                                   areaWKT + ") error " +
+                                   boost::lexical_cast<string>(err));
+    }
+
+    const char *ellipsoidAttr = "SPHEROID";
+    auto ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
+    auto radiusOrSemiMajorPtr = srs.GetAttrValue(ellipsoidAttr, 1);
+    auto invFlatteningPtr = srs.GetAttrValue(ellipsoidAttr, 2);
+
+    if (!(ellipsoidPtr && radiusOrSemiMajorPtr && invFlatteningPtr))
+      throw Fmi::Exception(BCP, string(crsName) + ": geometry " + ellipsoidAttr + " not set");
+
+    ellipsoid = ellipsoidPtr;
+    radiusOrSemiMajor = Fmi::stod(radiusOrSemiMajorPtr);
+    invFlattening = Fmi::stod(invFlatteningPtr);
   }
   catch (...)
   {
@@ -3003,16 +3157,12 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
     {
       // With datum shift the data is read using transformed coordinates and native projected data.
       //
-      // Note: Rotated latlon (needs wkt import from proj4 ob_tran projection string) and mercator
-      // (the only mercator qd seen so far had equal bottom left and top right projected X
-      // coordinate) currently not supported.
+      // The only mercator qd seen so far had equal bottom left and top right projected X
+      // coordinate; currently not supported.
       //
 
-      if ((itsReqParams.areaClassId == A_RotLatLon) ||
-          ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiRotatedLatLonArea)))
-        throw Fmi::Exception(BCP, "Rotated latlon not supported when using gdal transformation");
-      else if ((itsReqParams.areaClassId == A_Mercator) ||
-               ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
+      if ((itsReqParams.areaClassId == A_Mercator) ||
+          ((itsReqParams.areaClassId == A_Native) && (nativeClassId == kNFmiMercatorArea)))
         throw Fmi::Exception(BCP, "Mercator not supported when using gdal transformation");
 
       return;
@@ -3024,7 +3174,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
         itsReqParams.gridCenter.empty() && itsUseNativeGridSize)
       return;
 
-      // Clear the projection request if it is identical to the data:
+    // Clear the projection request if it is identical to the data:
 
 #ifdef WGS84
     if (projectionMatches(itsReqParams.projection, nativeArea))
@@ -3093,24 +3243,29 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
     }
     else if ((!itsUseNativeProj) && (nativeClassId != kNFmiLatLonArea))
     {
-      // Get native area latlon bounding box for nonnative projection.
+      // If bbox is not given, get native area latlon bounding box for nonnative projection.
       // Set itsRetainNativeGridResolution to retain native gridresolution if projecting to
       // latlon.
 
+      if (itsUseNativeBBox)
+      {
 #ifdef WGS84
       getRegLLBBox(q);
 #else
-#if 0
-      // Transform projected target bbox from projected to projected, then to latlon
+#ifndef TARGETMETRICBBOXCONV
+      // Legacy target bbox conversion, from native cs to latlon
+
+      bboxStr = getRegLLBBoxStr(q);
+#else
+      // Transform target bbox from projected to projected, then to latlon
 
       if (itsReqParams.projType == P_LatLon)
         bboxStr = getRegLLBBoxStr(q);
       else
         bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
-#else
-      bboxStr = getRegLLBBoxStr(q);
 #endif
 #endif
+      }
 
       if (itsReqParams.projType == P_LatLon)
         itsRetainNativeGridResolution = itsUseNativeGridSize;
@@ -3880,8 +4035,6 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
     Fmi::SpatialReference fsrs(crsAttr->mValue);
     auto &srs = *fsrs;
 
-    const char *ellipsoidAttr = "SPHEROID";
-
     if (srs.IsProjected())
     {
       /*
@@ -4035,35 +4188,10 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
       itsGridMetaData.southernPoleLat = 0 - *plat;
       itsGridMetaData.southernPoleLon = *plon;
 
-      ellipsoidAttr = "ELLIPSOID";
-
       gridProjection = T::GridProjectionValue::RotatedLatLon;
     }
     else
       gridProjection = T::GridProjectionValue::LatLon;
-
-    // Spheroid
-
-    auto ellipsoid = srs.GetAttrValue(ellipsoidAttr);
-    auto radiusOrSemiMajor = srs.GetAttrValue(ellipsoidAttr, 1);
-    auto flattening = srs.GetAttrValue(ellipsoidAttr, 2);
-
-    if (!(ellipsoid && radiusOrSemiMajor))
-      throw Fmi::Exception(BCP, string(attr) + ": " + ellipsoidAttr + " not set");
-
-    itsGridMetaData.ellipsoid = ellipsoid;
-    itsGridMetaData.earthRadiusOrSemiMajorInMeters = Fmi::stod(radiusOrSemiMajor);
-
-    if (flattening)
-    {
-      auto f = Fmi::stod(flattening);
-
-      if (f != 0)
-      {
-        itsGridMetaData.flattening = f;
-        itsGridMetaData.flatteningStr = flattening;
-      }
-    }
 
     // Clone/save crs
 

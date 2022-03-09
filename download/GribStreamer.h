@@ -54,11 +54,13 @@ class GribStreamer : public DataStreamer
 
   void scanningDirections(long& iNegative, long& jPositive) const;
 
+  void setShapeOfTheEarth(const NFmiArea *area = nullptr);
+
   void setLatlonGeometryToGrib() const;
-  void setRotatedLatlonGeometryToGrib(const NFmiArea* Area) const;
-  void setStereographicGeometryToGrib(const NFmiArea* Area) const;
+  void setRotatedLatlonGeometryToGrib(const NFmiArea *area = nullptr) const;
+  void setStereographicGeometryToGrib(const NFmiArea *area = nullptr) const;
   void setMercatorGeometryToGrib() const;
-  void setLambertConformalGeometryToGrib() const;
+  void setLambertConformalGeometryToGrib(const NFmiArea *area = nullptr) const;
   void setLambertAzimuthalEqualAreaGeometryToGrib() const;
   void setNamedSettingsToGrib() const;
   void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
