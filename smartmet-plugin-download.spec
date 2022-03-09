@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.3.8
+Version: 22.3.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -91,6 +91,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Mar  9 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.3.9-1.fmi
+- Fixed bugs in handling (projected) epsg projections (axis mapping strategy was not set in coord.transformation etc)
+- Added lcc and YKJ (nonnative) support for querydata source
+- Setting correct target cs spheroid (and wkt for netcdf) with querydata source instead of fixed sphere
+- Disabled automatic datum shift based on WKT DATUM for epsg projections
+- Added (but disabled by ifdefs) metric bbox conversion and handling of geographic epsg projections by their definition instead of as newbase latlon
+
 * Tue Mar  8 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.3.8-1.fmi
 - Use the new TimeSeries library
 
