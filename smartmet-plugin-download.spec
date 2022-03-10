@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.3.9
+Version: 22.3.10
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -19,12 +19,12 @@ BuildRequires: smartmet-library-spine-devel >= 22.3.8
 BuildRequires: smartmet-library-macgyver-devel >= 22.3.8
 BuildRequires: smartmet-library-timeseries-devel >= 22.3.8
 BuildRequires: smartmet-library-newbase-devel >= 22.1.21
-BuildRequires: smartmet-library-grid-content-devel >= 22.3.7
+BuildRequires: smartmet-library-grid-content-devel >= 22.3.10
 BuildRequires: smartmet-library-grid-files-devel >= 22.3.8
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 22.3.8
 BuildRequires: smartmet-engine-geonames-devel >= 22.1.31
-BuildRequires: smartmet-engine-grid-devel >= 22.3.7
+BuildRequires: smartmet-engine-grid-devel >= 22.3.10
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
@@ -91,6 +91,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Mar 10 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.3.10-1.fmi
+- Repackaged due to base library ABI changes
+
 * Wed Mar  9 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.3.9-1.fmi
 - Fixed bugs in handling (projected) epsg projections (axis mapping strategy was not set in coord.transformation etc)
 - Added lcc and YKJ (nonnative) support for querydata source
