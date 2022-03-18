@@ -891,7 +891,7 @@ void DataStreamer::setLevels(const Query &query)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::setParams(const Spine::OptionParsers::ParameterList &params,
+void DataStreamer::setParams(const TimeSeries::OptionParsers::ParameterList &params,
                              const Scaling &scaling)
 {
   try

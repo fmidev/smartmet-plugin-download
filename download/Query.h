@@ -16,8 +16,8 @@
 #include <newbase/NFmiPoint.h>
 #include <spine/HTTP.h>
 #include <spine/Location.h>
-#include <spine/OptionParsers.h>
 #include <spine/Parameter.h>
+#include <timeseries/OptionParsers.h>
 #include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <list>
 #include <locale>
@@ -244,7 +244,7 @@ class Query
 
   std::string timeZone;
 
-  Spine::OptionParsers::ParameterOptions pOptions;
+  TimeSeries::OptionParsers::ParameterOptions pOptions;
   TimeSeries::TimeSeriesGeneratorOptions tOptions;
 
  private:

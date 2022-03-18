@@ -53,7 +53,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
   void setLevels(const Query &query);
-  void setParams(const Spine::OptionParsers::ParameterList &params, const Scaling &scaling);
+  void setParams(const TimeSeries::OptionParsers::ParameterList &params, const Scaling &scaling);
 
   void setEngines(const Engine::Querydata::Engine *theQEngine,
                   const Engine::Grid::Engine *theGridEngine,
@@ -138,8 +138,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   boost::shared_ptr<NFmiQueryData> itsQueryData;
 
-  Spine::OptionParsers::ParameterList::const_iterator itsParamIterator;
-  Spine::OptionParsers::ParameterList itsDataParams;
+  TimeSeries::OptionParsers::ParameterList::const_iterator itsParamIterator;
+  TimeSeries::OptionParsers::ParameterList itsDataParams;
   TimeSeries::TimeSeriesGenerator::LocalTimeList itsDataTimes;
   Scaling::const_iterator itsScalingIterator;
 

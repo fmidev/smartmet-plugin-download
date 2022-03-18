@@ -13,7 +13,7 @@
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiPoint.h>
 #include <spine/Convenience.h>
-#include <spine/OptionParsers.h>
+#include <timeseries/OptionParsers.h>
 
 using namespace std;
 
@@ -34,8 +34,8 @@ static const char* defaultTimeZone = "utc";
 Query::Query(const Spine::HTTP::Request& req,
              const Config& /* config */,
              Engine::Querydata::Engine* /* qEngine */)
-    : pOptions(Spine::OptionParsers::parseParameters(req)),
-      tOptions(Spine::OptionParsers::parseTimes(req))
+    : pOptions(TimeSeries::OptionParsers::parseParameters(req)),
+      tOptions(TimeSeries::parseTimes(req))
 {
   try
   {

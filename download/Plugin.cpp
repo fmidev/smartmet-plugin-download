@@ -512,8 +512,8 @@ static bool getScaleFactorAndOffset(signed long id,
 // ----------------------------------------------------------------------
 
 static bool getParamConfig(const ParamChangeTable &pTable,
-                           const Spine::OptionParsers::ParameterList &reqParams,
-                           Spine::OptionParsers::ParameterList &knownParams,
+                           const TimeSeries::OptionParsers::ParameterList &reqParams,
+                           TimeSeries::OptionParsers::ParameterList &knownParams,
                            Scaling &scaling)
 {
   try
@@ -642,7 +642,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     // Unknown (and special) parameters are ignored.
 
     boost::shared_ptr<DataStreamer> ds;
-    Spine::OptionParsers::ParameterList knownParams;
+    TimeSeries::OptionParsers::ParameterList knownParams;
     Scaling scaling;
 
     if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
