@@ -15,14 +15,14 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.3.8
+BuildRequires: smartmet-library-spine-devel >= 22.3.18
 BuildRequires: smartmet-library-macgyver-devel >= 22.3.8
-BuildRequires: smartmet-library-timeseries-devel >= 22.3.8
+BuildRequires: smartmet-library-timeseries-devel >= 22.3.18
 BuildRequires: smartmet-library-newbase-devel >= 22.1.21
 BuildRequires: smartmet-library-grid-content-devel >= 22.3.10
 BuildRequires: smartmet-library-grid-files-devel >= 22.3.8
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.3.8
+BuildRequires: smartmet-engine-querydata-devel >= 22.3.18
 BuildRequires: smartmet-engine-geonames-devel >= 22.1.31
 BuildRequires: smartmet-engine-grid-devel >= 22.3.10
 BuildRequires: netcdf-cxx-devel
@@ -32,10 +32,10 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 22.3.8
-Requires: smartmet-library-timeseries >= 22.3.8
-Requires: smartmet-library-spine >= 22.3.8
+Requires: smartmet-library-timeseries >= 22.3.18
+Requires: smartmet-library-spine >= 22.3.18
 Requires: smartmet-library-newbase >= 22.1.21
-Requires: smartmet-engine-querydata >= 22.3.8
+Requires: smartmet-engine-querydata >= 22.3.18
 Requires: smartmet-server >= 21.11.25
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -53,9 +53,9 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 21.1.21
 #TestRequires: smartmet-engine-grid >= 21.1.21
-#TestRequires: smartmet-engine-querydata >= 22.3.8
+#TestRequires: smartmet-engine-querydata >= 22.3.18
 #TestRequires: smartmet-utils-devel >= 22.1.20
-#TestRequires: smartmet-library-spine-plugin-test >= 21.1.21
+#TestRequires: smartmet-library-spine-plugin-test >= 22.3.18
 #TestRequires: smartmet-qdtools >= 21.1.21
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 21.1.21
