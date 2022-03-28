@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.3.21
+Version: 22.3.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -16,25 +16,25 @@ BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 22.3.18
-BuildRequires: smartmet-library-macgyver-devel >= 22.3.8
+BuildRequires: smartmet-library-macgyver-devel >= 22.3.28
 BuildRequires: smartmet-library-timeseries-devel >= 22.3.18
-BuildRequires: smartmet-library-newbase-devel >= 22.1.21
-BuildRequires: smartmet-library-grid-content-devel >= 22.3.10
-BuildRequires: smartmet-library-grid-files-devel >= 22.3.8
+BuildRequires: smartmet-library-newbase-devel >= 22.3.22
+BuildRequires: smartmet-library-grid-content-devel >= 22.3.28
+BuildRequires: smartmet-library-grid-files-devel >= 22.3.15
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 22.3.18
-BuildRequires: smartmet-engine-geonames-devel >= 22.1.31
-BuildRequires: smartmet-engine-grid-devel >= 22.3.10
+BuildRequires: smartmet-engine-geonames-devel >= 22.3.21
+BuildRequires: smartmet-engine-grid-devel >= 22.3.28
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 22.3.8
+Requires: smartmet-library-macgyver >= 22.3.28
 Requires: smartmet-library-timeseries >= 22.3.18
 Requires: smartmet-library-spine >= 22.3.18
-Requires: smartmet-library-newbase >= 22.1.21
+Requires: smartmet-library-newbase >= 22.3.22
 Requires: smartmet-engine-querydata >= 22.3.18
 Requires: smartmet-server >= 21.11.25
 Requires: boost169-date-time
@@ -91,6 +91,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Mar 28 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.3.28-1.fmi
+- Repackaged due to ABI changes in grid-content library
+
 * Mon Mar 21 2022 Andris Pavēnis <andris.pavenis@fmi.fi> 22.3.21-1.fmi
 - Update due to changes in smartmet-library-spine and smartnet-library-timeseries
 
