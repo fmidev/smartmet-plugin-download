@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.5.3
+Version: 22.5.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -15,16 +15,16 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.4.26
+BuildRequires: smartmet-library-spine-devel >= 22.5.16
 BuildRequires: smartmet-library-macgyver-devel >= 22.3.28
-BuildRequires: smartmet-library-timeseries-devel >= 22.3.18
-BuildRequires: smartmet-library-newbase-devel >= 22.3.22
-BuildRequires: smartmet-library-grid-content-devel >= 22.3.28
-BuildRequires: smartmet-library-grid-files-devel >= 22.3.15
+BuildRequires: smartmet-library-timeseries-devel >= 22.5.20
+BuildRequires: smartmet-library-newbase-devel >= 22.5.20
+BuildRequires: smartmet-library-grid-content-devel >= 22.4.25
+BuildRequires: smartmet-library-grid-files-devel >= 22.5.20
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.3.18
+BuildRequires: smartmet-engine-querydata-devel >= 22.5.20
 BuildRequires: smartmet-engine-geonames-devel >= 22.3.21
-BuildRequires: smartmet-engine-grid-devel >= 22.3.28
+BuildRequires: smartmet-engine-grid-devel >= 22.5.5
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
@@ -32,11 +32,11 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 22.3.28
-Requires: smartmet-library-timeseries >= 22.3.18
-Requires: smartmet-library-spine >= 22.4.26
-Requires: smartmet-library-newbase >= 22.3.22
-Requires: smartmet-engine-querydata >= 22.3.18
-Requires: smartmet-server >= 21.11.25
+Requires: smartmet-library-timeseries >= 22.5.20
+Requires: smartmet-library-spine >= 22.5.16
+Requires: smartmet-library-newbase >= 22.5.20
+Requires: smartmet-engine-querydata >= 22.5.20
+Requires: smartmet-server >= 22.5.16
 Requires: boost169-date-time
 Requires: boost169-iostreams
 Requires: boost169-system
@@ -53,7 +53,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 21.1.21
 #TestRequires: smartmet-engine-grid >= 21.1.21
-#TestRequires: smartmet-engine-querydata >= 22.3.18
+#TestRequires: smartmet-engine-querydata >= 22.5.20
 #TestRequires: smartmet-utils-devel >= 22.1.20
 #TestRequires: smartmet-library-spine-plugin-test >= 22.4.26
 #TestRequires: smartmet-library-newbase-devel >= 22.5.18
@@ -92,6 +92,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri May 20 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.5.20-1.fmi
+- Repackaged due to ABI changes to newbase LatLon methods
+
 * Tue May  3 2022 Andris Pavenis <andris.pavenis@fmi.fi> 22.5.3-1.fmi
 - Repackage due to SmartMet::Spine::Reactor ABI changes
 
