@@ -22,7 +22,7 @@ BuildRequires: smartmet-library-newbase-devel >= 22.5.24
 BuildRequires: smartmet-library-grid-content-devel >= 22.5.24
 BuildRequires: smartmet-library-grid-files-devel >= 22.5.24
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.5.30
+BuildRequires: smartmet-engine-querydata-devel >= 22.5.31
 BuildRequires: smartmet-engine-geonames-devel >= 22.5.24
 BuildRequires: smartmet-engine-grid-devel >= 22.5.24
 BuildRequires: netcdf-cxx-devel
@@ -35,7 +35,7 @@ Requires: smartmet-library-macgyver >= 22.5.24
 Requires: smartmet-library-timeseries >= 22.5.24
 Requires: smartmet-library-spine >= 22.5.24
 Requires: smartmet-library-newbase >= 22.5.24
-Requires: smartmet-engine-querydata >= 22.5.30
+Requires: smartmet-engine-querydata >= 22.5.31
 Requires: smartmet-server >= 22.5.16
 Requires: boost169-date-time
 Requires: boost169-iostreams
@@ -53,7 +53,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 21.1.21
 #TestRequires: smartmet-engine-grid >= 21.1.21
-#TestRequires: smartmet-engine-querydata >= 22.5.30
+#TestRequires: smartmet-engine-querydata >= 22.5.31
 #TestRequires: smartmet-utils-devel >= 22.1.20
 #TestRequires: smartmet-library-spine-plugin-test >= 22.4.26
 #TestRequires: smartmet-library-newbase-devel >= 22.5.18
