@@ -39,7 +39,7 @@ clean:
 
 TEST_DB_DIR := $(shell pwd)/tmp-geonames-db
 
-TEST_PREPARE_TARGETS := cnf/geonames.conf start-redis-db wgs84mode
+TEST_PREPARE_TARGETS := cnf/geonames.conf start-redis-db
 TEST_FINISH_TARGETS := .dummy stop-redis-db
 ifdef CI
 GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
@@ -50,7 +50,7 @@ GEONAMES_HOST_EDIT := cat
 META_CONF_EDIT := cat
 endif
 
-TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf -e tmp/
+TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
 
 test: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
@@ -87,10 +87,6 @@ stop-redis-db:
 		cat cnf/grid/redis/redis-server.pid | xargs kill -9; \
 		rm -f cnf/grid/redis/redis-server.pid; \
 	fi
-
-wgs84mode:
-	rm -rf tmp && mkdir tmp && cp output/* tmp/
-	if grep --quiet "#define WGS84 1" /usr/include/smartmet/newbase/NFmiGlobals.h; then for f in tmp/*.wgs84; do mv $$f tmp/$$(basename $$f .wgs84); done; fi
 
 .dummy:
 	true
