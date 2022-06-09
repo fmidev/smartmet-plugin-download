@@ -31,39 +31,11 @@ top left lonlat		= 23.2034,61.636
 top right lonlat	= 26.7966,61.636
 bottom left lonlat	= 23.2034,58.0308
 bottom right lonlat	= 26.7966,58.0308
-
-top left WGS84		= 23.2034,61.636
-top right WGS84		= 26.7966,61.636
-bottom left WGS84	= 23.2034,58.0308
-bottom right WGS84	= 26.7966,58.0308
-center WGS84		= 25,59.8334
-
+center lonlat		= 25,59.8334
 bbox			= [2582990.67 2982983.87 6459959.11 6861288.13]
 
 projstr	= +type=crs +proj=eqc +datum=WGS84 +wktext +over +no_defs
 wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
-
-prettywkt =
-PROJCS["unknown",
-    GEOGCS["unknown",
-        DATUM["WGS_1984",
-            SPHEROID["WGS 84",6378137,298.257223563,
-                AUTHORITY["EPSG","7030"]],
-            AUTHORITY["EPSG","6326"]],
-        PRIMEM["Greenwich",0,
-            AUTHORITY["EPSG","8901"]],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]]],
-    PROJECTION["Equirectangular"],
-    PARAMETER["standard_parallel_1",0],
-    PARAMETER["central_meridian",0],
-    PARAMETER["false_easting",0],
-    PARAMETER["false_northing",0],
-    UNIT["metre",1,
-        AUTHORITY["EPSG","9001"]],
-    AXIS["Easting",EAST],
-    AXIS["Northing",NORTH],
-    EXTENSION["PROJ4","+proj=eqc +datum=WGS84 +over +no_defs"]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
@@ -77,7 +49,7 @@ IsCompound			= 0
 SemiMajor			= 6378137
 SemiMinor			= 6356752.314
 InvFlattening			= 298.2572236
-EPSG				= 4326
+EPSG				= -1
 
 central_meridian	= 0
 standard_parallel_1	= 0

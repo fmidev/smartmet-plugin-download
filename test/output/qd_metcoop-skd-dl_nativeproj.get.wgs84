@@ -31,40 +31,11 @@ top left lonlat		= -18.0586,72.6636
 top right lonlat	= 54.237,71.4593
 bottom left lonlat	= 0.279,50.1308
 bottom right lonlat	= 33.0637,49.5659
-
-top left WGS84		= -18.0586,72.6636
-top right WGS84		= 54.237,71.4593
-bottom left WGS84	= 0.279,50.1308
-bottom right WGS84	= 33.0637,49.5659
-center WGS84		= 17.5276,63.1695
-
+center lonlat		= 17.5276,63.1695
 bbox			= [-1068166.79 1322780.59 -1355147.23 1331075.65]
 
 projstr	= +type=crs +proj=lcc +lat_0=63.3 +lon_0=15 +lat_1=63.3 +lat_2=63.3 +datum=WGS84
 wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Lambert_Conformal_Conic_2SP"],PARAMETER["latitude_of_origin",63.3],PARAMETER["central_meridian",15],PARAMETER["standard_parallel_1",63.3],PARAMETER["standard_parallel_2",63.3],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
-
-prettywkt =
-PROJCS["unknown",
-    GEOGCS["unknown",
-        DATUM["WGS_1984",
-            SPHEROID["WGS 84",6378137,298.257223563,
-                AUTHORITY["EPSG","7030"]],
-            AUTHORITY["EPSG","6326"]],
-        PRIMEM["Greenwich",0,
-            AUTHORITY["EPSG","8901"]],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]]],
-    PROJECTION["Lambert_Conformal_Conic_2SP"],
-    PARAMETER["latitude_of_origin",63.3],
-    PARAMETER["central_meridian",15],
-    PARAMETER["standard_parallel_1",63.3],
-    PARAMETER["standard_parallel_2",63.3],
-    PARAMETER["false_easting",0],
-    PARAMETER["false_northing",0],
-    UNIT["metre",1,
-        AUTHORITY["EPSG","9001"]],
-    AXIS["Easting",EAST],
-    AXIS["Northing",NORTH]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
