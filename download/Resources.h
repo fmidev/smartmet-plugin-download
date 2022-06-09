@@ -44,17 +44,7 @@ class Resources : private boost::noncopyable
   Resources() = default;
   ~Resources();
 
-#ifdef WGS84
-  void createArea(const std::string &projection,
-                  const NFmiPoint &bottomLeft,
-                  const NFmiPoint &topRight);
-  void createArea(const std::string &projection,
-                  const NFmiPoint &center,
-                  double widthKM,
-                  double heightKM);
-#else
   const NFmiArea *createArea(const std::string &projection);
-#endif
   const NFmiArea *getArea();
 
   NFmiGrid *getGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);
