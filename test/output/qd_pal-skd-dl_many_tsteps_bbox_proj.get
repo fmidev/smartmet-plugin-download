@@ -34,9 +34,34 @@ bottom right lonlat	= 38,58
 center lonlat		= 26.5,64.5
 bbox			= [1667981.5 4225553.12 6449528.45 7895112.41]
 
-fmiarea	= latlon:15,58,38,71
-wktarea	= PROJCS["unknown",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1, AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
-proj4	= +proj=eqc +lat_ts=0 +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +R=6371220 +units=m +no_defs
+projstr	= +proj=eqc +R=6371220 +wktext +no_defs +type=crs
+wkt	= PROJCS["unknown",GEOGCS["FMI_Sphere",DATUM["FMI_2007",SPHEROID["FMI_Sphere",6371220,0]],PRIMEM["Greenwich",0],UNIT["Degree",0.0174532925199433]],PROJECTION["Equirectangular"],PARAMETER["standard_parallel_1",0],PARAMETER["central_meridian",0],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1, AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH]]
+
+EPSGTreatsAsLatLong		= 0
+EPSGTreatsAsNorthingEasting	= 0
+PrimeMeridian			= 0
+IsGeographic			= 0
+IsProjected			= 1
+IsGeocentric			= 0
+IsLocal				= 0
+IsVertical			= 0
+IsCompound			= 0
+SemiMajor			= 6371220
+SemiMinor			= 6371220
+InvFlattening			= 0
+EPSG				= -1
+
+central_meridian	= 0
+standard_parallel_1	= 0
+false_easting	= 0
+false_northing	= 0
+
+proj options:
++R = 6371220
++proj = "eqc"
++type = "crs"
++no_defs
++wktext
 
 top	= 0
 left	= 0
@@ -45,15 +70,12 @@ bottom	= 1
 
 xnumber		= 170
 ynumber		= 97
-dx		= 15.0445 km
-dy		= 14.9029 km
+dx		= 15.04453898 km
+dy		= 14.90292745 km
 
-xywidth		= 2557.57 km
-xyheight	= 1445.58 km
-aspectratio	= 1.76923
-
-xscale		= 23
-yscale		= -13
+xywidth		= 2557.571626 km
+xyheight	= 1445.583963 km
+aspectratio	= 1.769230769
 
 Information on the locations:
 
