@@ -31,38 +31,11 @@ top left lonlat		= 21.4292,62.0814
 top right lonlat	= 29.2256,61.738
 bottom left lonlat	= 21.2571,58.4335
 bottom right lonlat	= 28.1302,58.1359
-
-top left WGS84		= 21.4292,62.0814
-top right WGS84		= 29.2256,61.738
-bottom left WGS84	= 21.2571,58.4335
-bottom right WGS84	= 28.1302,58.1359
-center WGS84		= 25.011,60.1486
-
+center lonlat		= 25.011,60.1486
 bbox			= [73983.2978 481642.053 -3371450.57 -2965352.27]
 
 projstr	= +type=crs +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +datum=WGS84
 wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
-
-prettywkt =
-PROJCS["unknown",
-    GEOGCS["unknown",
-        DATUM["WGS_1984",
-            SPHEROID["WGS 84",6378137,298.257223563,
-                AUTHORITY["EPSG","7030"]],
-            AUTHORITY["EPSG","6326"]],
-        PRIMEM["Greenwich",0,
-            AUTHORITY["EPSG","8901"]],
-        UNIT["degree",0.0174532925199433,
-            AUTHORITY["EPSG","9122"]]],
-    PROJECTION["Polar_Stereographic"],
-    PARAMETER["latitude_of_origin",60],
-    PARAMETER["central_meridian",20],
-    PARAMETER["false_easting",0],
-    PARAMETER["false_northing",0],
-    UNIT["metre",1,
-        AUTHORITY["EPSG","9001"]],
-    AXIS["Easting",SOUTH],
-    AXIS["Northing",SOUTH]]
 
 EPSGTreatsAsLatLong		= 0
 EPSGTreatsAsNorthingEasting	= 0
@@ -76,7 +49,7 @@ IsCompound			= 0
 SemiMajor			= 6378137
 SemiMinor			= 6356752.314
 InvFlattening			= 298.2572236
-EPSG				= 4326
+EPSG				= -1
 
 central_meridian	= 20
 latitude_of_origin	= 60

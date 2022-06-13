@@ -13,7 +13,9 @@ variables:
 		crs:straight_vertical_longitude_from_pole = 20. ;
 		crs:latitude_of_projection_origin = 90. ;
 		crs:standard_parallel = 60. ;
-		crs:earth_radius = 6371220.f ;
+		crs:semi_major = 6378137. ;
+		crs:inverse_flattening = 298.257223563 ;
+		crs:crs_wkt = "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]" ;
 	float y(y) ;
 		y:standard_name = "projection_y_coordinate" ;
 		y:units = "m" ;
