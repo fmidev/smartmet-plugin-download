@@ -1346,18 +1346,40 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
 
     // Loop all columns of first and last row and first and last columns of other rows.
 
+#ifndef WGS84
     for (std::size_t y = 1, n = 0, dx = (gridSizeX - 1); (y <= gridSizeY); y++, n++)
       for (std::size_t x = 1; (x <= gridSizeX);)
+#else
+    const auto &area = q->area();
+    const auto &grid = q->grid();
+    bool first = true;
+
+    for (std::size_t y = 0, dx = gridSizeX - 1; y < gridSizeY; y++)
+      for (std::size_t x = 0; x < gridSizeX;)
+#endif
       {
+#ifndef WGS84
         const NFmiPoint &p = q->latLon(n);
+#else
+        const NFmiPoint p = area.ToNativeLatLon(grid.GridToXY(NFmiPoint(x, y)));
+#endif
 
         auto px = p.X(), py = p.Y();
 
+#ifndef WGS84
         if (n == 0)
         {
           blLon = trLon = px;
           blLat = trLat = py;
         }
+#else
+        if (first)
+        {
+          first = false;
+          blLon = trLon = px;
+          blLat = trLat = py;
+        }
+#endif
         else
         {
           blLon = std::min(px, blLon);
@@ -1366,11 +1388,17 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
           trLat = std::max(py, trLat);
         }
 
+#ifndef WGS84
         size_t dn = (((y == 1) || (y == gridSizeY)) ? 1 : dx);
+#else
+        size_t dn = (((y == 0) || (y == gridSizeY - 1)) ? 1 : dx);
+#endif
 
         x += dn;
+#ifndef WGS84
         if (x <= gridSizeX)
           n += dn;
+#endif
       }
 
     itsRegBoundingBox = BBoxCorners{NFmiPoint(blLon, blLat), NFmiPoint(trLon, trLat)};
@@ -1877,6 +1905,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
 
     if (itsReqParams.gridCenterLL)
     {
+#ifdef WGS84
       const auto &gridcenter = *itsReqParams.gridCenterLL;
 
       NFmiPoint center(gridcenter[0].first, gridcenter[0].second);
@@ -1884,11 +1913,38 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       auto height = gridcenter[1].second;
 
       boost::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
-          grid.Area()->SpatialReference(), "WGS84", center, 2 * 1000 * width, 2 * 1000 * height));
+          itsReqParams.projection, "FMI", center, 2 * 1000 * width, 2 * 1000 * height));
+
+      bl = area->ToNativeLatLon(area->BottomLeft());
+      tr = area->ToNativeLatLon(area->TopRight());
+#else
+      // NFmiFastQueryInfo does not support reading native grid points within bounded area;
+      // creating temporary projection to get bboxrect to crop the native area.
+      //
+      // Rotated latlon area is created using 'invrotlatlon' projection to handle the given
+      // bounding as rotated coordinates.
+      //
+      // Note: With rotlatlon projection bbox corners are now taken as regular latlons
+      //
+      string projection =
+          boost::algorithm::replace_all_copy(itsReqParams.projection, "rotlatlon", "invrotlatlon") +
+          "|" + getGridCenterBBoxStr();
+
+      boost::shared_ptr<NFmiArea> a = NFmiAreaFactory::Create(projection);
+      NFmiArea *area = a.get();
+      if (!area)
+        throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
 
       bl = area->BottomLeftLatLon();
       tr = area->TopRightLatLon();
+
+      ostringstream os;
+      os << fixed << setprecision(8) << bl.X() << "," << bl.Y() << "," << tr.X() << "," << tr.Y();
+
+      bboxStr = os.str();
+#endif
     }
+#ifdef WGS84
     else
     {
       itsReqParams.bboxRect = nPairsOfValues<double>(itsReqParams.origBBox, "bboxstr", 2);
@@ -1898,8 +1954,22 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
                      (*itsReqParams.bboxRect)[TOPRIGHT].second);
     }
 
+    NFmiPoint xy1 = grid.XYToGrid(grid.Area()->NativeToXY(bl));
+    NFmiPoint xy2 = grid.XYToGrid(grid.Area()->NativeToXY(tr));
+#else
+    else
+      bboxStr = itsReqParams.origBBox;
+
+    itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
+
+    bl = NFmiPoint((*itsReqParams.bboxRect)[BOTTOMLEFT].first,
+                   (*itsReqParams.bboxRect)[BOTTOMLEFT].second);
+    tr = NFmiPoint((*itsReqParams.bboxRect)[TOPRIGHT].first,
+                   (*itsReqParams.bboxRect)[TOPRIGHT].second);
+
     NFmiPoint xy1 = grid.LatLonToGrid(bl);
     NFmiPoint xy2 = grid.LatLonToGrid(tr);
+#endif
 
     itsCropping.bottomLeftX = boost::numeric_cast<int>(floor(xy1.X()));
     itsCropping.bottomLeftY = boost::numeric_cast<int>(floor(xy1.Y()));
@@ -1928,8 +1998,15 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
 
     setSteppedGridSize();
 
+#ifdef WGS84
+    bl = grid.Area()->ToNativeLatLon(
+        grid.GridToXY(NFmiPoint(itsCropping.bottomLeftX, itsCropping.bottomLeftY)));
+    tr = grid.Area()->ToNativeLatLon(
+        grid.GridToXY(NFmiPoint(itsCropping.topRightX, itsCropping.topRightY)));
+#else
     bl = grid.GridToLatLon(NFmiPoint(itsCropping.bottomLeftX, itsCropping.bottomLeftY));
     tr = grid.GridToLatLon(NFmiPoint(itsCropping.topRightX, itsCropping.topRightY));
+#endif
 
     ostringstream os;
     os << fixed << setprecision(8) << bl.X() << "," << bl.Y() << "," << tr.X() << "," << tr.Y();
@@ -2054,8 +2131,13 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     OGRSpatialReference wgs84ProjectedSrs, *wgs84PrSrsPtr = &wgs84ProjectedSrs,
                                            *wgs84LLSrsPtr = &wgs84ProjectedSrs;
     bool wgs84ProjLL = false;
-    bool qdProjLL = (area->SpatialReference().isGeographic() ||
-                     (area->AreaStr().find("rotlatlon") != string::npos));
+#ifdef WGS84
+    bool qdProjLL = area->SpatialReference().isGeographic();
+#else
+    // Guess this is for newbase eqc (latlon) instead of testing isProjected
+
+    bool qdProjLL = (area->AreaStr().find("rotlatlon") == 0);
+#endif
 
     bool useNativeBBox = (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty());
     bool useNativeResolution = ((!itsReqParams.gridSizeXY) && (!itsReqParams.gridResolutionXY));
@@ -2129,8 +2211,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
                                  "srs.importFromWKT(" + targetArea->WKT() + ") error " +
                                      boost::lexical_cast<string>(err));
 
-        wgs84ProjLL = (targetArea->SpatialReference().isGeographic() ||
-                       (targetArea->AreaStr().find("rotlatlon") != string::npos));
+        wgs84ProjLL = (targetArea->AreaStr().find("rotlatlon") == 0);
       }
     }
 
@@ -2289,18 +2370,23 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
       //
       NFmiPoint bl, tr;
 
-      // TODO: Why itsCropping.cropped tested with DatumShift::None ?
-      //
       if (((!itsCropping.cropped) && (itsReqParams.datumShift == Datum::DatumShift::None)) ||
           (!itsReqParams.bboxRect))
       {
         // Using the native or projected area's corners
 
+#ifdef WGS84
+#if 0
+        bl = area->WorldXYToNativeLatLon(area->WorldRect().TopLeft());
+        tr = area->WorldXYToNativeLatLon(area->WorldRect().BottomRight());
+#else
+        bl = area->ToNativeLatLon(area->BottomLeft());
+        tr = area->ToNativeLatLon(area->TopRight());
+#endif
+#else
         bl = area->BottomLeftLatLon();
         tr = area->TopRightLatLon();
-
-        if ((bl.X() >= tr.X()) || (bl.Y() >= tr.Y()))
-          throw Fmi::Exception::Trace(BCP, "Area is flipped");
+#endif
       }
       else
       {
@@ -3006,6 +3092,8 @@ bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
   }
 }
 
+#ifdef WGS84
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Test if the newbase projection name matches (and there are no parameters to it)
@@ -3026,8 +3114,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
   // checks are done automatically by DetectClassId, we do not need
   // to check them separately.
 
-  auto id = area.ClassId();
-  auto sr = area.SpatialReference();
+  auto id = area.DetectClassId();
 
   switch (id)
   {
@@ -3039,10 +3126,12 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
     case kNFmiLambertConformalConicArea: return (projection == "lcc");
     case kNFmiRotatedLatLonArea:         return (projection == "rotlatlon" || projection == "invrotlatlon");
     case kNFmiYKJArea:                   return (projection == "ykj");
-    default:                             return (projection == sr.projInfo().getString("proj"));
-    // clang-format on
+    default:                             return (projection == area.ProjInfo().getString("proj"));
+      // clang-format on
   }
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 /*!
@@ -3087,19 +3176,27 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
 
     // Clear the projection request if it is identical to the data:
 
+#ifdef WGS84
     if (projectionMatches(itsReqParams.projection, nativeArea))
       itsReqParams.projection.clear();
-
+#else
     string projection = nativeArea.AreaStr();
     boost::replace_all(projection, ":", "|");
 
     if ((!itsReqParams.projection.empty()) && (projection.find(itsReqParams.projection) == 0))
       itsReqParams.projection.clear();
+#endif
 
     if (itsReqParams.projection.empty() && itsReqParams.bbox.empty() &&
         itsReqParams.gridCenter.empty())
       return;
 
+    string projStr = nativeArea.ProjStr();
+    string bboxStr;  // !!!!!!!!!!!!!!!!! SHOUDL NOT BE UNINITIALIZED IN THE CODE BELOW!
+
+    NFmiPoint bottomLeft, topRight;
+
+#ifndef WGS84
     size_t bboxPos = projection.find("|");
 
     if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (projection.length() - 1)))
@@ -3107,10 +3204,22 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
                            "Unrecognized projection '" + projection + "' for producer '" +
                                itsReqParams.producer + "'");
 
-    string projStr = projection.substr(0, bboxPos);
-    string bboxStr = projection.substr(bboxPos + 1);
+    projStr = projection.substr(0, bboxPos);
+    bboxStr = projection.substr(bboxPos + 1);
 
     itsUseNativeProj = (itsReqParams.projection.empty() || (itsReqParams.projection == projStr));
+#else
+    itsUseNativeProj = true;
+    if (!itsReqParams.projection.empty())
+    {
+      // Use native projection if generated PROJ.4 would be the same
+      NFmiPoint center = nativeArea.CenterLatLon();  // WGS84, doesn't matter, it's close enough
+      boost::shared_ptr<NFmiArea> reqarea(
+          NFmiAreaFactory::CreateFromCenter(itsReqParams.projection, center, 1000, 1000));
+      auto reqProjStr = reqarea->ProjStr();
+      itsUseNativeProj = (projStr == reqProjStr);
+    }
+#endif
 
     if (!itsUseNativeProj)
       projStr = itsReqParams.projection;  // Creating nonnative projection
@@ -3140,25 +3249,25 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
 
       if (itsUseNativeBBox)
       {
-        // In WGS84 mode or with rotlat area transform source grid egde projected coordinates to
-        // projected target coordinates and then projected target corners to latlon.
-        //
-        // bbox produced by rotlat grid egde to latlon transformation (getRegLLBBoxStr(q),
-        // q->latLon()) has resulted flipped target area and output data has not been valid.
+#ifdef WGS84
+      getRegLLBBox(q);
+#else
+#ifndef TARGETMETRICBBOXCONV
+      // Legacy target bbox conversion, from native cs to latlon
 
-        if (
-            itsCfg.getLegacyMode() &&
-            ((itsReqParams.projType == P_LatLon) || (nativeClassId != A_RotLatLon))
-           )
-          bboxStr = getRegLLBBoxStr(q);
-        else
-          bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
+      bboxStr = getRegLLBBoxStr(q);
+#else
+      // Transform target bbox from projected to projected, then to latlon
+
+      if (itsReqParams.projType == P_LatLon)
+        bboxStr = getRegLLBBoxStr(q);
+      else
+        bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
+#endif
+#endif
       }
 
-      if (
-          (itsCfg.getLegacyMode() || (nativeClassId != A_RotLatLon)) &&
-          (itsReqParams.projType == P_LatLon)
-         )
+      if (itsReqParams.projType == P_LatLon)
         itsRetainNativeGridResolution = itsUseNativeGridSize;
     }
 
@@ -3176,22 +3285,43 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
       if (!itsReqParams.bbox.empty())
       {
         // bbox from the request or set by setCropping()
-
+#ifdef WGS84
+        getBBox(itsReqParams.bbox);
+        itsResources.createArea(
+            projStr, itsRegBoundingBox->bottomLeft, itsRegBoundingBox->topRight);
+#else
         bboxStr = itsReqParams.bbox;
+#endif
       }
       else if (!itsReqParams.gridCenter.empty())
       {
-        // lon,lat,xkm,ykm
+#ifdef WGS84
+        NFmiPoint center((*itsReqParams.gridCenterLL)[0].first,
+                         (*itsReqParams.gridCenterLL)[0].second);
+        auto width = (*itsReqParams.gridCenterLL)[1].first;
+        auto height = (*itsReqParams.gridCenterLL)[1].second;
 
+        itsResources.createArea(projStr, center, width, height);
+#else
+        // lon,lat,xkm,ykm
         bboxStr = getGridCenterBBoxStr();
+#endif
       }
       else
       {
+#ifdef WGS84
+        getRegLLBBox(q);
+        itsResources.createArea(
+            projStr, itsRegBoundingBox->bottomLeft, itsRegBoundingBox->topRight);
+#else
         // Native area latlon bounding box from getRegLLBBoxStr()
+#endif
       }
 
+#ifndef WGS84
       projection = projStr + "|" + bboxStr;
       itsResources.createArea(projection);
+#endif
     }
 
     itsCropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);

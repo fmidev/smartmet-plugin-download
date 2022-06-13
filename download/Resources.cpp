@@ -28,6 +28,62 @@ Resources::~Resources()
   }
 }
 
+#ifdef WGS84
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create area with given projection string
+ */
+// ----------------------------------------------------------------------
+
+void Resources::createArea(const std::string &projection,
+                           const NFmiPoint &bottomLeft,
+                           const NFmiPoint &topRight)
+{
+  try
+  {
+    auto area = NFmiAreaFactory::CreateFromCorners(projection, bottomLeft, topRight);
+
+    if (!area.get())
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+
+    areas.push_back(area);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create area with given projection string
+ */
+// ----------------------------------------------------------------------
+
+void Resources::createArea(const std::string &projection,
+                           const NFmiPoint &center,
+                           double widthKM,
+                           double heightKM)
+{
+  try
+  {
+    auto area = NFmiAreaFactory::CreateFromCenter(
+        projection, center, 2 * 1000 * widthKM, 2 * 1000 * heightKM);
+
+    if (!area.get())
+      throw Fmi::Exception(BCP, "Could not create projection '" + projection + "'");
+
+    areas.push_back(area);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+#else
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Create area with given projection string
@@ -52,6 +108,8 @@ const NFmiArea *Resources::createArea(const std::string &projection)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+#endif
 
 // ----------------------------------------------------------------------
 /*!

@@ -16,6 +16,11 @@
 #include <newbase/NFmiQueryData.h>
 #include <spine/Thread.h>
 
+#ifndef WGS84
+#include <newbase/NFmiStereographicArea.h>
+#include <newbase/NFmiYKJArea.h>
+#endif
+
 namespace
 {
 // NcFile::Open does not seem to be thread safe
@@ -692,14 +697,20 @@ void NetCdfStreamer::setStereographicGeometry(const boost::shared_ptr<NcVar> &cr
 
     if (!geometrySRS)
     {
-      auto projInfo = area->SpatialReference().projInfo();
-
-      auto opt_lon_0 = projInfo.getDouble("lon_0");
-      auto opt_lat_0 = projInfo.getDouble("lat_0");
-      auto opt_lat_ts = projInfo.getDouble("lat_ts");
+#ifdef WGS84
+      auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
+      auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
+      auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
       lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
       lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
       lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
+#else
+      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
+
+      lon_0 = a.CentralLongitude();
+      lat_0 = a.CentralLatitude();
+      lat_ts = a.TrueLatitude();
+#endif
     }
     else
     {
@@ -891,9 +902,13 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
 
     auto crsVar = addVariable("crs", ncShort);
 
-    int classId = (itsReqParams.areaClassId != A_Native)
-        ? (int)itsReqParams.areaClassId
-        : area->ClassId();
+    int classId = (itsReqParams.areaClassId != A_Native) ? (int)itsReqParams.areaClassId
+#ifdef WGS84
+                  : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId()
+                                                       : area->ClassId();
+#else
+                                                         : area->ClassId();
+#endif
 
     switch (classId)
     {
@@ -909,6 +924,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       case kNFmiLambertConformalConicArea:
         setLambertConformalGeometry(crsVar, area);
         break;
+#ifdef WGS84
+      case kNFmiProjArea:
+        throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
+#endif
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }

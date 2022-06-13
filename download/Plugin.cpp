@@ -83,7 +83,7 @@ bool special(const Spine::Parameter &theParam)
  */
 // ----------------------------------------------------------------------
 
-static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
+static ProjType getProjectionType(ReqParams &reqParams)
 {
   try
   {
@@ -155,14 +155,17 @@ static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
             }
             */
 
-            // In legacy mode geographic epsg projections (e.g. epsg:4326) are handled as
-            // newbase latlon (just to enable cropping)
+#ifndef EPSGGEOGCS
 
-            if (legacyMode && (!srs.IsProjected()))
+            // Legacy behaviour (just to enable cropping), handling e.g. epsg:4326 as newbase latlon
+
+            if (!srs.IsProjected())
             {
               reqParams.projection = "latlon";
-              return getProjectionType(reqParams, legacyMode);
+              return getProjectionType(reqParams);
             }
+
+#endif
 
             return P_Epsg;
           }
@@ -301,10 +304,6 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     if (reqParams.producer.empty())
       throw Fmi::Exception(BCP, "No producer");
 
-    // For misc testing
-
-    reqParams.test = getRequestUInt(req, producer, "test", 0);
-
     // Time related parameters. Detect special value 'data'.
 
     reqParams.startTime = getRequestParam(req, producer, "starttime", "");
@@ -344,7 +343,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
     reqParams.projection = getRequestParam(req, producer, "projection", "");
     if (reqParams.dataSource == QueryData)
-      reqParams.projType = getProjectionType(reqParams, config.getLegacyMode());
+      reqParams.projType = getProjectionType(reqParams);
 
     if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::DatumShift::None))
       // gdal/proj4 needed for projection
@@ -454,6 +453,11 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
                                    Fmi::to_string(grib2TablesVersionMin) + " and " +
                                    Fmi::to_string(grib2TablesVersionMax));
     }
+
+    // For misc testing
+    //
+
+    reqParams.test = getRequestUInt(req, producer, "test", 0);
 
     return producer;
   }
