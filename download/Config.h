@@ -62,6 +62,8 @@ class Config : private boost::noncopyable
   unsigned long getMaxRequestDataValues() const { return itsMaxRequestDataValues; }
   unsigned long getLogRequestDataValues() const { return itsLogRequestDataValues; }
 
+  bool getLegacyMode() const { return itsLegacyMode; }
+
  private:
   libconfig::Config itsConfig;
 
@@ -91,6 +93,8 @@ class Config : private boost::noncopyable
   std::set<std::string> itsDisabledPackingTypes;
   std::string itsPackingWarningMessage;
   std::string itsPackingErrorMessage;
+
+  bool itsLegacyMode;
 
 };  // class Config
 

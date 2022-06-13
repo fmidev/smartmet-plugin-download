@@ -23,11 +23,6 @@
 #include <string>
 #include <unistd.h>
 
-#ifndef WGS84
-#include <newbase/NFmiRotatedLatLonArea.h>
-#include <newbase/NFmiStereographicArea.h>
-#endif
-
 using namespace std;
 
 using namespace boost::posix_time;
@@ -276,7 +271,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
+void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
 {
   try
   {
@@ -285,12 +280,16 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
 
     if (itsReqParams.dataSource == QueryData)
     {
-      if (!area)
-        throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: use of SRS not supported");
+      auto geometrySRS = itsResources.getGeometrySRS();
 
-#ifdef WGS84
-      auto opt_plat = area->ProjInfo().getDouble("o_lat_p");
-      auto opt_plon = area->ProjInfo().getDouble("o_lon_p");
+      if ((!geometrySRS) && (!area))
+        throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
+
+      auto srs = geometrySRS ? Fmi::SpatialReference(*geometrySRS) : area->SpatialReference();
+      auto projInfo = srs.projInfo();
+
+      auto opt_plat = projInfo.getDouble("o_lat_p");
+      auto opt_plon = projInfo.getDouble("o_lon_p");
 
       if (*opt_plon != 0)
         throw Fmi::Exception(
@@ -299,48 +298,34 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area) const
       slon = *opt_plon;
       slat = -(*opt_plat);
 
-      auto fmisphere = fmt::format(
-          "+proj=latlong +R={:.0f} +over +towgs84=0,0,0 +no_defs", kRearth);
+      auto rotEqcSRS = srs.get();
+      char *p4Str;
+      rotEqcSRS->exportToProj4(&p4Str);
+      string rotLLp4Str(boost::algorithm::replace_first_copy(string(p4Str), "eqc", "latlong"));
+      CPLFree(p4Str);
+      OGRSpatialReference rotLLSRS;
+      rotLLSRS.importFromProj4(rotLLp4Str.c_str());
+      rotLLSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-      auto rotatedsphere = fmt::format(
-          "+to_meter=.0174532925199433 +proj=ob_tran +o_proj=latlong +o_lon_p={} +o_lat_p={} "
-          "+R={:.0f} +over +towgs84=0,0,0 +no_defs",
-          *opt_plon,
-          *opt_plat,
-          kRearth);
+      OGRSpatialReference llSRS;
+      llSRS.importFromProj4("+proj=latlong +datum=WGS84");
+      llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-      std::unique_ptr<NFmiArea> rotatedarea(NFmiArea::CreateFromCorners(
-          fmisphere, rotatedsphere, itsBoundingBox.bottomLeft, itsBoundingBox.topRight));
+      OGRCoordinateTransformation *ll2rotLLCT =
+          itsResources.getCoordinateTransformation(&llSRS, &rotLLSRS);
 
-      rotLLBBox.bottomLeft = rotatedarea->LatLonToWorldXY(itsBoundingBox.bottomLeft);
-      rotLLBBox.topRight = rotatedarea->LatLonToWorldXY(itsBoundingBox.topRight);
-#else
-      const NFmiRotatedLatLonArea &a = *(dynamic_cast<const NFmiRotatedLatLonArea *>(area));
+      double lon[] = { itsBoundingBox.bottomLeft.X(), itsBoundingBox.topRight.X() };
+      double lat[] = { itsBoundingBox.bottomLeft.Y(), itsBoundingBox.topRight.Y() };
 
-      if (itsResources.getGeometrySRS())
-      {
-        auto srs = Fmi::SpatialReference(*itsResources.getGeometrySRS());
-        auto opt_plon = srs.projInfo().getDouble("o_lon_p");
-        auto opt_plat = srs.projInfo().getDouble("o_lat_p");
+      if (!(ll2rotLLCT->Transform(2, lon, lat)))
+        throw Fmi::Exception(BCP, "Coordinate transformation failed");
 
-        if ((!opt_plon) || (!opt_plat))
-          throw Fmi::Exception(BCP, "setRotatedLatlonGeometryToGrib: no pole data");
-
-        slon = *opt_plon;
-        slat = *opt_plat;
-      }
-      else
-      {
-        slon = a.SouthernPole().X();
-        slat = a.SouthernPole().Y();
-      }
-
-      rotLLBBox.bottomLeft = a.ToRotLatLon(itsBoundingBox.bottomLeft);
-      rotLLBBox.topRight = a.ToRotLatLon(itsBoundingBox.topRight);
-#endif
+      rotLLBBox = BBoxCorners{NFmiPoint(lon[0], lat[0]), NFmiPoint(lon[1], lat[1])};
     }
     else
     {
+      // TODO: Negate slat ?
+
       slon = itsGridMetaData.southernPoleLon;
       slat = itsGridMetaData.southernPoleLat;
 
@@ -438,20 +423,14 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     if (!geometrySRS)
     {
-#ifdef WGS84
-      auto opt_lon_0 = area->ProjInfo().getDouble("lon_0");
-      auto opt_lat_0 = area->ProjInfo().getDouble("lat_0");
-      auto opt_lat_ts = area->ProjInfo().getDouble("lat_ts");
+      auto projInfo = area->SpatialReference().projInfo();
+
+      auto opt_lon_0 = projInfo.getDouble("lon_0");
+      auto opt_lat_0 = projInfo.getDouble("lat_0");
+      auto opt_lat_ts = projInfo.getDouble("lat_ts");
       lon_0 = (opt_lon_0 ? *opt_lon_0 : 0);
       lat_0 = (opt_lat_0 ? *opt_lat_0 : 90);
       lat_ts = (opt_lat_ts ? *opt_lat_ts : 90);
-#else
-      const NFmiStereographicArea &a = *(dynamic_cast<const NFmiStereographicArea *>(area));
-
-      lon_0 = a.CentralLongitude();
-      lat_0 = a.CentralLatitude();
-      lat_ts = a.TrueLatitude();
-#endif
     }
     else
     {
@@ -778,11 +757,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
   {
     int classId = (itsReqParams.areaClassId != A_Native)
         ? (int) itsReqParams.areaClassId
-#ifdef WGS84
-        : (area->ClassId() == kNFmiProjArea) ? area->DetectClassId() : area->ClassId();
-#else
         : area->ClassId();
-#endif
 
     itsValueArray.resize(itsNX * itsNY);
 
@@ -803,10 +778,6 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
       case kNFmiLambertConformalConicArea:
         setLambertConformalGeometryToGrib(area);
         break;
-#ifdef WGS84
-      case kNFmiProjArea:
-        throw Fmi::Exception(BCP, "Generic PROJ.4 projections not supported yet");
-#endif
       case kNFmiEquiDistArea:
         throw Fmi::Exception(BCP, "Equidistant projection is not supported by GRIB");
       case kNFmiGnomonicArea:

@@ -350,7 +350,8 @@ Config::Config(const string& configfile)
       itsNetCdfPTable(),
       itsTempDirectory(defaultTempDirectory),
       itsGrib2TablesVersionMin(0),
-      itsGrib2TablesVersionMax(0)
+      itsGrib2TablesVersionMax(0),
+      itsLegacyMode(false)
 {
   try
   {
@@ -454,6 +455,15 @@ Config::Config(const string& configfile)
 
     if (itsConfig.exists("logrequestdatavalues"))
       itsLogRequestDataValues = itsConfig.lookup("logrequestdatavalues");
+
+    // Legacy or WGS84 mode as set by newbase.
+    //
+    // For testing purposes, use LegacyMode setting if given
+
+    if (itsConfig.exists("LegacyMode"))
+      itsLegacyMode = itsConfig.lookup("LegacyMode");
+    else
+      itsLegacyMode = Fmi::LegacyMode();
   }
   catch (...)
   {
