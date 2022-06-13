@@ -27,12 +27,12 @@ Timesteps	= 4
 Information on the querydata area:
 
 projection		= kNFmiStereographicArea
-top left lonlat		= 21.4292,62.0814
-top right lonlat	= 29.2256,61.738
-bottom left lonlat	= 21.2571,58.4335
-bottom right lonlat	= 28.1302,58.1359
-center lonlat		= 25.011,60.1486
-bbox			= [73983.2978 481642.053 -3371450.57 -2965352.27]
+top left lonlat		= 21.4221,61.9453
+top right lonlat	= 29.1799,61.6038
+bottom left lonlat	= 21.2516,58.2995
+bottom right lonlat	= 28.0946,58.0034
+center lonlat		= 24.9875,60.014
+bbox			= [73988.2428 481644.573 -3386497.07 -2980387.81]
 
 projstr	= +type=crs +proj=stere +lat_0=90 +lat_ts=60 +lon_0=20 +datum=WGS84
 wkt	= PROJCS["unknown",GEOGCS["unknown",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]]],PROJECTION["Polar_Stereographic"],PARAMETER["latitude_of_origin",60],PARAMETER["central_meridian",20],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",SOUTH],AXIS["Northing",SOUTH]]
@@ -71,12 +71,12 @@ bottom	= 1
 
 xnumber		= 28
 ynumber		= 28
-dx		= 14.55924125 km
-dy		= 14.50351079 km
+dx		= 14.55915466 km
+dy		= 14.50390191 km
 
-xywidth		= 407.6587551 km
-xyheight	= 406.098302 km
-aspectratio	= 1.00384255
+xywidth		= 407.6563304 km
+xyheight	= 406.1092535 km
+aspectratio	= 1.003809509
 
 Information on the locations:
 
