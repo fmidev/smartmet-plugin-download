@@ -57,7 +57,7 @@ class GribStreamer : public DataStreamer
   void setShapeOfTheEarth(const NFmiArea *area = nullptr);
 
   void setLatlonGeometryToGrib() const;
-  void setRotatedLatlonGeometryToGrib(const NFmiArea *area = nullptr) const;
+  void setRotatedLatlonGeometryToGrib(const NFmiArea *area = nullptr);
   void setStereographicGeometryToGrib(const NFmiArea *area = nullptr) const;
   void setMercatorGeometryToGrib() const;
   void setLambertConformalGeometryToGrib(const NFmiArea *area = nullptr) const;
