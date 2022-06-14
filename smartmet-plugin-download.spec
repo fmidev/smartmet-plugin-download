@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.5.31
+Version: 22.6.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -92,6 +92,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 14 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> 22.6.14-1.fmi
+- Removed WGS84 ifdefs. Test result changes mainly due to newbase changes. BRAINSTORM-2328
+
 * Tue May 31 2022 Andris Pavēnis <andris.pavenis@fmi.fi> 22.5.31-1.fmi
 - Repackage due to smartmet-engine-querydata and smartmet-engine-observation ABI changes
 
