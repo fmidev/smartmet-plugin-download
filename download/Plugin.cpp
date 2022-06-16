@@ -158,7 +158,7 @@ static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
             // In legacy mode geographic epsg projections (e.g. epsg:4326) are handled as
             // newbase latlon (just to enable cropping)
 
-            if (legacyMode && (!srs.IsProjected()))
+            if (true /*legacyMode*/ && (!srs.IsProjected()))
             {
               reqParams.projection = "latlon";
               return getProjectionType(reqParams, legacyMode);
