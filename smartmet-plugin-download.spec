@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.6.14
+Version: 22.6.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -92,6 +92,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Jun 16 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> 22.6.16-1.fmi
+- Still handling geographic epsg projections as latlon instead of loading sr using epsg code, problems with bbox
+
 * Tue Jun 14 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> 22.6.14-1.fmi
 - Removed WGS84 ifdefs. Test result changes mainly due to newbase changes. BRAINSTORM-2328
 
