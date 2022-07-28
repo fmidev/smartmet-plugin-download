@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.6.21
+Version: 22.7.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,15 +25,15 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.6.16
-BuildRequires: smartmet-library-macgyver-devel >= 22.6.16
-BuildRequires: smartmet-library-timeseries-devel >= 22.6.16
+BuildRequires: smartmet-library-spine-devel >= 22.7.27
+BuildRequires: smartmet-library-macgyver-devel >= 22.7.27
+BuildRequires: smartmet-library-timeseries-devel >= 22.7.27
 BuildRequires: smartmet-library-newbase-devel >= 22.6.16
 BuildRequires: smartmet-library-grid-content-devel >= 22.5.24
 BuildRequires: smartmet-library-grid-files-devel >= 22.5.24
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.6.17
-BuildRequires: smartmet-engine-geonames-devel >= 22.6.17
+BuildRequires: smartmet-engine-querydata-devel >= 22.7.28
+BuildRequires: smartmet-engine-geonames-devel >= 22.7.27
 BuildRequires: smartmet-engine-grid-devel >= 22.6.17
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -41,11 +41,11 @@ Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 22.6.16
-Requires: smartmet-library-timeseries >= 22.6.16
-Requires: smartmet-library-spine >= 22.6.16
+Requires: smartmet-library-macgyver >= 22.7.27
+Requires: smartmet-library-timeseries >= 22.7.27
+Requires: smartmet-library-spine >= 22.7.27
 Requires: smartmet-library-newbase >= 22.6.16
-Requires: smartmet-engine-querydata >= 22.6.17
+Requires: smartmet-engine-querydata >= 22.7.28
 Requires: smartmet-server >= 22.5.16
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
@@ -61,11 +61,11 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 22.6.17
+#TestRequires: smartmet-engine-geonames >= 22.7.27
 #TestRequires: smartmet-engine-grid >= 22.6.17
-#TestRequires: smartmet-engine-querydata >= 22.6.17
+#TestRequires: smartmet-engine-querydata >= 22.7.28
 #TestRequires: smartmet-utils-devel >= 22.1.20
-#TestRequires: smartmet-library-spine-plugin-test >= 22.6.16
+#TestRequires: smartmet-library-spine-plugin-test >= 22.7.27
 #TestRequires: smartmet-library-newbase-devel >= 22.6.16
 #TestRequires: smartmet-qdtools >= 21.1.21
 #TestRequires: smartmet-test-data >= 20.6.30
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Jul 28 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.7.28-1.fmi
+- Repackaged due to QEngine ABI change
+
 * Tue Jun 21 2022 Andris Pavēnis <andris.pavenis@fmi.fi> 22.6.21-1.fmi
 - Add support for RHEL9, upgrade libpqxx to 7.7.0 (rhel8+) and fmt to 8.1.1
 
