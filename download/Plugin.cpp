@@ -743,6 +743,8 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     // In order to set response status check if (any) data is available for the requested
     // levels, parameters and time range
+    //
+    // Set parameter and level iterators etc. to their start positions and load first available grid
 
     if (!ds->hasRequestedData(producer, query, originTime, startTime, endTime))
       throw Fmi::Exception(
@@ -759,10 +761,6 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
                                    endTime,
                                    projection,
                                    reqParams.outputFormat);
-
-    // Set parameter and level iterators etc. to their start positions
-
-    ds->resetDataSet();
 
     return ds;
   }

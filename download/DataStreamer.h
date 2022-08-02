@@ -66,8 +66,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                         boost::posix_time::ptime &sTime,
                         boost::posix_time::ptime &eTime);
 
-  void resetDataSet() { resetDataSet(true); }
-
   virtual std::string getChunk() = 0;
 
   virtual void getDataChunk(Engine::Querydata::Q q,
@@ -164,7 +162,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
  private:
   DataStreamer();
 
-  void resetDataSet(bool getFirstChunk);
+  bool resetDataSet();
 
   void checkDataTimeStep(long timeStep = -1);
 

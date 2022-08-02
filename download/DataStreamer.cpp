@@ -1286,9 +1286,7 @@ bool DataStreamer::hasRequestedData(
           }
         }
 
-        // Some data is available.
-
-        return true;
+        return resetDataSet();
       }  // for available levels
     }    // for queried levels
 
@@ -4685,8 +4683,10 @@ void DataStreamer::extractGridData(string &chunk)
   }
 }
 
-void DataStreamer::resetDataSet(bool getFirstChunk)
+bool DataStreamer::resetDataSet()
 {
+  // Set parameter and level iterators etc. to their start positions and load first available grid
+
   itsLevelIterator = itsSortedDataLevels.begin();
   itsParamIterator = itsDataParams.begin();
   itsTimeIterator = itsDataTimes.begin();
@@ -4698,10 +4698,9 @@ void DataStreamer::resetDataSet(bool getFirstChunk)
 
   itsDataChunk.clear();
 
-  if (getFirstChunk)
-  {
-    extractData(itsDataChunk);
-  }
+  extractData(itsDataChunk);
+
+  return !itsDataChunk.empty();
 }
 
 void DataStreamer::setEngines(const Engine::Querydata::Engine *theQEngine,
