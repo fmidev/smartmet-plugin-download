@@ -415,11 +415,16 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 {
   try
   {
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if ((!geometrySRS) && (!area))
+      throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
+
     gset(itsGribHandle, "typeOfGrid", "polar_stereographic");
 
     // Note: grib2 longitude 0-360
 
-    double lon = itsBoundingBox.bottomLeft.X();
+    double lon = itsBoundingBox.bottomLeft.X(), lon_0, lat_0, lat_ts;
 
     if ((!itsGrib1Flag) && (lon < 0))
       lon += 360;
@@ -432,9 +437,6 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     gset(itsGribHandle, "DxInMetres", fabs(itsDX));
     gset(itsGribHandle, "DyInMetres", fabs(itsDY));
-
-    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
-    double lon_0, lat_0, lat_ts;
 
     if (!geometrySRS)
     {
