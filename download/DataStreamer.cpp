@@ -3397,8 +3397,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     std::size_t nativeGridSizeX = q->grid().XNumber();
     std::size_t nativeGridSizeY = q->grid().YNumber();
-    std::size_t gridSizeX = itsReqGridSizeX;
-    std::size_t gridSizeY = itsReqGridSizeY;
 
     // All data has same projection, gridsize and bounding box; thus target projection (area object)
     // and grid needs to be checked/created only once.
@@ -3438,10 +3436,10 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
       {
         // Create grid if using nonnative grid size. Use the cropped size for cropped querydata.
         //
-        gridSizeX = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
+        size_t gridSizeX = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
                         ? itsCropping.gridSizeX
                         : itsReqGridSizeX;
-        gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
+        size_t gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
                         ? itsCropping.gridSizeY
                         : itsReqGridSizeY;
 
