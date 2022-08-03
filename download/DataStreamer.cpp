@@ -1225,8 +1225,6 @@ bool DataStreamer::hasRequestedData(
 
     // Check if any of the requested levels exist or is interpolatable.
 
-    bool exactLevel = (itsLevelRng || isSurfaceLevel(itsLevelType));
-
     BOOST_FOREACH (auto const &queryLevel, itsDataLevels)
     {
       // Loop over the available data levels. Level interpolation is possible for pressure data
@@ -1264,9 +1262,7 @@ bool DataStreamer::hasRequestedData(
         //			}
         else if (!isSurfaceLevel(itsLevelType))
         {
-          exactLevel = (level == queryLevel);
-
-          if (!exactLevel)
+          if (level != queryLevel)
           {
             if (queryLevel > level)
               if (itsRisingLevels)
