@@ -318,7 +318,8 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLeve
         // Interpolatable if between data levels, data is interpolatable and interpolation is
         // allowed
         //
-        interpolatable &= (!first);
+        if (!(interpolatable && (!first)))
+          return false;
 
         break;
       }
@@ -762,6 +763,24 @@ void DataStreamer::generateValidTimeList(
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Sort (requested or all available) data levels
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::sortLevels()
+{
+  // Source data level order is needed for qd -output (for qd source)
+
+  for (auto it = itsDataLevels.begin(); (it != itsDataLevels.end()); it++)
+    itsSortedDataLevels.push_back(*it);
+
+  if (!itsRisingLevels)
+    itsSortedDataLevels.sort(std::greater<int>());
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set levels from request parameter(s) or from data if none was given.
  *
  */
@@ -812,6 +831,8 @@ void DataStreamer::setGridLevels(const Producer &producer, const Query &query)
         for (auto it = queryLevels.begin(); (it != queryLevels.end()); it++)
           itsDataLevels.insert(*it);
     }
+
+    sortLevels();
   }
   catch (...)
   {
@@ -877,6 +898,8 @@ void DataStreamer::setLevels(const Query &query)
       else
         itsDataLevels = query.levels;
     }
+
+    sortLevels();
   }
   catch (...)
   {
@@ -1141,7 +1164,7 @@ bool DataStreamer::hasRequestedGridData(
 
     setGridLevels(producer, query);
 
-    return true;
+    return resetDataSet();
   }
   catch (...)
   {
@@ -1161,20 +1184,8 @@ bool DataStreamer::hasRequestedData(
 {
   try
   {
-    bool ret = (itsReqParams.dataSource == Grid)
-                   ? hasRequestedGridData(producer, query, originTime, startTime, endTime)
-                   : true;
-
-    // Store/sort levels to source data order, needed for qd -output (for qd source)
-
-    for (auto it = itsDataLevels.begin(); (it != itsDataLevels.end()); it++)
-      itsSortedDataLevels.push_back(*it);
-
-    if (!itsRisingLevels)
-      itsSortedDataLevels.sort(std::greater<int>());
-
     if (itsReqParams.dataSource == Grid)
-      return ret;
+      return hasRequestedGridData(producer, query, originTime, startTime, endTime);
 
     auto q = itsQ;
     bool hasData = false;
@@ -2479,6 +2490,13 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
 
     const char *ellipsoidAttr = "SPHEROID";
     auto ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
+
+    if (!ellipsoidPtr)
+    {
+      ellipsoidAttr = "ELLIPSOID";
+      ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
+    }
+
     auto radiusOrSemiMajorPtr = srs.GetAttrValue(ellipsoidAttr, 1);
     auto invFlatteningPtr = srs.GetAttrValue(ellipsoidAttr, 2);
 
@@ -2997,18 +3015,24 @@ bool DataStreamer::isGridLevelRequested(const Producer &producer,
     // Level interpolation is possible for pressure data only.
 
     bool interpolatable = (isPressureLevel(mappingLevelType) && itsProducer.verticalInterpolation);
-    bool first = true;
 
     for (auto it = queryLevels.begin(); (it != queryLevels.end()); it++)
       if (*it == level)
         return true;
-      else if (level < *it)
-        // Interpolatable if between data levels, data is interpolatable and interpolation is
-        // allowed
+      else
+      {
+        // Currently all data levels are selected if level interpolation is allowed, but
+        // could select only 2 surrounding (logically nearest, but any lower and higher,
+        // e.g. the lowest and highest level for each parameter/validtime would do) data
+        // levels for each requested level needing interpolation to later check if
+        // interpolation is possible when extracting the data.
         //
-        return (!(first || (!interpolatable)));
+        // TODO: If (pressure) level interpolation would be allowed (has not been so) and
+        // there could be quite a lot of levels in the data, this should be changed to avoid
+        // collecting unneeded metadata.
+      }
 
-    return false;
+    return interpolatable;
   }
   catch (...)
   {
@@ -4640,7 +4664,9 @@ void DataStreamer::extractGridData(string &chunk)
 
       buildGridQuery(itsGridQuery, gridLevelType, level);
 
+//printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
       int result = itsGridEngine->executeQuery(itsGridQuery);
+//printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
 
       if (result != 0)
       {

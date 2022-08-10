@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.8.2
+Version: 22.8.10
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,28 +25,28 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.7.29
-BuildRequires: smartmet-library-macgyver-devel >= 22.7.29
+BuildRequires: smartmet-library-spine-devel >= 22.8.8
+BuildRequires: smartmet-library-macgyver-devel >= 22.8.9
 BuildRequires: smartmet-library-timeseries-devel >= 22.7.27
 BuildRequires: smartmet-library-newbase-devel >= 22.6.16
 BuildRequires: smartmet-library-grid-content-devel >= 22.7.26
 BuildRequires: smartmet-library-grid-files-devel >= 22.6.17
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.7.28
-BuildRequires: smartmet-engine-geonames-devel >= 22.7.27
-BuildRequires: smartmet-engine-grid-devel >= 22.7.28
+BuildRequires: smartmet-engine-querydata-devel >= 22.8.8
+BuildRequires: smartmet-engine-geonames-devel >= 22.8.4
+BuildRequires: smartmet-engine-grid-devel >= 22.8.4
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 22.7.29
+Requires: smartmet-library-macgyver >= 22.8.9
 Requires: smartmet-library-timeseries >= 22.7.27
-Requires: smartmet-library-spine >= 22.7.29
+Requires: smartmet-library-spine >= 22.8.8
 Requires: smartmet-library-newbase >= 22.6.16
-Requires: smartmet-engine-querydata >= 22.7.28
-Requires: smartmet-server >= 22.7.29
+Requires: smartmet-engine-querydata >= 22.8.8
+Requires: smartmet-server >= 22.8.8
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -63,7 +63,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 22.7.27
 #TestRequires: smartmet-engine-grid >= 22.6.17
-#TestRequires: smartmet-engine-querydata >= 22.7.28
+#TestRequires: smartmet-engine-querydata >= 22.8.8
 #TestRequires: smartmet-utils-devel >= 22.1.20
 #TestRequires: smartmet-library-spine-plugin-test >= 22.7.27
 #TestRequires: smartmet-library-newbase-devel >= 22.6.16
@@ -102,6 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Aug 10 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.8.10-1.fmi
+- Fixed grid data level interpolation checking related bugs; BRAINSTORM-2378
+- Removed unused variables and added internal error checking; BRAINSTORM-2374
+
 * Tue Aug  2 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.8.2-1.fmi
 - Check for empty query result for 1'st grid when initializing query; BRAINSTORM-2370
 

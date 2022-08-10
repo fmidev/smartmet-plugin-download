@@ -52,6 +52,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                              boost::posix_time::ptime &eTime);
 
   void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
+  void sortLevels();
   void setLevels(const Query &query);
   void setParams(const TimeSeries::OptionParsers::ParameterList &params, const Scaling &scaling);
 
