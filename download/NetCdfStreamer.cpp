@@ -56,10 +56,14 @@ NetCdfStreamer::~NetCdfStreamer()
 void NetCdfStreamer::requireNcFile()
 {
   // Require a started NetCDF file
+
   if (itsFile)
     return;
 
   itsFile.reset(new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
+
+  if (!(itsFile->is_valid()))
+    throw Fmi::Exception(BCP, "Netcdf file object is not valid");
 }
 
 // ----------------------------------------------------------------------
@@ -97,6 +101,17 @@ std::string NetCdfStreamer::getChunk()
           } while (!itsLoadedFlag);
 
           // Then outputting the file/data in chunks
+          //
+          // Unset NcFile pointer has caused crashes when calling close(); (possible) reason is
+          // that when query initialization (hasRequestedData(), checking atleast some requested
+          // data is available) has succeeded and then 1'st call to extractData has for any reason
+          // returned an empty result (denoting end of data), NcFile object has not been created.
+          //
+          // Possible empty query result for 1'st grid is now checked by query initialization and
+          // "no data" exception is thrown if nothing was returned.
+
+          if (!itsFile)
+            throw Fmi::Exception(BCP, "Netcdf file object is unset");
 
           itsFile->close();
 

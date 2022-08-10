@@ -13,7 +13,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/foreach.hpp>
@@ -42,6 +42,8 @@ using namespace std;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 using namespace boost::local_time;
+
+namespace ph = boost::placeholders;
 
 namespace SmartMet
 {
@@ -737,6 +739,8 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     // In order to set response status check if (any) data is available for the requested
     // levels, parameters and time range
+    //
+    // Set parameter and level iterators etc. to their start positions and load first available grid
 
     if (!ds->hasRequestedData(producer, query, originTime, startTime, endTime))
       throw Fmi::Exception(
@@ -753,10 +757,6 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
                                    endTime,
                                    projection,
                                    reqParams.outputFormat);
-
-    // Set parameter and level iterators etc. to their start positions
-
-    ds->resetDataSet();
 
     return ds;
   }
@@ -939,7 +939,8 @@ void Plugin::init()
     itsConfig.init(itsQEngine);
 
     if (!itsReactor->addContentHandler(
-            this, "/download", boost::bind(&Plugin::callRequestHandler, this, _1, _2, _3)))
+				       this, "/download", boost::bind(&Plugin::callRequestHandler,
+								      this, ph::_1, ph::_2, ph::_3)))
       throw Fmi::Exception(BCP, "Failed to register download content handler");
   }
   catch (...)

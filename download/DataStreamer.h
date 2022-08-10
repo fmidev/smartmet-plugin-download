@@ -52,6 +52,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                              boost::posix_time::ptime &eTime);
 
   void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
+  void sortLevels();
   void setLevels(const Query &query);
   void setParams(const TimeSeries::OptionParsers::ParameterList &params, const Scaling &scaling);
 
@@ -65,8 +66,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                         boost::posix_time::ptime &oTime,
                         boost::posix_time::ptime &sTime,
                         boost::posix_time::ptime &eTime);
-
-  void resetDataSet() { resetDataSet(true); }
 
   virtual std::string getChunk() = 0;
 
@@ -164,7 +163,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
  private:
   DataStreamer();
 
-  void resetDataSet(bool getFirstChunk);
+  bool resetDataSet();
 
   void checkDataTimeStep(long timeStep = -1);
 

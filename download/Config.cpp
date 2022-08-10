@@ -522,10 +522,8 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
 {
   try
   {
-    bool noDefaultProducer = false;
-
     Producers::iterator p = (name.empty() ? itsProducers.end() : itsProducers.find(name));
-    if ((p == itsProducers.end()) && (noDefaultProducer = (defaultProducerName() == "")))
+    if ((p == itsProducers.end()) && (defaultProducerName() == ""))
       // Unnamed producer "mathces" at this point; the producer will be searched against
       // querydata's configuration
       //
@@ -549,7 +547,7 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
 	// THIS IS NOT THREAD SAFE IF THE VARIABLE IS USED!
         p->second.qEngineProducerConfig = querydata.getProducerConfig(name);
       }
-#endif      
+#endif
 
       return p->second;
     }

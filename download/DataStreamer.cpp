@@ -318,7 +318,8 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLeve
         // Interpolatable if between data levels, data is interpolatable and interpolation is
         // allowed
         //
-        interpolatable &= (!first);
+        if (!(interpolatable && (!first)))
+          return false;
 
         break;
       }
@@ -762,6 +763,24 @@ void DataStreamer::generateValidTimeList(
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Sort (requested or all available) data levels
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::sortLevels()
+{
+  // Source data level order is needed for qd -output (for qd source)
+
+  for (auto it = itsDataLevels.begin(); (it != itsDataLevels.end()); it++)
+    itsSortedDataLevels.push_back(*it);
+
+  if (!itsRisingLevels)
+    itsSortedDataLevels.sort(std::greater<int>());
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set levels from request parameter(s) or from data if none was given.
  *
  */
@@ -812,6 +831,8 @@ void DataStreamer::setGridLevels(const Producer &producer, const Query &query)
         for (auto it = queryLevels.begin(); (it != queryLevels.end()); it++)
           itsDataLevels.insert(*it);
     }
+
+    sortLevels();
   }
   catch (...)
   {
@@ -877,6 +898,8 @@ void DataStreamer::setLevels(const Query &query)
       else
         itsDataLevels = query.levels;
     }
+
+    sortLevels();
   }
   catch (...)
   {
@@ -1141,7 +1164,7 @@ bool DataStreamer::hasRequestedGridData(
 
     setGridLevels(producer, query);
 
-    return true;
+    return resetDataSet();
   }
   catch (...)
   {
@@ -1161,20 +1184,8 @@ bool DataStreamer::hasRequestedData(
 {
   try
   {
-    bool ret = (itsReqParams.dataSource == Grid)
-                   ? hasRequestedGridData(producer, query, originTime, startTime, endTime)
-                   : true;
-
-    // Store/sort levels to source data order, needed for qd -output (for qd source)
-
-    for (auto it = itsDataLevels.begin(); (it != itsDataLevels.end()); it++)
-      itsSortedDataLevels.push_back(*it);
-
-    if (!itsRisingLevels)
-      itsSortedDataLevels.sort(std::greater<int>());
-
     if (itsReqParams.dataSource == Grid)
-      return ret;
+      return hasRequestedGridData(producer, query, originTime, startTime, endTime);
 
     auto q = itsQ;
     bool hasData = false;
@@ -1225,8 +1236,6 @@ bool DataStreamer::hasRequestedData(
 
     // Check if any of the requested levels exist or is interpolatable.
 
-    bool exactLevel = (itsLevelRng || isSurfaceLevel(itsLevelType));
-
     BOOST_FOREACH (auto const &queryLevel, itsDataLevels)
     {
       // Loop over the available data levels. Level interpolation is possible for pressure data
@@ -1264,9 +1273,7 @@ bool DataStreamer::hasRequestedData(
         //			}
         else if (!isSurfaceLevel(itsLevelType))
         {
-          exactLevel = (level == queryLevel);
-
-          if (!exactLevel)
+          if (level != queryLevel)
           {
             if (queryLevel > level)
               if (itsRisingLevels)
@@ -1286,9 +1293,7 @@ bool DataStreamer::hasRequestedData(
           }
         }
 
-        // Some data is available.
-
-        return true;
+        return resetDataSet();
       }  // for available levels
     }    // for queried levels
 
@@ -2399,6 +2404,13 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
 
     const char *ellipsoidAttr = "SPHEROID";
     auto ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
+
+    if (!ellipsoidPtr)
+    {
+      ellipsoidAttr = "ELLIPSOID";
+      ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
+    }
+
     auto radiusOrSemiMajorPtr = srs.GetAttrValue(ellipsoidAttr, 1);
     auto invFlatteningPtr = srs.GetAttrValue(ellipsoidAttr, 2);
 
@@ -2917,18 +2929,24 @@ bool DataStreamer::isGridLevelRequested(const Producer &producer,
     // Level interpolation is possible for pressure data only.
 
     bool interpolatable = (isPressureLevel(mappingLevelType) && itsProducer.verticalInterpolation);
-    bool first = true;
 
     for (auto it = queryLevels.begin(); (it != queryLevels.end()); it++)
       if (*it == level)
         return true;
-      else if (level < *it)
-        // Interpolatable if between data levels, data is interpolatable and interpolation is
-        // allowed
+      else
+      {
+        // Currently all data levels are selected if level interpolation is allowed, but
+        // could select only 2 surrounding (logically nearest, but any lower and higher,
+        // e.g. the lowest and highest level for each parameter/validtime would do) data
+        // levels for each requested level needing interpolation to later check if
+        // interpolation is possible when extracting the data.
         //
-        return (!(first || (!interpolatable)));
+        // TODO: If (pressure) level interpolation would be allowed (has not been so) and
+        // there could be quite a lot of levels in the data, this should be changed to avoid
+        // collecting unneeded metadata.
+      }
 
-    return false;
+    return interpolatable;
   }
   catch (...)
   {
@@ -3273,8 +3291,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
 
     std::size_t nativeGridSizeX = q->grid().XNumber();
     std::size_t nativeGridSizeY = q->grid().YNumber();
-    std::size_t gridSizeX = itsReqGridSizeX;
-    std::size_t gridSizeY = itsReqGridSizeY;
 
     // All data has same projection, gridsize and bounding box; thus target projection (area object)
     // and grid needs to be checked/created only once.
@@ -3314,10 +3330,10 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
       {
         // Create grid if using nonnative grid size. Use the cropped size for cropped querydata.
         //
-        gridSizeX = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
+        size_t gridSizeX = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
                         ? itsCropping.gridSizeX
                         : itsReqGridSizeX;
-        gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
+        size_t gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
                         ? itsCropping.gridSizeY
                         : itsReqGridSizeY;
 
@@ -4518,7 +4534,9 @@ void DataStreamer::extractGridData(string &chunk)
 
       buildGridQuery(itsGridQuery, gridLevelType, level);
 
+//printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
       int result = itsGridEngine->executeQuery(itsGridQuery);
+//printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
 
       if (result != 0)
       {
@@ -4555,8 +4573,10 @@ void DataStreamer::extractGridData(string &chunk)
   }
 }
 
-void DataStreamer::resetDataSet(bool getFirstChunk)
+bool DataStreamer::resetDataSet()
 {
+  // Set parameter and level iterators etc. to their start positions and load first available grid
+
   itsLevelIterator = itsSortedDataLevels.begin();
   itsParamIterator = itsDataParams.begin();
   itsTimeIterator = itsDataTimes.begin();
@@ -4568,10 +4588,9 @@ void DataStreamer::resetDataSet(bool getFirstChunk)
 
   itsDataChunk.clear();
 
-  if (getFirstChunk)
-  {
-    extractData(itsDataChunk);
-  }
+  extractData(itsDataChunk);
+
+  return !itsDataChunk.empty();
 }
 
 void DataStreamer::setEngines(const Engine::Querydata::Engine *theQEngine,

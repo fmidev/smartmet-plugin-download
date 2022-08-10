@@ -2,65 +2,75 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.6.16
+Version: 22.8.10
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-BuildRequires: boost169-devel
+
+%if 0%{?rhel} && 0%{rhel} < 9
+%define smartmet_boost boost169
+%else
+%define smartmet_boost boost
+%endif
+
+%define smartmet_fmt_min 8.1.1
+%define smartmet_fmt_max 8.2.0
+
+BuildRequires: %{smartmet_boost}-devel
 BuildRequires: gcc-c++
 BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.5.24
-BuildRequires: smartmet-library-macgyver-devel >= 22.5.24
-BuildRequires: smartmet-library-timeseries-devel >= 22.5.24
-BuildRequires: smartmet-library-newbase-devel >= 22.5.24
-BuildRequires: smartmet-library-grid-content-devel >= 22.5.24
-BuildRequires: smartmet-library-grid-files-devel >= 22.5.24
+BuildRequires: smartmet-library-spine-devel >= 22.8.8
+BuildRequires: smartmet-library-macgyver-devel >= 22.8.9
+BuildRequires: smartmet-library-timeseries-devel >= 22.7.27
+BuildRequires: smartmet-library-newbase-devel >= 22.6.16
+BuildRequires: smartmet-library-grid-content-devel >= 22.7.26
+BuildRequires: smartmet-library-grid-files-devel >= 22.6.17
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.5.31
-BuildRequires: smartmet-engine-geonames-devel >= 22.5.24
-BuildRequires: smartmet-engine-grid-devel >= 22.5.24
+BuildRequires: smartmet-engine-querydata-devel >= 22.8.8
+BuildRequires: smartmet-engine-geonames-devel >= 22.8.4
+BuildRequires: smartmet-engine-grid-devel >= 22.8.4
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 22.5.24
-Requires: smartmet-library-timeseries >= 22.5.24
-Requires: smartmet-library-spine >= 22.5.24
-Requires: smartmet-library-newbase >= 22.5.24
-Requires: smartmet-engine-querydata >= 22.5.31
-Requires: smartmet-server >= 22.5.16
-Requires: boost169-date-time
-Requires: boost169-iostreams
-Requires: boost169-system
-Requires: boost169-thread
+Requires: smartmet-library-macgyver >= 22.8.9
+Requires: smartmet-library-timeseries >= 22.7.27
+Requires: smartmet-library-spine >= 22.8.8
+Requires: smartmet-library-newbase >= 22.6.16
+Requires: smartmet-engine-querydata >= 22.8.8
+Requires: smartmet-server >= 22.8.8
+Requires: %{smartmet_boost}-date-time
+Requires: %{smartmet_boost}-iostreams
+Requires: %{smartmet_boost}-system
+Requires: %{smartmet_boost}-thread
 Requires: netcdf-cxx
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
-#TestRequires: boost169-devel
+#TestRequires: %{smartmet_boost}-devel
 #TestRequires: bzip2-devel
 #TestRequires: eccodes
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 21.1.21
-#TestRequires: smartmet-engine-grid >= 21.1.21
-#TestRequires: smartmet-engine-querydata >= 22.5.31
+#TestRequires: smartmet-engine-geonames >= 22.7.27
+#TestRequires: smartmet-engine-grid >= 22.6.17
+#TestRequires: smartmet-engine-querydata >= 22.8.8
 #TestRequires: smartmet-utils-devel >= 22.1.20
-#TestRequires: smartmet-library-spine-plugin-test >= 22.4.26
-#TestRequires: smartmet-library-newbase-devel >= 22.5.18
+#TestRequires: smartmet-library-spine-plugin-test >= 22.7.27
+#TestRequires: smartmet-library-newbase-devel >= 22.6.16
 #TestRequires: smartmet-qdtools >= 21.1.21
 #TestRequires: smartmet-test-data >= 20.6.30
 #TestRequires: smartmet-test-db >= 21.1.21
-#TestRequires: smartmet-engine-grid-test >= 21.1.21
+#TestRequires: smartmet-engine-grid-test >= 22.6.17
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -92,6 +102,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Aug 10 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.8.10-1.fmi
+- Fixed grid data level interpolation checking related bugs; BRAINSTORM-2378
+- Removed unused variables and added internal error checking; BRAINSTORM-2374
+
+* Tue Aug  2 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> - 22.8.2-1.fmi
+- Check for empty query result for 1'st grid when initializing query; BRAINSTORM-2370
+
+* Thu Jul 28 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.7.28-1.fmi
+- Repackaged due to QEngine ABI change
+
+* Tue Jun 21 2022 Andris Pavēnis <andris.pavenis@fmi.fi> 22.6.21-1.fmi
+- Add support for RHEL9, upgrade libpqxx to 7.7.0 (rhel8+) and fmt to 8.1.1
+
 * Thu Jun 16 2022 Pertti Kinnia <pertti.kinnia@fmi.fi> 22.6.16-1.fmi
 - Still handling geographic epsg projections as latlon instead of loading sr using epsg code, problems with bbox
 
