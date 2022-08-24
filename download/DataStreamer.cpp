@@ -1518,7 +1518,7 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
 
       if (targetLLSRS)
       {
-        double c[] = { blX,blY, blX,trY, trX,trY, trX,blY };
+        double c[] = {blX, blY, blX, trY, trX, trY, trX, blY};
         double *x = c, *y = c + 1;
 
         for (int i = 0; (i < 4); i++, x += 2, y += 2)
@@ -1533,11 +1533,15 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
           }
           else
           {
-            if (*x < blX) blX = *x;
-            else if (*x > trX) trX = *x;
+            if (*x < blX)
+              blX = *x;
+            else if (*x > trX)
+              trX = *x;
 
-            if (*y < blY) blY = *y;
-            else if (*y > trY) trY = *y;
+            if (*y < blY)
+              blY = *y;
+            else if (*y > trY)
+              trY = *y;
           }
         }
       }
@@ -2053,8 +2057,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
       qdLLSrsPtr->SetTOWGS84(htp[0], htp[1], htp[2], htp[3], htp[4], htp[5], htp[6]);
     }
-//  else
-//    qdLLSrsPtr->SetTOWGS84(0, 0, 0, 0, 0, 0, 0);
+    //  else
+    //    qdLLSrsPtr->SetTOWGS84(0, 0, 0, 0, 0, 0, 0);
 
     OGRSpatialReference wgs84ProjectedSrs, *wgs84PrSrsPtr = &wgs84ProjectedSrs,
                                            *wgs84LLSrsPtr = &wgs84ProjectedSrs;
@@ -2070,9 +2074,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     size_t bboxPos = areaStr.find(":");
 
     if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (areaStr.length() - 1)))
-      throw Fmi::Exception(BCP,
-                             "Unrecognized area '" + areaStr + "' for producer '" +
-                                 itsReqParams.producer + "'");
+      throw Fmi::Exception(
+          BCP, "Unrecognized area '" + areaStr + "' for producer '" + itsReqParams.producer + "'");
 
     string sourceProjection = areaStr.substr(0, bboxPos);
 
@@ -2088,8 +2091,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
       if (useNativeResolution)
       {
-        auto xScale = sourceArea->WorldXYWidth() / area->WorldXYWidth();
-        auto yScale = sourceArea->WorldXYHeight() / area->WorldXYHeight();
+        auto xScale = sourceArea->WorldXYWidth() / (area->WorldXYWidth() - 1);
+        auto yScale = sourceArea->WorldXYHeight() / (area->WorldXYHeight() - 1);
 
         itsReqGridSizeX = ceil(xScale * itsReqGridSizeX);
         itsReqGridSizeY = ceil(yScale * itsReqGridSizeY);
@@ -2131,8 +2134,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
         if ((err = wgs84PrSrsPtr->importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
           throw Fmi::Exception(BCP,
-                                 "srs.importFromWKT(" + targetArea->WKT() + ") error " +
-                                     boost::lexical_cast<string>(err));
+                               "srs.importFromWKT(" + targetArea->WKT() + ") error " +
+                                   boost::lexical_cast<string>(err));
 
         wgs84ProjLL = (targetArea->SpatialReference().isGeographic() ||
                        (targetArea->AreaStr().find("rotlatlon") != string::npos));
@@ -2355,7 +2358,7 @@ string DataStreamer::getWKT(OGRSpatialReference *geometrySRS) const
   try
   {
     OGRErr err;
-    const char* const papszOptions[] = { "FORMAT=WKT2", nullptr };
+    const char *const papszOptions[] = {"FORMAT=WKT2", nullptr};
     char *ppszResult;
 
     if ((err = geometrySRS->exportToWkt(&ppszResult, papszOptions)) != OGRERR_NONE)
@@ -2396,10 +2399,8 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
       OGRErr err;
 
       if ((err = areaSRS.importFromWkt(areaWKT.c_str())) != OGRERR_NONE)
-        throw Fmi::Exception(BCP,
-                               "srs.importFromWKT(" +
-                                   areaWKT + ") error " +
-                                   boost::lexical_cast<string>(err));
+        throw Fmi::Exception(
+            BCP, "srs.importFromWKT(" + areaWKT + ") error " + boost::lexical_cast<string>(err));
     }
 
     const char *ellipsoidAttr = "SPHEROID";
@@ -3058,7 +3059,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
     case kNFmiRotatedLatLonArea:         return (projection == "rotlatlon" || projection == "invrotlatlon");
     case kNFmiYKJArea:                   return (projection == "ykj");
     default:                             return (projection == sr.projInfo().getString("proj"));
-    // clang-format on
+      // clang-format on
   }
 }
 
@@ -3164,19 +3165,15 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
         // bbox produced by rotlat grid egde to latlon transformation (getRegLLBBoxStr(q),
         // q->latLon()) has resulted flipped target area and output data has not been valid.
 
-        if (
-            itsCfg.getLegacyMode() &&
-            ((itsReqParams.projType == P_LatLon) || (nativeClassId != A_RotLatLon))
-           )
+        if (itsCfg.getLegacyMode() &&
+            ((itsReqParams.projType == P_LatLon) || (nativeClassId != A_RotLatLon)))
           bboxStr = getRegLLBBoxStr(q);
         else
           bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
       }
 
-      if (
-          (itsCfg.getLegacyMode() || (nativeClassId != A_RotLatLon)) &&
-          (itsReqParams.projType == P_LatLon)
-         )
+      if ((itsCfg.getLegacyMode() || (nativeClassId != A_RotLatLon)) &&
+          (itsReqParams.projType == P_LatLon))
         itsRetainNativeGridResolution = itsUseNativeGridSize;
     }
 
@@ -3331,11 +3328,11 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
         // Create grid if using nonnative grid size. Use the cropped size for cropped querydata.
         //
         size_t gridSizeX = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
-                        ? itsCropping.gridSizeX
-                        : itsReqGridSizeX;
+                               ? itsCropping.gridSizeX
+                               : itsReqGridSizeX;
         size_t gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
-                        ? itsCropping.gridSizeY
-                        : itsReqGridSizeY;
+                               ? itsCropping.gridSizeY
+                               : itsReqGridSizeY;
 
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
       }
@@ -4534,9 +4531,9 @@ void DataStreamer::extractGridData(string &chunk)
 
       buildGridQuery(itsGridQuery, gridLevelType, level);
 
-//printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
+      // printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
       int result = itsGridEngine->executeQuery(itsGridQuery);
-//printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
+      // printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
 
       if (result != 0)
       {
