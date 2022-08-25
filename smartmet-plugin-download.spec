@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.8.24
+Version: 22.8.25
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,16 +25,16 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 22.8.23
+BuildRequires: smartmet-library-spine-devel >= 22.8.25
 BuildRequires: smartmet-library-macgyver-devel >= 22.8.23
 BuildRequires: smartmet-library-timeseries-devel >= 22.7.27
 BuildRequires: smartmet-library-newbase-devel >= 22.8.24
-BuildRequires: smartmet-library-grid-content-devel >= 22.8.23
+BuildRequires: smartmet-library-grid-content-devel >= 22.8.24
 BuildRequires: smartmet-library-grid-files-devel >= 22.6.23
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 22.8.24
 BuildRequires: smartmet-engine-geonames-devel >= 22.8.4
-BuildRequires: smartmet-engine-grid-devel >= 22.8.23
+BuildRequires: smartmet-engine-grid-devel >= 22.8.24
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
@@ -43,7 +43,7 @@ Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 22.8.23
 Requires: smartmet-library-timeseries >= 22.7.27
-Requires: smartmet-library-spine >= 22.8.23
+Requires: smartmet-library-spine >= 22.8.25
 Requires: smartmet-library-newbase >= 22.8.24
 Requires: smartmet-engine-querydata >= 22.8.24
 Requires: smartmet-server >= 22.8.19
@@ -62,15 +62,15 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 22.8.4
-#TestRequires: smartmet-engine-grid >= 22.8.23
+#TestRequires: smartmet-engine-grid >= 22.8.24
 #TestRequires: smartmet-engine-querydata >= 22.8.24
 #TestRequires: smartmet-utils-devel >= 22.2.8
-#TestRequires: smartmet-library-spine-plugin-test >= 22.8.23
+#TestRequires: smartmet-library-spine-plugin-test >= 22.8.25
 #TestRequires: smartmet-library-newbase-devel >= 22.8.24
 #TestRequires: smartmet-qdtools >= 22.8.24
 #TestRequires: smartmet-test-data >= 20.12.1
 #TestRequires: smartmet-test-db >= 22.4.14
-#TestRequires: smartmet-engine-grid-test >= 22.8.23
+#TestRequires: smartmet-engine-grid-test >= 22.8.24
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Aug 25 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.8.25-1.fmi
+- Use a generic exception handler for configuration file errors
+
 * Wed Aug 24 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.8.24-1.fmi
 - Fixed resolution calculations in DataStreamer
 

@@ -6,6 +6,7 @@
 
 #include "Config.h"
 #include <boost/algorithm/string/split.hpp>
+#include <spine/Exceptions.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <macgyver/Exception.h>
 #include <stdexcept>
@@ -133,26 +134,9 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
                                        boost::lexical_cast<string>(settings[i].getSourceLine()));
           }
         }
-        catch (const libconfig::ParseException& e)
+        catch(...)
         {
-          throw Fmi::Exception(BCP,
-                                 string("DLS configuration error ' ") + e.getError() +
-                                     "' with variable '" + paramName + "' on line " +
-                                     boost::lexical_cast<string>(e.getLine()));
-        }
-        catch (const libconfig::ConfigException&)
-        {
-          throw Fmi::Exception(BCP,
-                                 string("DLS configuration error with variable '") + paramName +
-                                     "' on line " +
-                                     boost::lexical_cast<string>(settings[i].getSourceLine()));
-        }
-        catch (const exception& e)
-        {
-          throw Fmi::Exception(BCP,
-                                 e.what() + string(" (line number ") +
-                                     boost::lexical_cast<string>(settings[i].getSourceLine()) +
-                                     ")");
+          Spine::Exceptions::handle("Download plugin");
         }
       }
     }
