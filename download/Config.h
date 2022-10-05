@@ -8,13 +8,9 @@
 
 #include "ParamConfig.h"
 #include "Query.h"
-
-#include <spine/Reactor.h>
-
-#include <libconfig.h++>
-
 #include <boost/utility.hpp>
-
+#include <spine/Reactor.h>
+#include <libconfig.h++>
 #include <string>
 
 namespace SmartMet
@@ -31,10 +27,13 @@ namespace Plugin
 {
 namespace Download
 {
-class Config : private boost::noncopyable
+class Config
 {
  public:
   Config(const std::string& configfile);
+  Config() = delete;
+  Config(const Config& other) = delete;
+  Config& operator=(const Config& other) = delete;
 
   void init(Engine::Querydata::Engine* querydata);
 
@@ -81,7 +80,7 @@ class Config : private boost::noncopyable
   unsigned int itsGrib2TablesVersionMax;
 
   unsigned long itsMaxRequestDataValues = 1024 * 1024 * 1024;
-  unsigned long itsLogRequestDataValues = 0; // if 0, no logging
+  unsigned long itsLogRequestDataValues = 0;  // if 0, no logging
 
   void parseConfigProducers(const Engine::Querydata::Engine& querydata);
   void parseConfigProducer(const std::string& name, Producer& currentSettings);

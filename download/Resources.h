@@ -1,12 +1,11 @@
 #pragma once
 
-#include <boost/core/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-#include <ogr_spatialref.h>
 #include <newbase/NFmiArea.h>
 #include <newbase/NFmiGrid.h>
 #include <newbase/NFmiPoint.h>
 #include <list>
+#include <ogr_spatialref.h>
 #include <string>
 
 // Resource management
@@ -38,10 +37,12 @@ namespace Plugin
 {
 namespace Download
 {
-class Resources : private boost::noncopyable
+class Resources
 {
  public:
   Resources() = default;
+  Resources(const Resources &other) = delete;
+  Resources &operator=(const Resources &other) = delete;
   ~Resources();
 
   const NFmiArea *createArea(const std::string &projection);

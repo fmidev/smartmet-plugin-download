@@ -8,17 +8,13 @@
 
 #include "Config.h"
 #include "DataStreamer.h"
-
+#include <boost/shared_ptr.hpp>
+#include <boost/thread.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <spine/HTTP.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMetPlugin.h>
-
-#include <boost/shared_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/utility.hpp>
-
 #include <map>
 #include <string>
 
@@ -28,10 +24,12 @@ namespace Plugin
 {
 namespace Download
 {
-class Plugin : public SmartMetPlugin, private boost::noncopyable
+class Plugin : public SmartMetPlugin
 {
  public:
   Plugin(Spine::Reactor* theReactor, const char* theConfig);
+  Plugin(const Plugin& other) = delete;
+  Plugin& operator=(const Plugin& other) = delete;
   virtual ~Plugin();
 
   const std::string& getPluginName() const;
