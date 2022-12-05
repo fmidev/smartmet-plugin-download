@@ -815,6 +815,12 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
     try
     {
+      // Check request method (support GET, OPTIONS)
+      if (checkRequest(theRequest, theResponse, false))
+      {
+        return;
+      }
+
       const int expires_seconds = 60;
       ptime t_now = second_clock::universal_time();
 
