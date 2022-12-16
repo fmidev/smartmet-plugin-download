@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 22.12.12
+Version: 22.12.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -32,8 +32,8 @@ BuildRequires: smartmet-library-newbase-devel >= 22.11.14
 BuildRequires: smartmet-library-grid-content-devel >= 22.12.12
 BuildRequires: smartmet-library-grid-files-devel >= 22.12.12
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.12.2
-BuildRequires: smartmet-engine-geonames-devel >= 22.10.5
+BuildRequires: smartmet-engine-querydata-devel >= 22.12.15
+BuildRequires: smartmet-engine-geonames-devel >= 22.12.15
 BuildRequires: smartmet-engine-grid-devel >= 22.12.12
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -45,7 +45,7 @@ Requires: smartmet-library-macgyver >= 22.10.20
 Requires: smartmet-library-timeseries >= 22.10.25
 Requires: smartmet-library-spine >= 22.12.2
 Requires: smartmet-library-newbase >= 22.11.14
-Requires: smartmet-engine-querydata >= 22.12.2
+Requires: smartmet-engine-querydata >= 22.12.15
 Requires: smartmet-server >= 22.12.5
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
@@ -61,10 +61,10 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 22.10.5
+#TestRequires: smartmet-engine-geonames >= 22.12.15
 #TestRequires: smartmet-engine-grid >= 22.12.12
-#TestRequires: smartmet-engine-querydata >= 22.12.2
-#TestRequires: smartmet-utils-devel >= 22.10.7
+#TestRequires: smartmet-engine-querydata >= 22.12.15
+#TestRequires: smartmet-utils-devel >= 22.12.14
 #TestRequires: smartmet-library-spine-plugin-test >= 22.12.2
 #TestRequires: smartmet-library-newbase-devel >= 22.11.14
 #TestRequires: smartmet-qdtools >= 22.12.9
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Dec 16 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.12.16-1.fmi
+- Allow POST requests
+
 * Mon Dec 12 2022 Mika Heiskanen <mika.heiskanen@fmi.fi> - 22.12.12-1.fmi
 - Repackaged due to ABI changes
 

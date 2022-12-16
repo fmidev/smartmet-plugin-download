@@ -19,10 +19,6 @@
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
-#include <cmath>
-#include <cpl_conv.h>
-#include <iostream>
-#include <limits>
 #include <macgyver/Exception.h>
 #include <macgyver/HelmertTransformation.h>
 #include <macgyver/StringConversion.h>
@@ -34,6 +30,10 @@
 #include <spine/Reactor.h>
 #include <spine/SmartMet.h>
 #include <spine/Table.h>
+#include <cmath>
+#include <cpl_conv.h>
+#include <iostream>
+#include <limits>
 #include <stdexcept>
 
 #include <cpl_conv.h>
@@ -139,9 +139,9 @@ static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
 
             if ((err = srs.importFromEPSG(reqParams.epsgCode)) != OGRERR_NONE)
               throw Fmi::Exception(BCP,
-                                     "srs.importFromEPSG(" +
-                                         boost::lexical_cast<string>(reqParams.epsgCode) +
-                                         ") error " + boost::lexical_cast<string>(err));
+                                   "srs.importFromEPSG(" +
+                                       boost::lexical_cast<string>(reqParams.epsgCode) +
+                                       ") error " + boost::lexical_cast<string>(err));
 
             /* Explicit datum shift hasn't been, and should not be used
              *
@@ -265,8 +265,8 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else if (reqParams.source == "grid")
       reqParams.dataSource = Grid;
     else
-      throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
-                             "', 'querydata' or 'grid' expected");
+      throw Fmi::Exception(
+          BCP, "Unknown source '" + reqParams.source + "', 'querydata' or 'grid' expected");
 
     if (reqParams.dataSource == Grid)
     {
@@ -452,9 +452,9 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       if ((grib2TablesVersionMax > 0) && ((reqParams.grib2TablesVersion < grib2TablesVersionMin) ||
                                           (reqParams.grib2TablesVersion > grib2TablesVersionMax)))
         throw Fmi::Exception(BCP,
-                               "'tablesversion' must be between " +
-                                   Fmi::to_string(grib2TablesVersionMin) + " and " +
-                                   Fmi::to_string(grib2TablesVersionMax));
+                             "'tablesversion' must be between " +
+                                 Fmi::to_string(grib2TablesVersionMin) + " and " +
+                                 Fmi::to_string(grib2TablesVersionMax));
     }
 
     return producer;
@@ -751,12 +751,8 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     string projection = boost::algorithm::replace_all_copy(reqParams.projection, " ", "_");
     boost::algorithm::replace_all(projection, ",", ":");
 
-    fileName = getDownloadFileName(reqParams.producer,
-                                   originTime,
-                                   startTime,
-                                   endTime,
-                                   projection,
-                                   reqParams.outputFormat);
+    fileName = getDownloadFileName(
+        reqParams.producer, originTime, startTime, endTime, projection, reqParams.outputFormat);
 
     return ds;
   }
@@ -785,8 +781,8 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
     // Initialize streamer.
 
     string filename;
-    response.setContent(
-        initializeStreamer(req, *itsQEngine, itsGridEngine, itsGeoEngine, query, itsConfig, filename));
+    response.setContent(initializeStreamer(
+        req, *itsQEngine, itsGridEngine, itsGeoEngine, query, itsConfig, filename));
 
     string mime = "application/octet-stream";
     response.setHeader("Content-type", mime.c_str());
@@ -815,8 +811,8 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
     try
     {
-      // Check request method (support GET, OPTIONS)
-      if (checkRequest(theRequest, theResponse, false))
+      // Check request method (support GET, POST, OPTIONS)
+      if (checkRequest(theRequest, theResponse, true))
       {
         return;
       }
@@ -945,8 +941,9 @@ void Plugin::init()
     itsConfig.init(itsQEngine);
 
     if (!itsReactor->addContentHandler(
-				       this, "/download", boost::bind(&Plugin::callRequestHandler,
-								      this, ph::_1, ph::_2, ph::_3)))
+            this,
+            "/download",
+            boost::bind(&Plugin::callRequestHandler, this, ph::_1, ph::_2, ph::_3)))
       throw Fmi::Exception(BCP, "Failed to register download content handler");
   }
   catch (...)
