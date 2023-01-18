@@ -482,21 +482,42 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 // ----------------------------------------------------------------------
 
 static bool getScaleFactorAndOffset(signed long id,
+                                    const std::string &paramName,
+                                    OutputFormat outputFormat,
                                     float *scale,
                                     float *offset,
                                     const ParamChangeTable &ptable)
 {
   try
   {
+    bool radonParam = (!paramName.empty());
+
     for (size_t i = 0; i < ptable.size(); ++i)
     {
-      // Note: conversion in reverse direction!
-      if (id == ptable[i].itsWantedParam.GetIdent())
+      if (radonParam)
       {
-        *scale = ptable[i].itsConversionScale;
-        *offset = ptable[i].itsConversionBase;
-        return true;
+        if (paramName == ptable[i].itsRadonName)
+        {
+          // No unit conversion for radon parameters
+
+          *scale = 1;
+          *offset = 0;
+
+          return (
+                  ((outputFormat == Grib1) && (!ptable[i].itsGrib1Param)) ||
+                  ((outputFormat == Grib2) && (!ptable[i].itsGrib2Param))
+                 );
+        }
+
+        continue;
       }
+      else if (id != ptable[i].itsWantedParam.GetIdent())
+        continue;
+
+      *scale = ptable[i].itsConversionScale;
+      *offset = ptable[i].itsConversionBase;
+
+      return true;
     }
 
     return false;
@@ -521,6 +542,8 @@ static bool getScaleFactorAndOffset(signed long id,
 
 static bool getParamConfig(const ParamChangeTable &pTable,
                            const TimeSeries::OptionParsers::ParameterList &reqParams,
+                           DataSource dataSource,
+                           OutputFormat outputFormat,
                            TimeSeries::OptionParsers::ParameterList &knownParams,
                            Scaling &scaling)
 {
@@ -535,16 +558,28 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     float scale = 1.0, offset = 0.0;
     unsigned int i = 0;
 
+    vector<string> paramParts;
+    std::string paramName;
+    bool gridContent = (dataSource == GridContent);
+
     BOOST_FOREACH (Spine::Parameter param, reqParams)
     {
       // We allow special params too if they have a number (WindUMS and WindVMS)
-      bool ok = (param.number() > 0);
+
+      bool ok = (gridContent || (param.number() > 0));
 
       if (ok)
       {
         int id = param.number();
         unsigned long lid = boost::numeric_cast<unsigned long>(id);
-        ok = getScaleFactorAndOffset(lid, &scale, &offset, pTable);
+
+        if (gridContent)
+        {
+          parseRadonParameterName(param.name(), paramParts);
+          paramName = paramParts[0];
+        }
+
+        ok = getScaleFactorAndOffset(lid, paramName, outputFormat, &scale, &offset, pTable);
       }
 
       if (!ok)
@@ -657,13 +692,15 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     {
       ds = boost::shared_ptr<DataStreamer>(new GribStreamer(req, config, producer, reqParams));
       getParamConfig(
-          config.getParamChangeTable(), query.pOptions.parameters(), knownParams, scaling);
+          config.getParamChangeTable(), query.pOptions.parameters(), reqParams.dataSource,
+          reqParams.outputFormat, knownParams, scaling);
     }
     else if (reqParams.outputFormat == NetCdf)
     {
       ds = boost::shared_ptr<DataStreamer>(new NetCdfStreamer(req, config, producer, reqParams));
       getParamConfig(
-          config.getParamChangeTable(false), query.pOptions.parameters(), knownParams, scaling);
+          config.getParamChangeTable(false), query.pOptions.parameters(), reqParams.dataSource,
+          reqParams.outputFormat, knownParams, scaling);
     }
     else
     {
