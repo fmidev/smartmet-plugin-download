@@ -184,9 +184,6 @@ bool setGribParamConfigField(GribParamId &gribParam,
                              const std::string name,
                              unsigned int value)
 {
-  if (!gribParam)
-    gribParam = GribParamIdentification();
-
   if (name == "discipline")
     gribParam->itsDiscipline = value;
   else if (name == "category")
@@ -211,19 +208,16 @@ void checkGribParamIdentification(const GribParamId &gribParam,
                                   const std::string &gribFormat,
                                   unsigned int arrayIndex)
 {
-  if (gribParam)
-  {
-    uint n = 0;
-    if (gribParam->itsDiscipline) n++;
-    if (gribParam->itsCategory) n++;
-    if (gribParam->itsParamNumber) n++;
+  uint n = 0;
+  if (gribParam->itsDiscipline) n++;
+  if (gribParam->itsCategory) n++;
+  if (gribParam->itsParamNumber) n++;
 
-    if ((n > 0) && (n != 3))
-      throw Fmi::Exception(
-          BCP, gribFormat + ": all or no parameter id fields " +
-          "(discipline, category and parameternumber) must be set at array index " +
-          Fmi::to_string(arrayIndex));
-  }
+  if (n != 3)
+    throw Fmi::Exception(
+        BCP, gribFormat +
+        ": discipline, category and parameternumber must be set at array index " +
+        Fmi::to_string(arrayIndex));
 }
 
 // ======================================================================
@@ -267,26 +261,31 @@ bool readGribParamConfigField(const std::string& name,
     else if ((name == "grib1") || (name == "grib2"))
     {
       const auto members = json.getMemberNames();
-      auto &gribParam = (name == "grib1") ? p.itsGrib1Param : p.itsGrib2Param;
 
-      BOOST_FOREACH (const auto& nm, members)
+      if (!members.empty())
       {
-        if ((nm == "templatenumber") && p.itsTemplateNumber)
-          throw Fmi::Exception(
-              BCP, nm + ": value is already set at array index " + Fmi::to_string(arrayIndex));
+        auto &gribParam = (name == "grib1") ? p.itsGrib1Param : p.itsGrib2Param;
+        gribParam = GribParamIdentification();
 
-        const Json::Value& js = json[nm];
+        BOOST_FOREACH (const auto& nm, members)
+        {
+          if ((nm == "templatenumber") && p.itsTemplateNumber)
+            throw Fmi::Exception(
+                BCP, nm + ": value is already set at array index " + Fmi::to_string(arrayIndex));
 
-        pathName = name + "." + nm;
+          const Json::Value& js = json[nm];
 
-        if (!setGribParamConfigField(gribParam, nm, asUInt(pathName, js, arrayIndex)))
-          return false;
+          pathName = name + "." + nm;
 
-        if (nm == "templatenumber")
-          p.itsTemplateNumber = gribParam->itsTemplateNumber;
+          if (!setGribParamConfigField(gribParam, nm, asUInt(pathName, js, arrayIndex)))
+            return false;
+
+          if (nm == "templatenumber")
+            p.itsTemplateNumber = gribParam->itsTemplateNumber;
+        }
+
+        checkGribParamIdentification(gribParam, name, arrayIndex);
       }
-
-      checkGribParamIdentification(gribParam, name, arrayIndex);
     }
     else
     {
