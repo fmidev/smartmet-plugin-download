@@ -504,8 +504,8 @@ static bool getScaleFactorAndOffset(signed long id,
           *offset = 0;
 
           return (
-                  ((outputFormat == Grib1) && (!ptable[i].itsGrib1Param)) ||
-                  ((outputFormat == Grib2) && (!ptable[i].itsGrib2Param))
+                  ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
+                  ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
                  );
         }
 
