@@ -16,22 +16,34 @@ namespace Download
 {
 // ----------------------------------------------------------------------
 /*!
- * \brief Utility routines for testing querydata's level type
+ * \brief Utility routines for testing level type
  */
 // ----------------------------------------------------------------------
 
-bool isSurfaceLevel(FmiLevelType levelType)
+bool isSurfaceLevel(FmiLevelType levelType, bool gridContent)
 {
+  if (gridContent)
+    return (
+            (levelType == GridFmiLevelTypeGround) ||
+            (levelType == GridFmiLevelTypeEntireAtmosphere)
+           );
+
   return ((levelType == kFmiGroundSurface) || (levelType == kFmiAnyLevelType));
 }
 
-bool isPressureLevel(FmiLevelType levelType)
+bool isPressureLevel(FmiLevelType levelType, bool gridContent)
 {
+  if (gridContent)
+    return (levelType == GridFmiLevelTypePressure);
+
   return (levelType == kFmiPressureLevel);
 }
 
-bool isHybridLevel(FmiLevelType levelType)
+bool isHybridLevel(FmiLevelType levelType, bool gridContent)
 {
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeHybrid);
+
   return (levelType == kFmiHybridLevel);
 }
 
@@ -40,13 +52,19 @@ bool isHeightOrDepthLevel(FmiLevelType levelType)
   return ((levelType == kFmiHeight) || (levelType == kFmiDepth));
 }
 
-bool isHeightLevel(FmiLevelType levelType, int levelValue)
+bool isHeightLevel(FmiLevelType levelType, int levelValue, bool gridContent)
 {
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeHeight);
+
   return ((levelType == kFmiHeight) && (levelValue >= 0));
 }
 
-bool isDepthLevel(FmiLevelType levelType, int levelValue)
+bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent)
 {
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeDepth);
+
   return (((levelType == kFmiHeight) && (levelValue < 0)) || (levelType == kFmiDepth));
 }
 
@@ -165,6 +183,159 @@ bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse radon parameter name parts
+ *
+ */
+// ----------------------------------------------------------------------
+
+void parseRadonParameterName(const string &param, vector<string> &paramParts)
+{
+  vector<string> parts;
+  const char *partNames[] = {
+                             "parameter",
+                             "producer name",
+                             "geometryId",
+                             "levelTypeId",
+                             "level",
+                             "forecastType",
+                             "forecastNumber"
+                            };
+
+  paramParts.clear();
+
+  boost::algorithm::split(parts, param, boost::algorithm::is_any_of(":"));
+  if (parts.size() != 7)
+    throw Fmi::Exception::Trace(BCP, "Invalid radon parameter name '" + param + "'");
+
+  size_t n = 0;
+  for (auto const &part : parts)
+  {
+    string s = boost::trim_copy(part);
+
+    if (s.empty())
+      throw Fmi::Exception::Trace(
+          BCP, string("Missing '") + partNames[n] + "' in radon parameter name '" + param + "'");
+    else if ((n > 1) && (! s.empty()) && (strspn(s.c_str(), "1234567890") != s.length()))
+      throw Fmi::Exception::Trace(
+          BCP, string("Nonnumeric '") + partNames[n] + "' in radon parameter name '" + param + "'");
+
+    paramParts.push_back(s);
+    n++;
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return radon parameter geometry id
+ *
+ */
+// ----------------------------------------------------------------------
+
+T::GeometryId getGeometryId(const string &param, const vector<string> &paramParts,
+                            boost::optional<T::GeometryId> defaultValue)
+{
+  if ((paramParts.size() < 3) || paramParts[2].empty())
+  {
+    if (defaultValue)
+     return *defaultValue;
+
+    throw Fmi::Exception::Trace(
+        BCP, "Geometry id missing in radon parameter name '" + param + "'");
+  }
+
+  return atoi(paramParts[2].c_str());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return radon parameter level type
+ *
+ */
+// ----------------------------------------------------------------------
+
+T::ParamLevelId getParamLevelId(const string &param, const vector<string> &paramParts,
+                                boost::optional<T::ParamLevelId> defaultValue)
+{
+  if ((paramParts.size() < 4) || paramParts[3].empty())
+  {
+    if (defaultValue)
+     return *defaultValue;
+
+    throw Fmi::Exception::Trace(
+        BCP, "Level type missing in radon parameter name '" + param + "'");
+  }
+
+  return atoi(paramParts[3].c_str());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return radon parameter level number
+ *
+ */
+// ----------------------------------------------------------------------
+
+T::ParamLevel getParamLevel(const string &param, const vector<string> &paramParts,
+                            boost::optional<T::ParamLevel> defaultValue)
+{
+  if ((paramParts.size() < 5) || paramParts[4].empty())
+  {
+    if (defaultValue)
+     return *defaultValue;
+
+    throw Fmi::Exception::Trace(
+        BCP, "Level number missing in radon parameter name '" + param + "'");
+  }
+
+  return atoi(paramParts[4].c_str());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return radon parameter forecast type
+ *
+ */
+// ----------------------------------------------------------------------
+
+T::ForecastType getForecastType(const string &param, const vector<string> &paramParts,
+                                boost::optional<T::ForecastType> defaultValue)
+{
+  if ((paramParts.size() < 6) || paramParts[5].empty())
+  {
+    if (defaultValue)
+     return *defaultValue;
+
+    throw Fmi::Exception::Trace(
+        BCP, "Forecast type missing in radon parameter name '" + param + "'");
+  }
+
+  return atoi(paramParts[5].c_str());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Return radon parameter forecast number
+ *
+ */
+// ----------------------------------------------------------------------
+
+T::ForecastType getForecastNumber(const string &param, const vector<string> &paramParts,
+                                  boost::optional<T::ForecastNumber> defaultValue)
+{
+  if ((paramParts.size() < 7) || paramParts[6].empty())
+  {
+    if (defaultValue)
+     return *defaultValue;
+
+    throw Fmi::Exception::Trace(
+        BCP, "Forecast number missing in radon parameter name '" + param + "'");
+  }
+
+  return atoi(paramParts[6].c_str());
 }
 
 }  // namespace Download

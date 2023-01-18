@@ -23,6 +23,16 @@ namespace Download
 {
 // Parameter configuration
 
+typedef struct
+{
+  boost::optional<long> itsDiscipline;
+  boost::optional<long> itsCategory;
+  boost::optional<long> itsParamNumber;
+  boost::optional<long> itsTemplateNumber;
+} GribParamIdentification;
+
+typedef boost::optional<GribParamIdentification> GribParamId;
+
 struct ParamChangeItem
 {
  public:
@@ -33,22 +43,26 @@ struct ParamChangeItem
 
   unsigned long itsOriginalParamId;
   NFmiParam itsWantedParam;
-  float itsConversionBase;  // f(x) = (scale * x) + base
+  float itsConversionBase;              // f(x) = (scale * x) + base
   float itsConversionScale;
   NFmiLevel *itsLevel;
-  std::string itsLevelType;              // Temporary storage for level type ..
-  boost::optional<float> itsLevelValue;  // .. and level value; used when creating NFmiLevel object
-                                         // (itsLevel)
-  std::string itsStepType;  // For average, cumulative etc. data; "accum", "max", "min", ...
-  unsigned int itsPeriodLengthMinutes;  // Period length in minutes for average, cumulative etc.
-                                        // data
+  std::string itsLevelType;             // Temporary storage for level type ..
+  boost::optional<float> itsLevelValue; // .. and value; used when creating NFmiLevel object
+  std::string itsStepType;              // Aggregate type, "accum", "max", "min", ...
+  unsigned int itsPeriodLengthMinutes;  // Aggregate period length in minutes
   std::string itsUnit;                  // Unit for netcdf parameters
   std::string itsStdName;               // Standfard name for netcdf parameters
   std::string itsLongName;              // Long name for netcdf parameters
   std::string itsCentre;                // Originating centre for grib parameters
-  unsigned int itsTemplateNumber;       // 'productDefinitionTemplateNumber' for grib parameters
+  boost::optional<long> itsTemplateNumber;  // 'productDefinitionTemplateNumber' for grib parameters
 
   boost::optional<bool> itsGridRelative;// Set for grid relative U and V
+
+  // Radon parameter data
+  //
+  std::string itsRadonName;		// T-K etc
+  GribParamId itsGrib1Param;		// Grib1 discipline etc
+  GribParamId itsGrib2Param;		// Grib2 discipline etc
 };
 
 typedef std::vector<ParamChangeItem> ParamChangeTable;

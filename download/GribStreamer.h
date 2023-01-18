@@ -66,6 +66,7 @@ class GribStreamer : public DataStreamer
   void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
   void setLevelAndParameterToGrib(int level,
                                   const NFmiParam& theParam,
+                                  const std::string& paramName,
                                   const ParamChangeTable& pTable,
                                   std::size_t& paramIdx);
   void setStepToGrib(const ParamChangeTable& pTable,

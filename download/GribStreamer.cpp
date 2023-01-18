@@ -191,10 +191,7 @@ void GribStreamer::setShapeOfTheEarth(const NFmiArea *area)
       else if ((fabs(invFlattening - 297) < 0.01) && (fabs(radiusOrSemiMajor - 6378160.0) < 0.01))
         shapeOfTheEarth = 2;  // IAU in 1965
       else if (invFlattening > 0)
-        throw Fmi::Exception(BCP,
-                             string("Unsupported ellipsoid in input data: ") +
-                                 Fmi::to_string(radiusOrSemiMajor) +
-                                 "," + Fmi::to_string(invFlattening));
+        shapeOfTheEarth = 7;
       else if (fabs(radiusOrSemiMajor - 6367470.0) < 0.01)
         shapeOfTheEarth = 0;
       else if (fabs(radiusOrSemiMajor - 6371229.0) < 0.01)
@@ -212,6 +209,15 @@ void GribStreamer::setShapeOfTheEarth(const NFmiArea *area)
       {
         gset(itsGribHandle, "scaleFactorOfRadiusOfSphericalEarth", 0.0);
         gset(itsGribHandle, "scaledValueOfRadiusOfSphericalEarth", radiusOrSemiMajor);
+      }
+      else if (shapeOfTheEarth == 7)
+      {
+        double semiMinor = radiusOrSemiMajor - (radiusOrSemiMajor * (1 / invFlattening));
+
+        gset(itsGribHandle, "scaleFactorOfMajorAxisOfOblateSpheroidEarth", 0.0);
+        gset(itsGribHandle, "scaledValueOfMajorAxisOfOblateSpheroidEarth", radiusOrSemiMajor);
+        gset(itsGribHandle, "scaleFactorOfMinorAxisOfOblateSpheroidEarth", 0.0);
+        gset(itsGribHandle, "scaledValueOfMinorAxisOfOblateSpheroidEarth", semiMinor);
       }
     }
   }
@@ -715,6 +721,9 @@ void GribStreamer::setNamedSettingsToGrib() const
 {
   try
   {
+    if (itsReqParams.dataSource == GridContent)
+      return;
+
     const Producer &pr = itsCfg.getProducer(itsReqParams.producer);
     auto setBeg = pr.namedSettingsBegin();
     auto setEnd = pr.namedSettingsEnd();
@@ -946,6 +955,7 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 
 void GribStreamer::setLevelAndParameterToGrib(int level,
                                               const NFmiParam &theParam,
+                                              const string &paramName,
                                               const ParamChangeTable &pTable,
                                               size_t &paramIdx)
 {
@@ -962,78 +972,133 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
   try
   {
-    string centre;
+    string centre, levelTypeStr, radonParam;
     signed long usedParId = theParam.GetIdent();
     NFmiLevel *cfgLevel = nullptr;
-    string levelTypeStr;
+    FmiLevelType levelType;
+    boost::optional<long> templateNumber;
+    bool gridContent = (itsReqParams.dataSource == GridContent);
     size_t i, j;
-    long templateNumber = 0;
+
+    if (gridContent)
+    {
+      // Take parameter name (e.g. T-K) from radon parameter name T-K:MEPS:1093:...
+
+      vector<string> paramParts;
+      parseRadonParameterName(paramName, paramParts);
+      radonParam = paramParts.front();
+
+      // Level type can vary for each parameter. Could take the type from radon parameter name too
+      //
+      // TODO: Use the numeric level type (key ?) to set type to output grib instead of type name ?
+
+      auto it = itsGridMetaData.paramLevelIds.find(paramName);
+
+      if (it == itsGridMetaData.paramLevelIds.end())
+        throw Fmi::Exception(
+            BCP, "Internal error: Parameter level type not in metadata: " + paramName);
+
+      levelType = FmiLevelType(it->second);
+    }
+    else
+      levelType = itsLevelType;
 
     for (i = 0, j = pTable.size(); i < pTable.size(); ++i)
-      if (usedParId == pTable[i].itsWantedParam.GetIdent())
+      if (! gridContent)
       {
-        // Preferring entry with level for surface data and without level for pressure and hybrid
-        // data.
-        // If preferred entry does not exist, taking the parameter id from the first entry for the
-        // parameter.
-        //
-        cfgLevel = pTable[i].itsLevel;
+        if (usedParId == pTable[i].itsWantedParam.GetIdent())
+        {
+          // Preferring entry with level for surface data and without level for pressure and hybrid
+          // data.
+          // If preferred entry does not exist, taking the parameter id from the first entry for the
+          // parameter.
+          //
+          cfgLevel = pTable[i].itsLevel;
 
-        if ((isSurfaceLevel(itsLevelType) && cfgLevel) ||
-            (!(isSurfaceLevel(itsLevelType) || cfgLevel)))
-          break;
+          if ((isSurfaceLevel(levelType) && cfgLevel) || (!(isSurfaceLevel(levelType) || cfgLevel)))
+            break;
 
-        if (j == pTable.size())
-          j = i;
+          if (j == pTable.size())
+            j = i;
+        }
       }
+      else if (pTable[i].itsRadonName == radonParam)
+        break;
 
     if (i >= pTable.size())
+    {
+      if (gridContent)
+        throw Fmi::Exception(BCP, "No grib configuration for parameter " + radonParam);
+
       i = j;
+    }
 
     paramIdx = i;
 
     if (i < pTable.size())
     {
+      if (! gridContent)
+        cfgLevel = pTable[i].itsLevel;
+
       usedParId = pTable[i].itsOriginalParamId;
-      cfgLevel = pTable[i].itsLevel;
       centre = pTable[i].itsCentre;
-      templateNumber = (long)pTable[i].itsTemplateNumber;
+      templateNumber = pTable[i].itsTemplateNumber;
     }
 
-    if (isSurfaceLevel(itsLevelType))
+    if (isSurfaceLevel(levelType, gridContent))
     {
       if (cfgLevel)
       {
         levelTypeStr = cfgLevel->GetName();
-        level = boost::numeric_cast<int>(cfgLevel->LevelValue());
+
+        if (!gridContent)
+          level = boost::numeric_cast<int>(cfgLevel->LevelValue());
       }
       else
       {
+        // TODO: Ground level type name can be set above for non gridcontent query, but
+        //       should check/set it for gridcontent too (cfgLevel is not set for it)
+        //
         levelTypeStr = EntireAtmosphere;
-        level = 0;
+
+        if (!gridContent)
+          level = 0;
       }
     }
-    else if (isPressureLevel(itsLevelType))
+    else if (isPressureLevel(levelType, gridContent))
       levelTypeStr = PressureLevel;
-    else if (isHybridLevel(itsLevelType))
+    else if (isHybridLevel(levelType, gridContent))
       levelTypeStr = HybridLevel;
-    else if (isHeightLevel(itsLevelType, level))
+    else if (isHeightLevel(levelType, level, gridContent))
       levelTypeStr = HeightLevel;
-    else if (isDepthLevel(itsLevelType, level))
+    else if (isDepthLevel(levelType, level, gridContent))
       levelTypeStr = DepthLevel;
     else
       throw Fmi::Exception(
-          BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(itsLevelType));
+          BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(levelType));
 
     if (!centre.empty())
       gset(itsGribHandle, "centre", centre);
 
     // Cannot set template number 0 unless stepType has been set
-    gset(itsGribHandle, "stepType", "instant");
-    if ((!itsGrib1Flag) && (templateNumber != 0))
-      gset(itsGribHandle, "productDefinitionTemplateNumber", templateNumber);
+    //
+    // Note: Comment above is weird because templateNumber is tested to be nonzero ?
 
-    gset(itsGribHandle, "paramId", usedParId);
+    gset(itsGribHandle, "stepType", "instant");
+    if ((!itsGrib1Flag) && templateNumber && (*templateNumber != 0))
+      gset(itsGribHandle, "productDefinitionTemplateNumber", *templateNumber);
+
+    auto const &gribParam = (itsGrib1Flag ? pTable[i].itsGrib1Param : pTable[i].itsGrib2Param);
+
+    if (gridContent && gribParam)
+    {
+      gset(itsGribHandle, "discipline", *(gribParam->itsDiscipline));
+      gset(itsGribHandle, "parameterCategory", *(gribParam->itsCategory));
+      gset(itsGribHandle, "parameterNumber", *(gribParam->itsParamNumber));
+    }
+    else
+      gset(itsGribHandle, "paramId", usedParId);
+
     gset(itsGribHandle, "typeOfLevel", levelTypeStr);
     gset(itsGribHandle, "level", boost::numeric_cast<long>(abs(level)));
   }
@@ -1306,7 +1371,7 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable();
     size_t paramIdx = pTable.size();
 
-    setLevelAndParameterToGrib(level, param, pTable, paramIdx);
+    setLevelAndParameterToGrib(level, param, "", pTable, paramIdx);
 
     // Set start and end step and step type (for average, cumulative etc. data)
 
@@ -1388,7 +1453,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable();
     size_t paramIdx = pTable.size();
 
-    setLevelAndParameterToGrib(level, param, pTable, paramIdx);
+    setLevelAndParameterToGrib(level, param, itsParamIterator->name(), pTable, paramIdx);
 
     // Set start and end step and step type (for average, cumulative etc. data)
 

@@ -31,15 +31,12 @@ static const char* defaultTimeZone = "utc";
  */
 // ----------------------------------------------------------------------
 
-Query::Query(const Spine::HTTP::Request& req,
-             const Config& /* config */,
-             Engine::Querydata::Engine* /* qEngine */)
-    : pOptions(TimeSeries::OptionParsers::parseParameters(req)),
-      tOptions(TimeSeries::parseTimes(req))
+Query::Query(const Spine::HTTP::Request& req)
 {
   try
   {
-    parseTimeZone(req);
+    parseParameters(req);
+    parseTimeOptions(req);
     parseLevels(req);
   }
   catch (...)
@@ -50,15 +47,57 @@ Query::Query(const Spine::HTTP::Request& req,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Parse timezone options
+ * \brief Parse param option
  */
 // ----------------------------------------------------------------------
 
-void Query::parseTimeZone(const Spine::HTTP::Request& theReq)
+void Query::parseParameters(const Spine::HTTP::Request& theReq)
 {
   try
   {
-    // Get the option string
+    string opt = Spine::optional_string(theReq.getParameter("source"), "querydata");
+
+    if (opt != "gridcontent")
+    {
+      // Using newbase names
+
+      pOptions = TimeSeries::OptionParsers::parseParameters(theReq);
+      return;
+    }
+
+    // Using radon names
+    //
+    // Generate unique param id's, grib/netcdf param mappings are searched by radon name
+
+    opt = Spine::required_string(theReq.getParameter("param"), "param option is required");
+
+    vector<string> params;
+    boost::algorithm::split(params, opt, boost::algorithm::is_any_of(","));
+
+    for (const string& param : params)
+      pOptions.add(Spine::Parameter(param, Spine::Parameter::Type::Data,
+                                    FmiParameterName(kFmiPressure + pOptions.size())));
+
+    if (pOptions.size() == 0)
+      throw Fmi::Exception::Trace(BCP, "No parameter names given");
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse time options
+ */
+// ----------------------------------------------------------------------
+
+void Query::parseTimeOptions(const Spine::HTTP::Request& theReq)
+{
+  try
+  {
+    tOptions = TimeSeries::parseTimes(theReq);
     timeZone = Spine::optional_string(theReq.getParameter("tz"), defaultTimeZone);
   }
   catch (...)
@@ -69,7 +108,7 @@ void Query::parseTimeZone(const Spine::HTTP::Request& theReq)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief parse Level query
+ * \brief Parse level options
  *
  * Empty result implies all levels are wanted
  */
@@ -82,13 +121,16 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
     // Get the option string
 
     string opt = Spine::optional_string(theReq.getParameter("level"), "");
+
     if (!opt.empty())
     {
       levels.insert(Fmi::stoi(opt));
     }
 
     // Allow also "levels"
+
     opt = Spine::optional_string(theReq.getParameter("levels"), "");
+
     if (!opt.empty())
     {
       vector<string> parts;

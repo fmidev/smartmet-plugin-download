@@ -92,7 +92,8 @@ typedef std::map<std::string, Producer> Producers;
 typedef enum
 {
   QueryData,
-  Grid
+  GridMapping,  // Using newbase names and grid engine mappings
+  GridContent   // Using radon names and content server data
 } DataSource;
 
 typedef enum
@@ -237,7 +238,7 @@ struct ReqParams
 class Query
 {
  public:
-  Query(const Spine::HTTP::Request &req, const Config &config, Engine::Querydata::Engine *qEngine);
+  Query(const Spine::HTTP::Request &req);
 
   typedef std::set<int> Levels;
   Levels levels;
@@ -250,7 +251,8 @@ class Query
  private:
   Query();
 
-  void parseTimeZone(const Spine::HTTP::Request &theReq);
+  void parseParameters(const Spine::HTTP::Request &theReq);
+  void parseTimeOptions(const Spine::HTTP::Request &theReq);
   void parseModel(const Spine::HTTP::Request &theReq);
   void parseLevels(const Spine::HTTP::Request &theReq);
 };

@@ -12,11 +12,19 @@ FLAGS += -Wno-vla -Wno-variadic-macros -Wno-deprecated-declarations -Wno-unknown
 
 DEFINES = -DUNIX -D_REENTRANT
 
+CORBA_INCLUDE = -isystem /usr/include/smartmet/grid-content/contentServer/corba/stubs \
+                -isystem /usr/include/smartmet/grid-content/dataServer/corba/stubs \
+                -isystem /usr/include/smartmet/grid-content/queryServer/corba/stubs
+CORBA_LIBS = -lomniORB4 -lomnithread
+
+INCLUDES += $(CORBA_INCLUDE)
+
 LIBS += -L$(libdir) \
 	-lsmartmet-spine \
 	-lsmartmet-newbase \
 	-lsmartmet-macgyver \
 	 $(REQUIRED_LIBS) \
+	 $(CORBA_LIBS) \
 	-lboost_date_time \
 	-lboost_thread \
 	-lboost_iostreams \

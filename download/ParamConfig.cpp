@@ -36,7 +36,7 @@ ParamChangeItem::ParamChangeItem()
       itsConversionScale(1.0),
       itsLevel(nullptr),
       itsPeriodLengthMinutes(0),
-      itsTemplateNumber(0),
+      itsTemplateNumber(),
       itsGridRelative(boost::optional<bool>())
 {
 }
@@ -60,7 +60,10 @@ ParamChangeItem::ParamChangeItem(const ParamChangeItem& theOther)
       itsLongName(theOther.itsLongName),
       itsCentre(theOther.itsCentre),
       itsTemplateNumber(theOther.itsTemplateNumber),
-      itsGridRelative(theOther.itsGridRelative)
+      itsGridRelative(theOther.itsGridRelative),
+      itsRadonName(theOther.itsRadonName),
+      itsGrib1Param(theOther.itsGrib1Param),
+      itsGrib2Param(theOther.itsGrib2Param)
 {
 }
 
@@ -83,6 +86,9 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
       itsCentre = theOther.itsCentre;
       itsTemplateNumber = theOther.itsTemplateNumber;
       itsGridRelative = theOther.itsGridRelative;
+      itsRadonName = theOther.itsRadonName;
+      itsGrib1Param = theOther.itsGrib1Param;
+      itsGrib2Param = theOther.itsGrib2Param;
     }
 
     return *this;
@@ -170,6 +176,58 @@ std::string asString(const std::string& name, const Json::Value& json, uint arra
 
 // ======================================================================
 /*!
+ * \brief Set grib parameter configuration field
+ */
+// ======================================================================
+
+bool setGribParamConfigField(GribParamId &gribParam,
+                             const std::string name,
+                             unsigned int value)
+{
+  if (!gribParam)
+    gribParam = GribParamIdentification();
+
+  if (name == "discipline")
+    gribParam->itsDiscipline = value;
+  else if (name == "category")
+    gribParam->itsCategory = value;
+  else if (name == "parameternumber")
+    gribParam->itsParamNumber = value;
+  else if (name == "templatenumber")
+    gribParam->itsTemplateNumber = value;
+  else
+    return false;
+
+  return true;
+}
+
+// ======================================================================
+/*!
+ * \brief Check grib param identification
+ */
+// ======================================================================
+
+void checkGribParamIdentification(const GribParamId &gribParam,
+                                  const std::string &gribFormat,
+                                  unsigned int arrayIndex)
+{
+  if (gribParam)
+  {
+    uint n = 0;
+    if (gribParam->itsDiscipline) n++;
+    if (gribParam->itsCategory) n++;
+    if (gribParam->itsParamNumber) n++;
+
+    if ((n > 0) && (n != 3))
+      throw Fmi::Exception(
+          BCP, gribFormat + ": all or no parameter id fields " +
+          "(discipline, category and parameternumber) must be set at array index " +
+          Fmi::to_string(arrayIndex));
+  }
+}
+
+// ======================================================================
+/*!
  * \brief Load grib format specific configuration fields.
  */
 // ======================================================================
@@ -177,7 +235,8 @@ std::string asString(const std::string& name, const Json::Value& json, uint arra
 bool readGribParamConfigField(const std::string& name,
                               const Json::Value& json,
                               ParamChangeItem& p,
-                              unsigned int arrayIndex)
+                              unsigned int arrayIndex,
+                              std::string& pathName)
 {
   try
   {
@@ -199,12 +258,41 @@ bool readGribParamConfigField(const std::string& name,
     }
     else if (name == "templatenumber")
     {
+      if (p.itsTemplateNumber)
+        throw Fmi::Exception(
+            BCP, name + ": value is already set at array index " + Fmi::to_string(arrayIndex));
+
       p.itsTemplateNumber = asUInt(name, json, arrayIndex);
+    }
+    else if ((name == "grib1") || (name == "grib2"))
+    {
+      const auto members = json.getMemberNames();
+      auto &gribParam = (name == "grib1") ? p.itsGrib1Param : p.itsGrib2Param;
+
+      BOOST_FOREACH (const auto& nm, members)
+      {
+        if ((nm == "templatenumber") && p.itsTemplateNumber)
+          throw Fmi::Exception(
+              BCP, nm + ": value is already set at array index " + Fmi::to_string(arrayIndex));
+
+        const Json::Value& js = json[nm];
+
+        pathName = name + "." + nm;
+
+        if (!setGribParamConfigField(gribParam, nm, asUInt(pathName, js, arrayIndex)))
+          return false;
+
+        if (nm == "templatenumber")
+          p.itsTemplateNumber = gribParam->itsTemplateNumber;
+      }
+
+      checkGribParamIdentification(gribParam, name, arrayIndex);
     }
     else
     {
       // Unknown setting
       //
+      pathName = name;
       return false;
     }
 
@@ -225,7 +313,8 @@ bool readGribParamConfigField(const std::string& name,
 bool readNetCdfParamConfigField(const std::string& name,
                                 const Json::Value& json,
                                 ParamChangeItem& p,
-                                unsigned int arrayIndex)
+                                unsigned int arrayIndex,
+                                std::string& pathName)
 {
   try
   {
@@ -241,7 +330,10 @@ bool readNetCdfParamConfigField(const std::string& name,
     else
       // Unknown setting
       //
+    {
+      pathName = name;
       return false;
+    }
 
     return true;
   }
@@ -288,22 +380,28 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
     for (unsigned int i = 0; i < theJson.size(); i++)
     {
       const Json::Value& paramJson = theJson[i];
-
       if (!paramJson.isObject())
         throw Fmi::Exception(BCP, "JSON object expected at array index " + Fmi::to_string(i));
 
       ParamChangeItem p;
-      std::string paramName;
+      std::string paramName, radonName, pathName;
       uint paramId = 0;
 
       const auto members = paramJson.getMemberNames();
       BOOST_FOREACH (const auto& name, members)
       {
         const Json::Value& json = paramJson[name];
-        if (json.isArray() || json.isObject())
-          throw Fmi::Exception(BCP,
-                                 name + ": value is neither a string nor a number at array index " +
-                                     Fmi::to_string(i));
+
+        if (grib && ((name == "grib1") || (name == "grib2")))
+        {
+          if (!json.isObject())
+            throw Fmi::Exception(
+                BCP, name + ": value is not an object at array index " + Fmi::to_string(i));
+        }
+        else if (json.isArray() || json.isObject())
+          throw Fmi::Exception(
+              BCP, name + ": value is neither a string nor a number at array index " +
+              Fmi::to_string(i));
 
         // Ignore null values
 
@@ -316,6 +414,8 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
           paramId = asUInt(name, json, i);
         else if (name == "name")
           paramName = asString(name, json, i);
+        else if (name == "radonname")
+          p.itsRadonName = asString(name, json, i);
         else if (name == "offset")
           p.itsConversionBase = asFloat(name, json, i);
         else if (name == "divisor")
@@ -327,11 +427,11 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
         //
         // Handle format specific settings
         //
-        else if (!fmtConfigFunc(name, json, p, i))
+        else if (!fmtConfigFunc(name, json, p, i, pathName))
           throw Fmi::Exception(BCP,
                                  std::string(grib ? "Grib" : "Netcdf") +
                                      " parameter configuration does not have a setting named '" +
-                                     name + "'!");
+                                     pathName + "'!");
       }
 
       // Set parameter id and name

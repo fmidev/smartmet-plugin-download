@@ -18,6 +18,7 @@
 #include <gis/CoordinateMatrix.h>
 #include <gis/SpatialReference.h>
 #include <grid-files/grid/Typedefs.h>
+#include <grid-content/contentServer/corba/server/ServerInterface.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <timeseries/TimeSeriesGenerator.h>
@@ -271,33 +272,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   class GridMetaData
   {
    public:
-    /*
-      1;GROUND;Ground or water surface;
-      2;PRESSURE;Pressure level;
-      3;HYBRID;Hybrid level;
-      4;ALTITUDE;Altitude;
-      5;TOP;Top of atmosphere;
-      6;HEIGHT;Height above ground in meters;
-      7;MEANSEA;Mean sea level;
-      8;ENTATM;Entire atmosphere;
-      9;GROUND_DEPTH;Layer between two depths below land surface;
-      10;DEPTH;Depth below some surface;
-      11;PRESSURE_DELTA;Level at specified pressure difference from ground to level;
-      12;MAXTHETAE;Level where maximum equivalent potential temperature is found;
-      13;HEIGHT_LAYER;Layer between two metric heights above ground;
-      14;DEPTH_LAYER;Layer between two depths below land surface;
-      15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
-      16;MAXWIND;Maximum wind level;
-    */
-    static const T::ParamLevelId GridFMILevelTypeNone = 0;
-    static const T::ParamLevelId GridFMILevelTypeGround = 1;
-    static const T::ParamLevelId GridFMILevelTypePressure = 2;
-    static const T::ParamLevelId GridFMILevelTypeHybrid = 3;
-    static const T::ParamLevelId GridFMILevelTypeHeight = 6;
-    static const T::ParamLevelId GridFMILevelTypeMeanSea = 7;
-    static const T::ParamLevelId GridFMILevelTypeEntireAtmosphere = 8;
-    static const T::ParamLevelId GridFMILevelTypeDepth = 10;
-
     class GridIterator
     {
      public:
@@ -317,7 +291,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     {
       dataStreamer = dS;
       producer = producerName;
-      paramLevelId = GridFMILevelTypeNone;
+      paramLevelId = GridFmiLevelTypeNone;
       relativeUV = false;
     }
 
@@ -342,7 +316,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     boost::posix_time::ptime originTime;      // Set if fixed (latest non-multifile or given) otime
     boost::posix_time::ptime gridOriginTime;  // otime of current grid (fixed or latest multifile)
-    T::ForecastNumber gridEnsemble;           // ensemble of current grid
+    T::ForecastType forecastType;
+    T::ForecastNumber forecastNumber;
     T::GeometryId geometryId;
     StringMapSet originTimeParams;
     std::map<std::string, std::set<T::ParamLevel>> originTimeLevels;
@@ -373,6 +348,13 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                  boost::posix_time::ptime &sTime,
                                  boost::posix_time::ptime &eTime);
   void setGridLevels(const Producer &producer, const Query &query);
+  void getOriginTimes(boost::posix_time::ptime oTime, std::vector<std::string> &originTimes);
+  void getParameterDetailsFromContentData(
+      const std::string &paramName,
+      boost::posix_time::ptime &oTime,
+      boost::posix_time::ptime &sTime,
+      boost::posix_time::ptime &eTime,
+      SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails);
   bool hasRequestedGridData(const Producer &producer,
                             Query &query,
                             boost::posix_time::ptime &oTime,

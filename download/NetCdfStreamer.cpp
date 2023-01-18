@@ -477,7 +477,7 @@ void NetCdfStreamer::addEnsembleDimension()
   {
     // Create dimension only if ensembe is applicable
 
-    if (itsGridMetaData.gridEnsemble < 0)
+    if (itsGridMetaData.forecastType < 0)
       return;
 
     auto ensembleVar =
@@ -486,7 +486,7 @@ void NetCdfStreamer::addEnsembleDimension()
 
     addAttribute(ensembleVar, "long_name", "Ensemble");
 
-    if (!ensembleVar->put(&itsGridMetaData.gridEnsemble, 1))
+    if (!ensembleVar->put(&itsGridMetaData.forecastType, 1))
       throw Fmi::Exception(BCP, "Failed to store ensemble");
   }
   catch (...)
@@ -555,22 +555,24 @@ void NetCdfStreamer::addLevelDimension()
 {
   try
   {
-    if (isSurfaceLevel(itsLevelType))
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+
+    if (isSurfaceLevel(itsLevelType, gridContent))
       return;
 
     string name, positive;
 
-    if (isPressureLevel(itsLevelType))
+    if (isPressureLevel(itsLevelType, gridContent))
     {
       name = "pressure";
       positive = "down";
     }
-    else if (isHybridLevel(itsLevelType))
+    else if (isHybridLevel(itsLevelType, gridContent))
     {
       name = "hybrid";
       positive = "up";
     }
-    else if (isHeightLevel(itsLevelType, 0))
+    else if (isHeightLevel(itsLevelType, 0, gridContent))
     {
       name = "height";
       positive = "up";

@@ -262,13 +262,15 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
     if (reqParams.source == "querydata")
       reqParams.dataSource = QueryData;
-    else if (reqParams.source == "grid")
-      reqParams.dataSource = Grid;
+    else if (reqParams.source == "gridmapping")
+      reqParams.dataSource = GridMapping;
+    else if (reqParams.source == "gridcontent")
+      reqParams.dataSource = GridContent;
     else
-      throw Fmi::Exception(
-          BCP, "Unknown source '" + reqParams.source + "', 'querydata' or 'grid' expected");
+      throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
+                             "', 'querydata', 'gridmapping' or 'gridcontent' expected");
 
-    if (reqParams.dataSource == Grid)
+    if (reqParams.dataSource != QueryData)
     {
       if (!gridEngine)
         throw Fmi::Exception(BCP, "Grid data is not available");
@@ -281,7 +283,17 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     string model = getRequestParam(req, config.defaultProducer(), "model", "");
     reqParams.producer = getRequestParam(req, config.defaultProducer(), "producer", "");
 
-    if (!reqParams.producer.empty())
+    if (reqParams.dataSource == GridContent)
+    {
+      // Common producer name is not used by data query, just setting some nonempty value.
+      // Name is later taken from 1'st radon parameter name to be used in output file name
+
+      if ((!model.empty()) || (!reqParams.producer.empty()))
+        throw Fmi::Exception(BCP, "Cannot specify producer with radon parameter names");
+
+      reqParams.producer = "gridcontent";
+    }
+    else if (!reqParams.producer.empty())
     {
       if ((!model.empty()) && (model != reqParams.producer))
         throw Fmi::Exception(BCP, "Cannot specify model and producer simultaneously");
@@ -289,16 +301,9 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else
       reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
 
-    const Producer &producer = config.getProducer(reqParams.producer, qEngine);
-
-    /*
-    TODO: no qEngine dependency with grid data
-
     const Producer &producer = (reqParams.dataSource == QueryData)
       ? config.getProducer(reqParams.producer, qEngine)
-      : config.getProducer(reqParams.producer, qEngine);
-//    : dummyProducer;
-    */
+      : dummyProducer;
 
     if (reqParams.producer.empty())
       throw Fmi::Exception(BCP, "No producer");
@@ -405,10 +410,15 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else if (reqParams.format == "GRIB2")
       reqParams.outputFormat = Grib2;
     else if (reqParams.format == "NETCDF")
+    {
+      if (reqParams.dataSource == GridContent)
+        throw Fmi::Exception(BCP, "Netcdf format not supported with grid content data");
+
       reqParams.outputFormat = NetCdf;
+    }
     else if (reqParams.format == "QD")
     {
-      if (reqParams.dataSource == Grid)
+      if (reqParams.dataSource != QueryData)
         throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
 
       reqParams.outputFormat = QD;
@@ -697,7 +707,9 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
           originTime = boost::posix_time::ptime(boost::date_time::neg_infin);
         else
           originTime = Fmi::TimeParser::parse(reqParams.originTime);
+
         q = qEngine.get(reqParams.producer, originTime);
+
         originTime = q->originTime();
       }
       else
@@ -706,7 +718,12 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
       }
     }
     else
-      ds->setMultiFile(producer.multiFile);
+    {
+      if (!reqParams.originTime.empty())
+        originTime = Fmi::TimeParser::parse(reqParams.originTime);
+
+      ds->setMultiFile(true);
+    }
 
     // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
     // timestep (60m --> data) defaults.
@@ -743,8 +760,14 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     // Set parameter and level iterators etc. to their start positions and load first available grid
 
     if (!ds->hasRequestedData(producer, query, originTime, startTime, endTime))
-      throw Fmi::Exception(
-          BCP, "initStreamer: No data available for producer '" + reqParams.producer + "'");
+    {
+      if (reqParams.dataSource != GridContent)
+        throw Fmi::Exception(BCP,
+                               "initStreamer: No data available for producer '" +
+                                   reqParams.producer + "'");
+      else
+        throw Fmi::Exception(BCP, "initStreamer: No data available");
+    }
 
     // Download file name
 
@@ -776,7 +799,7 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
 
     // Options
 
-    Query query(req, itsConfig, itsQEngine);
+    Query query(req);
 
     // Initialize streamer.
 

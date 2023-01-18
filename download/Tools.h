@@ -3,6 +3,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/optional.hpp>
 #include <engines/querydata/Q.h>
+#include <grid-files/grid/Typedefs.h>
 #include <ogr_spatialref.h>
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiPoint.h>
@@ -32,12 +33,39 @@ namespace Plugin
 {
 namespace Download
 {
-bool isSurfaceLevel(FmiLevelType levelType);
-bool isPressureLevel(FmiLevelType levelType);
-bool isHybridLevel(FmiLevelType levelType);
+/*
+  1;GROUND;Ground or water surface;
+  2;PRESSURE;Pressure level;
+  3;HYBRID;Hybrid level;
+  4;ALTITUDE;Altitude;
+  5;TOP;Top of atmosphere;
+  6;HEIGHT;Height above ground in meters;
+  7;MEANSEA;Mean sea level;
+  8;ENTATM;Entire atmosphere;
+  9;GROUND_DEPTH;Layer between two depths below land surface;
+ 10;DEPTH;Depth below some surface;
+ 11;PRESSURE_DELTA;Level at specified pressure difference from ground to level;
+ 12;MAXTHETAE;Level where maximum equivalent potential temperature is found;
+ 13;HEIGHT_LAYER;Layer between two metric heights above ground;
+ 14;DEPTH_LAYER;Layer between two depths below land surface;
+ 15;ISOTHERMAL;Isothermal level, temperature in 1/100 K;
+ 16;MAXWIND;Maximum wind level;
+*/
+
+static const T::ParamLevelId GridFmiLevelTypeNone = 0;
+static const T::ParamLevelId GridFmiLevelTypeGround = 1;
+static const T::ParamLevelId GridFmiLevelTypePressure = 2;
+static const T::ParamLevelId GridFmiLevelTypeHybrid = 3;
+static const T::ParamLevelId GridFmiLevelTypeHeight = 6;
+static const T::ParamLevelId GridFmiLevelTypeEntireAtmosphere = 8;
+static const T::ParamLevelId GridFmiLevelTypeDepth = 10;
+
+bool isSurfaceLevel(FmiLevelType levelType, bool gridContent = false);
+bool isPressureLevel(FmiLevelType levelType, bool gridContent = false);
+bool isHybridLevel(FmiLevelType levelType, bool gridContent = false);
 bool isHeightOrDepthLevel(FmiLevelType levelType);
-bool isHeightLevel(FmiLevelType levelType, int levelValue);
-bool isDepthLevel(FmiLevelType levelType, int levelValue);
+bool isHeightLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
+bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
 
 FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
                                   const std::string &producer,
@@ -50,6 +78,33 @@ double getProjParam(const OGRSpatialReference &srs,
                     const char *param,
                     bool ignoreErr = false,
                     double defaultValue = 0.0);
+
+void parseRadonParameterName(const std::string &param, std::vector<std::string> &paramParts);
+
+std::string getProducerName(
+    const std::string &param,
+    const std::vector<std::string> &paramParts,
+    boost::optional<std::string> defaultValue = boost::optional<std::string>());
+T::GeometryId getGeometryId(
+    const std::string &param,
+    const std::vector<std::string> &paramParts,
+    boost::optional<T::GeometryId> defaultValue = boost::optional<T::GeometryId>());
+T::ParamLevelId getParamLevelId(
+    const std::string &param,
+    const std::vector<std::string> &paramParts,
+    boost::optional<T::ParamLevelId> defaultValue = boost::optional<T::ParamLevelId>());
+T::ParamLevel getParamLevel(
+    const std::string &param,
+    const std::vector<std::string> &paramParts,
+    boost::optional<T::ParamLevel> defaultValue = boost::optional<T::ParamLevel>());
+T::ForecastType getForecastType(
+    const std::string &param,
+    const std::vector<std::string> &paramParts,
+    boost::optional<T::ForecastType> defaultValue = boost::optional<T::ForecastType>());
+T::ForecastNumber getForecastNumber(
+    const std::string &param,
+    const std::vector<std::string> &paramParts,
+    boost::optional<T::ForecastNumber> defaultValue = boost::optional<T::ForecastNumber>());
 
 // ----------------------------------------------------------------------
 /*!
