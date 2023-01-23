@@ -120,10 +120,14 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
   {
     // Get the option string
 
+    string source = Spine::optional_string(theReq.getParameter("source"), "");
     string opt = Spine::optional_string(theReq.getParameter("level"), "");
 
     if (!opt.empty())
     {
+      if (source == "gridcontent")
+        throw Fmi::Exception(BCP, "Cannot specify level option with grid content data");
+
       levels.insert(Fmi::stoi(opt));
     }
 
@@ -133,6 +137,9 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
 
     if (!opt.empty())
     {
+      if (source == "gridcontent")
+        throw Fmi::Exception(BCP, "Cannot specify levels option with grid content data");
+
       vector<string> parts;
       boost::algorithm::split(parts, opt, boost::algorithm::is_any_of(","));
       BOOST_FOREACH (const string& tmp, parts)

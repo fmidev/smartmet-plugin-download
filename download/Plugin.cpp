@@ -289,7 +289,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       // Name is later taken from 1'st radon parameter name to be used in output file name
 
       if ((!model.empty()) || (!reqParams.producer.empty()))
-        throw Fmi::Exception(BCP, "Cannot specify producer with radon parameter names");
+        throw Fmi::Exception(BCP, "Cannot specify producer option with grid content data");
 
       reqParams.producer = "gridcontent";
     }
