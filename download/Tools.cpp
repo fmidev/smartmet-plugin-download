@@ -208,7 +208,7 @@ void parseRadonParameterName(const string &param, vector<string> &paramParts)
   paramParts.clear();
 
   boost::algorithm::split(parts, param, boost::algorithm::is_any_of(":"));
-  if (parts.size() != 7)
+  if ((parts.size() != 6) && (parts.size() != 7))
     throw Fmi::Exception::Trace(BCP, "Invalid radon parameter name '" + param + "'");
 
   size_t n = 0;
@@ -216,12 +216,18 @@ void parseRadonParameterName(const string &param, vector<string> &paramParts)
   {
     string s = boost::trim_copy(part);
 
-    if (s.empty())
+    if ((n == 6) && (s.empty() || (s == "-1")))
+    {
+      // Forecast number can be missing or have value -1
+
+      ;
+    }
+    else if (s.empty())
       throw Fmi::Exception::Trace(
           BCP, string("Missing '") + partNames[n] + "' in radon parameter name '" + param + "'");
-    else if ((n > 1) && (! s.empty()) && (strspn(s.c_str(), "1234567890") != s.length()))
+    else if ((n > 1) && (strspn(s.c_str(), "1234567890") != s.length()))
       throw Fmi::Exception::Trace(
-          BCP, string("Nonnumeric '") + partNames[n] + "' in radon parameter name '" + param + "'");
+          BCP, string("Invalid '") + partNames[n] + "' in radon parameter name '" + param + "'");
 
     paramParts.push_back(s);
     n++;

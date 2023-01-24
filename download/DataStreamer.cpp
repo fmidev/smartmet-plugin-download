@@ -1022,7 +1022,7 @@ void DataStreamer::getParameterDetailsFromContentData(
     T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
     T::ParamLevel level = getParamLevel(paramName, paramParts);
     T::ForecastType forecastType = getForecastType(paramName, paramParts);
-    T::ForecastNumber forecastNumber = getForecastNumber(paramName, paramParts);
+    T::ForecastNumber forecastNumber = getForecastNumber(paramName, paramParts, -1);
 
     typedef map<T::GeometryId, SmartMet::Engine::Grid::ParameterDetails_vec> GeomDetails;
     typedef map<T::ParamLevel, GeomDetails> LevelDetails;
@@ -4141,7 +4141,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     parseRadonParameterName(itsParamIterator->name(), paramParts);
 
     queryParam.mForecastType = getForecastType(itsParamIterator->name(), paramParts);
-    queryParam.mForecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);
+    queryParam.mForecastNumber = getForecastNumber(itsParamIterator->name(), paramParts, -1);
     queryParam.mGeometryId = getGeometryId(itsParamIterator->name(), paramParts);
   }
   else
