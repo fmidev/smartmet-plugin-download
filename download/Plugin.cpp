@@ -759,7 +759,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
       if (!reqParams.originTime.empty())
         originTime = Fmi::TimeParser::parse(reqParams.originTime);
 
-      ds->setMultiFile(true);
+      ds->setMultiFile(false); // TODO: always ?
     }
 
     // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and

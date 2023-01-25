@@ -1680,7 +1680,7 @@ void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
       // Set geometry
       //
       setGridGeometryToGrib(gridQuery);
-      itsMetaFlag = false;
+      itsMetaFlag = (itsReqParams.dataSource != QueryData); // TODO: only if native grids differ ?
     }
 
     // Build and get grib message
