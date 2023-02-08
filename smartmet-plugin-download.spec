@@ -25,15 +25,15 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.1.16
+BuildRequires: smartmet-library-spine-devel >= 23.2.8
 BuildRequires: smartmet-library-macgyver-devel >= 22.12.16
-BuildRequires: smartmet-library-timeseries-devel >= 22.10.25
+BuildRequires: smartmet-library-timeseries-devel >= 23.1.31
 BuildRequires: smartmet-library-newbase-devel >= 22.11.14
 BuildRequires: smartmet-library-grid-content-devel >= 23.1.19
-BuildRequires: smartmet-library-grid-files-devel >= 23.1.19
+BuildRequires: smartmet-library-grid-files-devel >= 23.1.24
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 22.12.15
-BuildRequires: smartmet-engine-geonames-devel >= 22.12.21
+BuildRequires: smartmet-engine-geonames-devel >= 23.1.18
 BuildRequires: smartmet-engine-grid-devel >= 23.1.19
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -42,11 +42,11 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 22.12.16
-Requires: smartmet-library-timeseries >= 22.10.25
-Requires: smartmet-library-spine >= 23.1.16
+Requires: smartmet-library-timeseries >= 23.1.31
+Requires: smartmet-library-spine >= 23.2.8
 Requires: smartmet-library-newbase >= 22.11.14
 Requires: smartmet-engine-querydata >= 22.12.15
-Requires: smartmet-server >= 23.1.10
+Requires: smartmet-server >= 23.2.1
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -61,14 +61,14 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 22.12.21
+#TestRequires: smartmet-engine-geonames >= 23.1.18
 #TestRequires: smartmet-engine-grid >= 23.1.19
 #TestRequires: smartmet-engine-querydata >= 22.12.15
 #TestRequires: smartmet-utils-devel >= 23.1.19
-#TestRequires: smartmet-library-spine-plugin-test >= 23.1.16
+#TestRequires: smartmet-library-spine-plugin-test >= 23.2.8
 #TestRequires: smartmet-library-newbase-devel >= 22.11.14
-#TestRequires: smartmet-qdtools >= 23.1.5
-#TestRequires: smartmet-test-data >= 20.12.1
+#TestRequires: smartmet-qdtools >= 23.2.1
+#TestRequires: smartmet-test-data >= 23.2.2
 #TestRequires: smartmet-test-db >= 22.4.14
 #TestRequires: smartmet-engine-grid-test >= 23.1.19
 #TestRequires: wgrib

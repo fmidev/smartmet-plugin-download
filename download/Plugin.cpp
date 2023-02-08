@@ -27,6 +27,7 @@
 #include <macgyver/TimeZoneFactory.h>
 #include <newbase/NFmiQueryData.h>
 #include <spine/Convenience.h>
+#include <spine/HostInfo.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMet.h>
 #include <spine/Table.h>
@@ -856,6 +857,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", theRequest.getURI());
       exception.addParameter("ClientIP", theRequest.getClientIP());
+      exception.addParameter("ClientIP", Spine::HostInfo::getHostName(theRequest.getClientIP()));
       exception.printError();
 
       if (isdebug)
