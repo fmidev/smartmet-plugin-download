@@ -857,7 +857,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", theRequest.getURI());
       exception.addParameter("ClientIP", theRequest.getClientIP());
-      exception.addParameter("ClientIP", Spine::HostInfo::getHostName(theRequest.getClientIP()));
+      exception.addParameter("HostName", Spine::HostInfo::getHostName(theRequest.getClientIP()));
       exception.printError();
 
       if (isdebug)
