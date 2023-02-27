@@ -20,14 +20,13 @@ namespace Download
  */
 // ----------------------------------------------------------------------
 
-bool isSurfaceLevel(FmiLevelType levelType, bool gridContent)
+bool isGroundLevel(FmiLevelType levelType)
 {
-  if (gridContent)
-    return (
-            (levelType == GridFmiLevelTypeGround) ||
-            (levelType == GridFmiLevelTypeEntireAtmosphere)
-           );
+  return (levelType == GridFmiLevelTypeGround);
+}
 
+bool isSurfaceLevel(FmiLevelType levelType)
+{
   return ((levelType == kFmiGroundSurface) || (levelType == kFmiAnyLevelType));
 }
 
@@ -58,6 +57,11 @@ bool isHeightLevel(FmiLevelType levelType, int levelValue, bool gridContent)
     return (levelType == GridFmiLevelTypeHeight);
 
   return ((levelType == kFmiHeight) && (levelValue >= 0));
+}
+
+bool isEntireAtmosphereLevel(FmiLevelType levelType)
+{
+  return (levelType == GridFmiLevelTypeEntireAtmosphere);
 }
 
 bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent)
@@ -187,12 +191,24 @@ bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Check for ensemble forecast
+ *
+ */
+// ----------------------------------------------------------------------
+
+bool isEnsembleForecast(T::ForecastType forecastType)
+{
+  return ((forecastType == 3) || (forecastType == 4));
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Parse radon parameter name parts
  *
  */
 // ----------------------------------------------------------------------
 
-void parseRadonParameterName(const string &param, vector<string> &paramParts)
+void parseRadonParameterName(const string &param, vector<string> &paramParts, bool expanding)
 {
   vector<string> parts;
   const char *partNames[] = {
@@ -211,21 +227,34 @@ void parseRadonParameterName(const string &param, vector<string> &paramParts)
   if ((parts.size() != 6) && (parts.size() != 7))
     throw Fmi::Exception::Trace(BCP, "Invalid radon parameter name '" + param + "'");
 
+  // Returned vector is later trusted to have entry ([6]) for forecastNumber too, even through
+  // it might be missing in parameter name
+
+  if (parts.size() == 6)
+    parts.push_back("");
+
   size_t n = 0;
   for (auto const &part : parts)
   {
     string s = boost::trim_copy(part);
 
-    if ((n == 6) && (s.empty() || (s == "-1")))
+    // Forecastnumber -1 does not work (to query all ensemble members) when fetching
+    // content records, and missing (-1) value generally means "any value" for data query;
+    // don't allow missing forecastnumber for ensemble data
+
+    if (
+        (n == 6) && (s.empty() || (s == "-1")) &&
+        !isEnsembleForecast(getForecastType(param, paramParts))
+       )
     {
       // Forecast number can be missing or have value -1
 
-      ;
+      s = "-1";
     }
     else if (s.empty())
       throw Fmi::Exception::Trace(
           BCP, string("Missing '") + partNames[n] + "' in radon parameter name '" + param + "'");
-    else if ((n > 1) && (strspn(s.c_str(), "1234567890") != s.length()))
+    else if ((n > 1) && (!expanding) && (strspn(s.c_str(), "1234567890") != s.length()))
       throw Fmi::Exception::Trace(
           BCP, string("Invalid '") + partNames[n] + "' in radon parameter name '" + param + "'");
 

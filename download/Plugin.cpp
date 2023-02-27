@@ -411,12 +411,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else if (reqParams.format == "GRIB2")
       reqParams.outputFormat = Grib2;
     else if (reqParams.format == "NETCDF")
-    {
-      if (reqParams.dataSource == GridContent)
-        throw Fmi::Exception(BCP, "Netcdf format not supported with grid content data");
-
       reqParams.outputFormat = NetCdf;
-    }
     else if (reqParams.format == "QD")
     {
       if (reqParams.dataSource != QueryData)
@@ -505,6 +500,7 @@ static bool getScaleFactorAndOffset(signed long id,
           *offset = 0;
 
           return (
+                  (outputFormat == NetCdf) ||
                   ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
                   ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
                  );
@@ -562,6 +558,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     vector<string> paramParts;
     std::string paramName;
     bool gridContent = (dataSource == GridContent);
+    int geometry = -1;
 
     BOOST_FOREACH (Spine::Parameter param, reqParams)
     {
@@ -576,8 +573,22 @@ static bool getParamConfig(const ParamChangeTable &pTable,
 
         if (gridContent)
         {
+          // All parameters must have the same geometry
+
           parseRadonParameterName(param.name(), paramParts);
           paramName = paramParts[0];
+
+          auto geom = getGeometryId(paramName, paramParts);
+
+          if (geometry >= 0)
+          {
+            if (geom != geometry)
+              throw Fmi::Exception(BCP,
+                                   "All parameters must have the same geometryid " +
+                                   Fmi::to_string(geometry) + ": " + param.name());
+          }
+          else
+            geometry = geom;
         }
 
         ok = getScaleFactorAndOffset(lid, paramName, outputFormat, &scale, &offset, pTable);
@@ -837,7 +848,7 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
 
     // Options
 
-    Query query(req);
+    Query query(req, itsGridEngine);
 
     // Initialize streamer.
 

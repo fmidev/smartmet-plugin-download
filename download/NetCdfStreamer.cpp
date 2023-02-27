@@ -466,6 +466,117 @@ string getPeriodName(long periodLengthInMinutes)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get ensemble dimension name
+ *
+ */
+// ----------------------------------------------------------------------
+
+string NetCdfStreamer::getEnsembleDimensionName(
+    T::ForecastType forecastType, T::ForecastNumber forecastNumber) const
+{
+  try
+  {
+    if (!isEnsembleForecast(forecastType))
+      return "";
+
+    return "ensemble_" + Fmi::to_string(forecastType) + "_" + Fmi::to_string(forecastNumber);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get ensemble dimension by ensemble type and number
+ *
+ */
+// ----------------------------------------------------------------------
+
+boost::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
+    T::ForecastType forecastType, T::ForecastNumber forecastNumber,
+    string &ensembleDimensionName) const
+{
+  try
+  {
+    ensembleDimensionName = getEnsembleDimensionName(forecastType, forecastNumber);
+    if (ensembleDimensionName.empty())
+      return boost::shared_ptr<NcDim>();
+
+    return boost::shared_ptr<NcDim>(itsFile->get_dim(ensembleDimensionName.c_str()), dimDeleter);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+boost::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
+    T::ForecastType forecastType, T::ForecastNumber forecastNumber) const
+{
+  try
+  {
+    string ensembleDimensionName;
+    return getEnsembleDimension(forecastType, forecastNumber, ensembleDimensionName);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add ensemble dimensions
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::addEnsembleDimensions()
+{
+  try
+  {
+    vector<string> paramParts;
+    string ensembleDimName;
+
+    for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
+    {
+      // Create ensemble dimension when applicable
+      //
+      // Take forecast type/number from radon parameter names, e.g. T-K:MEPS:1093:2:92500:3:3
+
+      parseRadonParameterName(it->name(), paramParts);
+      auto forecastType = getForecastType(it->name(), paramParts);
+      auto forecastNumber = getForecastNumber(it->name(), paramParts);
+
+      // Ensemble dimension might already be created or is not created at all for given parameter
+
+      if (
+          getEnsembleDimension(forecastType, forecastNumber, ensembleDimName) ||
+          ensembleDimName.empty()
+         )
+        continue;
+
+      auto ensembleVar =
+          addCoordVariable(ensembleDimName, 1, ncShort, "ensemble", "", "Ensemble", itsEnsembleDim);
+//        addCoordVariable(ensembleDimName, 1, ncShort, "realization", "", "E", itsEnsembleDim);
+
+      addAttribute(ensembleVar, "long_name", "Ensemble member");
+
+      short forecastNumberDimValue = forecastNumber;
+      if (!ensembleVar->put(&forecastNumberDimValue, 1))
+        throw Fmi::Exception(BCP, "Failed to store ensemble");
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Add ensemble dimension
  *
  */
@@ -475,18 +586,25 @@ void NetCdfStreamer::addEnsembleDimension()
 {
   try
   {
-    // Create dimension only if ensembe is applicable
+    if (itsReqParams.dataSource == GridContent)
+    {
+      addEnsembleDimensions();
+      return;
+    }
+
+    // Create dimension if ensemble is applicable
 
     if (itsGridMetaData.forecastType < 0)
       return;
 
     auto ensembleVar =
         addCoordVariable("ensemble", 1, ncShort, "ensemble", "", "Ensemble", itsEnsembleDim);
-    //      addCoordVariable("ensemble", 1, ncShort, "realization", "", "E", itsEnsembleDim);
+//      addCoordVariable("ensemble", 1, ncShort, "realization", "", "E", itsEnsembleDim);
 
-    addAttribute(ensembleVar, "long_name", "Ensemble");
+    addAttribute(ensembleVar, "long_name", "Ensemble member");
 
-    if (!ensembleVar->put(&itsGridMetaData.forecastType, 1))
+    short forecastNumberDimValue = itsGridMetaData.forecastNumber;
+    if (!ensembleVar->put(&forecastNumberDimValue, 1))
       throw Fmi::Exception(BCP, "Failed to store ensemble");
   }
   catch (...)
@@ -546,6 +664,174 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get level type name, direction of positive values and unit
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::getLevelTypeAttributes(FmiLevelType levelType,
+                                            string &name,
+                                            string &positive,
+                                            string &unit) const
+{
+  try
+  {
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+
+    unit.clear();
+
+    if (isPressureLevel(levelType, gridContent))
+    {
+      name = "pressure";
+      positive = "down";
+      unit = "Pa";
+    }
+    else if (isHybridLevel(levelType, gridContent))
+    {
+      name = "hybrid";
+      positive = "up";
+    }
+    else if (isHeightLevel(levelType, 0, gridContent))
+    {
+      name = "height";
+      positive = "up";
+      unit = "m";
+    }
+    else if (isDepthLevel(levelType, 0, gridContent))
+    {
+      name = "depth";
+      unit = "m";
+
+      if ((! gridContent) && (levelType != itsNativeLevelType))
+        // kFmiHeight with negative levels
+        //
+        positive = "up";
+      else
+        positive = (itsPositiveLevels ? "down" : "up");
+    }
+    else
+      throw Fmi::Exception(
+          BCP, "Unrecognized level type " + boost::lexical_cast<string>(levelType));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get level dimension name
+ *
+ */
+// ----------------------------------------------------------------------
+
+string NetCdfStreamer::getLevelDimensionName(const string &levelTypeName, int level) const
+{
+  try
+  {
+    return levelTypeName + "_" + Fmi::to_string(level);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get level dimension by level type and number
+ *
+ */
+// ----------------------------------------------------------------------
+
+boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(FmiLevelType levelType,
+                                                           int level,
+                                                           string &levelTypeName,
+                                                           string &levelDirectionPositive,
+                                                           string &unit) const
+{
+  try
+  {
+    getLevelTypeAttributes(levelType, levelTypeName, levelDirectionPositive, unit);
+
+    string levelDimName = getLevelDimensionName(levelTypeName, level);
+    return boost::shared_ptr<NcDim>(itsFile->get_dim(levelDimName.c_str()), dimDeleter);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(FmiLevelType levelType, int level) const
+{
+  try
+  {
+    string levelTypeName, levelDirectionPositive, unit;
+    return getLevelDimension(levelType, level, levelTypeName, levelDirectionPositive, unit);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add level dimensions
+ *
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::addLevelDimensions()
+{
+  try
+  {
+    // Add level dimension for each leveltype's unique level. Level dimension is not used
+    // for ground and entire atmospere data.
+    //
+    // Take level types/numbers from radon parameter names, e.g. T-K:MEPS:1093:2:92500:4:0
+
+    vector<string> paramParts;
+    string levelTypeName, levelDirectionPositive, varName, unit;
+
+    for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
+    {
+      parseRadonParameterName(it->name(), paramParts);
+      FmiLevelType levelType = (FmiLevelType) getParamLevelId(it->name(), paramParts);
+
+      if (!(
+            isPressureLevel(levelType, true) || isHybridLevel(levelType, true) ||
+            isHeightLevel(levelType, true) || isDepthLevel(levelType, true)
+         ))
+        continue;
+
+      int level = getParamLevel(it->name(), paramParts);
+
+      if (getLevelDimension(levelType, level, levelTypeName, levelDirectionPositive, unit))
+        continue;
+
+      varName = levelTypeName + "_" + Fmi::to_string(level);
+      auto levelVar =
+          addCoordVariable(varName, 1, ncFloat, "level", unit, "Z", itsLevelDim);
+
+      addAttribute(levelVar, "long_name", (levelTypeName + " level").c_str());
+      addAttribute(levelVar, "positive", levelDirectionPositive.c_str());
+
+      float levelDimValue = level;
+      if (!levelVar->put(&levelDimValue, 1))
+        throw Fmi::Exception(BCP, "Failed to store level");
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Add level dimension
  *
  */
@@ -555,42 +841,20 @@ void NetCdfStreamer::addLevelDimension()
 {
   try
   {
-    bool gridContent = (itsReqParams.dataSource == GridContent);
+    if (itsReqParams.dataSource == GridContent)
+    {
+      addLevelDimensions();
+      return;
+    }
 
-    if (isSurfaceLevel(itsLevelType, gridContent))
+    if (isSurfaceLevel(itsLevelType))
       return;
 
-    string name, positive;
-
-    if (isPressureLevel(itsLevelType, gridContent))
-    {
-      name = "pressure";
-      positive = "down";
-    }
-    else if (isHybridLevel(itsLevelType, gridContent))
-    {
-      name = "hybrid";
-      positive = "up";
-    }
-    else if (isHeightLevel(itsLevelType, 0, gridContent))
-    {
-      name = "height";
-      positive = "up";
-    }
-    else
-    {
-      name = "depth";
-
-      if (itsLevelType != itsNativeLevelType)
-        // kFmiHeight with negative levels
-        //
-        positive = "up";
-      else
-        positive = (itsPositiveLevels ? "down" : "up");
-    }
+    string name, positive, unit;
+    getLevelTypeAttributes(itsLevelType, name, positive, unit);
 
     auto levelVar =
-        addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", "", "Z", itsLevelDim);
+        addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", unit, "Z", itsLevelDim);
 
     addAttribute(levelVar, "long_name", (string(levelVar->name()) + " level").c_str());
     addAttribute(levelVar, "positive", positive.c_str());
@@ -1404,42 +1668,94 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 {
   try
   {
+    const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
     NcDim &yOrLat = (itsYDim ? *itsYDim : *itsLatDim);
     NcDim &xOrLon = (itsYDim ? *itsXDim : *itsLonDim);
-
-    NcDim *dimensions[] = {
-        itsEnsembleDim ? &(*itsEnsembleDim) : nullptr,  // Ensemble
-        nullptr,                                        // Time dimension
-        itsLevelDim ? &(*itsLevelDim) : &yOrLat,        // Level or Y/lat
-        itsLevelDim ? &yOrLat : &xOrLon,                // Y/lat or X/lon dimension
-        itsLevelDim ? &xOrLon : nullptr                 // X dimension or n/a
-    };
-
     boost::shared_ptr<NcDim> tDim;
+    bool gridContent = (itsReqParams.dataSource == GridContent);
 
     for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
     {
-      NFmiParam theParam(it->number());
-      const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
-      string paramName, stdName, longName, unit, timeDimName = "time";
-      size_t i, j;
+      // Note: when querying with radon parameter names (when gridContent is true) itsEnsembleDim
+      // and/or itsLevelDim is set if any on the parameters has ensemble and/or level dimension
+      // (created by addEnsembleDimensions() and addLevelDimensions()); ensemble and/or level
+      // dimension may not exist for given parameter.
+      //
+      // With non-gridContent query all parameters have or have not ensemble and/or level dimension
+      // as indicated by itsEnsembleDim and itsLevelDim; ensemble is not used with querydata source
+      // (source = QueryData) but can exist when querying grid engine data using grid
+      // mappings/details (source = GridMapping).
 
-      dimensions[1] = &(*itsTimeDim);
+      auto ensembleDim = itsEnsembleDim;
+      auto levelDim = itsLevelDim;
+
+      NFmiParam theParam(it->number());
+      string paramName, radonParam, stdName, longName, unit, timeDimName = "time";
+      size_t i, j;
 
       signed long usedParId = theParam.GetIdent();
 
-      for (i = j = 0; i < pTable.size(); ++i)
-        if (usedParId == pTable[i].itsWantedParam.GetIdent())
-        {
-          if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
+      if (gridContent)
+      {
+        // Get param config index for the parameter
+
+        paramName = it->name();
+
+        vector<string> paramParts;
+        parseRadonParameterName(paramName, paramParts);
+        radonParam = paramParts.front();
+
+        for (i = j = 0; (i < pTable.size()); ++i)
+          if (pTable[i].itsRadonName == radonParam)
             break;
-          else if (j == 0)
-            j = i + 1;
-          else
-            throw Fmi::Exception(BCP,
-                                 "Missing gridrelative configuration for parameter " +
-                                     boost::lexical_cast<string>(usedParId));
+
+        if (i >= pTable.size())
+          throw Fmi::Exception(
+              BCP, "Internal error: No netcdf configuration for parameter " + radonParam);
+
+        // Get ensemble dimension
+
+        if (itsEnsembleDim)
+        {
+          auto forecastType = getForecastType(paramName, paramParts);
+          auto forecastNumber = getForecastNumber(paramName, paramParts);
+
+          ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
         }
+
+        // Get level dimension
+
+        if (itsLevelDim)
+        {
+          FmiLevelType levelType = (FmiLevelType) getParamLevelId(paramName, paramParts);
+          int level = (int) getParamLevel(paramName, paramParts);
+
+          levelDim = getLevelDimension(levelType, level);
+        }
+      }
+      else
+      {
+        for (i = j = 0; i < pTable.size(); ++i)
+          if (usedParId == pTable[i].itsWantedParam.GetIdent())
+          {
+            if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
+              break;
+            else if (j == 0)
+              j = i + 1;
+            else
+              throw Fmi::Exception(BCP,
+                                   "Missing gridrelative configuration for parameter " +
+                                       boost::lexical_cast<string>(usedParId));
+          }
+      }
+
+      NcDim *dimensions[] = {
+          ensembleDim ? &(*ensembleDim) : nullptr,  // Ensemble
+          &(*itsTimeDim),                           // Time dimension
+          levelDim ? &(*levelDim) : &yOrLat,        // Level or Y/lat
+          levelDim ? &yOrLat : &xOrLon,             // Y/lat or X/lon dimension
+          levelDim ? &xOrLon : nullptr              // X dimension or n/a
+      };
 
       if ((i >= pTable.size()) && (j > 0))
         i = j - 1;
@@ -1468,14 +1784,14 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 
       NcDim **dim = dimensions;
 
-      if (!itsEnsembleDim)
+      if (!ensembleDim)
         dim++;
 
       NcDim *dim1 = *(dim++);
       NcDim *dim2 = *(dim++);
       NcDim *dim3 = *(dim++);
       NcDim *dim4 = *(dim++);
-      NcDim *dim5 = (itsEnsembleDim ? *dim : nullptr);
+      NcDim *dim5 = (ensembleDim ? *dim : nullptr);
 
       auto dataVar = addVariable(paramName + "_" + boost::lexical_cast<string>(usedParId),
                                  ncFloat,
@@ -1561,6 +1877,7 @@ void NetCdfStreamer::storeParamValues()
     else
     {
       auto dataValues = itsGridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
+      bool gridContent = (itsReqParams.dataSource == GridContent);
 
       for (y = y0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, i++)
@@ -1569,7 +1886,12 @@ void NetCdfStreamer::storeParamValues()
           auto value = dataValues[c];
 
           if (value != ParamValueMissing)
-            values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
+          {
+            if (gridContent)
+              values[i] = value;
+            else
+              values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
+          }
           else
             values[i] = gribMissingValue;
         }
@@ -1593,33 +1915,73 @@ void NetCdfStreamer::storeParamValues()
           throw Fmi::Exception(BCP, "storeParamValues: internal: No more netcdf variables");
       }
 
+    // Note: when querying with radon parameter names (when gridContent is true) itsEnsembleDim
+    // and/or itsLevelDim is set if any on the parameters has ensemble and/or level dimension
+    // (created by addEnsembleDimensions() and addLevelDimensions()); ensemble and/or level
+    // dimension may not exist for given parameter.
+    //
+    // With non-gridContent query all parameters have or have not ensemble and/or level dimension
+    // as indicated by itsEnsembleDim and itsLevelDim; ensemble is not used with querydata source
+    // (source = QueryData) but can exist when querying grid engine data using grid
+    // mappings/details (source = GridMapping).
+
+    auto ensembleDim = itsEnsembleDim;
+    auto levelDim = itsLevelDim;
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+
+    if (gridContent)
+    {
+      vector<string> paramParts;
+      parseRadonParameterName(itsParamIterator->name(), paramParts);
+
+      if (itsEnsembleDim)
+      {
+        // Get ensemble dimension
+
+        auto forecastType = getForecastType(itsParamIterator->name(), paramParts);
+        auto forecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);
+
+        ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
+      }
+
+      if (itsLevelDim)
+      {
+        // Get level dimension
+
+        FmiLevelType levelType = (FmiLevelType) getParamLevelId(itsParamIterator->name(), paramParts);
+        int level = getParamLevel(itsParamIterator->name(), paramParts);
+
+        levelDim = getLevelDimension(levelType, level);
+      }
+    }
+
     long nX = (long)itsNX, nY = (long)itsNY;
     long edgeLengths[] = {
         1,                      // Ensemble dimension, edge length 1
         1,                      // Time dimension, edge length 1
-        itsLevelDim ? 1 : nY,   // Level (edge length 1) or Y dimension
-        itsLevelDim ? nY : nX,  // Y or X dimension
-        itsLevelDim ? nX : -1   // X dimension or n/a
+        levelDim ? 1 : nY,      // Level (edge length 1) or Y dimension
+        levelDim ? nY : nX,     // Y or X dimension
+        levelDim ? nX : -1      // X dimension or n/a
     };
     long *edge = edgeLengths;
-    uint nEdges = (itsLevelDim ? 5 : 4);
+    uint nEdges = (levelDim ? 5 : 4);
 
-    if (!itsEnsembleDim)
+    if (!ensembleDim)
     {
-      if (!(*itsVarIterator)->set_cur(timeIndex, itsLevelDim ? itsLevelIndex : -1))
+      if (!(*itsVarIterator)->set_cur(timeIndex, levelDim ? itsLevelIndex : -1))
         throw Fmi::Exception(BCP, "Failed to set active netcdf time/level");
 
       edge++;
       nEdges--;
     }
-    else if (!(*itsVarIterator)->set_cur(0, timeIndex, itsLevelDim ? itsLevelIndex : -1))
+    else if (!(*itsVarIterator)->set_cur(0, timeIndex, levelDim ? itsLevelIndex : -1))
       throw Fmi::Exception(BCP, "Failed to set active netcdf ensemble/time/level");
 
     long edge1 = *(edge++);
     long edge2 = *(edge++);
     long edge3 = *(edge++);
     long edge4 = *(edge++);
-    long edge5 = (itsEnsembleDim ? *edge : -1);
+    long edge5 = (ensembleDim ? *edge : -1);
 
     // It seems there can be at max 1 missing (-1) edge at the end of parameter edges
     //

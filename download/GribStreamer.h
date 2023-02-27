@@ -64,6 +64,8 @@ class GribStreamer : public DataStreamer
   void setLambertAzimuthalEqualAreaGeometryToGrib() const;
   void setNamedSettingsToGrib() const;
   void setGeometryToGrib(const NFmiArea* area, bool relative_uv);
+  std::string gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelType, NFmiLevel *cfgLevel,
+                                    int &level) const;
   void setLevelAndParameterToGrib(int level,
                                   const NFmiParam& theParam,
                                   const std::string& paramName,

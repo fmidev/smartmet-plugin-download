@@ -953,6 +953,52 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
+#define GroundLevel "groundOrWaterSurface"
+#define PressureLevel "isobaricInhPa"
+#define HybridLevel "hybrid"
+#define EntireAtmosphere "entireAtmosphere"
+#define HeightLevel "heightAboveSea"
+#define HeightAboveGroundLevel "heightAboveGround"
+#define DepthLevel "depthBelowSea"
+
+string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelType,
+                                           NFmiLevel *cfgLevel, int &level) const
+{
+  if (gridContent)
+  {
+    if (isGroundLevel(levelType))
+      return GroundLevel;
+    else if (isEntireAtmosphereLevel(levelType))
+      return EntireAtmosphere;
+  }
+  else
+  {
+    if (isSurfaceLevel(levelType))
+    {
+      if (cfgLevel)
+      {
+        level = boost::numeric_cast<int>(cfgLevel->LevelValue());
+        return string(cfgLevel->GetName());
+      }
+
+      level = 0;
+      return EntireAtmosphere;
+    }
+  }
+
+  if (isPressureLevel(levelType, gridContent))
+    return PressureLevel;
+  else if (isHybridLevel(levelType, gridContent))
+    return HybridLevel;
+  else if (isHeightLevel(levelType, level, gridContent))
+    return HeightLevel;
+  else if (isDepthLevel(levelType, level, gridContent))
+    return DepthLevel;
+
+  throw Fmi::Exception(
+      BCP, "Unrecognized level type " + boost::lexical_cast<string>(levelType));
+}
+
 void GribStreamer::setLevelAndParameterToGrib(int level,
                                               const NFmiParam &theParam,
                                               const string &paramName,
@@ -963,12 +1009,6 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
   //
   // Using hardcoded level types for pressure, hybrid and height/depth data and for
   // surface data if level configuration is missing.
-
-#define PressureLevel "isobaricInhPa"
-#define HybridLevel "hybrid"
-#define EntireAtmosphere "entireAtmosphere"
-#define HeightLevel "heightAboveSea"
-#define DepthLevel "depthBelowSea"
 
   try
   {
@@ -982,23 +1022,13 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
     if (gridContent)
     {
-      // Take parameter name (e.g. T-K) from radon parameter name T-K:MEPS:1093:...
+      // Take parameter name and level type from radon parameter name T-K:MEPS:1093:6,...
 
       vector<string> paramParts;
       parseRadonParameterName(paramName, paramParts);
       radonParam = paramParts.front();
 
-      // Level type can vary for each parameter. Could take the type from radon parameter name too
-      //
-      // TODO: Use the numeric level type (key ?) to set type to output grib instead of type name ?
-
-      auto it = itsGridMetaData.paramLevelIds.find(paramName);
-
-      if (it == itsGridMetaData.paramLevelIds.end())
-        throw Fmi::Exception(
-            BCP, "Internal error: Parameter level type not in metadata: " + paramName);
-
-      levelType = FmiLevelType(it->second);
+      levelType = FmiLevelType(getParamLevelId(paramName, paramParts));
     }
     else
       levelType = itsLevelType;
@@ -1045,37 +1075,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
       templateNumber = pTable[i].itsTemplateNumber;
     }
 
-    if (isSurfaceLevel(levelType, gridContent))
-    {
-      if (cfgLevel)
-      {
-        levelTypeStr = cfgLevel->GetName();
-
-        if (!gridContent)
-          level = boost::numeric_cast<int>(cfgLevel->LevelValue());
-      }
-      else
-      {
-        // TODO: Ground level type name can be set above for non gridcontent query, but
-        //       should check/set it for gridcontent too (cfgLevel is not set for it)
-        //
-        levelTypeStr = EntireAtmosphere;
-
-        if (!gridContent)
-          level = 0;
-      }
-    }
-    else if (isPressureLevel(levelType, gridContent))
-      levelTypeStr = PressureLevel;
-    else if (isHybridLevel(levelType, gridContent))
-      levelTypeStr = HybridLevel;
-    else if (isHeightLevel(levelType, level, gridContent))
-      levelTypeStr = HeightLevel;
-    else if (isDepthLevel(levelType, level, gridContent))
-      levelTypeStr = DepthLevel;
-    else
-      throw Fmi::Exception(
-          BCP, "Internal: Unrecognized level type " + boost::lexical_cast<string>(levelType));
+    levelTypeStr = gribLevelTypeAndLevel(gridContent, levelType, cfgLevel, level);
 
     if (!centre.empty())
       gset(itsGribHandle, "centre", centre);

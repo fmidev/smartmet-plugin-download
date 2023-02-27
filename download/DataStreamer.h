@@ -106,7 +106,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   FmiLevelType itsLevelType;  // Data level type; height level data with negative levels is stored
                               // as kFmiDepth
   FmiLevelType itsNativeLevelType;  // Native data level type
-  bool itsPositiveLevels = false;   // true if (depth) levels are positive
+  bool itsPositiveLevels = true;    // true if (depth) levels are positive
   Query::Levels itsDataLevels;
   std::list<int> itsSortedDataLevels;  // Levels in source data order (order needed for qd -output)
 

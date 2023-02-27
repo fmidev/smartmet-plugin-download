@@ -1022,7 +1022,7 @@ void DataStreamer::getParameterDetailsFromContentData(
     T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
     T::ParamLevel level = getParamLevel(paramName, paramParts);
     T::ForecastType forecastType = getForecastType(paramName, paramParts);
-    T::ForecastNumber forecastNumber = getForecastNumber(paramName, paramParts, -1);
+    T::ForecastNumber forecastNumber = getForecastNumber(paramName, paramParts);
 
     typedef map<T::GeometryId, SmartMet::Engine::Grid::ParameterDetails_vec> GeomDetails;
     typedef map<T::ParamLevel, GeomDetails> LevelDetails;
@@ -1045,6 +1045,8 @@ void DataStreamer::getParameterDetailsFromContentData(
     if (pos != string::npos)
       endTimeStr = endTimeStr.substr(0, pos);
 
+    // TODO: store/use content data already loaded when expanding parameter name
+
     auto cS = itsGridEngine->getContentSourceServer_sptr();
     T::ContentInfoList contentInfoList;
 
@@ -1065,7 +1067,7 @@ void DataStreamer::getParameterDetailsFromContentData(
 
     for (size_t idx = 0; (idx < contentInfoList.getLength()); idx++)
     {
-      // Skip content about to be deleted or with nonmatching origin time
+      // Ignore content about to be deleted or with nonmatching origin time
 
       auto contentInfo = contentInfoList.getContentInfoByIndex(idx);
 
@@ -1220,7 +1222,7 @@ bool DataStreamer::hasRequestedGridData(
           if ((!gridContent) && (pm.mParameterLevelId == GridFmiLevelTypePressure))
             level = pm.mParameterLevel * 0.01;  // e.g. levels=850
           else
-            level = pm.mParameterLevel;		// e.g. param=T-K::1093:2:85000:...
+            level = pm.mParameterLevel;         // e.g. param=T-K::1093:2:85000:...
 
           if (!gridContent)
           {
@@ -1329,10 +1331,10 @@ bool DataStreamer::hasRequestedGridData(
 
             if (itsGridMetaData.paramLevelId == GridFmiLevelTypeNone)
             {
-              // With radon parameters leveltype (and level) and geometry are taken from name.
+              // With radon parameters leveltype, level and geometry are taken from name.
               //
               // Since metadata's paramLevelId (grid level type) is tested later against None
-              // to check if data is available, set it anyway from 1'st parameter
+              // to check if data is available, set it from 1'st parameter
 
               itsGridMetaData.paramLevelId = pm.mParameterLevelId;
               itsGridMetaData.geometryId = pm.mGeometryId;
@@ -4141,7 +4143,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     parseRadonParameterName(itsParamIterator->name(), paramParts);
 
     queryParam.mForecastType = getForecastType(itsParamIterator->name(), paramParts);
-    queryParam.mForecastNumber = getForecastNumber(itsParamIterator->name(), paramParts, -1);
+    queryParam.mForecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);
     queryParam.mGeometryId = getGeometryId(itsParamIterator->name(), paramParts);
   }
   else

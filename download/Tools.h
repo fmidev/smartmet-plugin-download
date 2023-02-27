@@ -60,11 +60,13 @@ static const T::ParamLevelId GridFmiLevelTypeHeight = 6;
 static const T::ParamLevelId GridFmiLevelTypeEntireAtmosphere = 8;
 static const T::ParamLevelId GridFmiLevelTypeDepth = 10;
 
-bool isSurfaceLevel(FmiLevelType levelType, bool gridContent = false);
+bool isGroundLevel(FmiLevelType levelType);
+bool isSurfaceLevel(FmiLevelType levelType);
 bool isPressureLevel(FmiLevelType levelType, bool gridContent = false);
 bool isHybridLevel(FmiLevelType levelType, bool gridContent = false);
 bool isHeightOrDepthLevel(FmiLevelType levelType);
 bool isHeightLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
+bool isEntireAtmosphereLevel(FmiLevelType levelType);
 bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
 
 FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
@@ -79,7 +81,8 @@ double getProjParam(const OGRSpatialReference &srs,
                     bool ignoreErr = false,
                     double defaultValue = 0.0);
 
-void parseRadonParameterName(const std::string &param, std::vector<std::string> &paramParts);
+void parseRadonParameterName(const std::string &param, std::vector<std::string> &paramParts,
+                             bool expanding = false);
 
 std::string getProducerName(
     const std::string &param,
@@ -105,6 +108,8 @@ T::ForecastNumber getForecastNumber(
     const std::string &param,
     const std::vector<std::string> &paramParts,
     boost::optional<T::ForecastNumber> defaultValue = boost::optional<T::ForecastNumber>());
+
+bool isEnsembleForecast(T::ForecastType forecastType);
 
 // ----------------------------------------------------------------------
 /*!

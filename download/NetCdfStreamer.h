@@ -83,10 +83,30 @@ class NetCdfStreamer : public DataStreamer
   template <typename T1, typename T2>
   void addAttribute(T1 resource, std::string attrName, int nValues, T2 *attrValues);
 
+  std::string getEnsembleDimensionName(
+      T::ForecastType forecastType, T::ForecastNumber forecastNumber) const;
+  boost::shared_ptr<NcDim> getEnsembleDimension(
+      T::ForecastType forecastType, T::ForecastNumber forecastNumber,
+      std::string &ensembleDimensionName) const;
+  boost::shared_ptr<NcDim> getEnsembleDimension(
+      T::ForecastType forecastType, T::ForecastNumber forecastNumber) const;
+  void addEnsembleDimensions();
   void addEnsembleDimension();
   void addTimeDimension();
   boost::shared_ptr<NcDim> addTimeDimension(long periodLengthInMinutes,
                                             boost::shared_ptr<NcVar> &tVar);
+  std::string getLevelDimensionName(const std::string &levelTypeName, int level) const;
+  void getLevelTypeAttributes(FmiLevelType levelType,
+                              std::string &name,
+                              std::string &positive,
+                              std::string &unit) const;
+  boost::shared_ptr<NcDim> getLevelDimension(FmiLevelType levelType,
+                                             int level,
+                                             std::string &levelTypeName,
+                                             std::string &levelDirectionPositive,
+                                             std::string &unit) const;
+  boost::shared_ptr<NcDim> getLevelDimension(FmiLevelType levelType, int level) const;
+  void addLevelDimensions();
   void addLevelDimension();
 
   void setSpheroidAndWKT(const boost::shared_ptr<NcVar> &crsVar,
