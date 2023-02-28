@@ -966,6 +966,10 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
 {
   if (gridContent)
   {
+    // Grid data levels are in Pa, output level type is isobaricInhPa
+
+    level /= 100;
+
     if (isGroundLevel(levelType))
       return GroundLevel;
     else if (isEntireAtmosphereLevel(levelType))

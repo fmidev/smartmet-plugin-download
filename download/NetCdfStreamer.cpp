@@ -684,7 +684,7 @@ void NetCdfStreamer::getLevelTypeAttributes(FmiLevelType levelType,
     {
       name = "pressure";
       positive = "down";
-      unit = "Pa";
+      unit = "hPa";
     }
     else if (isHybridLevel(levelType, gridContent))
     {
@@ -819,7 +819,9 @@ void NetCdfStreamer::addLevelDimensions()
       addAttribute(levelVar, "long_name", (levelTypeName + " level").c_str());
       addAttribute(levelVar, "positive", levelDirectionPositive.c_str());
 
-      float levelDimValue = level;
+      // Grid data levels are in Pa, output level unit is hPa
+
+      float levelDimValue = level / 100;
       if (!levelVar->put(&levelDimValue, 1))
         throw Fmi::Exception(BCP, "Failed to store level");
     }
