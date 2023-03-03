@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.2.28
+Version: 23.3.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -26,7 +26,7 @@ BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 23.2.27
-BuildRequires: smartmet-library-macgyver-devel >= 23.2.27
+BuildRequires: smartmet-library-macgyver-devel >= 23.3.2
 BuildRequires: smartmet-library-timeseries-devel >= 23.1.31
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
 BuildRequires: smartmet-library-grid-content-devel >= 23.2.20
@@ -41,7 +41,7 @@ Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.2.27
+Requires: smartmet-library-macgyver >= 23.3.2
 Requires: smartmet-library-timeseries >= 23.1.31
 Requires: smartmet-library-spine >= 23.2.27
 Requires: smartmet-library-newbase >= 23.2.9
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Mar  3 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.3-1.fmi
+- Fixed height/depth leveltype handling in netcdf output; level dimension was not created
+
 * Tue Feb 28 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.2.28-1.fmi
 - Support grid data queries with radon parameter names when source=gridcontent (STU-20107)
 

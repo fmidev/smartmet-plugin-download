@@ -803,7 +803,7 @@ void NetCdfStreamer::addLevelDimensions()
 
       if (!(
             isPressureLevel(levelType, true) || isHybridLevel(levelType, true) ||
-            isHeightLevel(levelType, true) || isDepthLevel(levelType, true)
+            isHeightLevel(levelType, 0, true) || isDepthLevel(levelType, 0, true)
          ))
         continue;
 
