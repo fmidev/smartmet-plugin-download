@@ -105,6 +105,7 @@ rm -rf $RPM_BUILD_ROOT
 * Mon Mar  6 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.6-1.fmi
 - Use cached grid content data instead of (unintentionally) loading it from redis
 - Ignore intermediate grid content data
+- When loading parameter configuration set parameter name from parameter's radon name if name attribute is not given
 
 * Fri Mar  3 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.3-1.fmi
 - Fixed height/depth leveltype handling in netcdf output; level dimension was not created
