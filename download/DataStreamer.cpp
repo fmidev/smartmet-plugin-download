@@ -1067,7 +1067,8 @@ void DataStreamer::getParameterDetailsFromContentData(
 
     for (size_t idx = 0; (idx < contentInfoList.getLength()); idx++)
     {
-      // Ignore content about to be deleted or with nonmatching origin time
+      // Ignore not ready or disabled content or content about to be deleted or
+      // with nonmatching origin time
 
       auto contentInfo = contentInfoList.getContentInfoByIndex(idx);
 
@@ -1077,7 +1078,10 @@ void DataStreamer::getParameterDetailsFromContentData(
       T::GenerationInfo generationInfo;
       cS->getGenerationInfoById(0, contentInfo->mGenerationId, generationInfo);
 
-      if ((! originTimeStr.empty()) && (originTimeStr != generationInfo.mAnalysisTime))
+      if (
+          (generationInfo.mStatus != T::GenerationInfo::Status::Ready) ||
+          ((! originTimeStr.empty()) && (originTimeStr != generationInfo.mAnalysisTime))
+         )
         continue;
 
       // Level type, level and geometry must be given in parameter name, but could collect data

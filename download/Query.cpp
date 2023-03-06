@@ -303,21 +303,22 @@ void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
 
           for (size_t idx = 0; (idx < contentInfoList.getLength()); idx++)
           {
-            // Ignore content about to be deleted or with nonmatching origin time
+            // Ignore not ready or disabled content or content about to be deleted or
+            // with nonmatching origin time
 
             auto contentInfo = contentInfoList.getContentInfoByIndex(idx);
 
             if ((contentInfo->mDeletionTime + 5) < time(NULL))
               continue;
 
-            if (!originTimeStr.empty())
-            {
-              T::GenerationInfo generationInfo;
-              cS->getGenerationInfoById(0, contentInfo->mGenerationId, generationInfo);
+            T::GenerationInfo generationInfo;
+            cS->getGenerationInfoById(0, contentInfo->mGenerationId, generationInfo);
 
-              if (originTimeStr != generationInfo.mAnalysisTime)
-                continue;
-            }
+            if (
+                (generationInfo.mStatus != T::GenerationInfo::Status::Ready) ||
+                ((! originTimeStr.empty()) && (originTimeStr != generationInfo.mAnalysisTime))
+               )
+              continue;
 
             if (!levels.insert(contentInfo->mParameterLevel).second)
               continue;
