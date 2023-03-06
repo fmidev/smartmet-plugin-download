@@ -1047,7 +1047,7 @@ void DataStreamer::getParameterDetailsFromContentData(
 
     // TODO: store/use content data already loaded when expanding parameter name
 
-    auto cS = itsGridEngine->getContentSourceServer_sptr();
+    auto cS = itsGridEngine->getContentServer_sptr();
     T::ContentInfoList contentInfoList;
 
     cS->getContentListByParameterAndProducerName(0,

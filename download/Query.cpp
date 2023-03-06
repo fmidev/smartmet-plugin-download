@@ -265,7 +265,7 @@ void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
     pos = endTimeStr.find(",");
     if (pos != string::npos) endTimeStr = endTimeStr.substr(0, pos);
 
-    auto cS = gridEngine->getContentSourceServer_sptr();
+    auto cS = gridEngine->getContentServer_sptr();
 
     for (auto const &levelRange : levelRanges)
     {
