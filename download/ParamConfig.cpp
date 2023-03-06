@@ -435,6 +435,9 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
 
       // Set parameter id and name
 
+      if (paramName.empty())
+        paramName = p.itsRadonName;
+
       p.itsWantedParam.SetIdent(paramId);
       p.itsWantedParam.SetName(paramName);
 
