@@ -419,7 +419,7 @@ ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
 
               // Check if latest data covers the last validtime of 2'nd latest data
 
-              if ((index == 0) && (levelTimes.second.size() > 1) &&
+              if ((index == 1) && (levelTimes.second.size() > 1) &&
                   (*(otLevel->second.rbegin()) < *(prev(otLevel)->second.rbegin())))
                 index = -1;
             }
