@@ -61,6 +61,7 @@ ParamChangeItem::ParamChangeItem(const ParamChangeItem& theOther)
       itsCentre(theOther.itsCentre),
       itsTemplateNumber(theOther.itsTemplateNumber),
       itsGridRelative(theOther.itsGridRelative),
+      itsRadonProducer(theOther.itsRadonProducer),
       itsRadonName(theOther.itsRadonName),
       itsGrib1Param(theOther.itsGrib1Param),
       itsGrib2Param(theOther.itsGrib2Param)
@@ -86,6 +87,7 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
       itsCentre = theOther.itsCentre;
       itsTemplateNumber = theOther.itsTemplateNumber;
       itsGridRelative = theOther.itsGridRelative;
+      itsRadonProducer = theOther.itsRadonProducer;
       itsRadonName = theOther.itsRadonName;
       itsGrib1Param = theOther.itsGrib1Param;
       itsGrib2Param = theOther.itsGrib2Param;
@@ -180,16 +182,37 @@ std::string asString(const std::string& name, const Json::Value& json, uint arra
  */
 // ======================================================================
 
-bool setGribParamConfigField(GribParamId &gribParam,
-                             const std::string name,
+bool setGribParamConfigField(bool grib1,
+                             GribParamId &gribParam,
+                             const std::string &name,
                              unsigned int value)
 {
+  if (name == "parameternumber")
+  {
+    gribParam->itsParamNumber = value;
+    return true;
+  }
+
+  if (grib1)
+  {
+    if (name == "tableversion")
+      gribParam->itsTableVersion = value;
+    else if (name == "indicatoroftimerange")
+      gribParam->itsIndicatorOfTimeRange = value;
+    else
+      return false;
+
+    return true;
+  }
+
   if (name == "discipline")
     gribParam->itsDiscipline = value;
   else if (name == "category")
     gribParam->itsCategory = value;
   else if (name == "parameternumber")
     gribParam->itsParamNumber = value;
+  else if (name == "typeofstatisticalprocessing")
+    gribParam->itsTypeOfStatisticalProcessing = value;
   else if (name == "templatenumber")
     gribParam->itsTemplateNumber = value;
   else
@@ -209,14 +232,24 @@ void checkGribParamIdentification(const GribParamId &gribParam,
                                   unsigned int arrayIndex)
 {
   uint n = 0;
-  if (gribParam->itsDiscipline) n++;
-  if (gribParam->itsCategory) n++;
+
   if (gribParam->itsParamNumber) n++;
 
-  if (n != 3)
+  if (gribFormat == "grib2")
+  {
+    if (gribParam->itsDiscipline) n++;
+    if (gribParam->itsCategory) n++;
+
+    if (n != 3)
+      throw Fmi::Exception(
+          BCP, gribFormat +
+          ": discipline, category and parameternumber must be set at array index " +
+          Fmi::to_string(arrayIndex));
+  }
+  else if (n == 0)
     throw Fmi::Exception(
         BCP, gribFormat +
-        ": discipline, category and parameternumber must be set at array index " +
+        ": parameternumber must be set at array index " +
         Fmi::to_string(arrayIndex));
 }
 
@@ -258,13 +291,18 @@ bool readGribParamConfigField(const std::string& name,
 
       p.itsTemplateNumber = asUInt(name, json, arrayIndex);
     }
+    else if (name == "radonproducer")
+    {
+      p.itsRadonProducer = asString(name, json, arrayIndex);
+    }
     else if ((name == "grib1") || (name == "grib2"))
     {
       const auto members = json.getMemberNames();
 
       if (!members.empty())
       {
-        auto &gribParam = (name == "grib1") ? p.itsGrib1Param : p.itsGrib2Param;
+        bool grib1 = (name == "grib1");
+        auto &gribParam = (grib1 ? p.itsGrib1Param : p.itsGrib2Param);
         gribParam = GribParamIdentification();
 
         BOOST_FOREACH (const auto& nm, members)
@@ -277,7 +315,7 @@ bool readGribParamConfigField(const std::string& name,
 
           pathName = name + "." + nm;
 
-          if (!setGribParamConfigField(gribParam, nm, asUInt(pathName, js, arrayIndex)))
+          if (!setGribParamConfigField(grib1, gribParam, nm, asUInt(pathName, js, arrayIndex)))
             return false;
 
           if (nm == "templatenumber")
@@ -413,6 +451,8 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
           paramId = asUInt(name, json, i);
         else if (name == "name")
           paramName = asString(name, json, i);
+        else if (name == "radonproducer")
+          p.itsRadonProducer = asString(name, json, i);
         else if (name == "radonname")
           p.itsRadonName = asString(name, json, i);
         else if (name == "offset")
