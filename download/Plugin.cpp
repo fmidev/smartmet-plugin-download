@@ -478,6 +478,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 // ----------------------------------------------------------------------
 
 static bool getScaleFactorAndOffset(signed long id,
+                                    const std::string &producerName,
                                     const std::string &paramName,
                                     OutputFormat outputFormat,
                                     float *scale,
@@ -487,23 +488,18 @@ static bool getScaleFactorAndOffset(signed long id,
   try
   {
     bool radonParam = (!paramName.empty());
+    size_t i = 0, j = ptable.size();
 
-    for (size_t i = 0; i < ptable.size(); ++i)
+    for (; i < ptable.size(); ++i)
     {
       if (radonParam)
       {
         if (paramName == ptable[i].itsRadonName)
         {
-          // No unit conversion for radon parameters
-
-          *scale = 1;
-          *offset = 0;
-
-          return (
-                  (outputFormat == NetCdf) ||
-                  ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
-                  ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
-                 );
+          if ((outputFormat == NetCdf) || (producerName == ptable[i].itsRadonProducer))
+            break;
+          else if ((j == ptable.size()) && ptable[i].itsRadonProducer.empty())
+            j = i;
         }
 
         continue;
@@ -517,7 +513,22 @@ static bool getScaleFactorAndOffset(signed long id,
       return true;
     }
 
-    return false;
+    // No unit conversion for radon parameters
+
+    *scale = 1;
+    *offset = 0;
+
+    if (i >= ptable.size())
+      i = j;
+
+    if ((!radonParam) || (i >= ptable.size()))
+      return false;
+
+    return (
+            (outputFormat == NetCdf) ||
+            ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
+            ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
+           );
   }
   catch (...)
   {
@@ -556,7 +567,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     unsigned int i = 0;
 
     vector<string> paramParts;
-    std::string paramName;
+    std::string producerName, paramName;
     bool gridContent = (dataSource == GridContent);
     int geometry = -1;
 
@@ -577,6 +588,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
 
           parseRadonParameterName(param.name(), paramParts);
           paramName = paramParts[0];
+          producerName = paramParts[1];
 
           auto geom = getGeometryId(paramName, paramParts);
 
@@ -591,7 +603,8 @@ static bool getParamConfig(const ParamChangeTable &pTable,
             geometry = geom;
         }
 
-        ok = getScaleFactorAndOffset(lid, paramName, outputFormat, &scale, &offset, pTable);
+        ok = getScaleFactorAndOffset(lid, producerName, paramName, outputFormat, &scale, &offset,
+                                     pTable);
       }
 
       if (!ok)
