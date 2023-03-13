@@ -25,10 +25,15 @@ namespace Download
 
 typedef struct
 {
+  boost::optional<long> itsParamNumber;
+  // grib1
+  boost::optional<long> itsTableVersion;
+  boost::optional<long> itsIndicatorOfTimeRange;
+  // grib2
   boost::optional<long> itsDiscipline;
   boost::optional<long> itsCategory;
-  boost::optional<long> itsParamNumber;
   boost::optional<long> itsTemplateNumber;
+  boost::optional<long> itsTypeOfStatisticalProcessing;
 } GribParamIdentification;
 
 typedef boost::optional<GribParamIdentification> GribParamId;
@@ -60,9 +65,10 @@ struct ParamChangeItem
 
   // Radon parameter data
   //
-  std::string itsRadonName;		// T-K etc
-  GribParamId itsGrib1Param;		// Grib1 discipline etc
-  GribParamId itsGrib2Param;		// Grib2 discipline etc
+  std::string itsRadonProducer;  // SMARTMET etc
+  std::string itsRadonName;      // T-K etc
+  GribParamId itsGrib1Param;     // Grib1 discipline etc
+  GribParamId itsGrib2Param;     // Grib2 discipline etc
 };
 
 typedef std::vector<ParamChangeItem> ParamChangeTable;
