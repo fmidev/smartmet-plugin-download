@@ -1016,10 +1016,11 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
   try
   {
-    string centre, levelTypeStr, radonParam;
+    string centre, levelTypeStr, radonProducer, radonParam;
     signed long usedParId = theParam.GetIdent();
     NFmiLevel *cfgLevel = nullptr;
     FmiLevelType levelType;
+    T::ForecastType forecastType = 0;
     boost::optional<long> templateNumber;
     bool gridContent = (itsReqParams.dataSource == GridContent);
     size_t i, j;
@@ -1030,9 +1031,11 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
       vector<string> paramParts;
       parseRadonParameterName(paramName, paramParts);
-      radonParam = paramParts.front();
+      radonParam = paramParts[0];
+      radonProducer = paramParts[1];
 
       levelType = FmiLevelType(getParamLevelId(paramName, paramParts));
+      forecastType = getForecastType(paramName, paramParts);
     }
     else
       levelType = itsLevelType;
@@ -1057,11 +1060,25 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
         }
       }
       else if (pTable[i].itsRadonName == radonParam)
-        break;
+      {
+        if (!
+            (
+             (itsGrib1Flag && pTable[i].itsGrib1Param) ||
+             ((!itsGrib1Flag) && pTable[i].itsGrib2Param)
+            )
+           )
+          continue;
+
+        if (pTable[i].itsRadonProducer == radonProducer)
+          break;
+
+        if ((j == pTable.size()) && pTable[i].itsRadonProducer.empty())
+          j = i;
+      }
 
     if (i >= pTable.size())
     {
-      if (gridContent)
+      if (gridContent && (j >= pTable.size()))
         throw Fmi::Exception(BCP, "No grib configuration for parameter " + radonParam);
 
       i = j;
@@ -1087,10 +1104,24 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     // Cannot set template number 0 unless stepType has been set
     //
     // Note: Comment above is weird because templateNumber is tested to be nonzero ?
+    //
+    // Since productDefinitionTemplateNumber is currently not available in radon (to dump
+    // into plugin's grib parameter configuration), if template number is not set in configuration,
+    // using templateNumber 0 (NormalProduct) for deterministic forecast data and 1
+    // (EnsembleForecast) for ensemble forecasts when storing data fetched with radon names. The
+    // logic does not work for all parameters though; the correct template number must be set to
+    // configuration when needed.
 
     gset(itsGribHandle, "stepType", "instant");
-    if ((!itsGrib1Flag) && templateNumber && (*templateNumber != 0))
-      gset(itsGribHandle, "productDefinitionTemplateNumber", *templateNumber);
+
+    if (!itsGrib1Flag)
+    {
+      if (gridContent && (!templateNumber))
+        templateNumber = (isEnsembleForecast(forecastType) ? 1 : 0);
+
+      if (templateNumber && (gridContent || (*templateNumber != 0)))
+        gset(itsGribHandle, "productDefinitionTemplateNumber", *templateNumber);
+    }
 
     auto const &gribParam = (itsGrib1Flag ? pTable[i].itsGrib1Param : pTable[i].itsGrib2Param);
 
@@ -1135,12 +1166,42 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     // Set step type and calculate start and end step for aggregates.
     //
     // Note: There's no metadata available about whether given data/parameter has start or end time
-    // stamping;
-    //	     stamping is selected with boolean 'bDataIsEndTimeStamped'.
+    // stamping; stamping is selected with boolean 'bDataIsEndTimeStamped'.
+    //
+    // Even though the existence of parameter configuration block having format specific entry is
+    // tested also when querying with radon names (when gridContent is true), the configuration
+    // has been searched earlier and format specific configuration exists for the parameter.
+    // Aggregate period length is currently not available as such in radon; it may have been
+    // embedded in some parameter names but that is not checked. Period length will not be set if
+    // it has not been manually set to configuration.
 
     const bool bDataIsEndTimeStamped = true;
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+    bool hasParamConfig = (paramIdx < pTable.size());
+    bool hasStepType = (hasParamConfig && (!pTable[paramIdx].itsStepType.empty()));
+    boost::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
 
-    if ((paramIdx < pTable.size()) && (!pTable[paramIdx].itsStepType.empty()))
+    if (gridContent && hasParamConfig)
+    {
+      auto const &config = pTable[paramIdx];
+
+      if (itsGrib1Flag)
+      {
+        if (config.itsGrib1Param)
+          indicatorOfTimeRange = config.itsGrib1Param->itsIndicatorOfTimeRange;
+
+        hasStepType = (indicatorOfTimeRange ? true : false);
+      }
+      else if (config.itsGrib2Param)
+      {
+        typeOfStatisticalProcessing = config.itsGrib2Param->itsTypeOfStatisticalProcessing;
+        hasStepType = (typeOfStatisticalProcessing ? true : false);
+      }
+      else
+        hasStepType = false;
+    }
+
+    if (hasStepType)
     {
       // Aggregate period length must be the same or multiple of data time step for time steps less
       // than day
@@ -1263,7 +1324,15 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         setOriginTime = true;
       }
 
-      gset(itsGribHandle, "stepType", pTable[paramIdx].itsStepType);
+      if (itsReqParams.dataSource == GridContent)
+      {
+        if (itsGrib1Flag)
+          gset(itsGribHandle, "indicatorOfTimeRange", *indicatorOfTimeRange);
+        else
+          gset(itsGribHandle, "typeOfStatisticalProcessing", *typeOfStatisticalProcessing);
+      }
+      else
+        gset(itsGribHandle, "stepType", pTable[paramIdx].itsStepType);
     }
 
     if (setOriginTime)
