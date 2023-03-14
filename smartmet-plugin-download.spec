@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.3.6
+Version: 23.3.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,18 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Mar 14 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.14-1.fmi
+- Added setting of grib1 table2Version and fixed setting of grib1 parameter number
+- Changed grib1 param configuration 'tableVersion' field name to 'table2Version'
+- Use configured grib format specific key to set aggregation type for data fetched using radon names. Since template number is not available in radon, if it is not manually set in parameter configuration use NormalProduct or EnsembleForecast depending on forecast type. That does not work for all parameters though, correct template numbers for the parameters must be manually entered to configuration when needed. Also parameter's aggregate period length is unavailable in radon and must be manually entered to configuration or it will be left unset on output
+- Load radon producer name too from grib configuration since configuration for radon parameters can be producer specific. Also load grib1/2 aggregation type and grib1 TableVersion and parameter number
+- Added producer name to GribParamIdentification since configuration for radon parameters can be producer specific. Store grib1/2 aggregation type and grib1 TableVersion too
+- When checking for known grib parameters by radon names, check for producer specific parameter configuration first and non producer specific configuration (wmo parameter numbering) secondarily
+
+* Fri Mar 10 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.10-1.fmi
+- Fixed check for latest validtime of parameter's newest analysis to be equal to or later than latest validtime for 2'nd newest analysis. The is obsolete though since run status is now taken into account when metadata is collected
+- Use producer specific grib parameter configuration block for radon parameter if such exists
+
 * Mon Mar  6 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.6-1.fmi
 - Use cached grid content data instead of (unintentionally) loading it from redis
 - Ignore intermediate grid content data
