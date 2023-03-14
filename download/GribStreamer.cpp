@@ -1127,9 +1127,19 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
     if (gridContent && gribParam)
     {
-      gset(itsGribHandle, "discipline", *(gribParam->itsDiscipline));
-      gset(itsGribHandle, "parameterCategory", *(gribParam->itsCategory));
-      gset(itsGribHandle, "parameterNumber", *(gribParam->itsParamNumber));
+      if (itsGrib1Flag)
+      {
+        if (gribParam->itsTable2Version)
+          gset(itsGribHandle, "table2Version", *(gribParam->itsTable2Version));
+
+        gset(itsGribHandle, "indicatorOfParameter", *(gribParam->itsParamNumber));
+      }
+      else
+      {
+        gset(itsGribHandle, "discipline", *(gribParam->itsDiscipline));
+        gset(itsGribHandle, "parameterCategory", *(gribParam->itsCategory));
+        gset(itsGribHandle, "parameterNumber", *(gribParam->itsParamNumber));
+      }
     }
     else
       gset(itsGribHandle, "paramId", usedParId);
