@@ -195,8 +195,8 @@ bool setGribParamConfigField(bool grib1,
 
   if (grib1)
   {
-    if (name == "tableversion")
-      gribParam->itsTableVersion = value;
+    if (name == "table2version")
+      gribParam->itsTable2Version = value;
     else if (name == "indicatoroftimerange")
       gribParam->itsIndicatorOfTimeRange = value;
     else
@@ -235,7 +235,17 @@ void checkGribParamIdentification(const GribParamId &gribParam,
 
   if (gribParam->itsParamNumber) n++;
 
-  if (gribFormat == "grib2")
+  if (gribFormat == "grib1")
+  {
+    if (gribParam->itsTable2Version) n++;
+
+    if (n != 2)
+      throw Fmi::Exception(
+          BCP, gribFormat +
+          ": table2version and parameternumber must be set at array index " +
+          Fmi::to_string(arrayIndex));
+  }
+  else
   {
     if (gribParam->itsDiscipline) n++;
     if (gribParam->itsCategory) n++;
@@ -246,11 +256,6 @@ void checkGribParamIdentification(const GribParamId &gribParam,
           ": discipline, category and parameternumber must be set at array index " +
           Fmi::to_string(arrayIndex));
   }
-  else if (n == 0)
-    throw Fmi::Exception(
-        BCP, gribFormat +
-        ": parameternumber must be set at array index " +
-        Fmi::to_string(arrayIndex));
 }
 
 // ======================================================================
