@@ -27,7 +27,7 @@ typedef struct
 {
   boost::optional<long> itsParamNumber;
   // grib1
-  boost::optional<long> itsTableVersion;
+  boost::optional<long> itsTable2Version;
   boost::optional<long> itsIndicatorOfTimeRange;
   // grib2
   boost::optional<long> itsDiscipline;
