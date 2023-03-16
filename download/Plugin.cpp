@@ -496,15 +496,27 @@ static bool getScaleFactorAndOffset(signed long id,
       {
         if (paramName == ptable[i].itsRadonName)
         {
-          if ((outputFormat == NetCdf) || (producerName == ptable[i].itsRadonProducer))
+          if (outputFormat == NetCdf)
             break;
-          else if ((j == ptable.size()) && ptable[i].itsRadonProducer.empty())
-            j = i;
+
+          if (
+              ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
+              ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
+             )
+          {
+            auto const &confProducer = ptable[i].itsRadonProducer;
+
+            if (producerName == confProducer)
+              break;
+            else if ((j == ptable.size()) && (outputFormat == Grib2) && confProducer.empty())
+              j = i;
+          }
         }
 
         continue;
       }
-      else if (id != ptable[i].itsWantedParam.GetIdent())
+
+      if (id != ptable[i].itsWantedParam.GetIdent())
         continue;
 
       *scale = ptable[i].itsConversionScale;
@@ -521,14 +533,7 @@ static bool getScaleFactorAndOffset(signed long id,
     if (i >= ptable.size())
       i = j;
 
-    if ((!radonParam) || (i >= ptable.size()))
-      return false;
-
-    return (
-            (outputFormat == NetCdf) ||
-            ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
-            ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
-           );
+    return (i < ptable.size());
   }
   catch (...)
   {
