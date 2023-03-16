@@ -259,11 +259,24 @@ void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
     auto pos = originTimeStr.find(",");
     if (pos != string::npos) originTimeStr = originTimeStr.substr(0, pos);
 
-    pos = startTimeStr.find(",");
-    if (pos != string::npos) startTimeStr = startTimeStr.substr(0, pos);
+    if (startTimeStr.empty())
+      startTimeStr = "19000101T000000";
+    else
+    {
+      pos = startTimeStr.find(",");
+      if (pos != string::npos) startTimeStr = startTimeStr.substr(0, pos);
+    }
 
-    pos = endTimeStr.find(",");
-    if (pos != string::npos) endTimeStr = endTimeStr.substr(0, pos);
+    if (endTimeStr.empty())
+      endTimeStr = "99991231T235959";
+    else
+    {
+      pos = endTimeStr.find(",");
+      if (pos != string::npos) endTimeStr = endTimeStr.substr(0, pos);
+    }
+
+    if (startTimeStr > endTimeStr)
+      startTimeStr = endTimeStr;
 
     auto cS = gridEngine->getContentServer_sptr();
 
