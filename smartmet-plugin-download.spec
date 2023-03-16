@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.3.16
+Version: 23.3.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Mar 17 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.17-1.fmi
+- If starttime or endtime option is not given, using default time to query all available grid content information
+- In addition to &source=gridcontent, request parameter &source=grid is taken as grid content query too and radon parameter names are expected to be given
+
 * Thu Mar 16 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.16-1.fmi
 - Fixed bug in searching grib parameter configuration entry for radon parameters
 
