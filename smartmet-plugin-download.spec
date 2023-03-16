@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.3.14
+Version: 23.3.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,7 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Fri Mar 14 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.14-1.fmi
+* Thu Mar 16 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.16-1.fmi
+- Fixed bug in searching grib parameter configuration entry for radon parameters
+
+* Tue Mar 14 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.14-1.fmi
 - Added setting of grib1 table2Version and fixed setting of grib1 parameter number
 - Changed grib1 param configuration 'tableVersion' field name to 'table2Version'
 - Use configured grib format specific key to set aggregation type for data fetched using radon names. Since template number is not available in radon, if it is not manually set in parameter configuration use NormalProduct or EnsembleForecast depending on forecast type. That does not work for all parameters though, correct template numbers for the parameters must be manually entered to configuration when needed. Also parameter's aggregate period length is unavailable in radon and must be manually entered to configuration or it will be left unset on output
