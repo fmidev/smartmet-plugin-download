@@ -266,7 +266,10 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     else if (reqParams.source == "gridmapping")
       reqParams.dataSource = GridMapping;
     else if ((reqParams.source == "grid") || (reqParams.source == "gridcontent"))
+    {
+      reqParams.source = "gridcontent";
       reqParams.dataSource = GridContent;
+    }
     else
       throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
                              "', 'querydata', 'gridmapping' or 'gridcontent' expected");
