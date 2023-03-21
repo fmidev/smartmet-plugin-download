@@ -4168,6 +4168,8 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     queryParam.mGeometryId = itsGridMetaData.geometryId;
   }
 
+  queryParam.mParameterKeyType = T::ParamKeyTypeValue::FMI_NAME;
+
   queryParam.mAreaInterpolationMethod = -1;
   queryParam.mTimeInterpolationMethod = -1;
   queryParam.mLevelInterpolationMethod = -1;
