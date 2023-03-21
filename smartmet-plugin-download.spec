@@ -103,6 +103,7 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Tue Mar 21 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.21-1.fmi
+- Bug fix to selecting latest common origintime for grid data
 - Fixed bug in handling request parameter source=grid (query with radon names), the request parameter value is tested in few places instead of using enumerated data source value
 - Grid data query object's mParameterKeyType was left unset; set it to FMI_NAME
 
