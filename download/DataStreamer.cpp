@@ -413,15 +413,15 @@ ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
 
             if (otLevel != levelTimes.second.end())
             {
-              // Check if the newest data covers the last validtime of 2'nd newest data
-
               index = levelTimes.second.size() - distance(levelTimes.second.begin(), otLevel);
 
               // Check if latest data covers the last validtime of 2'nd latest data
 
+              /*
               if ((index == 1) && (levelTimes.second.size() > 1) &&
                   (*(otLevel->second.rbegin()) < *(prev(otLevel)->second.rbegin())))
                 index = -1;
+              */
             }
             else
               index = -1;
@@ -442,7 +442,7 @@ ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
       }
 
       if (index < 0)
-        throw Fmi::Exception(BCP, "Data has no common origintime");
+        continue;
 
       // Erase newer/nonvalid origintimes from metadata
 
@@ -472,10 +472,10 @@ ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
       originTimeLevels.erase(next(otl), originTimeLevels.end());
       originTimeTimes.erase(next(ott), originTimeTimes.end());
 
-      break;
+      return from_iso_string(ot->c_str());
     }
 
-    return ((index >= 0) ? from_iso_string(ot->c_str()) : ptime());
+    throw Fmi::Exception(BCP, "Data has no common origintime");
   }
   catch (...)
   {
