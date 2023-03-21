@@ -369,7 +369,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq, Engine::Grid::En
   {
     string opt = Spine::optional_string(theReq.getParameter("source"), "querydata");
 
-    if (opt != "gridcontent")
+    if ((opt != "grid") && (opt != "gridcontent"))
     {
       // Using newbase names
 
@@ -454,7 +454,7 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
 
     if (!opt.empty())
     {
-      if (source == "gridcontent")
+      if ((source == "grid") || (source == "gridcontent"))
         throw Fmi::Exception(BCP, "Cannot specify level option with grid content data");
 
       levels.insert(Fmi::stoi(opt));
@@ -466,7 +466,7 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
 
     if (!opt.empty())
     {
-      if (source == "gridcontent")
+      if ((source == "grid") || (source == "gridcontent"))
         throw Fmi::Exception(BCP, "Cannot specify levels option with grid content data");
 
       vector<string> parts;
