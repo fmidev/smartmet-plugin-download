@@ -237,14 +237,18 @@ void parseRadonParameterName(const string &param, vector<string> &paramParts, bo
   for (auto const &part : parts)
   {
     string s = boost::trim_copy(part);
+    const char *cp = s.c_str();
+    auto length = s.length();
 
     // Forecastnumber -1 does not work (to query all ensemble members) when fetching
     // content records, and missing (-1) value generally means "any value" for data query;
     // don't allow missing forecastnumber for ensemble data
+    //
+    // Allow negative value for height level
 
     if (
         (n == 6) && (s.empty() || (s == "-1")) &&
-        !isEnsembleForecast(getForecastType(param, paramParts))
+        (!isEnsembleForecast(getForecastType(param, paramParts)))
        )
     {
       // Forecast number can be missing or have value -1
@@ -254,9 +258,21 @@ void parseRadonParameterName(const string &param, vector<string> &paramParts, bo
     else if (s.empty())
       throw Fmi::Exception::Trace(
           BCP, string("Missing '") + partNames[n] + "' in radon parameter name '" + param + "'");
-    else if ((n > 1) && (!expanding) && (strspn(s.c_str(), "1234567890") != s.length()))
-      throw Fmi::Exception::Trace(
-          BCP, string("Invalid '") + partNames[n] + "' in radon parameter name '" + param + "'");
+    else if ((n > 1) && (!expanding))
+    {
+      if (
+          (n == 4) && (*cp == '-') &&
+          (getParamLevelId(param, paramParts) == GridFmiLevelTypeHeight)
+         )
+      {
+        cp++;
+        length--;
+      }
+
+      if (strspn(cp, "1234567890") != length)
+        throw Fmi::Exception::Trace(
+            BCP, string("Invalid '") + partNames[n] + "' in radon parameter name '" + param + "'");
+    }
 
     paramParts.push_back(s);
     n++;

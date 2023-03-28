@@ -55,9 +55,18 @@ Query::Query(const Spine::HTTP::Request& req, Engine::Grid::Engine *gridEngine)
 // ----------------------------------------------------------------------
 
 int Query::parseIntValue(const string &paramName, const string &fieldName, const string &fieldValue,
-                         int maxValue)
+                         bool negativeValueValid, int maxValue)
 {
-  if (strspn(fieldValue.c_str(), "1234567890") != fieldValue.length())
+  const char *cp = fieldValue.c_str();
+  auto length = fieldValue.length();
+
+  if (negativeValueValid && (*cp == '-'))
+  {
+    cp++;
+    length--;
+  }
+
+  if (strspn(cp, "1234567890") != length)
     throw Fmi::Exception::Trace(BCP, paramName + ": Invalid " + fieldName + " value " + fieldValue);
 
   auto v = atoi(fieldValue.c_str());
@@ -76,16 +85,17 @@ int Query::parseIntValue(const string &paramName, const string &fieldName, const
 // ----------------------------------------------------------------------
 
 pair<int, int> Query::parseIntRange(const string &paramName, const string &fieldName,
-                                    const string &fieldValue, size_t delimPos, int maxValue)
+                                    const string &fieldValue, size_t delimPos,
+                                    bool negativeValueValid, int maxValue)
 {
   int lo = 0, hi = 0;
 
   if ((delimPos > 0) && (delimPos < (fieldValue.length() - 1)))
   {
     lo = parseIntValue(paramName, fieldName, boost::trim_copy(fieldValue.substr(0, delimPos)),
-                       maxValue);
+                       negativeValueValid, maxValue);
     hi = parseIntValue(paramName, fieldName, boost::trim_copy(fieldValue.substr(delimPos + 1)),
-                       maxValue);
+                       negativeValueValid, maxValue);
   }
 
   if (lo >= hi)
@@ -97,12 +107,13 @@ pair<int, int> Query::parseIntRange(const string &paramName, const string &field
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Parse int values or value ranges, e.g. 1;5-8;11
+ * \brief Parse int values or value ranges, e.g. 1;5/8;11
  */
 // ----------------------------------------------------------------------
 
 list<pair<int, int>> Query::parseIntValues(const string &paramName, const string &fieldName,
-                                           const string &valueStr, int maxValue)
+                                           const string &valueStr, bool negativeValueValid,
+                                           int maxValue)
 {
   list<pair<int, int>> intValues;
   set<string> parts;
@@ -112,16 +123,17 @@ list<pair<int, int>> Query::parseIntValues(const string &paramName, const string
   for (auto const &part : parts)
   {
     string s = boost::trim_copy(part);
-    auto pos = s.find("-");
+    auto pos = s.find("/");
 
-    if ((pos == string::npos) || (s == "-1"))
+    if (pos == string::npos)
     {
-      int value = ((pos == string::npos) ? parseIntValue(paramName, fieldName, s, maxValue) : -1);
+      int value = parseIntValue(paramName, fieldName, s, negativeValueValid, maxValue);
       intValues.push_back(make_pair(value, value));
     }
     else
     {
-      pair<int, int> rangeValue = parseIntRange(paramName, fieldName, s, pos, maxValue);
+      pair<int, int> rangeValue =
+          parseIntRange(paramName, fieldName, s, pos, negativeValueValid, maxValue);
       intValues.push_back(rangeValue);
     }
   }
@@ -145,6 +157,9 @@ void Query::expandParameterFromSingleValues(const string &param,
   // If level/forecastnumber ranges are given, both listed/single values (range start and end
   // are set to the same value) and range start/end values are set to levelRanges and
   // forecastNumberRanges. The expanded parameter names are added to pOptions
+  //
+  // Heigth level value can be negative. Forecast number can have negative value (-1) for
+  // deterministic forecast
 
   vector<string> paramParts;
   string paramName;
@@ -153,11 +168,15 @@ void Query::expandParameterFromSingleValues(const string &param,
   parseRadonParameterName(param, paramParts, true);
 
   auto leveltype = getParamLevelId(param, paramParts);
+  bool negativeLevelValid = (leveltype == GridFmiLevelTypeHeight);
+  bool negativeForecastNumberValid =
+      ((paramParts[6] == "-1") && (!isEnsembleForecast(getForecastType(param, paramParts))));
   int maxLevel = (leveltype == GridFmiLevelTypeHybrid) ? 199 : 0;
 
-  levelRanges = parseIntValues(param, "level", paramParts[4], maxLevel);
+  levelRanges = parseIntValues(param, "level", paramParts[4], negativeLevelValid, maxLevel);
 
-  forecastNumberRanges = parseIntValues(param, "forecast number", paramParts[6], 99);
+  forecastNumberRanges =
+      parseIntValues(param, "forecast number", paramParts[6], negativeForecastNumberValid, 99);
 
   if (forecastNumberRanges.empty())
     forecastNumberRanges.push_back(make_pair(-1, -1));
@@ -237,7 +256,7 @@ void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
 {
   try
   {
-    // Expand parameter names from level/forecastnumber ranges (e.g. 5-8) by checking if
+    // Expand parameter names from level/forecastnumber ranges (e.g. 5/8) by checking if
     // they have content available. The expanded parameter names are added to pOptions
 
     vector<string> paramParts;
@@ -381,7 +400,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq, Engine::Grid::En
     //
     // Generating unique param newbase id's, grib/netcdf param mappings are searched by radon name
     //
-    // Expand parameter levels and forecast numbers (e.q. 1;5-8;11) by loading content
+    // Expand parameter levels and forecast numbers (e.q. 1;5/8;11) by loading content
     // records for given level/forecastnumber ranges and examining available data.
     // For single/listed level/forecastnumber values expanded parameter names are just added
     // to pOptions, their content is loaded later when fetching the data

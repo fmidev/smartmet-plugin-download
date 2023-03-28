@@ -253,13 +253,14 @@ class Query
   Query();
 
   int parseIntValue(const std::string &paramName, const std::string &fieldName,
-                    const std::string &fieldValue, int maxValue);
+                    const std::string &fieldValue, bool negativeValueValid, int maxValue);
   std::pair<int, int> parseIntRange(const std::string &paramName, const std::string &fieldName,
-                                    const std::string &fieldValue, size_t delimPos, int maxValue);
+                                    const std::string &fieldValue, size_t delimPos,
+                                    bool negativeValueValid, int maxValue);
   std::list<std::pair<int, int>> parseIntValues(const std::string &paramName,
                                                 const std::string &fieldName,
                                                 const std::string &valueStr,
-                                                int maxValue);
+                                                bool negativeValueValid, int maxValue);
   void expandParameterFromSingleValues(const std::string &param,
                                        TimeSeries::OptionParsers::ParameterOptions &pOptions,
                                        std::list<std::pair<int, int>> &levelRanges,

@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.3.21
+Version: 23.3.28
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,16 +25,16 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.2.27
+BuildRequires: smartmet-library-spine-devel >= 23.3.14
 BuildRequires: smartmet-library-macgyver-devel >= 23.3.3
-BuildRequires: smartmet-library-timeseries-devel >= 23.2.16
+BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
-BuildRequires: smartmet-library-grid-content-devel >= 23.2.20
-BuildRequires: smartmet-library-grid-files-devel >= 23.2.23
+BuildRequires: smartmet-library-grid-content-devel >= 23.3.9
+BuildRequires: smartmet-library-grid-files-devel >= 23.3.9
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 22.12.15
-BuildRequires: smartmet-engine-geonames-devel >= 23.2.27
-BuildRequires: smartmet-engine-grid-devel >= 23.2.20
+BuildRequires: smartmet-engine-querydata-devel >= 23.3.21
+BuildRequires: smartmet-engine-geonames-devel >= 23.3.16
+BuildRequires: smartmet-engine-grid-devel >= 23.3.9
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
@@ -42,11 +42,11 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 23.3.3
-Requires: smartmet-library-timeseries >= 23.2.16
-Requires: smartmet-library-spine >= 23.2.27
+Requires: smartmet-library-timeseries >= 23.3.15
+Requires: smartmet-library-spine >= 23.3.14
 Requires: smartmet-library-newbase >= 23.2.9
-Requires: smartmet-engine-querydata >= 22.12.15
-Requires: smartmet-server >= 23.2.1
+Requires: smartmet-engine-querydata >= 23.3.21
+Requires: smartmet-server >= 23.3.21
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -61,16 +61,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 23.2.27
-#TestRequires: smartmet-engine-grid >= 23.2.20
-#TestRequires: smartmet-engine-querydata >= 22.12.15
+#TestRequires: smartmet-engine-geonames >= 23.3.16
+#TestRequires: smartmet-engine-grid >= 23.3.9
+#TestRequires: smartmet-engine-querydata >= 23.3.21
 #TestRequires: smartmet-utils-devel >= 23.1.19
-#TestRequires: smartmet-library-spine-plugin-test >= 23.2.27
+#TestRequires: smartmet-library-spine-plugin-test >= 23.3.14
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
-#TestRequires: smartmet-qdtools >= 23.2.22
+#TestRequires: smartmet-qdtools >= 23.3.28
 #TestRequires: smartmet-test-data >= 23.2.9
 #TestRequires: smartmet-test-db >= 23.2.24
-#TestRequires: smartmet-engine-grid-test >= 23.2.20
+#TestRequires: smartmet-engine-grid-test >= 23.3.9
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -102,6 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Mar 28 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.28-1.fmi
+- Allow negative level value/range for height level (e.g. SAL-PSU:HBM_EC:608:6:-5:1:-1)
+- Changed level (and forecastnumber) range delimiter to '/' since negative values are accepted
+
 * Tue Mar 21 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.21-1.fmi
 - Bug fix to selecting latest common origintime for grid data
 - Fixed bug in handling request parameter source=grid (query with radon names), the request parameter value is tested in few places instead of using enumerated data source value
