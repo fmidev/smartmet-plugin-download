@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.3.28
+Version: 23.4.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -29,12 +29,12 @@ BuildRequires: smartmet-library-spine-devel >= 23.3.14
 BuildRequires: smartmet-library-macgyver-devel >= 23.3.3
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
-BuildRequires: smartmet-library-grid-content-devel >= 23.3.9
+BuildRequires: smartmet-library-grid-content-devel >= 23.4.17
 BuildRequires: smartmet-library-grid-files-devel >= 23.3.9
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.3.21
 BuildRequires: smartmet-engine-geonames-devel >= 23.3.16
-BuildRequires: smartmet-engine-grid-devel >= 23.3.9
+BuildRequires: smartmet-engine-grid-devel >= 23.4.17
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
@@ -62,15 +62,15 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 23.3.16
-#TestRequires: smartmet-engine-grid >= 23.3.9
+#TestRequires: smartmet-engine-grid >= 23.4.17
 #TestRequires: smartmet-engine-querydata >= 23.3.21
-#TestRequires: smartmet-utils-devel >= 23.1.19
+#TestRequires: smartmet-utils-devel >= 23.4.17
 #TestRequires: smartmet-library-spine-plugin-test >= 23.3.14
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
 #TestRequires: smartmet-qdtools >= 23.3.28
 #TestRequires: smartmet-test-data >= 23.2.9
 #TestRequires: smartmet-test-db >= 23.2.24
-#TestRequires: smartmet-engine-grid-test >= 23.3.9
+#TestRequires: smartmet-engine-grid-test >= 23.4.17
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Apr 17 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.4.17-1.fmi
+- Repackaged due to GRID ABI changes
+
 * Tue Mar 28 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.3.28-1.fmi
 - Allow negative level value/range for height level (e.g. SAL-PSU:HBM_EC:608:6:-5:1:-1)
 - Changed level (and forecastnumber) range delimiter to '/' since negative values are accepted
