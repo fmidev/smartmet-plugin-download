@@ -966,10 +966,6 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
 {
   if (gridContent)
   {
-    // Grid data levels are in Pa, output level type is isobaricInhPa
-
-    level /= 100;
-
     if (isGroundLevel(levelType))
       return GroundLevel;
     else if (isEntireAtmosphereLevel(levelType))
@@ -991,7 +987,16 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   }
 
   if (isPressureLevel(levelType, gridContent))
+  {
+    if (gridContent)
+    {
+      // Radon name levels are Pa, output level is hPa
+
+      level /= 100;
+    }
+
     return PressureLevel;
+  }
   else if (isHybridLevel(levelType, gridContent))
     return HybridLevel;
   else if (isHeightLevel(levelType, level, gridContent))
