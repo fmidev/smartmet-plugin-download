@@ -63,6 +63,11 @@ class NetCdfStreamer : public DataStreamer
   std::list<NcVar *>::iterator itsVarIterator;
   std::list<NcVar *> itsDataVars;
 
+  typedef std::map<std::string, std::set<int>> DimensionLevels;
+  DimensionLevels itsDimensionLevels;
+  typedef std::map<std::string, std::string> LevelDimensions;
+  LevelDimensions itsLevelDimensions;
+
   boost::shared_ptr<NcDim> addDimension(const std::string &dimName, long dimSize);
   boost::shared_ptr<NcVar> addVariable(const std::string &varName,
                                        NcType dataType,
@@ -95,17 +100,14 @@ class NetCdfStreamer : public DataStreamer
   void addTimeDimension();
   boost::shared_ptr<NcDim> addTimeDimension(long periodLengthInMinutes,
                                             boost::shared_ptr<NcVar> &tVar);
-  std::string getLevelDimensionName(const std::string &levelTypeName, int level) const;
   void getLevelTypeAttributes(FmiLevelType levelType,
                               std::string &name,
                               std::string &positive,
                               std::string &unit) const;
-  boost::shared_ptr<NcDim> getLevelDimension(FmiLevelType levelType,
-                                             int level,
-                                             std::string &levelTypeName,
-                                             std::string &levelDirectionPositive,
-                                             std::string &unit) const;
-  boost::shared_ptr<NcDim> getLevelDimension(FmiLevelType levelType, int level) const;
+  boost::shared_ptr<NcDim> getLevelDimension(
+      const std::string &paramName, std::string &levelDimName) const;
+  boost::shared_ptr<NcDim> getLevelDimAndIndex(
+      const std::string &paramName, int paramLevel, int &levelIndex) const;
   void addLevelDimensions();
   void addLevelDimension();
 
@@ -124,7 +126,13 @@ class NetCdfStreamer : public DataStreamer
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
   boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
-  void addParameters(bool relative_uv);
+
+  bool hasParamVariable(const std::vector<std::string> &paramParts,
+                        std::map<std::string, NcVar *> &paramVariables);
+  void addParamVariable(NcVar *var,
+                        const std::vector<std::string> &paramParts,
+                        std::map<std::string, NcVar *> &paramVariables);
+  void addVariables(bool relative_uv);
 
   void storeParamValues();
 

@@ -721,16 +721,59 @@ void NetCdfStreamer::getLevelTypeAttributes(FmiLevelType levelType,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get level dimension name
+ * \brief Get level dimension by radon parameter name
  *
  */
 // ----------------------------------------------------------------------
 
-string NetCdfStreamer::getLevelDimensionName(const string &levelTypeName, int level) const
+namespace
+{
+string paramNameWithoutLevel(const vector<string> &paramParts)
 {
   try
   {
-    return levelTypeName + "_" + Fmi::to_string(level);
+    return paramParts[0] + ":" + paramParts[1] + ":" + paramParts[2] + ":" +
+           paramParts[3] + ":" + paramParts[5] + ":" + paramParts[6];
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+string paramNameWithoutLevel(const string &paramName)
+{
+  try
+  {
+    vector<string> paramParts;
+    parseRadonParameterName(paramName, paramParts);
+
+    return paramNameWithoutLevel(paramParts);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+}
+
+boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
+    const string &paramName, string &levelDimName) const
+{
+  try
+  {
+    vector<string> paramParts;
+    parseRadonParameterName(paramName, paramParts);
+
+    levelDimName.clear();
+
+    auto levelDim = itsLevelDimensions.find(paramNameWithoutLevel(paramName));
+
+    if (levelDim == itsLevelDimensions.end())
+      return boost::shared_ptr<NcDim>();
+
+    levelDimName = levelDim->second.c_str();
+
+    return boost::shared_ptr<NcDim>(itsFile->get_dim(levelDimName.c_str()), dimDeleter);
   }
   catch (...)
   {
@@ -740,36 +783,44 @@ string NetCdfStreamer::getLevelDimensionName(const string &levelTypeName, int le
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get level dimension by level type and number
+ * \brief Get level dimension and index by radon parameter name and level value
  *
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(FmiLevelType levelType,
-                                                           int level,
-                                                           string &levelTypeName,
-                                                           string &levelDirectionPositive,
-                                                           string &unit) const
+boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimAndIndex(
+    const string &paramName, int paramLevel, int &levelIndex) const
 {
   try
   {
-    getLevelTypeAttributes(levelType, levelTypeName, levelDirectionPositive, unit);
+    string levelDimName;
 
-    string levelDimName = getLevelDimensionName(levelTypeName, level);
-    return boost::shared_ptr<NcDim>(itsFile->get_dim(levelDimName.c_str()), dimDeleter);
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
+    levelIndex = -1;
 
-boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(FmiLevelType levelType, int level) const
-{
-  try
-  {
-    string levelTypeName, levelDirectionPositive, unit;
-    return getLevelDimension(levelType, level, levelTypeName, levelDirectionPositive, unit);
+    auto levelDim = getLevelDimension(paramName, levelDimName);
+
+    if (!levelDim)
+      return levelDim;
+
+    auto it = itsDimensionLevels.find(levelDimName);
+
+    if (it == itsDimensionLevels.end())
+      throw Fmi::Exception::Trace(BCP, "Internal error: level dimension not found");
+
+    auto itl = it->second.cbegin();
+
+    for (; (itl != it->second.cend()); itl++)
+    {
+      levelIndex++;
+
+      if (*itl == paramLevel)
+        break;
+    }
+
+    if (itl == it->second.cend())
+      throw Fmi::Exception::Trace(BCP, "Internal error: level not found");
+
+    return levelDim;
   }
   catch (...)
   {
@@ -788,13 +839,21 @@ void NetCdfStreamer::addLevelDimensions()
 {
   try
   {
-    // Add level dimension for each leveltype's unique level. Level dimension is not used
-    // for ground and entire atmospere data.
+    // Add level dimension for each unique leveltype/levels combination. Level dimension is not used
+    // for ground and entire atmosphere data.
     //
     // Take level types/numbers from radon parameter names, e.g. T-K:MEPS:1093:2:92500:4:0
+    //
+    // First collect all parameters and levels using leveltype as the top level map key, storing
+    // it's parameters and their levels into a map
 
+    typedef map<string, set<int>> ParamLevels;
+    typedef pair<string, string> DirectionAndUnit;
+    typedef map<string, DirectionAndUnit> DimensionAttributes;
+    typedef map<FmiLevelType, ParamLevels> LevelTypeLevels;
+    LevelTypeLevels levelTypeLevels;
+    DimensionAttributes dimensionAttributes;
     vector<string> paramParts;
-    string levelTypeName, levelDirectionPositive, varName, unit;
 
     for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
     {
@@ -807,23 +866,71 @@ void NetCdfStreamer::addLevelDimensions()
          ))
         continue;
 
-      int level = getParamLevel(it->name(), paramParts);
+      auto itlt = levelTypeLevels.find(levelType);
+      if (itlt == levelTypeLevels.end())
+        itlt = levelTypeLevels.insert(make_pair(levelType, ParamLevels())).first;
 
-      if (getLevelDimension(levelType, level, levelTypeName, levelDirectionPositive, unit))
-        continue;
+      string paramName = paramNameWithoutLevel(paramParts);
 
-      varName = levelTypeName + "_" + Fmi::to_string(level);
-      auto levelVar =
-          addCoordVariable(varName, 1, ncFloat, "level", unit, "Z", itsLevelDim);
+      auto itp = itlt->second.find(paramName);
+      if (itp == itlt->second.end())
+        itp = itlt->second.insert(make_pair(paramName, set<int>())).first;
 
-      addAttribute(levelVar, "long_name", (levelTypeName + " level").c_str());
-      addAttribute(levelVar, "positive", levelDirectionPositive.c_str());
+      itp->second.insert(getParamLevel(it->name(), paramParts));
+    }
 
-      // Grid data levels are in Pa, output level unit is hPa
+    // Clear duplicate level sets to use the same dimension variable for the parameters
 
-      float levelDimValue = level / 100;
-      if (!levelVar->put(&levelDimValue, 1))
-        throw Fmi::Exception(BCP, "Failed to store level");
+    string levelTypeName, levelDirectionPositive, varName, unit;
+    size_t nDims = 0;
+
+    for (auto itlt = levelTypeLevels.begin(); (itlt != levelTypeLevels.end()); itlt++)
+    {
+      getLevelTypeAttributes(itlt->first, levelTypeName, levelDirectionPositive, unit);
+
+      for (auto itp = itlt->second.begin(); (itp != itlt->second.end()); itp++)
+      {
+        if (itp->second.empty())
+          continue;
+
+        varName = levelTypeName + "_" + Fmi::to_string(++nDims);
+
+        itsDimensionLevels.insert(make_pair(varName, itp->second));
+        dimensionAttributes.insert(make_pair(varName, make_pair(levelDirectionPositive, unit)));
+        itsLevelDimensions.insert(make_pair(itp->first, varName));
+
+        for (auto itp2 = next(itp); (itp2 != itlt->second.end()); itp2++)
+        {
+          if (itp2->second == itp->second)
+          {
+            itsLevelDimensions.insert(make_pair(itp2->first, varName));
+            itp2->second.clear();
+          }
+        }
+      }
+    }
+
+    // Add dimensions. Grid pressure levels are Pa, output level is hPa
+
+    for (auto itd = itsDimensionLevels.begin(); (itd != itsDimensionLevels.end()); itd++)
+    {
+      auto itda = dimensionAttributes.find(itd->first);
+
+      auto levelVar = addCoordVariable(
+          itd->first, itd->second.size(), ncFloat, "level", itda->second.second, "Z", itsLevelDim);
+
+      addAttribute(levelVar, "long_name", (itd->first + " levels").c_str());
+      addAttribute(levelVar, "positive", itda->second.first.c_str());
+
+      float levels[itd->second.size()];
+      size_t nLevels = 0;
+      bool hPa = (itda->second.second == "hPa");
+
+      for (auto level : itd->second)
+        levels[nLevels++] = (hPa ? (level / 100) : level);
+
+      if (!levelVar->put(levels, nLevels))
+        throw Fmi::Exception(BCP, "Failed to store levels");
     }
   }
   catch (...)
@@ -1666,7 +1773,42 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::addParameters(bool relative_uv)
+bool NetCdfStreamer::hasParamVariable
+    (const vector<string> &paramParts, map<string, NcVar *> &paramVariables)
+{
+  try
+  {
+    auto it = paramVariables.find(paramNameWithoutLevel(paramParts));
+
+    if (it != paramVariables.end())
+    {
+      itsDataVars.push_back(it->second);
+      return true;
+    }
+
+    return false;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void NetCdfStreamer::addParamVariable(NcVar *var,
+                                      const vector<string> &paramParts,
+                                      map<string, NcVar *> &paramVariables)
+{
+  try
+  {
+    paramVariables.insert(make_pair(paramNameWithoutLevel(paramParts), var));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+void NetCdfStreamer::addVariables(bool relative_uv)
 {
   try
   {
@@ -1674,6 +1816,9 @@ void NetCdfStreamer::addParameters(bool relative_uv)
     NcDim &yOrLat = (itsYDim ? *itsYDim : *itsLatDim);
     NcDim &xOrLon = (itsYDim ? *itsXDim : *itsLonDim);
     boost::shared_ptr<NcDim> tDim;
+    map<string, NcVar *> paramVariables;
+    vector<string> paramParts;
+    size_t nVars = 0;
     bool gridContent = (itsReqParams.dataSource == GridContent);
 
     for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
@@ -1699,12 +1844,16 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 
       if (gridContent)
       {
-        // Get param config index for the parameter
+        // Check if netcdf variable already exists for the parameter
 
         paramName = it->name();
-
-        vector<string> paramParts;
         parseRadonParameterName(paramName, paramParts);
+
+        if (hasParamVariable(paramParts, paramVariables))
+          continue;
+
+        // Get param config index for the parameter
+
         radonParam = paramParts.front();
 
         for (i = j = 0; (i < pTable.size()); ++i)
@@ -1729,10 +1878,8 @@ void NetCdfStreamer::addParameters(bool relative_uv)
 
         if (itsLevelDim)
         {
-          FmiLevelType levelType = (FmiLevelType) getParamLevelId(paramName, paramParts);
-          int level = (int) getParamLevel(paramName, paramParts);
-
-          levelDim = getLevelDimension(levelType, level);
+          string levelDimName;
+          levelDim = getLevelDimension(paramName, levelDimName);
         }
       }
       else
@@ -1795,7 +1942,7 @@ void NetCdfStreamer::addParameters(bool relative_uv)
       NcDim *dim4 = *(dim++);
       NcDim *dim5 = (ensembleDim ? *dim : nullptr);
 
-      auto dataVar = addVariable(paramName + "_" + boost::lexical_cast<string>(usedParId),
+      auto dataVar = addVariable(paramName + "_" + Fmi::to_string(++nVars),
                                  ncFloat,
                                  dim1,
                                  dim2,
@@ -1826,6 +1973,11 @@ void NetCdfStreamer::addParameters(bool relative_uv)
         addAttribute(dataVar, "coordinates", "lat lon");
 
       itsDataVars.push_back(dataVar.get());
+
+      if (gridContent)
+        // Store the netcdf variable for the parameter
+        //
+        addParamVariable(dataVar.get(), paramParts, paramVariables);
     }
 
     itsVarIterator = itsDataVars.begin();
@@ -1930,6 +2082,7 @@ void NetCdfStreamer::storeParamValues()
     auto ensembleDim = itsEnsembleDim;
     auto levelDim = itsLevelDim;
     bool gridContent = (itsReqParams.dataSource == GridContent);
+    int levelIndex = itsLevelIndex;
 
     if (gridContent)
     {
@@ -1948,12 +2101,11 @@ void NetCdfStreamer::storeParamValues()
 
       if (itsLevelDim)
       {
-        // Get level dimension
+        // Get level dimension and index
 
-        FmiLevelType levelType = (FmiLevelType) getParamLevelId(itsParamIterator->name(), paramParts);
         int level = getParamLevel(itsParamIterator->name(), paramParts);
 
-        levelDim = getLevelDimension(levelType, level);
+        levelDim = getLevelDimAndIndex(itsParamIterator->name(), level, levelIndex);
       }
     }
 
@@ -1970,14 +2122,14 @@ void NetCdfStreamer::storeParamValues()
 
     if (!ensembleDim)
     {
-      if (!(*itsVarIterator)->set_cur(timeIndex, levelDim ? itsLevelIndex : -1))
-        throw Fmi::Exception(BCP, "Failed to set active netcdf time/level");
+      if (!(*itsVarIterator)->set_cur(timeIndex, levelDim ? levelIndex : -1))
+        throw Fmi::Exception(BCP, "Failed to set current netcdf time/level");
 
       edge++;
       nEdges--;
     }
-    else if (!(*itsVarIterator)->set_cur(0, timeIndex, levelDim ? itsLevelIndex : -1))
-      throw Fmi::Exception(BCP, "Failed to set active netcdf ensemble/time/level");
+    else if (!(*itsVarIterator)->set_cur(0, timeIndex, levelDim ? levelIndex : -1))
+      throw Fmi::Exception(BCP, "Failed to set current netcdf ensemble/time/level");
 
     long edge1 = *(edge++);
     long edge2 = *(edge++);
@@ -2063,9 +2215,9 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 
       setGeometry(q, area, grid);
 
-      // Add parameters
+      // Add variables
 
-      addParameters(q->isRelativeUV());
+      addVariables(q->isRelativeUV());
 
       itsMetaFlag = false;
     }
@@ -2106,9 +2258,9 @@ void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
 
       setGridGeometry(gridQuery);
 
-      // Add parameters
+      // Add variables
 
-      addParameters(false);
+      addVariables(false);
 
       itsMetaFlag = false;
     }
