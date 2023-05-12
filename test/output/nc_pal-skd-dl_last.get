@@ -31,14 +31,14 @@ variables:
 		lon:standard_name = "longitude" ;
 		lon:long_name = "longitude" ;
 		lon:units = "degrees_east" ;
-	float air_temperature_4(time, y, x) ;
-		air_temperature_4:units = "K" ;
-		air_temperature_4:_FillValue = 32700.f ;
-		air_temperature_4:missing_value = 32700.f ;
-		air_temperature_4:grid_mapping = "crs" ;
-		air_temperature_4:standard_name = "air_temperature" ;
-		air_temperature_4:long_name = "Air temperature" ;
-		air_temperature_4:coordinates = "lat lon" ;
+	float air_temperature_1(time, y, x) ;
+		air_temperature_1:units = "K" ;
+		air_temperature_1:_FillValue = 32700.f ;
+		air_temperature_1:missing_value = 32700.f ;
+		air_temperature_1:grid_mapping = "crs" ;
+		air_temperature_1:standard_name = "air_temperature" ;
+		air_temperature_1:long_name = "Air temperature" ;
+		air_temperature_1:coordinates = "lat lon" ;
 
 // global attributes:
 		:Conventions = "CF-1.6" ;
