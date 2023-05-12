@@ -123,7 +123,10 @@ list<pair<int, int>> Query::parseIntValues(const string &paramName, const string
   for (auto const &part : parts)
   {
     string s = boost::trim_copy(part);
-    auto pos = s.find("/");
+    auto pos = s.find("-");
+
+    if (pos == 0)
+       pos = s.find("-", 1);
 
     if (pos == string::npos)
     {
@@ -427,7 +430,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq, Engine::Grid::En
     }
 
     if (pOptions.size() == 0)
-      throw Fmi::Exception::Trace(BCP, "No parameter names given");
+      throw Fmi::Exception::Trace(BCP, "No data available");
   }
   catch (...)
   {

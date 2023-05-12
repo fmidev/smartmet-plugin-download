@@ -990,7 +990,7 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   {
     if (gridContent)
     {
-      // Radon name levels are Pa, output level is hPa
+      // Grid pressure levels are Pa, output level is hPa
 
       level /= 100;
     }
