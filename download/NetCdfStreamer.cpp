@@ -1881,6 +1881,8 @@ void NetCdfStreamer::addVariables(bool relative_uv)
           string levelDimName;
           levelDim = getLevelDimension(paramName, levelDimName);
         }
+
+        usedParId = ++nVars;
       }
       else
       {
@@ -1942,7 +1944,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
       NcDim *dim4 = *(dim++);
       NcDim *dim5 = (ensembleDim ? *dim : nullptr);
 
-      auto dataVar = addVariable(paramName + "_" + Fmi::to_string(++nVars),
+      auto dataVar = addVariable(paramName + "_" + Fmi::to_string(usedParId),
                                  ncFloat,
                                  dim1,
                                  dim2,

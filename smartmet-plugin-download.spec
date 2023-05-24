@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.5.12
+Version: 23.5.24
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -26,7 +26,7 @@ BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 23.4.27
-BuildRequires: smartmet-library-macgyver-devel >= 23.4.27
+BuildRequires: smartmet-library-macgyver-devel >= 23.5.24
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
 BuildRequires: smartmet-library-grid-content-devel >= 23.4.17
@@ -41,12 +41,12 @@ Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.4.27
+Requires: smartmet-library-macgyver >= 23.5.24
 Requires: smartmet-library-timeseries >= 23.3.15
 Requires: smartmet-library-spine >= 23.4.27
 Requires: smartmet-library-newbase >= 23.2.9
 Requires: smartmet-engine-querydata >= 23.4.27
-Requires: smartmet-server >= 23.4.27
+Requires: smartmet-server >= 23.5.19
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -68,7 +68,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-library-spine-plugin-test >= 23.4.27
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
 #TestRequires: smartmet-qdtools >= 23.3.28
-#TestRequires: smartmet-test-data >= 23.2.9
+#TestRequires: smartmet-test-data >= 23.5.15
 #TestRequires: smartmet-test-db >= 23.2.24
 #TestRequires: smartmet-engine-grid-test >= 23.4.17
 #TestRequires: wgrib
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed May 24 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.5.24-1.fmi
+- Use newbase parameter id as netcdf variable name suffix for querydata producers; BRAINSTORM-2611
+
 * Fri May 12 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.5.12-1.fmi
 - New release version. Changes and bug fixes to grid data query with radon names:
 - Create netcdf level dimensions for leveltype/levels sets instead of leveltype/level
