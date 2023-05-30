@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.5.24
+Version: 23.5.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue May 30 2023 Andris Pavēnis <andris.pavenis@fmi.fi> 23.5.30-1.fmi
+- Repackage due to omniORB upgrade to 4.3.0
+
 * Wed May 24 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.5.24-1.fmi
 - Use newbase parameter id as netcdf variable name suffix for querydata producers; BRAINSTORM-2611
 
