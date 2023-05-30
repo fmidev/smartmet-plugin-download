@@ -29,7 +29,7 @@ BuildRequires: smartmet-library-spine-devel >= 23.4.27
 BuildRequires: smartmet-library-macgyver-devel >= 23.5.24
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
-BuildRequires: smartmet-library-grid-content-devel >= 23.4.17
+BuildRequires: smartmet-library-grid-content-devel >= 23.5.26
 BuildRequires: smartmet-library-grid-files-devel >= 23.3.9
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.4.27
@@ -46,6 +46,7 @@ Requires: smartmet-library-timeseries >= 23.3.15
 Requires: smartmet-library-spine >= 23.4.27
 Requires: smartmet-library-newbase >= 23.2.9
 Requires: smartmet-engine-querydata >= 23.4.27
+Requires: smartmet-library-grid-content >= 23.5.26
 Requires: smartmet-server >= 23.5.19
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
