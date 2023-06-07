@@ -17,8 +17,6 @@ CORBA_INCLUDE = -isystem /usr/include/smartmet/grid-content/contentServer/corba/
                 -isystem /usr/include/smartmet/grid-content/queryServer/corba/stubs
 CORBA_LIBS = -lomniORB4 -lomnithread
 
-ECCODES_LIBS := $(shell pkg-config --libs eccodes)
-
 INCLUDES += $(CORBA_INCLUDE)
 
 LIBS += -L$(libdir) \
@@ -32,7 +30,7 @@ LIBS += -L$(libdir) \
 	-lboost_iostreams \
 	-lboost_system \
 	-lbz2 -lz \
-	$(ECCODES_LIBS) \
+	-leccodes -leccodes_memfs \
 	-lnetcdf_c++
 
 # What to install
