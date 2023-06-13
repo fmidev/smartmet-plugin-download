@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.6.6
+Version: 23.6.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,27 +25,27 @@ BuildRequires: gdal34-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.4.27
-BuildRequires: smartmet-library-macgyver-devel >= 23.6.2
+BuildRequires: smartmet-library-spine-devel >= 23.6.13
+BuildRequires: smartmet-library-macgyver-devel >= 23.6.6
 BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
 BuildRequires: smartmet-library-newbase-devel >= 23.2.9
 BuildRequires: smartmet-library-grid-content-devel >= 23.5.26
 BuildRequires: smartmet-library-grid-files-devel >= 23.6.6
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 23.4.27
-BuildRequires: smartmet-engine-geonames-devel >= 23.4.27
-BuildRequires: smartmet-engine-grid-devel >= 23.5.26
+BuildRequires: smartmet-engine-querydata-devel >= 23.6.13
+BuildRequires: smartmet-engine-geonames-devel >= 23.6.13
+BuildRequires: smartmet-engine-grid-devel >= 23.6.8
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal34
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.6.2
+Requires: smartmet-library-macgyver >= 23.6.6
 Requires: smartmet-library-timeseries >= 23.3.15
-Requires: smartmet-library-spine >= 23.4.27
+Requires: smartmet-library-spine >= 23.6.13
 Requires: smartmet-library-newbase >= 23.2.9
-Requires: smartmet-engine-querydata >= 23.4.27
+Requires: smartmet-engine-querydata >= 23.6.13
 Requires: smartmet-library-grid-content >= 23.5.26
 Requires: smartmet-server >= 23.5.19
 Requires: %{smartmet_boost}-date-time
@@ -62,16 +62,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 23.4.27
-#TestRequires: smartmet-engine-grid >= 23.5.26
-#TestRequires: smartmet-engine-querydata >= 23.4.27
+#TestRequires: smartmet-engine-geonames >= 23.6.13
+#TestRequires: smartmet-engine-grid >= 23.6.8
+#TestRequires: smartmet-engine-querydata >= 23.6.13
 #TestRequires: smartmet-utils-devel >= 23.4.28
-#TestRequires: smartmet-library-spine-plugin-test >= 23.4.27
+#TestRequires: smartmet-library-spine-plugin-test >= 23.6.13
 #TestRequires: smartmet-library-newbase-devel >= 23.2.9
 #TestRequires: smartmet-qdtools >= 23.3.28
 #TestRequires: smartmet-test-data >= 23.5.15
 #TestRequires: smartmet-test-db >= 23.6.1
-#TestRequires: smartmet-engine-grid-test >= 23.5.26
+#TestRequires: smartmet-engine-grid-test >= 23.6.8
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 13 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.13-1.fmi
+- Support internal and environment variables in configuration files
+
 * Tue Jun  6 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.6-1.fmi
 - Repackaged due to GRID ABI changes
 
