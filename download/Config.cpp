@@ -6,9 +6,10 @@
 
 #include "Config.h"
 #include <boost/algorithm/string/split.hpp>
-#include <spine/Exceptions.h>
 #include <boost/algorithm/string/trim.hpp>
 #include <macgyver/Exception.h>
+#include <spine/ConfigTools.h>
+#include <spine/Exceptions.h>
 #include <stdexcept>
 
 using namespace std;
@@ -57,9 +58,9 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
 
             if (!setting.isArray())
               throw Fmi::Exception(BCP,
-                                     optName + "." + paramName +
-                                         " must be an array in dls configuration file line " +
-                                         boost::lexical_cast<string>(setting.getSourceLine()));
+                                   optName + "." + paramName +
+                                       " must be an array in dls configuration file line " +
+                                       boost::lexical_cast<string>(setting.getSourceLine()));
 
             if (paramName == "disabledReqParameters")
             {
@@ -102,10 +103,9 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
             libconfig::Setting& formatSettings = itsConfig.lookup(optName);
 
             if (!formatSettings.isGroup())
-              throw Fmi::Exception(
-                  BCP,
-                  optName + " must be an array in dls configuration file line " +
-                      boost::lexical_cast<string>(formatSettings.getSourceLine()));
+              throw Fmi::Exception(BCP,
+                                   optName + " must be an array in dls configuration file line " +
+                                       boost::lexical_cast<string>(formatSettings.getSourceLine()));
 
             for (int j = 0; j < formatSettings.getLength(); ++j)
               currentSettings.namedSettings.insert(
@@ -119,8 +119,8 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
           {
             if (!Plugin::Download::Datum::parseDatumShift(settings[i], currentSettings.datumShift))
               throw Fmi::Exception(BCP,
-                                     "Invalid datum in dls configuration file line " +
-                                         boost::lexical_cast<string>(settings.getSourceLine()));
+                                   "Invalid datum in dls configuration file line " +
+                                       boost::lexical_cast<string>(settings.getSourceLine()));
           }
           else if (paramName == "multiFile")
           {
@@ -129,12 +129,12 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
           else
           {
             throw Fmi::Exception(BCP,
-                                   string("Unrecognized parameter '") + paramName +
-                                       "' in dls configuration on line " +
-                                       boost::lexical_cast<string>(settings[i].getSourceLine()));
+                                 string("Unrecognized parameter '") + paramName +
+                                     "' in dls configuration on line " +
+                                     boost::lexical_cast<string>(settings[i].getSourceLine()));
           }
         }
-        catch(...)
+        catch (...)
         {
           Spine::Exceptions::handle("Download plugin");
         }
@@ -186,8 +186,8 @@ void Config::setEnvSettings()
       {
         if (!settings.isGroup())
           throw Fmi::Exception(BCP,
-                                 env + " must be an array in dls configuration file om line " +
-                                     boost::lexical_cast<string>(settings.getSourceLine()));
+                               env + " must be an array in dls configuration file om line " +
+                                   boost::lexical_cast<string>(settings.getSourceLine()));
 
         for (; i < settings.getLength(); ++i)
         {
@@ -200,22 +200,22 @@ void Config::setEnvSettings()
       catch (const libconfig::ParseException& e)
       {
         throw Fmi::Exception(BCP,
-                               string("DLS configuration error ' ") + e.getError() +
-                                   "' with variable '" + env + "' on line " +
-                                   boost::lexical_cast<string>(e.getLine()));
+                             string("DLS configuration error ' ") + e.getError() +
+                                 "' with variable '" + env + "' on line " +
+                                 boost::lexical_cast<string>(e.getLine()));
       }
       catch (const libconfig::ConfigException&)
       {
         throw Fmi::Exception(BCP,
-                               string("DLS configuration error with variable '") + env +
-                                   "' on line " +
-                                   boost::lexical_cast<string>(settings[i].getSourceLine()));
+                             string("DLS configuration error with variable '") + env +
+                                 "' on line " +
+                                 boost::lexical_cast<string>(settings[i].getSourceLine()));
       }
       catch (const exception& e)
       {
         throw Fmi::Exception(BCP,
-                               e.what() + string(" (line number ") +
-                                   boost::lexical_cast<string>(settings[i].getSourceLine()) + ")");
+                             e.what() + string(" (line number ") +
+                                 boost::lexical_cast<string>(settings[i].getSourceLine()) + ")");
       }
     }
   }
@@ -245,8 +245,8 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
 
       if (!producers.isGroup())
         throw Fmi::Exception(BCP,
-                               "producers must be a group in dls configuration file line " +
-                                   boost::lexical_cast<string>(producers.getSourceLine()));
+                             "producers must be a group in dls configuration file line " +
+                                 boost::lexical_cast<string>(producers.getSourceLine()));
     }
 
     if (!itsConfig.exists("producers.enabled"))
@@ -269,8 +269,8 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
 
     if (!enabled.isArray())
       throw Fmi::Exception(BCP,
-                             "producers.enabled must be an array in dls configuration file line " +
-                                 boost::lexical_cast<string>(enabled.getSourceLine()));
+                           "producers.enabled must be an array in dls configuration file line " +
+                               boost::lexical_cast<string>(enabled.getSourceLine()));
 
     // Default data source
 
@@ -348,6 +348,7 @@ Config::Config(const string& configfile)
     itsConfig.setIncludeDir(p.c_str());
 
     itsConfig.readFile(configfile.c_str());
+    Spine::expandVariables(itsConfig);
 
     itsConfig.lookupValue("gribconfig", itsGribConfig);
     if (!itsGribConfig.empty())
@@ -378,9 +379,9 @@ Config::Config(const string& configfile)
 
     if (hasMin != hasMax)
       throw Fmi::Exception(BCP,
-                             "Neither or both grib2.tablesversion.min and "
-                             "grib2.tablesversion.max must be given in DLS "
-                             "configuration");
+                           "Neither or both grib2.tablesversion.min and "
+                           "grib2.tablesversion.max must be given in DLS "
+                           "configuration");
 
     if (hasMin)
     {
@@ -528,7 +529,7 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
             name = *prodlist.begin();
         }
 
-	// THIS IS NOT THREAD SAFE IF THE VARIABLE IS USED!
+        // THIS IS NOT THREAD SAFE IF THE VARIABLE IS USED!
         p->second.qEngineProducerConfig = querydata.getProducerConfig(name);
       }
 #endif
