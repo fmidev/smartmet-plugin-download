@@ -52,11 +52,13 @@ namespace Download
 
 DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
+                           const Query &query,
                            const Producer &producer,
                            const ReqParams &reqParams)
     : Spine::HTTP::ContentStreamer(),
       itsRequest(req),
       itsCfg(config),
+      itsQuery(query),
       itsReqParams(reqParams),
       itsProducer(producer),
       itsDoneFlag(false),
@@ -1014,7 +1016,7 @@ void DataStreamer::getParameterDetailsFromContentData(
   try
   {
     vector<string> paramParts;
-    parseRadonParameterName(paramName, paramParts);
+    itsQuery.parseRadonParameterName(paramName, paramParts);
 
     string param = paramParts[0];
     string producer = paramParts[1];
@@ -4155,7 +4157,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   if (itsReqParams.dataSource == GridContent)
   {
     vector<string> paramParts;
-    parseRadonParameterName(itsParamIterator->name(), paramParts);
+    itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
 
     queryParam.mForecastType = getForecastType(itsParamIterator->name(), paramParts);
     queryParam.mForecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);

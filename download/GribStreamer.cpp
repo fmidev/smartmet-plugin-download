@@ -39,9 +39,11 @@ boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *para
 
 GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
+                           const Query &query,
                            const Producer &producer,
                            const ReqParams &reqParams)
-    : DataStreamer(req, config, producer, reqParams), itsGrib1Flag(reqParams.outputFormat == Grib1)
+    : DataStreamer(req, config, query, producer, reqParams)
+    , itsGrib1Flag(reqParams.outputFormat == Grib1)
 {
   try
   {
@@ -1035,7 +1037,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
       // Take parameter name and level type from radon parameter name T-K:MEPS:1093:6,...
 
       vector<string> paramParts;
-      parseRadonParameterName(paramName, paramParts);
+      itsQuery.parseRadonParameterName(paramName, paramParts);
       radonParam = paramParts[0];
       radonProducer = paramParts[1];
 

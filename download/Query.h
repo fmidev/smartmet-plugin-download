@@ -249,8 +249,13 @@ class Query
   TimeSeries::OptionParsers::ParameterOptions pOptions;
   TimeSeries::TimeSeriesGeneratorOptions tOptions;
 
+  void parseRadonParameterName(
+      const std::string &param, std::vector<std::string> &paramParts, bool expanding = false) const;
+
  private:
   Query();
+
+  std::map<std::string, std::vector<std::string>> radonParameters;
 
   int parseIntValue(const std::string &paramName, const std::string &fieldName,
                     const std::string &fieldValue, bool negativeValueValid, int maxValue);

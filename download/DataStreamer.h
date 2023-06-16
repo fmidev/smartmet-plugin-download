@@ -42,6 +42,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   DataStreamer(const Spine::HTTP::Request &req,
                const Config &config,
+               const Query &query,
                const Producer &producer,
                const ReqParams &regParams);
   virtual ~DataStreamer();
@@ -91,6 +92,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   const Spine::HTTP::Request &itsRequest;
 
   const Config &itsCfg;
+  const Query &itsQuery;
   ReqParams itsReqParams;
   Resources itsResources;
   const Producer &itsProducer;

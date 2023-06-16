@@ -557,7 +557,7 @@ static bool getScaleFactorAndOffset(signed long id,
 // ----------------------------------------------------------------------
 
 static bool getParamConfig(const ParamChangeTable &pTable,
-                           const TimeSeries::OptionParsers::ParameterList &reqParams,
+                           const Query &query,
                            DataSource dataSource,
                            OutputFormat outputFormat,
                            TimeSeries::OptionParsers::ParameterList &knownParams,
@@ -579,7 +579,9 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     bool gridContent = (dataSource == GridContent);
     int geometry = -1;
 
-    BOOST_FOREACH (Spine::Parameter param, reqParams)
+    auto const &params = query.pOptions.parameters();
+
+    BOOST_FOREACH (Spine::Parameter param, params)
     {
       // We allow special params too if they have a number (WindUMS and WindVMS)
 
@@ -594,7 +596,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
         {
           // All parameters must have the same geometry
 
-          parseRadonParameterName(param.name(), paramParts);
+          query.parseRadonParameterName(param.name(), paramParts);
           paramName = paramParts[0];
           producerName = paramParts[1];
 
@@ -626,7 +628,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     std::list<unsigned int>::const_iterator itm = missingParams.begin();
     i = 0;
 
-    BOOST_FOREACH (Spine::Parameter param, reqParams)
+    BOOST_FOREACH (Spine::Parameter param, params)
     {
       if ((itm != missingParams.end()) && (i == *itm))
         itm++;
@@ -723,21 +725,24 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
     {
-      ds = boost::shared_ptr<DataStreamer>(new GribStreamer(req, config, producer, reqParams));
+      ds = boost::shared_ptr<DataStreamer>(
+          new GribStreamer(req, config, query, producer, reqParams));
       getParamConfig(
-          config.getParamChangeTable(), query.pOptions.parameters(), reqParams.dataSource,
+          config.getParamChangeTable(), query, reqParams.dataSource,
           reqParams.outputFormat, knownParams, scaling);
     }
     else if (reqParams.outputFormat == NetCdf)
     {
-      ds = boost::shared_ptr<DataStreamer>(new NetCdfStreamer(req, config, producer, reqParams));
+      ds = boost::shared_ptr<DataStreamer>(
+          new NetCdfStreamer(req, config, query, producer, reqParams));
       getParamConfig(
-          config.getParamChangeTable(false), query.pOptions.parameters(), reqParams.dataSource,
+          config.getParamChangeTable(false), query, reqParams.dataSource,
           reqParams.outputFormat, knownParams, scaling);
     }
     else
     {
-      ds = boost::shared_ptr<DataStreamer>(new QDStreamer(req, config, producer, reqParams));
+      ds = boost::shared_ptr<DataStreamer>(
+          new QDStreamer(req, config, query, producer, reqParams));
 
       BOOST_FOREACH (Spine::Parameter param, query.pOptions.parameters())
       {
@@ -869,13 +874,13 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
 
     // Options
 
-    Query query(req, itsGridEngine);
+    itsQuery = boost::make_shared<Query>(req, itsGridEngine);
 
     // Initialize streamer.
 
     string filename;
     response.setContent(initializeStreamer(
-        req, *itsQEngine, itsGridEngine, itsGeoEngine, query, itsConfig, filename));
+        req, *itsQEngine, itsGridEngine, itsGeoEngine, *itsQuery, itsConfig, filename));
 
     string mime = "application/octet-stream";
     response.setHeader("Content-type", mime.c_str());

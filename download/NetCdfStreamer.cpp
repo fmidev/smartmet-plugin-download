@@ -35,9 +35,10 @@ namespace Download
 {
 NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
+                               const Query &query,
                                const Producer &producer,
                                const ReqParams &reqParams)
-    : DataStreamer(req, config, producer, reqParams),
+    : DataStreamer(req, config, query, producer, reqParams),
       itsError(NcError::verbose_nonfatal),
       itsFilename(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) +
                   "_" + boost::lexical_cast<string>(boost::this_thread::get_id())),
@@ -546,7 +547,7 @@ void NetCdfStreamer::addEnsembleDimensions()
       //
       // Take forecast type/number from radon parameter names, e.g. T-K:MEPS:1093:2:92500:3:3
 
-      parseRadonParameterName(it->name(), paramParts);
+      itsQuery.parseRadonParameterName(it->name(), paramParts);
       auto forecastType = getForecastType(it->name(), paramParts);
       auto forecastNumber = getForecastNumber(it->name(), paramParts);
 
@@ -740,12 +741,12 @@ string paramNameWithoutLevel(const vector<string> &paramParts)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
-string paramNameWithoutLevel(const string &paramName)
+string paramNameWithoutLevel(const Query &query, const string &paramName)
 {
   try
   {
     vector<string> paramParts;
-    parseRadonParameterName(paramName, paramParts);
+    query.parseRadonParameterName(paramName, paramParts);
 
     return paramNameWithoutLevel(paramParts);
   }
@@ -762,11 +763,11 @@ boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
   try
   {
     vector<string> paramParts;
-    parseRadonParameterName(paramName, paramParts);
+    itsQuery.parseRadonParameterName(paramName, paramParts);
 
     levelDimName.clear();
 
-    auto levelDim = itsLevelDimensions.find(paramNameWithoutLevel(paramName));
+    auto levelDim = itsLevelDimensions.find(paramNameWithoutLevel(itsQuery, paramName));
 
     if (levelDim == itsLevelDimensions.end())
       return boost::shared_ptr<NcDim>();
@@ -857,7 +858,7 @@ void NetCdfStreamer::addLevelDimensions()
 
     for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
     {
-      parseRadonParameterName(it->name(), paramParts);
+      itsQuery.parseRadonParameterName(it->name(), paramParts);
       FmiLevelType levelType = (FmiLevelType) getParamLevelId(it->name(), paramParts);
 
       if (!(
@@ -1847,7 +1848,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
         // Check if netcdf variable already exists for the parameter
 
         paramName = it->name();
-        parseRadonParameterName(paramName, paramParts);
+        itsQuery.parseRadonParameterName(paramName, paramParts);
 
         if (hasParamVariable(paramParts, paramVariables))
           continue;
@@ -2089,7 +2090,7 @@ void NetCdfStreamer::storeParamValues()
     if (gridContent)
     {
       vector<string> paramParts;
-      parseRadonParameterName(itsParamIterator->name(), paramParts);
+      itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
 
       if (itsEnsembleDim)
       {

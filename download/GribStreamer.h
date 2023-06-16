@@ -22,6 +22,7 @@ class GribStreamer : public DataStreamer
  public:
   GribStreamer(const Spine::HTTP::Request& req,
                const Config& config,
+               const Query& Query,
                const Producer& producer,
                const ReqParams& reqParams);
   virtual ~GribStreamer();
