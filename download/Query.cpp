@@ -255,7 +255,7 @@ void Query::expandParameterFromSingleValues(const string &param,
   // deterministic forecast
 
   vector<string> paramParts;
-  string paramName;
+  string paramName, fcNumber;
   bool hasRange = false;
 
   parseRadonParameterName(param, paramParts, true);
@@ -296,7 +296,10 @@ void Query::expandParameterFromSingleValues(const string &param,
       if (forecastNumber.first >= 0)
         paramParts[6] = Fmi::to_string(forecastNumber.first);
       else
+      {
+        fcNumber = paramParts[6];
         paramParts.pop_back();
+      }
 
       for (auto const &part : paramParts)
         paramName += (((&part != &paramParts[0]) ? ":" : "") + part);
@@ -305,7 +308,7 @@ void Query::expandParameterFromSingleValues(const string &param,
                                     FmiParameterName(kFmiPressure + pOptions.size())));
 
       if (forecastNumber.first < 0)
-        paramParts.push_back("");
+        paramParts.push_back(fcNumber);
 
       radonParameters.insert(make_pair(paramName, paramParts));
     }
