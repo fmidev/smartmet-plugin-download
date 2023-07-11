@@ -21,7 +21,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: %{smartmet_boost}-devel
 BuildRequires: gcc-c++
-BuildRequires: gdal34-devel
+BuildRequires: gdal35-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
@@ -37,7 +37,7 @@ BuildRequires: smartmet-engine-geonames-devel >= 23.4.27
 BuildRequires: smartmet-engine-grid-devel >= 23.4.17
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
-Requires: gdal34
+Requires: gdal35
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
@@ -76,7 +76,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: zlib-devel
 
 # makefile.inc side effect (otherwise fails on top level Makefile)
-#TestRequires: gdal34-devel
+#TestRequires: gdal35-devel
 #TestRequires: jsoncpp-devel
 #TestRequires: ctpp2-devel
 
