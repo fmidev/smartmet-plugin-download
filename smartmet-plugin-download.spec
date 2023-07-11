@@ -25,16 +25,16 @@ BuildRequires: gdal35-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.4.27
+BuildRequires: smartmet-library-spine-devel >= 23.7.10
 BuildRequires: smartmet-library-macgyver-devel >= 23.5.24
-BuildRequires: smartmet-library-timeseries-devel >= 23.3.15
-BuildRequires: smartmet-library-newbase-devel >= 23.2.9
-BuildRequires: smartmet-library-grid-content-devel >= 23.4.17
-BuildRequires: smartmet-library-grid-files-devel >= 23.3.9
+BuildRequires: smartmet-library-timeseries-devel >= 23.7.10
+BuildRequires: smartmet-library-newbase-devel >= 23.7.10
+BuildRequires: smartmet-library-grid-content-devel >= 23.7.10
+BuildRequires: smartmet-library-grid-files-devel >= 23.7.10
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 23.4.27
-BuildRequires: smartmet-engine-geonames-devel >= 23.4.27
-BuildRequires: smartmet-engine-grid-devel >= 23.4.17
+BuildRequires: smartmet-engine-querydata-devel >= 23.7.10
+BuildRequires: smartmet-engine-geonames-devel >= 23.7.11
+BuildRequires: smartmet-engine-grid-devel >= 23.7.11
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal35
@@ -42,10 +42,10 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 23.5.24
-Requires: smartmet-library-timeseries >= 23.3.15
-Requires: smartmet-library-spine >= 23.4.27
-Requires: smartmet-library-newbase >= 23.2.9
-Requires: smartmet-engine-querydata >= 23.4.27
+Requires: smartmet-library-timeseries >= 23.7.10
+Requires: smartmet-library-spine >= 23.7.10
+Requires: smartmet-library-newbase >= 23.7.10
+Requires: smartmet-engine-querydata >= 23.7.10
 Requires: smartmet-server >= 23.5.19
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
@@ -61,16 +61,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 23.4.27
-#TestRequires: smartmet-engine-grid >= 23.4.17
-#TestRequires: smartmet-engine-querydata >= 23.4.27
+#TestRequires: smartmet-engine-geonames >= 23.7.11
+#TestRequires: smartmet-engine-grid >= 23.7.11
+#TestRequires: smartmet-engine-querydata >= 23.7.10
 #TestRequires: smartmet-utils-devel >= 23.4.28
-#TestRequires: smartmet-library-spine-plugin-test >= 23.4.27
-#TestRequires: smartmet-library-newbase-devel >= 23.2.9
+#TestRequires: smartmet-library-spine-plugin-test >= 23.7.10
+#TestRequires: smartmet-library-newbase-devel >= 23.7.10
 #TestRequires: smartmet-qdtools >= 23.3.28
 #TestRequires: smartmet-test-data >= 23.5.15
 #TestRequires: smartmet-test-db >= 23.2.24
-#TestRequires: smartmet-engine-grid-test >= 23.4.17
+#TestRequires: smartmet-engine-grid-test >= 23.7.11
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
