@@ -9,6 +9,11 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Configure RPM excludes
+          command: |
+            test -f /etc/yum.repos.d/epel.repo && sudo sed -i -e '/^\[epel\]/a exclude=eccodes*' /etc/yum.repos.d/epel.repo
+            test -f /etc/yum.repos.d/epel-modular.repo && sudo sed -i -e '/^\[epel-modular\]/a exclude=eccodes*' /etc/yum.repos.d/epel-modular.repo
+      - run:
           name: Install build dependencies
           command: ci-build deps
       - run:
@@ -27,6 +32,11 @@ jobs:
       - checkout
       - attach_workspace:
           at: /dist
+      - run:
+          name: Configure RPM excludes
+          command: |
+            test -f /etc/yum.repos.d/epel.repo && sudo sed -i -e '/^\[epel\]/a exclude=eccodes*' /etc/yum.repos.d/epel.repo
+            test -f /etc/yum.repos.d/epel-modular.repo && sudo sed -i -e '/^\[epel-modular\]/a exclude=eccodes*' /etc/yum.repos.d/epel-modular.repo
       - run:
           name: Installation test
           command: ci-build dummy ; sudo yum install -y /dist/*.rpm

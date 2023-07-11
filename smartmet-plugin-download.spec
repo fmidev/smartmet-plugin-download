@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.5.24
+Version: 23.6.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -26,7 +26,7 @@ BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 23.7.10
-BuildRequires: smartmet-library-macgyver-devel >= 23.5.24
+BuildRequires: smartmet-library-macgyver-devel >= 23.6.6
 BuildRequires: smartmet-library-timeseries-devel >= 23.7.10
 BuildRequires: smartmet-library-newbase-devel >= 23.7.10
 BuildRequires: smartmet-library-grid-content-devel >= 23.7.10
@@ -41,7 +41,7 @@ Requires: gdal35
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.5.24
+Requires: smartmet-library-macgyver >= 23.6.6
 Requires: smartmet-library-timeseries >= 23.7.10
 Requires: smartmet-library-spine >= 23.7.10
 Requires: smartmet-library-newbase >= 23.7.10
@@ -87,7 +87,7 @@ SmartMet Download Plugin
 rm -rf $RPM_BUILD_ROOT
 
 %setup -q -n %{SPECNAME}
- 
+
 %build -q -n %{SPECNAME}
 make %{_smp_mflags}
 
@@ -102,6 +102,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 13 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.13-1.fmi
+- Support internal and environment variables in configuration files
+
+* Tue Jun  6 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.6.6-1.fmi
+- Repackaged due to GRID ABI changes
+
+* Tue May 30 2023 Andris Pavēnis <andris.pavenis@fmi.fi> 23.5.30-1.fmi
+- Repackage due to omniORB upgrade to 4.3.0
+
 * Wed May 24 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.5.24-1.fmi
 - Use newbase parameter id as netcdf variable name suffix for querydata producers; BRAINSTORM-2611
 
