@@ -50,6 +50,96 @@ Query::Query(const Spine::HTTP::Request& req, Engine::Grid::Engine *gridEngine)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Parse radon parameter name parts
+ *
+ */
+// ----------------------------------------------------------------------
+
+void Query::parseRadonParameterName(
+    const string &param, vector<string> &paramParts, bool expanding) const
+{
+  if (! expanding)
+  {
+    auto itp = radonParameters.find(param);
+
+    if (itp != radonParameters.end())
+    {
+      paramParts = itp->second;
+      return;
+    }
+  }
+
+  vector<string> parts;
+  const char *partNames[] = {
+                             "parameter",
+                             "producer name",
+                             "geometryId",
+                             "levelTypeId",
+                             "level",
+                             "forecastType",
+                             "forecastNumber"
+                            };
+
+  paramParts.clear();
+
+  boost::algorithm::split(parts, param, boost::algorithm::is_any_of(":"));
+  if ((parts.size() != 6) && (parts.size() != 7))
+    throw Fmi::Exception::Trace(BCP, "Invalid radon parameter name '" + param + "'");
+
+  // Returned vector is later trusted to have entry ([6]) for forecastNumber too, even through
+  // it might be missing in parameter name
+
+  if (parts.size() == 6)
+    parts.push_back("");
+
+  size_t n = 0;
+  for (auto const &part : parts)
+  {
+    string s = boost::trim_copy(part);
+    const char *cp = s.c_str();
+    auto length = s.length();
+
+    // Forecastnumber -1 does not work (to query all ensemble members) when fetching
+    // content records, and missing (-1) value generally means "any value" for data query;
+    // don't allow missing forecastnumber for ensemble data
+    //
+    // Allow negative value for height level
+
+    if (
+        (n == 6) && (s.empty() || (s == "-1")) &&
+        (!isEnsembleForecast(getForecastType(param, paramParts)))
+       )
+    {
+      // Forecast number can be missing or have value -1
+
+      s = "-1";
+    }
+    else if (s.empty())
+      throw Fmi::Exception::Trace(
+          BCP, string("Missing '") + partNames[n] + "' in radon parameter name '" + param + "'");
+    else if ((n > 1) && (!expanding))
+    {
+      if (
+          (n == 4) && (*cp == '-') &&
+          (getParamLevelId(param, paramParts) == GridFmiLevelTypeHeight)
+         )
+      {
+        cp++;
+        length--;
+      }
+
+      if (strspn(cp, "1234567890") != length)
+        throw Fmi::Exception::Trace(
+            BCP, string("Invalid '") + partNames[n] + "' in radon parameter name '" + param + "'");
+    }
+
+    paramParts.push_back(s);
+    n++;
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Parse int value
  */
 // ----------------------------------------------------------------------
@@ -165,7 +255,7 @@ void Query::expandParameterFromSingleValues(const string &param,
   // deterministic forecast
 
   vector<string> paramParts;
-  string paramName;
+  string paramName, fcNumber;
   bool hasRange = false;
 
   parseRadonParameterName(param, paramParts, true);
@@ -206,13 +296,21 @@ void Query::expandParameterFromSingleValues(const string &param,
       if (forecastNumber.first >= 0)
         paramParts[6] = Fmi::to_string(forecastNumber.first);
       else
+      {
+        fcNumber = paramParts[6];
         paramParts.pop_back();
+      }
 
       for (auto const &part : paramParts)
         paramName += (((&part != &paramParts[0]) ? ":" : "") + part);
 
       pOptions.add(Spine::Parameter(paramName, Spine::Parameter::Type::Data,
                                     FmiParameterName(kFmiPressure + pOptions.size())));
+
+      if (forecastNumber.first < 0)
+        paramParts.push_back(fcNumber);
+
+      radonParameters.insert(make_pair(paramName, paramParts));
     }
   }
 
@@ -368,6 +466,8 @@ void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
 
             pOptions.add(Spine::Parameter(expandedParamName, Spine::Parameter::Type::Data,
                                           FmiParameterName(kFmiPressure + pOptions.size())));
+
+            radonParameters.insert(make_pair(expandedParamName, paramParts));
           }
         }
       }

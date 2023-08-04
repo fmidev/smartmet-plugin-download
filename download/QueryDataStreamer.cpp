@@ -20,9 +20,10 @@ namespace Download
 {
 QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
                        const Config &config,
+                       const Query &query,
                        const Producer &producer,
                        const ReqParams &reqParams)
-    : DataStreamer(req, config, producer, reqParams),
+    : DataStreamer(req, config, query, producer, reqParams),
       itsMetaFlag(true),
       itsLoadedFlag(false),
       itsCurrentX(0),

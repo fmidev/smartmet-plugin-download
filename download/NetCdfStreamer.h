@@ -21,6 +21,7 @@ class NetCdfStreamer : public DataStreamer
  public:
   NetCdfStreamer(const Spine::HTTP::Request &req,
                  const Config &config,
+                 const Query &query,
                  const Producer &producer,
                  const ReqParams &reqParams);
   virtual ~NetCdfStreamer();
