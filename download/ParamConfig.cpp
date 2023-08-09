@@ -284,7 +284,7 @@ bool readGribParamConfigField(const std::string& name,
     {
       p.itsLevelValue = asFloat(name, json, arrayIndex);
     }
-    else if (name == "center")
+    else if ((name == "center") || (name == "centre"))
     {
       p.itsCentre = asString(name, json, arrayIndex);
     }
