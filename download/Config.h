@@ -51,6 +51,7 @@ class Config
 
   const std::string& getTempDirectory() const { return itsTempDirectory; }
   const libconfig::Config& config() const { return itsConfig; }
+  unsigned int getGrib2TablesVersionDefault() { return itsGrib2TablesVersionDefault; }
   std::pair<unsigned int, unsigned int> getGrib2TablesVersionRange() const
   {
     return std::make_pair(itsGrib2TablesVersionMin, itsGrib2TablesVersionMax);
@@ -76,6 +77,7 @@ class Config
   ParamChangeTable itsGribPTable;
   ParamChangeTable itsNetCdfPTable;
   std::string itsTempDirectory;
+  unsigned int itsGrib2TablesVersionDefault;
   unsigned int itsGrib2TablesVersionMin;
   unsigned int itsGrib2TablesVersionMax;
 

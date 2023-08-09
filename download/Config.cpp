@@ -333,6 +333,7 @@ Config::Config(const string& configfile)
     : itsGribPTable(),
       itsNetCdfPTable(),
       itsTempDirectory(defaultTempDirectory),
+      itsGrib2TablesVersionDefault(0),
       itsGrib2TablesVersionMin(0),
       itsGrib2TablesVersionMax(0),
       itsLegacyMode(false)
@@ -374,6 +375,9 @@ Config::Config(const string& configfile)
 
     itsConfig.lookupValue("tempdirectory", itsTempDirectory);
 
+    if (itsConfig.exists("grib2.tablesversion.default"))
+      itsConfig.lookupValue("grib2.tablesversion.default", itsGrib2TablesVersionDefault);
+
     bool hasMin = itsConfig.exists("grib2.tablesversion.min"),
          hasMax = itsConfig.exists("grib2.tablesversion.max");
 
@@ -393,6 +397,18 @@ Config::Config(const string& configfile)
             BCP,
             "Invalid DLS configuration: grib2.tablesversion.min must be less than or equal to "
             "grib2.tablesversion.max");
+
+      if (
+          (itsGrib2TablesVersionMax > 0) &&
+          (
+           (itsGrib2TablesVersionDefault < itsGrib2TablesVersionMin) ||
+           (itsGrib2TablesVersionDefault > itsGrib2TablesVersionMax)
+          )
+         )
+        throw Fmi::Exception(
+            BCP,
+            "Invalid DLS configuration: grib2.tablesversion.default must be within "
+            "grib2.tablesversion.min and grib2.tablesversion.max range");
     }
 
     // GRIB packing settings

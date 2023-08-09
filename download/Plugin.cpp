@@ -449,7 +449,9 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     // Tables version for grib2
 
     reqParams.grib2TablesVersion =
-        ((reqParams.outputFormat == Grib2) ? getRequestUInt(req, producer, "tablesversion", 0) : 0);
+        ((reqParams.outputFormat == Grib2)
+            ? getRequestUInt(req, producer, "tablesversion", config.getGrib2TablesVersionDefault())
+            : 0);
 
     if (reqParams.grib2TablesVersion > 0)
     {
