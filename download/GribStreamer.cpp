@@ -723,10 +723,20 @@ void GribStreamer::setNamedSettingsToGrib() const
 {
   try
   {
-    if (itsReqParams.dataSource == GridContent)
-      return;
+    string producer;
 
-    const Producer &pr = itsCfg.getProducer(itsReqParams.producer);
+    if (itsReqParams.dataSource == GridContent)
+    {
+      // Take producer name from radon parameter name T-K:MEPS:1093:6,...
+
+      vector<string> paramParts;
+      itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
+      producer = paramParts[1];
+    }
+    else
+      producer = itsReqParams.producer;
+
+    const Producer &pr = itsCfg.getProducer(producer);
     auto setBeg = pr.namedSettingsBegin();
     auto setEnd = pr.namedSettingsEnd();
     const char *const centre = "centre";

@@ -35,7 +35,7 @@ class Config
   Config(const Config& other) = delete;
   Config& operator=(const Config& other) = delete;
 
-  void init(Engine::Querydata::Engine* querydata);
+  void init(Engine::Querydata::Engine* querydata, Engine::Grid::Engine* griddata);
 
   const Producer& getProducer(std::string& name, const Engine::Querydata::Engine& querydata);
   const Producer& getProducer(const std::string& name) const;
@@ -84,7 +84,8 @@ class Config
   unsigned long itsMaxRequestDataValues = 1024 * 1024 * 1024;
   unsigned long itsLogRequestDataValues = 0;  // if 0, no logging
 
-  void parseConfigProducers(const Engine::Querydata::Engine& querydata);
+  void parseConfigProducers(
+      const Engine::Querydata::Engine& querydata, const Engine::Grid::Engine* griddata);
   void parseConfigProducer(const std::string& name, Producer& currentSettings);
 
   void setEnvSettings();

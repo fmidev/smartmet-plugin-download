@@ -231,7 +231,8 @@ void Config::setEnvSettings()
  */
 // ----------------------------------------------------------------------
 
-void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
+void Config::parseConfigProducers(
+    const Engine::Querydata::Engine& querydata, const Engine::Grid::Engine* griddata)
 {
   try
   {
@@ -251,7 +252,7 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
 
     if (!itsConfig.exists("producers.enabled"))
     {
-      // Get all querydata's producers
+      // Get all querydata producers
       //
       const Engine::Querydata::ProducerList& prodList = querydata.producers();
       auto prBeg = prodList.begin(), prEnd = prodList.end();
@@ -262,6 +263,20 @@ void Config::parseConfigProducers(const Engine::Querydata::Engine& querydata)
       {
         enabled.add(libconfig::Setting::TypeString);
         enabled[i] = it_Prod->c_str();
+      }
+
+      if (griddata)
+      {
+        // Get all grid producers
+        //
+        string_vec gridProducers;
+        griddata->getProducerList(gridProducers);
+
+        for (auto const &gridProducer : gridProducers)
+        {
+          enabled.add(libconfig::Setting::TypeString);
+          enabled[i++] = gridProducer.c_str();
+        }
       }
     }
 
@@ -479,11 +494,11 @@ Config::Config(const string& configfile)
  */
 // ----------------------------------------------------------------------
 
-void Config::init(Engine::Querydata::Engine* querydata)
+void Config::init(Engine::Querydata::Engine* querydata, Engine::Grid::Engine* griddata)
 {
   try
   {
-    parseConfigProducers(*querydata);
+    parseConfigProducers(*querydata, griddata);
   }
   catch (...)
   {

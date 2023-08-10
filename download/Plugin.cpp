@@ -1039,7 +1039,7 @@ void Plugin::init()
       throw Fmi::Exception(BCP, "Geonames engine unavailable");
     itsGeoEngine = reinterpret_cast<Engine::Geonames::Engine *>(engine);
 
-    itsConfig.init(itsQEngine);
+    itsConfig.init(itsQEngine, itsGridEngine);
 
     if (!itsReactor->addContentHandler(
             this,
