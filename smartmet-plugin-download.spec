@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.8.4
+Version: 23.8.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,6 +103,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Aug 11 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.11-1.fmi
+- Load grid data producers too at startup to use named config settings (e.g. originating centre) for the producers
+- Using grib paramconfig setting name 'centre' (in addition to 'center') to specify originating centre
+- Added optional config setting for default grib tables version
+
 * Fri Aug  4 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.4-1.fmi
 - Store and use parsed radon parameter name fields instead of reparsing
 
