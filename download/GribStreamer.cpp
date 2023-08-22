@@ -972,6 +972,7 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 #define HeightLevel "heightAboveSea"
 #define HeightAboveGroundLevel "heightAboveGround"
 #define DepthLevel "depthBelowSea"
+#define NominalTopLevel "nominalTop"
 
 string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelType,
                                            NFmiLevel *cfgLevel, int &level) const
@@ -1015,6 +1016,11 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
     return HeightLevel;
   else if (isDepthLevel(levelType, level, gridContent))
     return DepthLevel;
+  else if (isNominalTopLevel(levelType, gridContent))
+  {
+    level = 0;
+    return NominalTopLevel;
+  }
 
   throw Fmi::Exception(
       BCP, "Unrecognized level type " + boost::lexical_cast<string>(levelType));

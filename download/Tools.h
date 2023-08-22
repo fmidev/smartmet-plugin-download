@@ -56,6 +56,7 @@ static const T::ParamLevelId GridFmiLevelTypeNone = 0;
 static const T::ParamLevelId GridFmiLevelTypeGround = 1;
 static const T::ParamLevelId GridFmiLevelTypePressure = 2;
 static const T::ParamLevelId GridFmiLevelTypeHybrid = 3;
+static const T::ParamLevelId GridFmiLevelTypeNominalTop = 5;
 static const T::ParamLevelId GridFmiLevelTypeHeight = 6;
 static const T::ParamLevelId GridFmiLevelTypeEntireAtmosphere = 8;
 static const T::ParamLevelId GridFmiLevelTypeDepth = 10;
@@ -68,6 +69,7 @@ bool isHeightOrDepthLevel(FmiLevelType levelType);
 bool isHeightLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
 bool isEntireAtmosphereLevel(FmiLevelType levelType);
 bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
+bool isNominalTopLevel(FmiLevelType levelType, bool gridContent = false);
 
 FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
                                   const std::string &producer,

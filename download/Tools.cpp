@@ -72,6 +72,14 @@ bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent)
   return (((levelType == kFmiHeight) && (levelValue < 0)) || (levelType == kFmiDepth));
 }
 
+bool isNominalTopLevel(FmiLevelType levelType, bool gridContent)
+{
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeNominalTop);
+
+  return false;
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Utility routine for getting projection parameter's value from srs
