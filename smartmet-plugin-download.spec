@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.8.11
+Version: 23.8.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Aug 22 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.22-1.fmi
+- Added grib output support for nominal top level grid source data"
+
 * Fri Aug 11 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.11-1.fmi
 - Load grid data producers too at startup to use named config settings (e.g. originating centre) for the producers
 - Using grib paramconfig setting name 'centre' (in addition to 'center') to specify originating centre
