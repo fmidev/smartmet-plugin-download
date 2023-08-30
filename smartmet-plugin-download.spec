@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.8.22
+Version: 23.8.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,13 +25,13 @@ BuildRequires: gdal35-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.7.31
-BuildRequires: smartmet-library-macgyver-devel >= 23.7.28
-BuildRequires: smartmet-library-macgyver-devel >= 23.7.28
+BuildRequires: smartmet-library-spine-devel >= 23.8.28
+BuildRequires: smartmet-library-macgyver-devel >= 23.8.21
+BuildRequires: smartmet-library-macgyver-devel >= 23.8.21
 BuildRequires: smartmet-library-timeseries-devel >= 23.7.28
-BuildRequires: smartmet-library-newbase-devel >= 23.7.31
+BuildRequires: smartmet-library-newbase-devel >= 23.8.30
 BuildRequires: smartmet-library-grid-content-devel >= 23.7.28
-BuildRequires: smartmet-library-grid-files-devel >= 23.8.4
+BuildRequires: smartmet-library-grid-files-devel >= 23.8.21
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.7.28
 BuildRequires: smartmet-engine-geonames-devel >= 23.7.28
@@ -42,10 +42,10 @@ Requires: gdal35
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.7.28
+Requires: smartmet-library-macgyver >= 23.8.21
 Requires: smartmet-library-timeseries >= 23.7.28
-Requires: smartmet-library-spine >= 23.7.31
-Requires: smartmet-library-newbase >= 23.7.31
+Requires: smartmet-library-spine >= 23.8.28
+Requires: smartmet-library-newbase >= 23.8.30
 Requires: smartmet-engine-querydata >= 23.7.28
 Requires: smartmet-server >= 23.7.28
 Requires: %{smartmet_boost}-date-time
@@ -65,10 +65,10 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-geonames >= 23.7.28
 #TestRequires: smartmet-engine-grid >= 23.7.28
 #TestRequires: smartmet-engine-querydata >= 23.7.28
-#TestRequires: smartmet-utils-devel >= 23.7.17
-#TestRequires: smartmet-library-spine-plugin-test >= 23.7.31
-#TestRequires: smartmet-library-newbase-devel >= 23.7.31
-#TestRequires: smartmet-qdtools >= 23.7.28
+#TestRequires: smartmet-utils-devel >= 23.8.23
+#TestRequires: smartmet-library-spine-plugin-test >= 23.8.28
+#TestRequires: smartmet-library-newbase-devel >= 23.8.30
+#TestRequires: smartmet-qdtools >= 23.8.29
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-engine-grid-test >= 23.7.28
@@ -103,6 +103,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Aug 30 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.30-1.fmi
+- Fixed Query object usage causing crashes (BRAINSTORM-2699), caused by changes made Aug 4
+- Fixed bug in checking default value for grib2 tablesversion
+
 * Tue Aug 22 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.22-1.fmi
 - Added grib output support for nominal top level grid source data"
 
