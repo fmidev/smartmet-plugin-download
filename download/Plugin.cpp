@@ -707,7 +707,6 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
                                                           const Engine::Querydata::Engine &qEngine,
                                                           const Engine::Grid::Engine *gridEngine,
                                                           const Engine::Geonames::Engine *geoEngine,
-                                                          Query &query,
                                                           Config &config,
                                                           string &fileName)
 {
@@ -717,6 +716,26 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     ReqParams reqParams;
     const auto &producer = getRequestParams(req, reqParams, config, qEngine, gridEngine);
+
+    auto query = Query(req, gridEngine);
+
+    // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
+    // timestep (60m --> data) defaults.
+    // However, if 'now' request parameter is set, use the parsed starttime.
+
+    auto now = getRequestParam(req, producer, "now", "");
+
+    ptime originTime, startTime, endTime;
+
+    if ((!reqParams.startTime.empty()) || (!now.empty()))
+      startTime = query.tOptions.startTime;
+
+    if (!reqParams.endTime.empty())
+      endTime = query.tOptions.endTime;
+
+    query.tOptions.startTimeData = startTime.is_not_a_date_time();
+    query.tOptions.timeStep = reqParams.timeStep;
+    query.tOptions.endTimeData = (reqParams.endTime.empty() && (reqParams.timeStep == 0));
 
     // Create format specific streamer and get scaling information for the requested parameters.
     // Unknown (and special) parameters are ignored.
@@ -768,8 +787,6 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     // Get Q object for the producer/origintime
 
-    ptime originTime, startTime, endTime;
-
     Engine::Querydata::Q q;
 
     if (reqParams.dataSource == QueryData)
@@ -802,33 +819,17 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
       ds->setMultiFile(false); // TODO: always ?
     }
 
-    // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
-    // timestep (60m --> data) defaults.
-    // However, if 'now' request parameter is set, use the parsed starttime.
-
-    auto now = getRequestParam(req, producer, "now", "");
-
-    if ((!reqParams.startTime.empty()) || (!now.empty()))
-      startTime = query.tOptions.startTime;
-
-    if (!reqParams.endTime.empty())
-      endTime = query.tOptions.endTime;
-
-    query.tOptions.startTimeData = startTime.is_not_a_date_time();
-    query.tOptions.timeStep = reqParams.timeStep;
-    query.tOptions.endTimeData = (reqParams.endTime.empty() && (reqParams.timeStep == 0));
-
     if (reqParams.dataSource == QueryData)
     {
       // Generate list of validtimes for the data to be loaded.
       // For grid data validtimes are generated after checking data availability
 
-      ds->generateValidTimeList(q, query, originTime, startTime, endTime);
+      ds->generateValidTimeList(q, originTime, startTime, endTime);
 
       // Set request levels.
       // For grid data levels are set after checking data availability
 
-      ds->setLevels(query);
+      ds->setLevels();
     }
 
     // In order to set response status check if (any) data is available for the requested
@@ -836,7 +837,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     //
     // Set parameter and level iterators etc. to their start positions and load first available grid
 
-    if (!ds->hasRequestedData(producer, query, originTime, startTime, endTime))
+    if (!ds->hasRequestedData(producer, originTime, startTime, endTime))
     {
       if (reqParams.dataSource != GridContent)
         throw Fmi::Exception(BCP,
@@ -874,15 +875,11 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
   {
     // asm volatile ("int3;");
 
-    // Options
-
-    itsQuery = boost::make_shared<Query>(req, itsGridEngine);
-
     // Initialize streamer.
 
     string filename;
     response.setContent(initializeStreamer(
-        req, *itsQEngine, itsGridEngine, itsGeoEngine, *itsQuery, itsConfig, filename));
+        req, *itsQEngine, itsGridEngine, itsGeoEngine, itsConfig, filename));
 
     string mime = "application/octet-stream";
     response.setHeader("Content-type", mime.c_str());

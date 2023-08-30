@@ -34,7 +34,7 @@ static const char* defaultTimeZone = "utc";
  */
 // ----------------------------------------------------------------------
 
-Query::Query(const Spine::HTTP::Request& req, Engine::Grid::Engine *gridEngine)
+Query::Query(const Spine::HTTP::Request& req, const Engine::Grid::Engine *gridEngine)
 {
   try
   {
@@ -348,7 +348,7 @@ void Query::expandParameterFromSingleValues(const string &param,
  */
 // ----------------------------------------------------------------------
 
-void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
+void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                            ptime originTime,
                                            const string &paramName,
                                            const list<pair<int, int>> &levelRanges,
@@ -485,7 +485,8 @@ void Query::expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
  */
 // ----------------------------------------------------------------------
 
-void Query::parseParameters(const Spine::HTTP::Request& theReq, Engine::Grid::Engine *gridEngine)
+void Query::parseParameters(const Spine::HTTP::Request& theReq,
+                            const Engine::Grid::Engine *gridEngine)
 {
   try
   {

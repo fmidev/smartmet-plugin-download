@@ -711,7 +711,7 @@ void DataStreamer::generateGridValidTimeList(Query &query, ptime &oTime, ptime &
 // ----------------------------------------------------------------------
 
 void DataStreamer::generateValidTimeList(
-    const Engine::Querydata::Q &q, Query &query, ptime &oTime, ptime &sTime, ptime &eTime)
+    const Engine::Querydata::Q &q, ptime &oTime, ptime &sTime, ptime &eTime)
 {
   try
   {
@@ -732,34 +732,34 @@ void DataStreamer::generateValidTimeList(
       oTime = itsQ->originTime();
 
     if (sTime.is_not_a_date_time() || (sTime < itsQ->validTime()))
-      sTime = query.tOptions.startTime = itsQ->validTime();
+      sTime = itsQuery.tOptions.startTime = itsQ->validTime();
 
     itsQ->lastTime();
     itsLastDataTime = itsQ->validTime();
     itsQ->firstTime();
 
     if (eTime.is_not_a_date_time())
-      eTime = query.tOptions.endTime = itsLastDataTime;
+      eTime = itsQuery.tOptions.endTime = itsLastDataTime;
 
     // Generate list of validtimes for the data to be loaded.
     //
     // Note: Mode must be changed from TimeSteps to DataTimes if timestep was not given (we don't
     // use the default).
 
-    bool hasTimeStep = (query.tOptions.timeStep && (*query.tOptions.timeStep > 0));
+    bool hasTimeStep = (itsQuery.tOptions.timeStep && (*itsQuery.tOptions.timeStep > 0));
 
-    if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::TimeSteps) &&
+    if ((itsQuery.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::TimeSteps) &&
         (!hasTimeStep))
-      query.tOptions.mode = TimeSeries::TimeSeriesGeneratorOptions::DataTimes;
+      itsQuery.tOptions.mode = TimeSeries::TimeSeriesGeneratorOptions::DataTimes;
 
-    if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::DataTimes) ||
-        query.tOptions.startTimeData || query.tOptions.endTimeData)
+    if ((itsQuery.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::DataTimes) ||
+        itsQuery.tOptions.startTimeData || itsQuery.tOptions.endTimeData)
     {
-      query.tOptions.setDataTimes(q->validTimes(), q->isClimatology());
+      itsQuery.tOptions.setDataTimes(q->validTimes(), q->isClimatology());
     }
 
-    auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(query.timeZone);
-    itsDataTimes = TimeSeries::TimeSeriesGenerator::generate(query.tOptions, tz);
+    auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(itsQuery.timeZone);
+    itsDataTimes = TimeSeries::TimeSeriesGenerator::generate(itsQuery.tOptions, tz);
 
     if (itsDataTimes.empty())
       throw Fmi::Exception(BCP, "No valid times in the requested time period").disableStackTrace();
@@ -865,7 +865,7 @@ void DataStreamer::setGridLevels(const Producer &producer, const Query &query)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::setLevels(const Query &query)
+void DataStreamer::setLevels()
 {
   try
   {
@@ -886,7 +886,7 @@ void DataStreamer::setLevels(const Query &query)
                     ((itsReqParams.minHeight >= 0) || (itsReqParams.maxHeight > 0)));
 
     Query::Levels &levels =
-        ((query.levels.begin() == query.levels.end()) && ((!itsLevelRng) && (!itsHeightRng)))
+        ((itsQuery.levels.begin() == itsQuery.levels.end()) && ((!itsLevelRng) && (!itsHeightRng)))
             ? itsDataLevels
             : allLevels;
 
@@ -906,14 +906,14 @@ void DataStreamer::setLevels(const Query &query)
     {
       // If no levels/heights were given, using all querydata levels
 
-      if (query.levels.begin() == query.levels.end())
+      if (itsQuery.levels.begin() == itsQuery.levels.end())
       {
         if (itsLevelRng || itsHeightRng)
           for (int l = itsReqParams.minLevel; (l <= itsReqParams.maxLevel); l++)
             itsDataLevels.insert(l);
       }
       else
-        itsDataLevels = query.levels;
+        itsDataLevels = itsQuery.levels;
     }
 
     sortLevels();
@@ -1175,7 +1175,7 @@ void DataStreamer::getParameterDetailsFromContentData(
 // ----------------------------------------------------------------------
 
 bool DataStreamer::hasRequestedGridData(
-    const Producer &producer, Query &query, ptime &oTime, ptime &sTime, ptime &eTime)
+    const Producer &producer, ptime &oTime, ptime &sTime, ptime &eTime)
 {
   try
   {
@@ -1268,7 +1268,7 @@ bool DataStreamer::hasRequestedGridData(
             else
               mappingLevelType = kFmiDepth;
 
-            if (!isGridLevelRequested(producer, query, mappingLevelType, level))
+            if (!isGridLevelRequested(producer, itsQuery, mappingLevelType, level))
               continue;
 
             if (paramKey.empty())
@@ -1452,11 +1452,11 @@ bool DataStreamer::hasRequestedGridData(
 
     // Generate list of validtimes for the data to be loaded.
 
-    generateGridValidTimeList(query, oTime, sTime, eTime);
+    generateGridValidTimeList(itsQuery, oTime, sTime, eTime);
 
     // Set request levels
 
-    setGridLevels(producer, query);
+    setGridLevels(producer, itsQuery);
 
     return resetDataSet();
   }
@@ -1474,12 +1474,12 @@ bool DataStreamer::hasRequestedGridData(
 // ----------------------------------------------------------------------
 
 bool DataStreamer::hasRequestedData(
-    const Producer &producer, Query &query, ptime &originTime, ptime &startTime, ptime &endTime)
+    const Producer &producer, ptime &originTime, ptime &startTime, ptime &endTime)
 {
   try
   {
     if (itsReqParams.dataSource != QueryData)
-      return hasRequestedGridData(producer, query, originTime, startTime, endTime);
+      return hasRequestedGridData(producer, originTime, startTime, endTime);
 
     auto q = itsQ;
     bool hasData = false;

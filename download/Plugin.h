@@ -54,7 +54,6 @@ class Plugin : public SmartMetPlugin
   Engine::Querydata::Engine* itsQEngine;
   Engine::Grid::Engine* itsGridEngine;
   Engine::Geonames::Engine* itsGeoEngine;
-  boost::shared_ptr<Query> itsQuery;
 };
 
 }  // namespace Download

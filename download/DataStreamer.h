@@ -48,14 +48,13 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   virtual ~DataStreamer();
 
   void generateValidTimeList(const Engine::Querydata::Q &q,
-                             Query &query,
                              boost::posix_time::ptime &oTime,
                              boost::posix_time::ptime &sTime,
                              boost::posix_time::ptime &eTime);
 
   void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
   void sortLevels();
-  void setLevels(const Query &query);
+  void setLevels();
   void setParams(const TimeSeries::OptionParsers::ParameterList &params, const Scaling &scaling);
 
   void setEngines(const Engine::Querydata::Engine *theQEngine,
@@ -64,7 +63,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer,
-                        Query &query,
                         boost::posix_time::ptime &oTime,
                         boost::posix_time::ptime &sTime,
                         boost::posix_time::ptime &eTime);
@@ -92,7 +90,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   const Spine::HTTP::Request &itsRequest;
 
   const Config &itsCfg;
-  const Query &itsQuery;
+  Query itsQuery;
   ReqParams itsReqParams;
   Resources itsResources;
   const Producer &itsProducer;
@@ -358,7 +356,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
       boost::posix_time::ptime &eTime,
       SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails);
   bool hasRequestedGridData(const Producer &producer,
-                            Query &query,
                             boost::posix_time::ptime &oTime,
                             boost::posix_time::ptime &sTime,
                             boost::posix_time::ptime &eTime);

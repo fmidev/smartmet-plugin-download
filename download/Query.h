@@ -239,7 +239,7 @@ struct ReqParams
 class Query
 {
  public:
-  Query(const Spine::HTTP::Request &req, Engine::Grid::Engine *gridEngine);
+  Query(const Spine::HTTP::Request &req, const Engine::Grid::Engine *gridEngine);
 
   typedef std::set<int> Levels;
   Levels levels;
@@ -270,13 +270,13 @@ class Query
                                        TimeSeries::OptionParsers::ParameterOptions &pOptions,
                                        std::list<std::pair<int, int>> &levelRanges,
                                        std::list<std::pair<int, int>> &forecastNumberRanges);
-  void expandParameterFromRangeValues(Engine::Grid::Engine *gridEngine,
+  void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                       boost::posix_time::ptime originTime,
                                       const std::string &paramName,
                                       const std::list<std::pair<int, int>> &levelRanges,
                                       const std::list<std::pair<int, int>> &forecastNumberRanges,
                                       TimeSeries::OptionParsers::ParameterOptions &pOptions);
-  void parseParameters(const Spine::HTTP::Request &theReq, Engine::Grid::Engine *gridEngine);
+  void parseParameters(const Spine::HTTP::Request &theReq, const Engine::Grid::Engine *gridEngine);
   void parseTimeOptions(const Spine::HTTP::Request &theReq);
   void parseModel(const Spine::HTTP::Request &theReq);
   void parseLevels(const Spine::HTTP::Request &theReq);
