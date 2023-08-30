@@ -414,7 +414,7 @@ Config::Config(const string& configfile)
             "grib2.tablesversion.max");
 
       if (
-          (itsGrib2TablesVersionMax > 0) &&
+          (itsGrib2TablesVersionDefault > 0) && (itsGrib2TablesVersionMax > 0) &&
           (
            (itsGrib2TablesVersionDefault < itsGrib2TablesVersionMin) ||
            (itsGrib2TablesVersionDefault > itsGrib2TablesVersionMax)
