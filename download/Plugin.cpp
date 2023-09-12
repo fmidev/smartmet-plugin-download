@@ -487,13 +487,19 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
         throw Fmi::Exception(
              BCP, "Cannot specify gridparamblocksize or gridtimeblocksize unless source=grid");
 
-      if (reqParams.outputFormat == NetCdf)
-        throw Fmi::Exception(
-             BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
-
       if ((reqParams.gridParamBlockSize > 0) && (reqParams.gridTimeBlockSize > 0))
         throw Fmi::Exception(
              BCP, "Cannot specify gridparamblocksize and gridtimeblocksize simultaneously");
+
+      // Allow gridtimeblocksize 1 with netcdf output since it has no effect; by default
+      // data is fetched one grid (timestep) at a time and parameter runs in outer loop
+
+      if (
+          (reqParams.outputFormat == NetCdf) &&
+          ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 1))
+         )
+        throw Fmi::Exception(
+             BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
     }
 
     return producer;
