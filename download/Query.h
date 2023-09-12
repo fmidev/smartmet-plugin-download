@@ -156,6 +156,11 @@ struct ReqParams
   unsigned int timeStep;   // Extract every n'th validtime. Default: 0; extract every validtime
   unsigned int maxTimeSteps;  // Max # of validtimes extracted. Default: 0; extract every validtime.
                               // Currently not used
+
+  unsigned int gridParamBlockSize;  // # of grid parameters fetched as a block (single timestep)
+  unsigned int gridTimeBlockSize;   // # of grid timesteps fetched as a block (single parameter)
+  unsigned int chunkSize;           // Minimum chunk length to return
+
   //
   // Level; pressure/hPa or hybrid or height level ranges/limits. Default: extract every level
   //

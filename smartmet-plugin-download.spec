@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.8.30
+Version: 23.9.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,29 +25,29 @@ BuildRequires: gdal35-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.8.28
-BuildRequires: smartmet-library-macgyver-devel >= 23.8.21
-BuildRequires: smartmet-library-macgyver-devel >= 23.8.21
+BuildRequires: smartmet-library-spine-devel >= 23.8.31
+BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
+BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
 BuildRequires: smartmet-library-timeseries-devel >= 23.7.28
 BuildRequires: smartmet-library-newbase-devel >= 23.8.30
-BuildRequires: smartmet-library-grid-content-devel >= 23.7.28
-BuildRequires: smartmet-library-grid-files-devel >= 23.8.21
+BuildRequires: smartmet-library-grid-content-devel >= 23.9.11
+BuildRequires: smartmet-library-grid-files-devel >= 23.9.11
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 23.7.28
-BuildRequires: smartmet-engine-geonames-devel >= 23.7.28
-BuildRequires: smartmet-engine-grid-devel >= 23.7.28
+BuildRequires: smartmet-engine-querydata-devel >= 23.8.31
+BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
+BuildRequires: smartmet-engine-grid-devel >= 23.9.11
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal35
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.8.21
+Requires: smartmet-library-macgyver >= 23.8.31
 Requires: smartmet-library-timeseries >= 23.7.28
-Requires: smartmet-library-spine >= 23.8.28
+Requires: smartmet-library-spine >= 23.8.31
 Requires: smartmet-library-newbase >= 23.8.30
-Requires: smartmet-engine-querydata >= 23.7.28
-Requires: smartmet-server >= 23.7.28
+Requires: smartmet-engine-querydata >= 23.8.31
+Requires: smartmet-server >= 23.8.30
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -62,16 +62,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 23.7.28
-#TestRequires: smartmet-engine-grid >= 23.7.28
-#TestRequires: smartmet-engine-querydata >= 23.7.28
-#TestRequires: smartmet-utils-devel >= 23.8.23
-#TestRequires: smartmet-library-spine-plugin-test >= 23.8.28
+#TestRequires: smartmet-engine-geonames >= 23.9.6
+#TestRequires: smartmet-engine-grid >= 23.9.11
+#TestRequires: smartmet-engine-querydata >= 23.8.31
+#TestRequires: smartmet-utils-devel >= 23.9.6
+#TestRequires: smartmet-library-spine-plugin-test >= 23.8.31
 #TestRequires: smartmet-library-newbase-devel >= 23.8.30
 #TestRequires: smartmet-qdtools >= 23.8.29
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-test-db >= 23.7.21
-#TestRequires: smartmet-engine-grid-test >= 23.7.28
+#TestRequires: smartmet-engine-grid-test >= 23.9.11
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -103,12 +103,19 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Sep 12 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.12-1.fmi
+- Fetch multiple grid data parameters (gridparamblocksize=n) or timesteps (gridtimeblocksize=n) as a block if requested, possibly resulting better throughput depending on the layout of underlying grid data
+- Added request parameter (chunksize=n) to set nondefault grib output chunk size to avoid unnecessary copying of data to chunk buffer. Small chunk size is used for grid content data by default
+
+* Mon Sep 11 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.9.11-1.fmi
+- Repackaged due to ABI changes in grid-files
+
 * Wed Aug 30 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.30-1.fmi
 - Fixed Query object usage causing crashes (BRAINSTORM-2699), caused by changes made Aug 4
 - Fixed bug in checking default value for grib2 tablesversion
 
 * Tue Aug 22 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.22-1.fmi
-- Added grib output support for nominal top level grid source data"
+- Added grib output support for nominal top level grid source data
 
 * Fri Aug 11 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.8.11-1.fmi
 - Load grid data producers too at startup to use named config settings (e.g. originating centre) for the producers

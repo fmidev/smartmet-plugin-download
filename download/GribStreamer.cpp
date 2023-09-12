@@ -1523,6 +1523,7 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
                                        const NFmiMetTime &vTime,
                                        int level,
+                                       uint gridIndex,
                                        float scale,
                                        float offset)
 {
@@ -1576,12 +1577,12 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
     int i = 0;
 
-    auto dataValues = gridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
+    const auto vVec = &(getValueListItem(gridQuery, gridIndex)->mValueVector);
 
     for (y = y0; (y < yN); y += yStep)
       for (x = x0; (x < xN); x += xStep, i++)
       {
-        float value = dataValues[i];
+        float value = (*vVec)[i];
 
         if (value != ParamValueMissing)
           itsValueArray[i] = (value + offset) / scale;
@@ -1638,12 +1639,13 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
 string GribStreamer::getGridGribMessage(const QueryServer::Query &gridQuery,
                                         int level,
                                         const NFmiMetTime &mt,
+                                        uint gridIndex,
                                         float scale,
                                         float offset)
 {
   try
   {
-    addGridValuesToGrib(gridQuery, mt, level, scale, offset);
+    addGridValuesToGrib(gridQuery, mt, level, gridIndex, scale, offset);
 
     const void *mesg;
     size_t mesg_len;
@@ -1690,8 +1692,7 @@ std::string GribStreamer::getChunk()
           chunkBufLength += chunk.length();
 
         // To avoid small chunk transfer overhead collect chunks until max chunk length or max count
-        // of
-        // collected chunks are reached
+        // of collected chunks is reached
 
         if (itsDoneFlag || (nChunks >= itsMaxMsgChunks) || (chunkBufLength >= itsChunkLength))
         {
@@ -1777,6 +1778,7 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
 void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
                                     int level,
                                     const NFmiMetTime &mt,
+                                    uint gridIndex,
                                     string &chunk)
 {
   try
@@ -1792,7 +1794,7 @@ void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
     // Build and get grib message
 
     chunk = getGridGribMessage(
-        gridQuery, level, mt, itsScalingIterator->first, itsScalingIterator->second);
+        gridQuery, level, mt, gridIndex, itsScalingIterator->first, itsScalingIterator->second);
   }
   catch (...)
   {
