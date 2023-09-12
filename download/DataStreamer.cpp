@@ -4925,8 +4925,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     if ((itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
-        (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon) &&
-        (itsDX < 100) && (itsDY < 100))
+        (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon))
     {
       itsDX *= 1000;
       itsDY *= 1000;
@@ -5052,9 +5051,9 @@ void DataStreamer::extractGridData(string &chunk)
 
         buildGridQuery(itsGridQuery, gridLevelType, level);
 
-        printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
+        // printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
         int result = itsGridEngine->executeQuery(itsGridQuery);
-        printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
+        // printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
 
         if (result != 0)
         {
