@@ -81,7 +81,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
                                 int level,
                                 const NFmiMetTime &mt,
-                                uint dataIndex,
+                                uint gridIndex,
                                 std::string &chunk){};
 
  protected:
