@@ -19,6 +19,7 @@
 #include <gis/SpatialReference.h>
 #include <grid-files/grid/Typedefs.h>
 #include <grid-content/contentServer/corba/server/ServerInterface.h>
+#include <grid-content/queryServer/definition/ParameterValues.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <timeseries/TimeSeriesGenerator.h>
@@ -80,6 +81,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
                                 int level,
                                 const NFmiMetTime &mt,
+                                uint gridIndex,
                                 std::string &chunk){};
 
  protected:
@@ -279,6 +281,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
       bool atEnd();
       bool hasData(T::ParamLevelId &gridLevelType, int &level);
+      GridIterator &nextParam();
       GridIterator &operator++();
       GridIterator operator++(int);
 
@@ -287,12 +290,13 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
       GridMetaData *gridMetaData;
     };
 
-    GridMetaData(DataStreamer *dS, std::string producerName) : gridIterator(this)
+    GridMetaData(DataStreamer *dS, std::string producerName, bool paramOrder) : gridIterator(this)
     {
       dataStreamer = dS;
       producer = producerName;
       paramLevelId = GridFmiLevelTypeNone;
       relativeUV = false;
+      queryOrderParam = paramOrder;
     }
 
     std::string producer;
@@ -325,6 +329,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     std::map<std::string, std::string> paramKeys;
     std::map<std::string, T::ParamLevelId> paramLevelIds;
     T::ParamLevelId paramLevelId;
+
+    bool queryOrderParam;
 
     boost::posix_time::ptime selectGridLatestValidOriginTime();
     const std::string &getLatestOriginTime(boost::posix_time::ptime *originTime = NULL,
@@ -370,7 +376,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getGridBBox();
   void getGridProjection(const QueryServer::Query &gridQuery);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
-  bool getGridQueryInfo(const QueryServer::Query &gridQuery);
+  bool getGridQueryInfo(const QueryServer::Query &gridQuery, uint gridIndex);
+  uint bufferIndex() const;
   void extractGridData(std::string &chunk);
 
  protected:
@@ -378,6 +385,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   GridMetaData itsGridMetaData;
   QueryServer::Query itsGridQuery;
+
+  QueryServer::ParameterValues_sptr getValueListItem(
+       const QueryServer::Query &gridQuery, uint gridIndex) const;
 };
 
 }  // namespace Download

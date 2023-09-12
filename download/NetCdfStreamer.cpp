@@ -2245,6 +2245,7 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
                                       int,
                                       const NFmiMetTime &,
+                                      uint,
                                       string &chunk)
 {
   try

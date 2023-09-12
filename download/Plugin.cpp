@@ -468,6 +468,40 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
                                  Fmi::to_string(grib2TablesVersionMax));
     }
 
+    // Number of grid data parameters for given time instant or timesteps for given parameter
+    // fetched as a block, and minimum chunk length returned
+
+    reqParams.gridParamBlockSize = getRequestUInt(req, producer, "gridparamblocksize", 0);
+    reqParams.gridTimeBlockSize = getRequestUInt(req, producer, "gridtimeblocksize", 0);
+    reqParams.chunkSize = getRequestUInt(req, producer, "chunksize", 0);
+
+    if ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 0))
+    {
+      // TODO: Parameter or time block fetches are currently not supported with netcdf output
+      //
+      //       - reset itsVarIterator, paramChanged() is called when parameter changes;
+      //         check if just reset is ok if there are missing parameters
+      //       - change storeParamValues() to use gridIndex
+
+      if (reqParams.dataSource != GridContent)
+        throw Fmi::Exception(
+             BCP, "Cannot specify gridparamblocksize or gridtimeblocksize unless source=grid");
+
+      if ((reqParams.gridParamBlockSize > 0) && (reqParams.gridTimeBlockSize > 0))
+        throw Fmi::Exception(
+             BCP, "Cannot specify gridparamblocksize and gridtimeblocksize simultaneously");
+
+      // Allow gridtimeblocksize 1 with netcdf output since it has no effect; by default
+      // data is fetched one grid (timestep) at a time and parameter runs in outer loop
+
+      if (
+          (reqParams.outputFormat == NetCdf) &&
+          ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 1))
+         )
+        throw Fmi::Exception(
+             BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
+    }
+
     return producer;
   }
   catch (...)

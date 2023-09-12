@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.9.11
+Version: 23.9.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,6 +103,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Sep 12 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.12-1.fmi
+- Fetch multiple grid data parameters (gridparamblocksize=n) or timesteps (gridtimeblocksize=n) as a block if requested, possibly resulting better throughput depending on the layout of underlying grid data
+- Added request parameter (chunksize=n) to set nondefault grib output chunk size to avoid unnecessary copying of data to chunk buffer. Small chunk size is used for grid content data by default
+
 * Mon Sep 11 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.9.11-1.fmi
 - Repackaged due to ABI changes in grid-files
 

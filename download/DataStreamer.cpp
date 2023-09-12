@@ -30,8 +30,10 @@
 #include <unistd.h>
 #include <unordered_set>
 
-static const long maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return
-static const long maxMsgChunks = 30;  // Max # of data chunks collected and returned as one chunk
+static const uint minChunkLengthInBytes = 256 * 256;    // Min length of data chunk to return
+static const uint maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return
+static const uint maxMsgChunks = 30;  // Max # of data chunks collected and returned as one chunk
+static const uint maxGridQueryBlockSize = 30;  // Max # of grid params/timesteps fetched as a block
 
 using namespace std;
 
@@ -62,16 +64,37 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
       itsReqParams(reqParams),
       itsProducer(producer),
       itsDoneFlag(false),
-      itsChunkLength(maxChunkLengthInBytes),
+      itsChunkLength(min(itsReqParams.chunkSize, maxChunkLengthInBytes)),
       itsMaxMsgChunks(maxMsgChunks),
       itsMetaFlag(true),
       itsReqGridSizeX(0),
       itsReqGridSizeY(0),
       itsProjectionChecked(false),
-      itsGridMetaData(this, itsReqParams.producer)
+      itsGridMetaData(this, itsReqParams.producer, (itsReqParams.gridParamBlockSize > 0))
 {
   try
   {
+    if (itsReqParams.dataSource == GridContent)
+    {
+      // Limit grid data block size and returned chunk size.
+      //
+      // By default use small chunk size for grid content data to avoid copying data
+      // to chunk buffer
+
+      if (itsReqParams.gridParamBlockSize > maxGridQueryBlockSize)
+        itsReqParams.gridParamBlockSize = maxGridQueryBlockSize;
+      if (itsReqParams.gridTimeBlockSize > maxGridQueryBlockSize)
+        itsReqParams.gridTimeBlockSize = maxGridQueryBlockSize;
+
+      if (itsChunkLength == 0)
+        itsChunkLength = minChunkLengthInBytes;
+    }
+    else if (itsChunkLength == 0)
+    {
+      // Using legacy chunk size by default
+
+      itsChunkLength = maxChunkLengthInBytes;
+    }
   }
   catch (...)
   {
@@ -152,6 +175,73 @@ void DataStreamer::checkDataTimeStep(long timeStep)
  */
 // ----------------------------------------------------------------------
 
+DataStreamer::GridMetaData::GridIterator &DataStreamer::GridMetaData::GridIterator::nextParam()
+{
+  try
+  {
+    auto ds = gridMetaData->dataStreamer;
+    auto timesEnd = ds->itsDataTimes.end();
+
+    if (ds->itsTimeIterator == timesEnd)
+      return *this;
+
+    auto paramsEnd = ds->itsDataParams.end();
+
+    for (ds->itsParamIterator++; (ds->itsParamIterator != paramsEnd); ds->itsParamIterator++)
+    {
+      if (ds->itsScalingIterator != ds->itsValScaling.end())
+        ds->itsScalingIterator++;
+
+      if (ds->itsScalingIterator == ds->itsValScaling.end())
+        throw Fmi::Exception(BCP, "GridIterator: internal: No more scaling data");
+
+      ds->paramChanged();
+
+      auto paramKey = gridMetaData->paramKeys.find(ds->itsParamIterator->name());
+
+      // TODO: If parameter metadata is missing, should throw internal error ?
+
+      if (paramKey != gridMetaData->paramKeys.end())
+        return *this;
+    }
+
+    ds->itsParamIterator = ds->itsDataParams.begin();
+    ds->itsScalingIterator =  ds->itsValScaling.begin();
+
+    while (ds->itsTimeIterator != timesEnd)
+    {
+      ds->itsTimeIterator++;
+      ds->itsTimeIndex++;
+
+      if (ds->itsTimeIterator != timesEnd)
+      {
+        auto timeInstant = ds->itsTimeIterator->utc_time();
+
+        if ((timeInstant >= ds->itsFirstDataTime) && (timeInstant <= ds->itsLastDataTime))
+          break;
+      }
+    }
+
+    // There's only one fixed level (0) to "loop", level is taken from radon parameter name
+
+    ds->itsLevelIterator = ds->itsSortedDataLevels.begin();
+    ds->itsLevelIndex = 0;
+
+    return *this;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Increment grid iterator
+ *
+ */
+// ----------------------------------------------------------------------
+
 DataStreamer::GridMetaData::GridIterator &DataStreamer::GridMetaData::GridIterator::operator++()
 {
   try
@@ -163,6 +253,9 @@ DataStreamer::GridMetaData::GridIterator &DataStreamer::GridMetaData::GridIterat
       init = false;
       return *this;
     }
+
+    if (gridMetaData->queryOrderParam)
+      return nextParam();
 
     auto ds = gridMetaData->dataStreamer;
     auto paramsEnd = ds->itsDataParams.end();
@@ -188,6 +281,8 @@ DataStreamer::GridMetaData::GridIterator &DataStreamer::GridMetaData::GridIterat
 
     if (ds->itsTimeIterator != timesEnd)
       return *this;
+
+    ds->itsGridQuery.mForecastTimeList.clear();
 
     ds->itsTimeIterator = ds->itsDataTimes.begin();
     ds->itsTimeIndex = 0;
@@ -261,6 +356,10 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
   try
   {
     auto ds = gridMetaData->dataStreamer;
+
+    if (gridMetaData->queryOrderParam)
+      return (ds->itsTimeIterator == ds->itsDataTimes.end());
+
     return (ds->itsParamIterator == ds->itsDataParams.end());
   }
   catch (...)
@@ -4137,44 +4236,13 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   }
 
   gridQuery.mAnalysisTime = to_iso_string(itsGridMetaData.gridOriginTime);
-  gridQuery.mForecastTimeList.insert(toTimeT(itsTimeIterator->utc_time()));
+
+  uint nTimes = ((itsReqParams.gridTimeBlockSize > 0) ? itsReqParams.gridTimeBlockSize : 1), nT = 1;
+  for (auto it = itsTimeIterator; ((nT <= nTimes) && (it != itsDataTimes.end())); nT++, it++)
+    gridQuery.mForecastTimeList.insert(toTimeT(it->utc_time()));
 
   gridQuery.mSearchType = QueryServer::Query::SearchType::TimeSteps;
   gridQuery.mTimezone = "UTC";
-
-  QueryServer::QueryParameter queryParam;
-
-  queryParam.mType = QueryServer::QueryParameter::Type::Vector;
-  queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
-
-  queryParam.mParam = itsGridMetaData.paramKeys.find(itsParamIterator->name())->second;
-
-  queryParam.mParameterLevelId = gridLevelType;
-  if ((itsReqParams.dataSource != GridContent) && (itsLevelType == kFmiPressureLevel))
-    level *= 100;
-  queryParam.mParameterLevel = level;
-
-  if (itsReqParams.dataSource == GridContent)
-  {
-    vector<string> paramParts;
-    itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
-
-    queryParam.mForecastType = getForecastType(itsParamIterator->name(), paramParts);
-    queryParam.mForecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);
-    queryParam.mGeometryId = getGeometryId(itsParamIterator->name(), paramParts);
-  }
-  else
-  {
-    queryParam.mForecastType = itsGridMetaData.forecastType;
-    queryParam.mForecastNumber = itsGridMetaData.forecastNumber;
-    queryParam.mGeometryId = itsGridMetaData.geometryId;
-  }
-
-  queryParam.mParameterKeyType = T::ParamKeyTypeValue::FMI_NAME;
-
-  queryParam.mAreaInterpolationMethod = -1;
-  queryParam.mTimeInterpolationMethod = -1;
-  queryParam.mLevelInterpolationMethod = -1;
 
   if (itsReqParams.projection.empty())
   {
@@ -4187,15 +4255,58 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
 
-  if (itsReqParams.outputFormat == NetCdf)
+  for (auto paramIter = itsParamIterator; (paramIter != itsDataParams.end()); paramIter++)
   {
-    // Get grid coordinates for netcdf output
+    QueryServer::QueryParameter queryParam;
 
-    queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates);  // |
-    //                       QueryServer::QueryParameter::Flags::NoReturnValues);
+    queryParam.mType = QueryServer::QueryParameter::Type::Vector;
+    queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
+
+    queryParam.mParam = itsGridMetaData.paramKeys.find(paramIter->name())->second;
+
+    queryParam.mParameterLevelId = gridLevelType;
+    if ((itsReqParams.dataSource != GridContent) && (itsLevelType == kFmiPressureLevel))
+      level *= 100;
+    queryParam.mParameterLevel = level;
+
+    if (itsReqParams.dataSource == GridContent)
+    {
+      vector<string> paramParts;
+      itsQuery.parseRadonParameterName(paramIter->name(), paramParts);
+
+      queryParam.mForecastType = getForecastType(paramIter->name(), paramParts);
+      queryParam.mForecastNumber = getForecastNumber(paramIter->name(), paramParts);
+      queryParam.mGeometryId = getGeometryId(paramIter->name(), paramParts);
+    }
+    else
+    {
+      queryParam.mForecastType = itsGridMetaData.forecastType;
+      queryParam.mForecastNumber = itsGridMetaData.forecastNumber;
+      queryParam.mGeometryId = itsGridMetaData.geometryId;
+    }
+
+    queryParam.mParameterKeyType = T::ParamKeyTypeValue::FMI_NAME;
+
+    queryParam.mAreaInterpolationMethod = -1;
+    queryParam.mTimeInterpolationMethod = -1;
+    queryParam.mLevelInterpolationMethod = -1;
+
+    if (itsReqParams.outputFormat == NetCdf)
+    {
+      // Get grid coordinates for netcdf output
+
+      queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates);  // |
+//                         QueryServer::QueryParameter::Flags::NoReturnValues);
+    }
+
+    gridQuery.mQueryParameterList.push_back(queryParam);
+
+    if (
+        (itsReqParams.dataSource != GridContent) ||
+        (gridQuery.mQueryParameterList.size() >= itsReqParams.gridParamBlockSize)
+       )
+      return;
   }
-
-  gridQuery.mQueryParameterList.push_back(queryParam);
 }
 
 // ----------------------------------------------------------------------
@@ -4646,6 +4757,48 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get grid data parameter value list item
+ *
+ */
+// ----------------------------------------------------------------------
+
+QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
+    const QueryServer::Query &gridQuery, uint gridIndex) const
+{
+  try
+  {
+    if (gridIndex > 0)
+    {
+      if (gridQuery.mQueryParameterList.size() > 1)
+      {
+        if (gridIndex >= gridQuery.mQueryParameterList.size())
+          throw Fmi::Exception(BCP, "getValueListItem: internal: parameter index out of bounds");
+
+        auto itp = gridQuery.mQueryParameterList.begin();
+        advance(itp, gridIndex);
+
+        return itp->mValueList.front();
+      }
+
+      if (gridIndex >= gridQuery.mQueryParameterList.begin()->mValueList.size())
+        throw Fmi::Exception(BCP, "getValueListItem: internal: time index out of bounds");
+
+      auto itt = gridQuery.mQueryParameterList.begin()->mValueList.begin();
+      advance(itt, gridIndex);
+
+      return *itt;
+    }
+
+    return gridQuery.mQueryParameterList.front().mValueList.front();
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get query result grid infomation (projection, grid size etc).
  *        Return false on empty result (missing data assumed),
  *        throw on errors
@@ -4653,15 +4806,15 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
+bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gridIndex)
 {
   try
   {
     // Can't rely on returned query status, check first if got any data
 
-    auto vVec = gridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
+    const auto vVec = &(getValueListItem(gridQuery, gridIndex)->mValueVector);
 
-    if (vVec.size() == 0)
+    if (vVec->empty())
       return false;
 
     // Projection and spheroid
@@ -4723,9 +4876,9 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
     auto gridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
     auto gridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
 
-    if (vVec.size() != (gridSizeX * gridSizeY))
+    if (vVec->size() != (gridSizeX * gridSizeY))
       throw Fmi::Exception(BCP,
-                           "Grid size " + Fmi::to_string(vVec.size()) + " and width/height " +
+                           "Grid size " + Fmi::to_string(vVec->size()) + " and width/height " +
                                Fmi::to_string(gridSizeX) + "/" + Fmi::to_string(gridSizeY) +
                                " mismatch");
     else if (itsReqParams.gridSizeXY &&
@@ -4803,12 +4956,61 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     // Ensemble
 
-    itsGridMetaData.forecastType =
-        gridQuery.mQueryParameterList.front().mValueList.front()->mForecastType;
-    itsGridMetaData.forecastNumber =
-        gridQuery.mQueryParameterList.front().mValueList.front()->mForecastNumber;
+    auto const valueListItem = getValueListItem(gridQuery, gridIndex);
+
+    itsGridMetaData.forecastType = valueListItem->mForecastType;
+    itsGridMetaData.forecastNumber = valueListItem->mForecastNumber;
 
     return true;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get grid query object index for current grid
+ *
+ */
+// ----------------------------------------------------------------------
+
+uint DataStreamer::bufferIndex() const
+{
+  try
+  {
+    if (!((itsReqParams.gridTimeBlockSize > 1) || (itsReqParams.gridParamBlockSize > 0)))
+      return 0;
+
+    uint index = 0;
+
+    if (itsReqParams.gridTimeBlockSize > 1)
+    {
+      if (itsGridQuery.mForecastTimeList.empty())
+        return 0;
+
+      auto validTime = toTimeT(itsTimeIterator->utc_time());
+      auto forecastTime = itsGridQuery.mForecastTimeList.begin();
+
+      index = (itsTimeIndex % itsReqParams.gridTimeBlockSize);
+
+      if (index >= itsGridQuery.mForecastTimeList.size())
+        throw Fmi::Exception(BCP, "bufferIndex: internal: time index out of bounds");
+
+      if (index > 0)
+        advance(forecastTime, index);
+
+      return ((*forecastTime == validTime) ? index : 0);
+    }
+
+    auto param = itsGridQuery.mQueryParameterList.begin();
+
+    for (; (param != itsGridQuery.mQueryParameterList.end()); param++, index++)
+      if (param->mParam == itsParamIterator->name())
+        return index;
+
+    return 0;
   }
   catch (...)
   {
@@ -4839,20 +5041,27 @@ void DataStreamer::extractGridData(string &chunk)
       if (!gridIterator.hasData(gridLevelType, level))
         continue;
 
-      itsGridQuery = QueryServer::Query();
+      auto gridIndex = bufferIndex();
 
-      buildGridQuery(itsGridQuery, gridLevelType, level);
-
-      // printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
-      int result = itsGridEngine->executeQuery(itsGridQuery);
-      // printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
-
-      if (result != 0)
+      if (! gridIndex)
       {
-        Fmi::Exception exception(BCP, "The query server returns an error message!");
-        exception.addParameter("Result", std::to_string(result));
-        exception.addParameter("Message", QueryServer::getResultString(result));
-        throw exception;
+        // Fetch next block of parameters or timesteps
+
+        itsGridQuery = QueryServer::Query();
+
+        buildGridQuery(itsGridQuery, gridLevelType, level);
+
+        // printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
+        int result = itsGridEngine->executeQuery(itsGridQuery);
+        // printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
+
+        if (result != 0)
+        {
+          Fmi::Exception exception(BCP, "The query server returns an error message!");
+          exception.addParameter("Result", std::to_string(result));
+          exception.addParameter("Message", QueryServer::getResultString(result));
+          throw exception;
+        }
       }
 
       // Unfortunately no usable status is returned by gridengine query.
@@ -4861,7 +5070,7 @@ void DataStreamer::extractGridData(string &chunk)
       // missing because it got cleaned. Otherwise if the returned grid e.g. does not match
       // requested grid size etc, an error is thrown
 
-      if (!getGridQueryInfo(itsGridQuery))
+      if (!getGridQueryInfo(itsGridQuery, gridIndex))
         continue;
 
       // Load the data chunk from itsGridQuery
@@ -4871,7 +5080,7 @@ void DataStreamer::extractGridData(string &chunk)
 
       NFmiMetTime mt(itsTimeIterator->utc_time());
 
-      getGridDataChunk(itsGridQuery, level, mt, chunk);
+      getGridDataChunk(itsGridQuery, level, mt, gridIndex, chunk);
 
       return;
     }
