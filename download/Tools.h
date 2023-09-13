@@ -70,6 +70,7 @@ bool isHeightLevel(FmiLevelType levelType, int levelValue, bool gridContent = fa
 bool isEntireAtmosphereLevel(FmiLevelType levelType);
 bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent = false);
 bool isNominalTopLevel(FmiLevelType levelType, bool gridContent = false);
+bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType);
 
 FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
                                   const std::string &producer,

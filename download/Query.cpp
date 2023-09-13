@@ -241,6 +241,7 @@ list<pair<int, int>> Query::parseIntValues(const string &paramName, const string
 // ----------------------------------------------------------------------
 
 void Query::expandParameterFromSingleValues(const string &param,
+                                            bool gribOutput,
                                             TimeSeries::OptionParsers::ParameterOptions &pOptions,
                                             list<pair<int, int>> &levelRanges,
                                             list<pair<int, int>> &forecastNumberRanges)
@@ -261,6 +262,10 @@ void Query::expandParameterFromSingleValues(const string &param,
   parseRadonParameterName(param, paramParts, true);
 
   auto leveltype = getParamLevelId(param, paramParts);
+
+  if (!isSupportedGridLevelType(gribOutput, FmiLevelType(leveltype)))
+    return;
+
   bool negativeLevelValid = (leveltype == GridFmiLevelTypeHeight);
   bool negativeForecastNumberValid =
       ((paramParts[6] == "-1") && (!isEnsembleForecast(getForecastType(param, paramParts))));
@@ -351,6 +356,7 @@ void Query::expandParameterFromSingleValues(const string &param,
 void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                            ptime originTime,
                                            const string &paramName,
+                                           bool gribOutput,
                                            const list<pair<int, int>> &levelRanges,
                                            const list<pair<int, int>> &forecastNumberRanges,
                                            TimeSeries::OptionParsers::ParameterOptions &pOptions)
@@ -363,10 +369,14 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     vector<string> paramParts;
     parseRadonParameterName(paramName, paramParts, true);
 
+    T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
+
+    if (!isSupportedGridLevelType(gribOutput, FmiLevelType(levelTypeId)))
+      return;
+
     string param = paramParts[0];
     string producer = paramParts[1];
     T::GeometryId geometryId = getGeometryId(paramName, paramParts);
-    T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
     T::ForecastType forecastType = getForecastType(paramName, paramParts);
     T::ContentInfoList contentInfoList;
     set<T::ParamLevel> levels;
@@ -512,6 +522,10 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
     opt = Spine::optional_string(theReq.getParameter("origintime"), "");
     ptime originTime(opt.empty() ? ptime() : Fmi::TimeParser::parse(opt));
 
+    opt = Spine::required_string(theReq.getParameter("format"), "format option is required");
+    Fmi::ascii_toupper(opt);
+    bool gribOutput = (opt != "NETCDF");
+
     opt = Spine::required_string(theReq.getParameter("param"), "param option is required");
     vector<string> params;
     boost::algorithm::split(params, opt, boost::algorithm::is_any_of(","));
@@ -523,11 +537,12 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
       levelRanges.clear();
       forecastNumberRanges.clear();
 
-      expandParameterFromSingleValues(param, pOptions, levelRanges, forecastNumberRanges);
+      expandParameterFromSingleValues(param, gribOutput, pOptions, levelRanges,
+                                      forecastNumberRanges);
 
       if ((!levelRanges.empty()) || (!forecastNumberRanges.empty()))
-        expandParameterFromRangeValues(gridEngine, originTime, param, levelRanges, forecastNumberRanges,
-                                       pOptions);
+        expandParameterFromRangeValues(gridEngine, originTime, param, gribOutput, levelRanges,
+                                       forecastNumberRanges, pOptions);
     }
 
     if (pOptions.size() == 0)

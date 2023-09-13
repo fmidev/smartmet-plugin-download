@@ -272,12 +272,14 @@ class Query
                                                 const std::string &valueStr,
                                                 bool negativeValueValid, int maxValue);
   void expandParameterFromSingleValues(const std::string &param,
+                                       bool gribOutput,
                                        TimeSeries::OptionParsers::ParameterOptions &pOptions,
                                        std::list<std::pair<int, int>> &levelRanges,
                                        std::list<std::pair<int, int>> &forecastNumberRanges);
   void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                       boost::posix_time::ptime originTime,
                                       const std::string &paramName,
+                                      bool gribOutput,
                                       const std::list<std::pair<int, int>> &levelRanges,
                                       const std::list<std::pair<int, int>> &forecastNumberRanges,
                                       TimeSeries::OptionParsers::ParameterOptions &pOptions);

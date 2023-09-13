@@ -77,6 +77,25 @@ bool isNominalTopLevel(FmiLevelType levelType, bool gridContent)
   return false;
 }
 
+bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
+{
+  if (gribOutput)
+    return (
+            isGroundLevel(levelType) ||
+            isEntireAtmosphereLevel(levelType) ||
+            isPressureLevel(levelType, true) ||
+            isHybridLevel(levelType, true) ||
+            isHeightLevel(levelType, 0, true) ||
+            isDepthLevel(levelType, 0, true) ||
+            isNominalTopLevel(levelType, true)
+           );
+
+  return (
+          isPressureLevel(levelType, true) || isHybridLevel(levelType, true) ||
+          isHeightLevel(levelType, 0, true) || isDepthLevel(levelType, 0, true)
+         );
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Utility routine for getting projection parameter's value from srs
