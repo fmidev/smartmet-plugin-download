@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.9.12
+Version: 23.9.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,7 +103,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Mon Sep 12 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.12-1.fmi
+* Wed Sep 13 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.13-1.fmi
+- Added grib output support for mean sea level grid source data (BRAINSTORM-2721)
+- Ignore parameters with unsupported level types at query initialization instead of throwing error after fetching data (BRAINSTORM-2720)
+
+* Tue Sep 12 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.12-1.fmi
 - Fetch multiple grid data parameters (gridparamblocksize=n) or timesteps (gridtimeblocksize=n) as a block if requested, possibly resulting better throughput depending on the layout of underlying grid data
 - Added request parameter (chunksize=n) to set nondefault grib output chunk size to avoid unnecessary copying of data to chunk buffer. Small chunk size is used for grid content data by default
 
