@@ -77,6 +77,14 @@ bool isNominalTopLevel(FmiLevelType levelType, bool gridContent)
   return false;
 }
 
+bool isMeanSeaLevel(FmiLevelType levelType, bool gridContent)
+{
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeMeanSea);
+
+  return false;
+}
+
 bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
 {
   if (gribOutput)
@@ -87,7 +95,8 @@ bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
             isHybridLevel(levelType, true) ||
             isHeightLevel(levelType, 0, true) ||
             isDepthLevel(levelType, 0, true) ||
-            isNominalTopLevel(levelType, true)
+            isNominalTopLevel(levelType, true) ||
+            isMeanSeaLevel(levelType, true)
            );
 
   return (

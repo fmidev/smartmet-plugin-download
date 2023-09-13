@@ -973,6 +973,7 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 #define HeightAboveGroundLevel "heightAboveGround"
 #define DepthLevel "depthBelowSea"
 #define NominalTopLevel "nominalTop"
+#define MeanSeaLevel "meanSea"
 
 string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelType,
                                            NFmiLevel *cfgLevel, int &level) const
@@ -1020,6 +1021,13 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   {
     level = 0;
     return NominalTopLevel;
+  }
+  else if (isMeanSeaLevel(levelType, gridContent))
+  {
+    if (level == 0)
+      return MeanSeaLevel;
+
+    return HeightLevel;
   }
 
   throw Fmi::Exception(
