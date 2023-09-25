@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.9.13
+Version: 23.9.25
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -28,7 +28,7 @@ BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 23.8.31
 BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
 BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
-BuildRequires: smartmet-library-timeseries-devel >= 23.7.28
+BuildRequires: smartmet-library-timeseries-devel >= 23.9.18
 BuildRequires: smartmet-library-newbase-devel >= 23.8.30
 BuildRequires: smartmet-library-grid-content-devel >= 23.9.11
 BuildRequires: smartmet-library-grid-files-devel >= 23.9.11
@@ -43,7 +43,7 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 23.8.31
-Requires: smartmet-library-timeseries >= 23.7.28
+Requires: smartmet-library-timeseries >= 23.9.18
 Requires: smartmet-library-spine >= 23.8.31
 Requires: smartmet-library-newbase >= 23.8.30
 Requires: smartmet-engine-querydata >= 23.8.31
@@ -68,7 +68,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.8.31
 #TestRequires: smartmet-library-newbase-devel >= 23.8.30
-#TestRequires: smartmet-qdtools >= 23.8.29
+#TestRequires: smartmet-qdtools >= 23.9.15
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-engine-grid-test >= 23.9.11
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Sep 25 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.25-1.fmi
+- Use grid.crop.llbox as cropped latlon bbox (BRAINSTORM-2727)
+
 * Wed Sep 13 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.13-1.fmi
 - Added grib output support for mean sea level grid source data (BRAINSTORM-2721)
 - Ignore parameters with unsupported level types at query initialization instead of throwing error after fetching data (BRAINSTORM-2720)
