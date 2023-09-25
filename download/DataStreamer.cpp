@@ -4833,15 +4833,12 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
 
     const char *attr;
 
-    if ((itsGridMetaData.projType == T::GridProjectionValue::LatLon) ||
-        (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon))
-    {
-      if (itsReqParams.projection.empty() &&
-          ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty())))
-        attr = "grid.crop.bbox";
-      else
-        attr = "grid.bbox";
-    }
+    if (itsReqParams.projection.empty() &&
+        ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty())))
+      attr = "grid.crop.llbox";
+    else if ((itsGridMetaData.projType == T::GridProjectionValue::LatLon) ||
+             (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon))
+      attr = "grid.bbox";
     else
       attr = "grid.llbox";
 
