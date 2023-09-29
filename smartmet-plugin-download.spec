@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.9.25
+Version: 23.9.29
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -30,12 +30,12 @@ BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
 BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
 BuildRequires: smartmet-library-timeseries-devel >= 23.9.18
 BuildRequires: smartmet-library-newbase-devel >= 23.8.30
-BuildRequires: smartmet-library-grid-content-devel >= 23.9.11
-BuildRequires: smartmet-library-grid-files-devel >= 23.9.11
+BuildRequires: smartmet-library-grid-content-devel >= 23.9.29
+BuildRequires: smartmet-library-grid-files-devel >= 23.9.29
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.8.31
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
-BuildRequires: smartmet-engine-grid-devel >= 23.9.11
+BuildRequires: smartmet-engine-grid-devel >= 23.9.29
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal35
@@ -63,7 +63,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 23.9.6
-#TestRequires: smartmet-engine-grid >= 23.9.11
+#TestRequires: smartmet-engine-grid >= 23.9.29
 #TestRequires: smartmet-engine-querydata >= 23.8.31
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.8.31
@@ -71,7 +71,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 23.9.15
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-test-db >= 23.7.21
-#TestRequires: smartmet-engine-grid-test >= 23.9.11
+#TestRequires: smartmet-engine-grid-test >= 23.9.29
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Sep 29 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.9.29-1.fmi
+- Repackaged due to changes in grid-libraries
+
 * Mon Sep 25 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.9.25-1.fmi
 - Use grid.crop.llbox as cropped latlon bbox (BRAINSTORM-2727)
 
