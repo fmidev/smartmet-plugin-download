@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.9.29
+Version: 23.10.5
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -28,10 +28,10 @@ BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 23.8.31
 BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
 BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
-BuildRequires: smartmet-library-timeseries-devel >= 23.9.18
-BuildRequires: smartmet-library-newbase-devel >= 23.8.30
+BuildRequires: smartmet-library-timeseries-devel >= 23.10.5
+BuildRequires: smartmet-library-newbase-devel >= 23.10.3
 BuildRequires: smartmet-library-grid-content-devel >= 23.9.29
-BuildRequires: smartmet-library-grid-files-devel >= 23.9.29
+BuildRequires: smartmet-library-grid-files-devel >= 23.10.3
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.8.31
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
@@ -43,9 +43,9 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 23.8.31
-Requires: smartmet-library-timeseries >= 23.9.18
+Requires: smartmet-library-timeseries >= 23.10.5
 Requires: smartmet-library-spine >= 23.8.31
-Requires: smartmet-library-newbase >= 23.8.30
+Requires: smartmet-library-newbase >= 23.10.3
 Requires: smartmet-engine-querydata >= 23.8.31
 Requires: smartmet-server >= 23.8.30
 Requires: %{smartmet_boost}-date-time
@@ -67,7 +67,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-querydata >= 23.8.31
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.8.31
-#TestRequires: smartmet-library-newbase-devel >= 23.8.30
+#TestRequires: smartmet-library-newbase-devel >= 23.10.3
 #TestRequires: smartmet-qdtools >= 23.9.15
 #TestRequires: smartmet-test-data >= 23.7.14
 #TestRequires: smartmet-test-db >= 23.7.21
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Oct  5 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.5-1.fmi
+- Load grid parameter content records by using producer generation ids instead of producer name, thus avoiding loading lot of unneeded content records (BRAINSTORM-2728)
+
 * Fri Sep 29 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.9.29-1.fmi
 - Repackaged due to changes in grid-libraries
 
