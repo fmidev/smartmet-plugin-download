@@ -611,7 +611,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     unsigned int i = 0;
 
     vector<string> paramParts;
-    std::string producerName, paramName;
+    string producerName, paramName;
     bool gridContent = (dataSource == GridContent);
     int geometry = -1;
 
@@ -751,7 +751,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     ReqParams reqParams;
     const auto &producer = getRequestParams(req, reqParams, config, qEngine, gridEngine);
 
-    auto query = Query(req, gridEngine);
+    auto query = Query(req, gridEngine, reqParams.originTime);
 
     // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
     // timestep (60m --> data) defaults.
@@ -766,10 +766,6 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     if (!reqParams.endTime.empty())
       endTime = query.tOptions.endTime;
-
-    query.tOptions.startTimeData = startTime.is_not_a_date_time();
-    query.tOptions.timeStep = reqParams.timeStep;
-    query.tOptions.endTimeData = (reqParams.endTime.empty() && (reqParams.timeStep == 0));
 
     // Create format specific streamer and get scaling information for the requested parameters.
     // Unknown (and special) parameters are ignored.

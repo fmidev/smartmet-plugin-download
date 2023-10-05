@@ -354,13 +354,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                  boost::posix_time::ptime &sTime,
                                  boost::posix_time::ptime &eTime);
   void setGridLevels(const Producer &producer, const Query &query);
-  void getOriginTimes(boost::posix_time::ptime oTime, std::vector<std::string> &originTimes);
   void getParameterDetailsFromContentData(
-      const std::string &paramName,
-      boost::posix_time::ptime &oTime,
-      boost::posix_time::ptime &sTime,
-      boost::posix_time::ptime &eTime,
-      SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails);
+      const std::string &paramName, SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails);
   bool hasRequestedGridData(const Producer &producer,
                             boost::posix_time::ptime &oTime,
                             boost::posix_time::ptime &sTime,

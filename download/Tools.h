@@ -12,6 +12,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <grid-content/contentServer/definition/GenerationInfo.h>
 
 using Scaling = std::list<std::pair<float, float>>;
 
@@ -114,6 +115,7 @@ T::ForecastNumber getForecastNumber(
     const std::vector<std::string> &paramParts,
     boost::optional<T::ForecastNumber> defaultValue = boost::optional<T::ForecastNumber>());
 
+bool isValidGeneration(const T::GenerationInfo *generationInfo);
 bool isEnsembleForecast(T::ForecastType forecastType);
 
 // ----------------------------------------------------------------------

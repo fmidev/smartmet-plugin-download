@@ -244,7 +244,9 @@ struct ReqParams
 class Query
 {
  public:
-  Query(const Spine::HTTP::Request &req, const Engine::Grid::Engine *gridEngine);
+  Query(const Spine::HTTP::Request &req,
+        const Engine::Grid::Engine *gridEngine,
+        std::string &originTime);
 
   typedef std::set<int> Levels;
   Levels levels;
@@ -257,10 +259,21 @@ class Query
   void parseRadonParameterName(
       const std::string &param, std::vector<std::string> &paramParts, bool expanding = false) const;
 
+  typedef std::map<uint, T::GenerationInfo> GenerationInfos;
+  typedef std::map<std::string, T::ContentInfoList> ParameterContents;
+
+  const GenerationInfos &getGenerationInfos() { return generationInfos; }
+  const ParameterContents &getParameterContents() { return parameterContents; }
+
  private:
   Query();
 
   std::map<std::string, std::vector<std::string>> radonParameters;
+  GenerationInfos generationInfos;
+  ParameterContents parameterContents;
+  typedef std::map<std::string, uint> OriginTimeGenerations;
+  typedef std::map<std::string, OriginTimeGenerations> ProducerGenerations;
+  ProducerGenerations producerGenerations;
 
   int parseIntValue(const std::string &paramName, const std::string &fieldName,
                     const std::string &fieldValue, bool negativeValueValid, int maxValue);
@@ -271,11 +284,19 @@ class Query
                                                 const std::string &fieldName,
                                                 const std::string &valueStr,
                                                 bool negativeValueValid, int maxValue);
-  void expandParameterFromSingleValues(const std::string &param,
-                                       bool gribOutput,
-                                       TimeSeries::OptionParsers::ParameterOptions &pOptions,
-                                       std::list<std::pair<int, int>> &levelRanges,
-                                       std::list<std::pair<int, int>> &forecastNumberRanges);
+  void parseParameterLevelAndForecastNumberRanges(
+      const std::string &param,
+      bool gribOutput,
+      TimeSeries::OptionParsers::ParameterOptions &pOptions,
+      std::list<std::pair<int, int>> &levelRanges,
+      std::list<std::pair<int, int>> &forecastNumberRanges);
+  bool loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
+                                 const std::vector<std::string> &params,
+                                 std::string &originTime);
+  bool getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
+                               const std::string &producer,
+                               const std::string &originTime,
+                               uint &generationId);
   void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                       boost::posix_time::ptime originTime,
                                       const std::string &paramName,
@@ -283,7 +304,9 @@ class Query
                                       const std::list<std::pair<int, int>> &levelRanges,
                                       const std::list<std::pair<int, int>> &forecastNumberRanges,
                                       TimeSeries::OptionParsers::ParameterOptions &pOptions);
-  void parseParameters(const Spine::HTTP::Request &theReq, const Engine::Grid::Engine *gridEngine);
+  void parseParameters(const Spine::HTTP::Request &theReq,
+                       const Engine::Grid::Engine *gridEngine,
+                       std::string &originTime);
   void parseTimeOptions(const Spine::HTTP::Request &theReq);
   void parseModel(const Spine::HTTP::Request &theReq);
   void parseLevels(const Spine::HTTP::Request &theReq);

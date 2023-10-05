@@ -1062,139 +1062,52 @@ void DataStreamer::setParams(const TimeSeries::OptionParsers::ParameterList &par
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get producer's origin times
- *
- */
-// ----------------------------------------------------------------------
-
-void DataStreamer::getOriginTimes(ptime oTime, std::vector<std::string> &originTimes)
-{
-  try
-  {
-    // Fetch producer's all generations
-
-    originTimes.clear();
-
-    auto cS = itsGridEngine->getContentSourceServer_sptr();
-    T::GenerationInfoList generationInfoList;
-    string originTimeStr(oTime.is_not_a_date_time() ? "" : to_iso_string(oTime));
-
-    cS->getGenerationInfoListByProducerName(0, itsReqParams.producer, generationInfoList);
-
-    if (
-        (generationInfoList.getSize() == 0) ||
-        (
-         (! originTimeStr.empty()) &&
-         (! generationInfoList.getGenerationInfoByAnalysisTime(originTimeStr))
-        )
-      )
-      throw Fmi::Exception::Trace(BCP, "No data available");
-
-    if (! originTimeStr.empty())
-      originTimes.push_back(originTimeStr);
-    else
-      generationInfoList.getAnalysisTimes(originTimes, true);
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Get parameter details from grid content data
  *
  */
 // ----------------------------------------------------------------------
 
 void DataStreamer::getParameterDetailsFromContentData(
-    const string &paramName, ptime &oTime, ptime &sTime, ptime &eTime,
-    SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails)
+    const string &paramName, SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails)
 {
   try
   {
+    auto const &paramContents = itsQuery.getParameterContents();
+    auto const &paramContent = paramContents.find(paramName);
+
+    if ((paramContent == paramContents.end()) || (paramContent->second.getLength() == 0))
+      return;
+
+    auto const &generationInfos = itsQuery.getGenerationInfos();
+    auto const &contentInfoList = paramContent->second;
+    auto contentInfo = contentInfoList.getContentInfoByIndex(0);
+    auto const contentLength = contentInfoList.getLength();
+
+    // Ignore too old content
+
+    auto generationInfo = generationInfos.find(contentInfo->mGenerationId);
+
+    if (generationInfo == generationInfos.end())
+      throw Fmi::Exception(
+          BCP, "getParameterDetailsFromContentData: internal: generationId not found");
+
+    if (!isValidGeneration(&(generationInfo->second)))
+      return;
+
     vector<string> paramParts;
     itsQuery.parseRadonParameterName(paramName, paramParts);
 
-    string param = paramParts[0];
-    string producer = paramParts[1];
-    T::GeometryId geometryId = getGeometryId(paramName, paramParts);
-    T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
-    T::ParamLevel level = getParamLevel(paramName, paramParts);
-    T::ForecastType forecastType = getForecastType(paramName, paramParts);
-    T::ForecastNumber forecastNumber = getForecastNumber(paramName, paramParts);
+    const string &param = paramParts[0];
+    const string &producer = paramParts[1];
 
     typedef map<T::GeometryId, SmartMet::Engine::Grid::ParameterDetails_vec> GeomDetails;
     typedef map<T::ParamLevel, GeomDetails> LevelDetails;
     typedef map<T::ParamLevelId, LevelDetails> LevelTypeDetails;
     LevelTypeDetails levelGeomParamDetails;
 
-    string originTimeStr(oTime.is_not_a_date_time() ? "" : to_iso_string(oTime));
-    string startTimeStr(sTime.is_not_a_date_time() ? "" : to_iso_string(sTime));
-    string endTimeStr(eTime.is_not_a_date_time() ? "" : to_iso_string(eTime));
-
-    auto pos = originTimeStr.find(",");
-    if (pos != string::npos)
-      originTimeStr = originTimeStr.substr(0, pos);
-
-    if (startTimeStr.empty())
-      startTimeStr = "19000101T000000";
-    else
+    for (size_t idx = 0; (idx < contentLength); idx++)
     {
-      pos = startTimeStr.find(",");
-      if (pos != string::npos) startTimeStr = startTimeStr.substr(0, pos);
-    }
-
-    if (endTimeStr.empty())
-      endTimeStr = "99991231T235959";
-    else
-    {
-      pos = endTimeStr.find(",");
-      if (pos != string::npos) endTimeStr = endTimeStr.substr(0, pos);
-    }
-
-    if (startTimeStr > endTimeStr)
-      startTimeStr = endTimeStr;
-
-    // TODO: store/use content data already loaded when expanding parameter name
-
-    auto cS = itsGridEngine->getContentServer_sptr();
-    T::ContentInfoList contentInfoList;
-
-    cS->getContentListByParameterAndProducerName(0,
-                                                 producer,
-                                                 T::ParamKeyTypeValue::FMI_NAME,
-                                                 param,
-                                                 levelTypeId,
-                                                 level,
-                                                 level,
-                                                 forecastType,
-                                                 forecastNumber,
-                                                 geometryId,
-                                                 startTimeStr,
-                                                 endTimeStr,
-                                                 0,
-                                                 contentInfoList);
-
-    for (size_t idx = 0; (idx < contentInfoList.getLength()); idx++)
-    {
-      // Ignore not ready or disabled content or content about to be deleted or
-      // with nonmatching origin time
-
-      auto contentInfo = contentInfoList.getContentInfoByIndex(idx);
-
-      if ((contentInfo->mDeletionTime + 5) < time(NULL))
-        continue;
-
-      T::GenerationInfo generationInfo;
-      cS->getGenerationInfoById(0, contentInfo->mGenerationId, generationInfo);
-
-      if (
-          (generationInfo.mStatus != T::GenerationInfo::Status::Ready) ||
-          ((! originTimeStr.empty()) && (originTimeStr != generationInfo.mAnalysisTime))
-         )
-        continue;
+      contentInfo = contentInfoList.getContentInfoByIndex(idx);
 
       // Level type, level and geometry must be given in parameter name, but could collect data
       // for multiple level types, levels and geometries
@@ -1241,12 +1154,12 @@ void DataStreamer::getParameterDetailsFromContentData(
         geomIter->second.push_back(pd);
       }
 
-      auto timeIter =
-          geomIter->second.front().mMappings.front().mTimes.find(generationInfo.mAnalysisTime);
+      auto timeIter = geomIter->second.front().mMappings.front().mTimes.find(
+          generationInfo->second.mAnalysisTime);
 
       if (timeIter == geomIter->second.front().mMappings.front().mTimes.end())
         timeIter = geomIter->second.front().mMappings.front().mTimes.insert(make_pair(
-            generationInfo.mAnalysisTime, set<string>())).first;
+            generationInfo->second.mAnalysisTime, set<string>())).first;
 
       timeIter->second.insert(contentInfo->getForecastTime());
     }
@@ -1294,7 +1207,7 @@ bool DataStreamer::hasRequestedGridData(
       SmartMet::Engine::Grid::ParameterDetails_vec paramDetails;
 
       if (gridContent)
-        getParameterDetailsFromContentData(param.name(), oTime, sTime, eTime, paramDetails);
+        getParameterDetailsFromContentData(param.name(), paramDetails);
       else
         itsGridEngine->getParameterDetails(itsReqParams.producer, param.name(), paramDetails);
 

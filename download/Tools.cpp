@@ -11,6 +11,8 @@ namespace Plugin
 {
 namespace Download
 {
+static time_t GridGenerationDeletionTimeOffset = 5;
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Utility routines for testing level type
@@ -220,6 +222,24 @@ bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check if generation is valid
+ *
+ */
+// ----------------------------------------------------------------------
+
+bool isValidGeneration(const T::GenerationInfo *generationInfo)
+{
+  return (
+          (
+           (generationInfo->mDeletionTime == 0) ||
+           (generationInfo->mDeletionTime >= (time(NULL) + GridGenerationDeletionTimeOffset))
+          ) &&
+          (generationInfo->mStatus == T::GenerationInfo::Status::Ready)
+         );
 }
 
 // ----------------------------------------------------------------------
