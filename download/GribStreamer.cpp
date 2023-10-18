@@ -1631,24 +1631,32 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
       // No scaling applied
 
       for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep, i++)
+      {
+        int j = y * xN;
+
+        for (x = x0; (x < xN); x += xStep, j += xStep, i++)
         {
-          float value = (*vVec)[i];
+          float value = (*vVec)[j];
           itsValueArray[i] = ((value != ParamValueMissing) ? value : gribMissingValue);
         }
+      }
     }
     else
     {
       for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep, i++)
+      {
+        int j = y * xN;
+
+        for (x = x0; (x < xN); x += xStep, j += xStep, i++)
         {
-          float value = (*vVec)[i];
+          float value = (*vVec)[j];
 
           if (value != ParamValueMissing)
             itsValueArray[i] = (value + offset) / scale;
           else
             itsValueArray[i] = gribMissingValue;
         }
+      }
     }
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
