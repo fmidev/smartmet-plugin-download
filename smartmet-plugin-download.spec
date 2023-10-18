@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.10.12
+Version: 23.10.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,15 +25,14 @@ BuildRequires: gdal35-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 23.8.31
-BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
-BuildRequires: smartmet-library-macgyver-devel >= 23.8.31
-BuildRequires: smartmet-library-timeseries-devel >= 23.10.5
-BuildRequires: smartmet-library-newbase-devel >= 23.10.3
+BuildRequires: smartmet-library-spine-devel >= 23.10.10
+BuildRequires: smartmet-library-macgyver-devel >= 23.10.10
+BuildRequires: smartmet-library-timeseries-devel >= 23.10.11
+BuildRequires: smartmet-library-newbase-devel >= 23.10.11
 BuildRequires: smartmet-library-grid-content-devel >= 23.10.12
 BuildRequires: smartmet-library-grid-files-devel >= 23.10.12
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 23.8.31
+BuildRequires: smartmet-engine-querydata-devel >= 23.10.12
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
 BuildRequires: smartmet-engine-grid-devel >= 23.10.12
 BuildRequires: netcdf-cxx-devel
@@ -42,11 +41,11 @@ Requires: gdal35
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 23.8.31
-Requires: smartmet-library-timeseries >= 23.10.5
-Requires: smartmet-library-spine >= 23.8.31
-Requires: smartmet-library-newbase >= 23.10.3
-Requires: smartmet-engine-querydata >= 23.8.31
+Requires: smartmet-library-macgyver >= 23.10.10
+Requires: smartmet-library-timeseries >= 23.10.11
+Requires: smartmet-library-spine >= 23.10.10
+Requires: smartmet-library-newbase >= 23.10.11
+Requires: smartmet-engine-querydata >= 23.10.12
 Requires: smartmet-server >= 23.8.30
 Requires: %{smartmet_boost}-date-time
 Requires: %{smartmet_boost}-iostreams
@@ -64,12 +63,12 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 23.9.6
 #TestRequires: smartmet-engine-grid >= 23.10.12
-#TestRequires: smartmet-engine-querydata >= 23.8.31
+#TestRequires: smartmet-engine-querydata >= 23.10.12
 #TestRequires: smartmet-utils-devel >= 23.9.6
-#TestRequires: smartmet-library-spine-plugin-test >= 23.8.31
-#TestRequires: smartmet-library-newbase-devel >= 23.10.3
-#TestRequires: smartmet-qdtools >= 23.9.15
-#TestRequires: smartmet-test-data >= 23.7.14
+#TestRequires: smartmet-library-spine-plugin-test >= 23.10.10
+#TestRequires: smartmet-library-newbase-devel >= 23.10.11
+#TestRequires: smartmet-qdtools >= 23.10.11
+#TestRequires: smartmet-test-data >= 23.10.16
 #TestRequires: smartmet-test-db >= 23.7.21
 #TestRequires: smartmet-engine-grid-test >= 23.10.12
 #TestRequires: wgrib
@@ -103,6 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Oct 18 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.18-1.fmi
+- Since it seems setting grib handle keys/values repeatedly slows down, set grib geomertry for each grid only if source=gridmapping, and if source=gridcontent set parameter (discipline, category, parameternumber), level etc. only when radon parameter changes (avoid unnecessary settings when looping time instants and parameter runs in outer loop as by default). Do not apply scaling at all when source=gridcontent since scale and offset values are always fixed (1 and 0) and would have no effect (BRAINSTORM-2747)
+- Fixed gridstep handling for grid data (BRAINSTORM-2748)
+
 * Thu Oct 12 2023 Andris Pavēnis <andris.pavenis@fmi.fi> 23.10.12-1.fmi
 - Repackage due to smartmet-library-grid-files and smartmet-library-grid-files changes
 
