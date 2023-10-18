@@ -1053,8 +1053,11 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     FmiLevelType levelType;
     T::ForecastType forecastType = 0;
     boost::optional<long> templateNumber;
-    bool gridContent = (itsReqParams.dataSource == GridContent);
-    size_t i, j;
+    bool gridContent = (itsReqParams.dataSource == GridContent), foundParam = false;
+    size_t i, j = pTable.size();
+    auto paramIndexIter = paramConfigIndexes.end();
+
+    paramIdx = pTable.size();
 
     if (gridContent)
     {
@@ -1067,45 +1070,73 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
       levelType = FmiLevelType(getParamLevelId(paramName, paramParts));
       forecastType = getForecastType(paramName, paramParts);
+
+      // Search map for the param and producer and return the parameter config index
+      // if found and the radon parameter does not change (looping timesteps).
+      //
+      // TODO: Use parameter config index map for querydata and gridmapping queries too ?
+
+      paramIndexIter = paramConfigIndexes.find(radonParam);
+
+      if (paramIndexIter != paramConfigIndexes.end())
+      {
+        auto it = paramIndexIter->second.find(radonProducer);
+        foundParam = (it != paramIndexIter->second.end());
+
+        if (foundParam)
+        {
+          paramIdx = it->second;
+
+          if (paramName == itsPreviousParam)
+            return;
+        }
+      }
+
+      itsPreviousParam = paramName;
     }
     else
       levelType = itsLevelType;
 
-    for (i = 0, j = pTable.size(); i < pTable.size(); ++i)
-      if (! gridContent)
-      {
-        if (usedParId == pTable[i].itsWantedParam.GetIdent())
+    if (!foundParam)
+    {
+      for (i = 0; i < pTable.size(); ++i)
+        if (! gridContent)
         {
-          // Preferring entry with level for surface data and without level for pressure and hybrid
-          // data.
-          // If preferred entry does not exist, taking the parameter id from the first entry for the
-          // parameter.
-          //
-          cfgLevel = pTable[i].itsLevel;
+          if (usedParId == pTable[i].itsWantedParam.GetIdent())
+          {
+            // Preferring entry with level for surface data and without level for pressure and
+            // hybrid data.
+            // If preferred entry does not exist, taking the parameter id from the first entry
+            // for the parameter.
+            //
+            cfgLevel = pTable[i].itsLevel;
 
-          if ((isSurfaceLevel(levelType) && cfgLevel) || (!(isSurfaceLevel(levelType) || cfgLevel)))
+            if ((isSurfaceLevel(levelType) && cfgLevel) || (!(isSurfaceLevel(levelType) || cfgLevel)))
+              break;
+
+            if (j == pTable.size())
+              j = i;
+          }
+        }
+        else if (pTable[i].itsRadonName == radonParam)
+        {
+          if (!
+              (
+               (itsGrib1Flag && pTable[i].itsGrib1Param) ||
+               ((!itsGrib1Flag) && pTable[i].itsGrib2Param)
+              )
+             )
+            continue;
+
+          if (pTable[i].itsRadonProducer == radonProducer)
             break;
 
-          if (j == pTable.size())
+          if ((j == pTable.size()) && pTable[i].itsRadonProducer.empty())
             j = i;
         }
-      }
-      else if (pTable[i].itsRadonName == radonParam)
-      {
-        if (!
-            (
-             (itsGrib1Flag && pTable[i].itsGrib1Param) ||
-             ((!itsGrib1Flag) && pTable[i].itsGrib2Param)
-            )
-           )
-          continue;
-
-        if (pTable[i].itsRadonProducer == radonProducer)
-          break;
-
-        if ((j == pTable.size()) && pTable[i].itsRadonProducer.empty())
-          j = i;
-      }
+    }
+    else
+      i = paramIdx;
 
     if (i >= pTable.size())
     {
@@ -1121,6 +1152,14 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     {
       if (! gridContent)
         cfgLevel = pTable[i].itsLevel;
+      else if (!foundParam)
+      {
+        if (paramIndexIter == paramConfigIndexes.end())
+          paramIndexIter = paramConfigIndexes.insert(
+              make_pair(radonParam, ParamConfigProducerIndexes())).first;
+
+        paramIndexIter->second.insert(make_pair(radonProducer, paramIdx));
+      }
 
       usedParId = pTable[i].itsOriginalParamId;
       centre = pTable[i].itsCentre;
@@ -1587,16 +1626,30 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
 
     const auto vVec = &(getValueListItem(gridQuery, gridIndex)->mValueVector);
 
-    for (y = y0; (y < yN); y += yStep)
-      for (x = x0; (x < xN); x += xStep, i++)
-      {
-        float value = (*vVec)[i];
+    if (itsReqParams.dataSource == GridContent)
+    {
+      // No scaling applied
 
-        if (value != ParamValueMissing)
-          itsValueArray[i] = (value + offset) / scale;
-        else
-          itsValueArray[i] = gribMissingValue;
-      }
+      for (y = y0; (y < yN); y += yStep)
+        for (x = x0; (x < xN); x += xStep, i++)
+        {
+          float value = (*vVec)[i];
+          itsValueArray[i] = ((value != ParamValueMissing) ? value : gribMissingValue);
+        }
+    }
+    else
+    {
+      for (y = y0; (y < yN); y += yStep)
+        for (x = x0; (x < xN); x += xStep, i++)
+        {
+          float value = (*vVec)[i];
+
+          if (value != ParamValueMissing)
+            itsValueArray[i] = (value + offset) / scale;
+          else
+            itsValueArray[i] = gribMissingValue;
+        }
+    }
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
   }
@@ -1796,7 +1849,7 @@ void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
       // Set geometry
       //
       setGridGeometryToGrib(gridQuery);
-      itsMetaFlag = (itsReqParams.dataSource != QueryData); // TODO: only if native grids differ ?
+      itsMetaFlag = (itsReqParams.dataSource == GridMapping);
     }
 
     // Build and get grib message

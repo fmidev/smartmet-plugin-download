@@ -93,6 +93,11 @@ class GribStreamer : public DataStreamer
   // Grid support
   //
 
+  std::string itsPreviousParam;
+  typedef std::map<std::string, int> ParamConfigProducerIndexes;
+  typedef std::map<std::string, ParamConfigProducerIndexes> ParamConfigParamIndexes;
+  ParamConfigParamIndexes paramConfigIndexes;
+
   void setGridOrigo(const QueryServer::Query& gridQuery);
   void setGridGeometryToGrib(const QueryServer::Query& gridQuery);
   void addGridValuesToGrib(const QueryServer::Query& gridQuery,
