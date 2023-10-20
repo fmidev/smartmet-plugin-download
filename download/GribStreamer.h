@@ -98,7 +98,6 @@ class GribStreamer : public DataStreamer
   typedef std::map<std::string, ParamConfigProducerIndexes> ParamConfigParamIndexes;
   ParamConfigParamIndexes paramConfigIndexes;
 
-  void setGridOrigo(const QueryServer::Query& gridQuery);
   void setGridGeometryToGrib(const QueryServer::Query& gridQuery);
   void addGridValuesToGrib(const QueryServer::Query& gridQuery,
                            const NFmiMetTime& vTime,

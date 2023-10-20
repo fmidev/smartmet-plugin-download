@@ -4712,6 +4712,47 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get grid origo
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getGridOrigo(const QueryServer::Query &gridQuery)
+{
+  try
+  {
+    auto rXAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseXDirection");
+
+    if ((!rXAttr) || ((rXAttr->mValue != "0") && (rXAttr->mValue != "1")))
+      throw Fmi::Exception::Trace(BCP,
+                                  "grid.original.reverseXDirection is missing or has unkown value");
+
+    auto rYAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseYDirection");
+
+    if ((!rYAttr) || ((rYAttr->mValue != "0") && (rYAttr->mValue != "1")))
+      throw Fmi::Exception::Trace(
+          BCP, "grid.original.reverseYDirection is missing or has unknown value");
+
+    bool iNegative = (rXAttr->mValue == "1");
+    bool jPositive = (rYAttr->mValue == "0");
+
+    if ((!iNegative) && (!jPositive))
+      itsGridOrigo = kTopLeft;
+    else if (iNegative && (!jPositive))
+      itsGridOrigo = kTopRight;
+    else if ((!iNegative) && jPositive)
+      itsGridOrigo = kBottomLeft;
+    else
+      itsGridOrigo = kBottomRight;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get query result grid infomation (projection, grid size etc).
  *        Return false on empty result (missing data assumed),
  *        throw on errors
@@ -4733,6 +4774,10 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
     // Projection and spheroid
 
     getGridProjection(gridQuery);
+
+    // Grid origo/direction
+
+    getGridOrigo(gridQuery);
 
     // Latlon or rotated latlon bounding box
     //
@@ -4767,8 +4812,12 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
     if (!bbox)
       throw Fmi::Exception(BCP, string(attr) + " is empty in query result");
 
-    auto bb = BBoxCorners(NFmiPoint((*bbox)[BOTTOMLEFT].first, (*bbox)[BOTTOMLEFT].second),
-                          NFmiPoint((*bbox)[TOPRIGHT].first, (*bbox)[TOPRIGHT].second));
+    // Take y -axis direction into account when setting bbox (reverse x -axis is not supported)
+
+    auto BL = ((itsGridOrigo != kTopLeft) ? BOTTOMLEFT : TOPRIGHT);
+    auto TR = ((itsGridOrigo != kTopLeft) ? TOPRIGHT : BOTTOMLEFT);
+    auto bb = BBoxCorners(NFmiPoint((*bbox)[BL].first, (*bbox)[BL].second),
+                          NFmiPoint((*bbox)[TR].first, (*bbox)[TR].second));
 
     if (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon)
       itsBoundingBox = bb;

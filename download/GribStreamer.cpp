@@ -357,9 +357,9 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
     gset(itsGribHandle, "Nj", itsNY);
 
     double gridCellHeightInDegrees =
-        (rotLLBBox.topRight.Y() - rotLLBBox.bottomLeft.Y()) / (itsNY - 1);
+        fabs((rotLLBBox.topRight.Y() - rotLLBBox.bottomLeft.Y()) / (itsNY - 1));
     double gridCellWidthInDegrees =
-        (rotLLBBox.topRight.X() - rotLLBBox.bottomLeft.X()) / (itsNX - 1);
+        fabs((rotLLBBox.topRight.X() - rotLLBBox.bottomLeft.X()) / (itsNX - 1));
 
     long iNegative, jPositive;
 
@@ -848,47 +848,6 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Set grid origo
- *
- */
-// ----------------------------------------------------------------------
-
-void GribStreamer::setGridOrigo(const QueryServer::Query &gridQuery)
-{
-  try
-  {
-    auto rXAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseXDirection");
-
-    if ((!rXAttr) || ((rXAttr->mValue != "0") && (rXAttr->mValue != "1")))
-      throw Fmi::Exception::Trace(BCP,
-                                  "grid.original.reverseXDirection is missing or has unkown value");
-
-    auto rYAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseYDirection");
-
-    if ((!rYAttr) || ((rYAttr->mValue != "0") && (rYAttr->mValue != "1")))
-      throw Fmi::Exception::Trace(
-          BCP, "grid.original.reverseYDirection is missing or has unknown value");
-
-    bool iNegative = (rXAttr->mValue == "1");
-    bool jPositive = (rYAttr->mValue == "0");
-
-    if ((!iNegative) && (!jPositive))
-      itsGridOrigo = kTopLeft;
-    else if (iNegative && (!jPositive))
-      itsGridOrigo = kTopRight;
-    else if ((!iNegative) && jPositive)
-      itsGridOrigo = kBottomLeft;
-    else
-      itsGridOrigo = kBottomRight;
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
  * \brief Set grid grib projection metadata
  *
  */
@@ -898,8 +857,6 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 {
   try
   {
-    setGridOrigo(gridQuery);
-
     itsValueArray.resize(itsNX * itsNY);
 
     switch (itsGridMetaData.projType)
