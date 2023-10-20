@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.10.18
+Version: 23.10.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Oct 20 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.20-1.fmi
+- Take grib y -axis scanning direction into account when setting latitude of first/last grid point (BRAINSTORM-2759)
+
 * Wed Oct 18 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.18-1.fmi
 - Since it seems setting grib handle keys/values repeatedly slows down, set grib geomertry for each grid only if source=gridmapping, and if source=gridcontent set parameter (discipline, category, parameternumber), level etc. only when radon parameter changes (avoid unnecessary settings when looping time instants and parameter runs in outer loop as by default). Do not apply scaling at all when source=gridcontent since scale and offset values are always fixed (1 and 0) and would have no effect (BRAINSTORM-2747)
 - Fixed gridstep handling for grid data (BRAINSTORM-2748)
