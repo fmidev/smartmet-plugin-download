@@ -702,7 +702,12 @@ void Query::parseTimeOptions(const Spine::HTTP::Request& theReq)
     auto now = Spine::optional_string(theReq.getParameter("now"), "");
     auto startTime = Spine::optional_string(theReq.getParameter("starttime"), "");
     auto endTime = Spine::optional_string(theReq.getParameter("endtime"), "");
-    auto timeStep = Spine::optional_unsigned_long(theReq.getParameter("timestep"), 0);
+
+    unsigned long timeStep = 0;
+    auto opt = theReq.getParameter("timestep");
+
+    if (opt && (*opt != "data"))
+      timeStep = Spine::optional_unsigned_long(opt, 0);
 
     tOptions = TimeSeries::parseTimes(theReq);
     tOptions.startTimeData = (startTime.empty() && now.empty());
