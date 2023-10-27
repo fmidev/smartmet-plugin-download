@@ -312,7 +312,10 @@ bool readGribParamConfigField(const std::string& name,
 
         BOOST_FOREACH (const auto& nm, members)
         {
-          if ((nm == "templatenumber") && p.itsTemplateNumber)
+          if (
+              ((nm == "templatenumber") && p.itsTemplateNumber) ||
+              ((nm == "typeofstatisticalprocessing") && (!p.itsStepType.empty()))
+             )
             throw Fmi::Exception(
                 BCP, nm + ": value is already set at array index " + Fmi::to_string(arrayIndex));
 

@@ -1152,7 +1152,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
     auto const &gribParam = (itsGrib1Flag ? pTable[i].itsGrib1Param : pTable[i].itsGrib2Param);
 
-    if (gridContent && gribParam)
+    if (gribParam)
     {
       if (itsGrib1Flag)
       {
@@ -1206,19 +1206,18 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     // stamping; stamping is selected with boolean 'bDataIsEndTimeStamped'.
     //
     // Even though the existence of parameter configuration block having format specific entry is
-    // tested also when querying with radon names (when gridContent is true), the configuration
+    // tested also when querying with radon names (when source=grid), the configuration
     // has been searched earlier and format specific configuration exists for the parameter.
     // Aggregate period length is currently not available as such in radon; it may have been
     // embedded in some parameter names but that is not checked. Period length will not be set if
     // it has not been manually set to configuration.
 
     const bool bDataIsEndTimeStamped = true;
-    bool gridContent = (itsReqParams.dataSource == GridContent);
     bool hasParamConfig = (paramIdx < pTable.size());
     bool hasStepType = (hasParamConfig && (!pTable[paramIdx].itsStepType.empty()));
     boost::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
 
-    if (gridContent && hasParamConfig)
+    if (hasParamConfig && (!hasStepType))
     {
       auto const &config = pTable[paramIdx];
 
@@ -1234,8 +1233,6 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         typeOfStatisticalProcessing = config.itsGrib2Param->itsTypeOfStatisticalProcessing;
         hasStepType = (typeOfStatisticalProcessing ? true : false);
       }
-      else
-        hasStepType = false;
     }
 
     if (hasStepType)
@@ -1361,7 +1358,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         setOriginTime = true;
       }
 
-      if (itsReqParams.dataSource == GridContent)
+      if (pTable[paramIdx].itsStepType.empty())
       {
         if (itsGrib1Flag)
           gset(itsGribHandle, "indicatorOfTimeRange", *indicatorOfTimeRange);

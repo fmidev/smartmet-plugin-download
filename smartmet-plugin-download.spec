@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.10.25
+Version: 23.10.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Oct 27 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.27-1.fmi
+- Enable use of grib1/grib2 parameter configuration blocks for nongrid parameters too to be able to set parameter discipline, category and parameter number (etc) instead of edition independent paramId which for some reason currently does not work atleast for paramId 260268
+
 * Wed Oct 25 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.25-1.fmi
 - Fixed parsing of request parameter 'timestep=data'
 
