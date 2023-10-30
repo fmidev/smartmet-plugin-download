@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.10.27
+Version: 23.10.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -27,14 +27,14 @@ BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 23.10.20
 BuildRequires: smartmet-library-macgyver-devel >= 23.10.10
-BuildRequires: smartmet-library-timeseries-devel >= 23.10.20
+BuildRequires: smartmet-library-timeseries-devel >= 23.10.30
 BuildRequires: smartmet-library-newbase-devel >= 23.10.11
-BuildRequires: smartmet-library-grid-content-devel >= 23.10.12
-BuildRequires: smartmet-library-grid-files-devel >= 23.10.20
+BuildRequires: smartmet-library-grid-content-devel >= 23.10.30
+BuildRequires: smartmet-library-grid-files-devel >= 23.10.30
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.10.12
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
-BuildRequires: smartmet-engine-grid-devel >= 23.10.12
+BuildRequires: smartmet-engine-grid-devel >= 23.10.30
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal35
@@ -42,7 +42,7 @@ Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 23.10.10
-Requires: smartmet-library-timeseries >= 23.10.20
+Requires: smartmet-library-timeseries >= 23.10.30
 Requires: smartmet-library-spine >= 23.10.20
 Requires: smartmet-library-newbase >= 23.10.11
 Requires: smartmet-engine-querydata >= 23.10.12
@@ -62,7 +62,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 23.9.6
-#TestRequires: smartmet-engine-grid >= 23.10.12
+#TestRequires: smartmet-engine-grid >= 23.10.30
 #TestRequires: smartmet-engine-querydata >= 23.10.12
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.10.20
@@ -70,7 +70,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 23.10.18
 #TestRequires: smartmet-test-data >= 23.10.16
 #TestRequires: smartmet-test-db >= 23.7.21
-#TestRequires: smartmet-engine-grid-test >= 23.10.12
+#TestRequires: smartmet-engine-grid-test >= 23.10.30
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Oct 30 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.10.30-1.fmi
+- Repackaged due to ABI changes in GRID libraries
+
 * Fri Oct 27 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.27-1.fmi
 - Enable use of grib1/grib2 parameter configuration blocks for nongrid parameters too to be able to set parameter discipline, category and parameter number (etc) instead of edition independent paramId which for some reason currently does not work atleast for paramId 260268
 
