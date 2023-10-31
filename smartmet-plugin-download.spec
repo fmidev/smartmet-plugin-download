@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.10.30
+Version: 23.10.31
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Oct 31 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.31-1.fmi
+- Fixed grid query starttime=data option to return data starting from 1'st timestep instead of 'now' and endtime=data to return data upto last timestep instead of 'now' (BRAINSTORM-2775)
+
 * Mon Oct 30 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.10.30-1.fmi
 - Repackaged due to ABI changes in GRID libraries
 
