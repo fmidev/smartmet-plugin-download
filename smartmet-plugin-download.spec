@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.10.31
+Version: 23.11.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Nob  3 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.11.3-1.fmi
+- In addition to requested projection, take gridsize and gridresolution into account when determining whether grid source data is cropped or not. gridresolution has currently no effect with bbox since gridengine ignores it; requested resolution and resúlting number of cells hardly matches the given bbox exactly (BRAINSTORM-2778)
+- Use grid.llbox for latlon and rotlat grids too instead of grid.crop.llbox. grid.crop.llbox is assumed to reflect source grid y -axis direction and grib.llbox corners are assumed to have increasing latitude order regardless of source grid y -axis direction (BRAINSTORM-2782)
+
 * Tue Oct 31 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.10.31-1.fmi
 - Fixed grid query starttime=data option to return data starting from 1'st timestep instead of 'now' and endtime=data to return data upto last timestep instead of 'now' (BRAINSTORM-2775)
 

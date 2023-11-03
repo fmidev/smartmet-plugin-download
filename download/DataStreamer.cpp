@@ -4779,24 +4779,24 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
 
     getGridOrigo(gridQuery);
 
-    // Latlon or rotated latlon bounding box
-    //
-    // Note: using grid.bbox for latlon data too, original llbox is modified
-    // for wms (?); e.g. ECG
-    //
-    // grid.llbox = 0.000000,-90.000000,-0.100000,90.000000
-    // grid.bbox = 0.000000,-90.000000,359.900000,90.000000
+    // Note: grid.crop.llbox is assumed to reflect source grid y -axis direction and
+    //       grib.llbox corners are assumed to have increasing latitude order regardless
+    //       of source grid y -axis direction
 
     string bboxStr;
 
     const char *attr;
 
-    if (itsReqParams.projection.empty() &&
-        ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty())))
+    if (
+        itsReqParams.projection.empty() &&
+        (itsCropping.crop || (!itsReqParams.gridSizeXY)) &&
+        (!itsReqParams.gridResolutionXY) &&
+        ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty()))
+       )
+    {
+      itsCropping.crop = true;
       attr = "grid.crop.llbox";
-    else if ((itsGridMetaData.projType == T::GridProjectionValue::LatLon) ||
-             (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon))
-      attr = "grid.bbox";
+    }
     else
       attr = "grid.llbox";
 
@@ -4814,8 +4814,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
 
     // Take y -axis direction into account when setting bbox (reverse x -axis is not supported)
 
-    auto BL = ((itsGridOrigo != kTopLeft) ? BOTTOMLEFT : TOPRIGHT);
-    auto TR = ((itsGridOrigo != kTopLeft) ? TOPRIGHT : BOTTOMLEFT);
+    auto BL = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? BOTTOMLEFT : TOPRIGHT);
+    auto TR = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? TOPRIGHT : BOTTOMLEFT);
     auto bb = BBoxCorners(NFmiPoint((*bbox)[BL].first, (*bbox)[BL].second),
                           NFmiPoint((*bbox)[TR].first, (*bbox)[TR].second));
 
