@@ -8,7 +8,7 @@
 
 #include "DataStreamer.h"
 #include "GribTools.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/thread.hpp>
 
 namespace SmartMet
@@ -51,7 +51,7 @@ class GribStreamer : public DataStreamer
 
   grib_handle* itsGribHandle;
   std::vector<double> itsValueArray;
-  boost::posix_time::ptime itsGribOriginTime;
+  Fmi::DateTime itsGribOriginTime;
   bool itsGrib1Flag;
 
   void scanningDirections(long& iNegative, long& jPositive) const;
@@ -76,7 +76,7 @@ class GribStreamer : public DataStreamer
   void setStepToGrib(const ParamChangeTable& pTable,
                      std::size_t paramIdx,
                      bool setOriginTime,
-                     const boost::posix_time::ptime& validTime);
+                     const Fmi::DateTime& validTime);
   void addValuesToGrib(Engine::Querydata::Q q,
                        const NFmiMetTime& vTime,
                        int level,

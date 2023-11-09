@@ -298,7 +298,7 @@ class Query
                                const std::string &originTime,
                                uint &generationId);
   void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
-                                      boost::posix_time::ptime originTime,
+                                      Fmi::DateTime originTime,
                                       const std::string &paramName,
                                       bool gribOutput,
                                       const std::list<std::pair<int, int>> &levelRanges,

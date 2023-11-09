@@ -6,7 +6,7 @@
 
 #include "NetCdfStreamer.h"
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <gis/ProjInfo.h>
@@ -298,13 +298,13 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, int nValues, T2 
  */
 // ----------------------------------------------------------------------
 
-int getTimeOffset(const ptime &t1, const ptime t2, long timeStep)
+int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime t2, long timeStep)
 {
   try
   {
     if (timeStep < DataStreamer::minutesInDay)
     {
-      time_duration td(t1 - t2);
+      Fmi::TimeDuration td(t1 - t2);
 
       if ((timeStep < 60) || (timeStep % 60))
         return (td.hours() * 60) + td.minutes();
@@ -386,7 +386,7 @@ void NetCdfStreamer::addTimeDimension()
                                " for producer '" + itsReqParams.producer + "'");
 
     TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
-    ptime startTime = itsDataTimes.front().utc_time();
+    Fmi::DateTime startTime = itsDataTimes.front().utc_time();
     size_t timeSize = 0;
     int times[itsDataTimes.size()];
 
@@ -407,7 +407,7 @@ void NetCdfStreamer::addTimeDimension()
 
     date d(startTime.date());
     greg_month gm(d.month());
-    time_duration td(startTime.time_of_day());
+    Fmi::TimeDuration td(startTime.time_of_day());
 
     ostringstream os;
 
@@ -1645,12 +1645,12 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
-ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
+ptime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMinutes)
 {
   try
   {
     date d = vt.date();
-    time_duration td = vt.time_of_day();
+    Fmi::TimeDuration td = vt.time_of_day();
     long minutes = (td.hours() * 60) + td.minutes();
 
     if (((periodLengthInMinutes > 0) && (periodLengthInMinutes < 60) &&
@@ -1659,28 +1659,28 @@ ptime getPeriodStartTime(const ptime &vt, long periodLengthInMinutes)
         ((periodLengthInMinutes < DataStreamer::minutesInDay) &&
          ((DataStreamer::minutesInDay % periodLengthInMinutes) == 0)))
       if (minutes == 0)
-        return ptime(d, time_duration(0, -periodLengthInMinutes, 0));
+        return ptime(d, Fmi::TimeDuration(0, -periodLengthInMinutes, 0));
       else if ((minutes % periodLengthInMinutes) != 0)
         return ptime(
-            d, time_duration(0, ((minutes / periodLengthInMinutes) * periodLengthInMinutes), 0));
+            d, Fmi::TimeDuration(0, ((minutes / periodLengthInMinutes) * periodLengthInMinutes), 0));
       else
-        return ptime(d, time_duration(0, minutes - periodLengthInMinutes, 0));
+        return ptime(d, Fmi::TimeDuration(0, minutes - periodLengthInMinutes, 0));
     else if (periodLengthInMinutes == DataStreamer::minutesInDay)
       if (minutes == 0)
-        return ptime(ptime(d, time_duration(-1, 0, 0)).date());
+        return ptime(ptime(d, Fmi::TimeDuration(-1, 0, 0)).date());
       else
         return ptime(d);
     else if (periodLengthInMinutes == DataStreamer::minutesInMonth)
     {
       if ((d.day() == 1) && (minutes == 0))
-        d = ptime(d, time_duration(-1, 0, 0)).date();
+        d = ptime(d, Fmi::TimeDuration(-1, 0, 0)).date();
 
       return ptime(date(d.year(), d.month(), 1));
     }
     else if (periodLengthInMinutes == DataStreamer::minutesInYear)
     {
       if ((d.month() == 1) && (d.day() == 1) && (minutes == 0))
-        d = ptime(d, time_duration(-1, 0, 0)).date();
+        d = ptime(d, Fmi::TimeDuration(-1, 0, 0)).date();
 
       return ptime(date(d.year(), 1, 1));
     }
@@ -1728,7 +1728,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
     // Determine and store time bounds
 
     TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
-    ptime startTime = itsDataTimes.front().utc_time(), vt;
+    Fmi::DateTime startTime = itsDataTimes.front().utc_time(), vt;
     int bounds[2 * itsTimeDim->size()];
     size_t i = 0;
 

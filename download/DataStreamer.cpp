@@ -9,7 +9,7 @@
 #include "Plugin.h"
 #include <boost/algorithm/string/split.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/foreach.hpp>
 #include <gis/DEM.h>
 #include <gis/LandCover.h>
@@ -380,7 +380,7 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLeve
   try
   {
     auto ds = gridMetaData->dataStreamer;
-    ptime validTime = ds->itsTimeIterator->utc_time();
+    Fmi::DateTime validTime = ds->itsTimeIterator->utc_time();
 
     gridMetaData->gridOriginTime = gridMetaData->originTime;
 
@@ -591,8 +591,8 @@ ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
  */
 // ----------------------------------------------------------------------
 
-const string &DataStreamer::GridMetaData::getLatestOriginTime(ptime *originTime,
-                                                              const ptime *validTime) const
+const string &DataStreamer::GridMetaData::getLatestOriginTime(Fmi::DateTime *originTime,
+                                                              const Fmi::DateTime *validTime) const
 {
   try
   {
@@ -605,7 +605,7 @@ const string &DataStreamer::GridMetaData::getLatestOriginTime(ptime *originTime,
 
     if (validTime)
     {
-      ptime firstTime, lastTime;
+      Fmi::DateTime firstTime, lastTime;
       long timeStep;
 
       for (; ott != originTimeTimes.rend(); ott++)
@@ -636,8 +636,8 @@ const string &DataStreamer::GridMetaData::getLatestOriginTime(ptime *originTime,
 // ----------------------------------------------------------------------
 
 bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTimeStr,
-                                                  ptime &firstTime,
-                                                  ptime &lastTime,
+                                                  Fmi::DateTime &firstTime,
+                                                  Fmi::DateTime &lastTime,
                                                   long &timeStep) const
 {
   try
@@ -729,7 +729,7 @@ boost::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::generateGridValidTimeList(Query &query, ptime &oTime, ptime &sTime, ptime &eTime)
+void DataStreamer::generateGridValidTimeList(Query &query, Fmi::DateTime &oTime, Fmi::DateTime &sTime, Fmi::DateTime &eTime)
 {
   try
   {
@@ -810,7 +810,7 @@ void DataStreamer::generateGridValidTimeList(Query &query, ptime &oTime, ptime &
 // ----------------------------------------------------------------------
 
 void DataStreamer::generateValidTimeList(
-    const Engine::Querydata::Q &q, ptime &oTime, ptime &sTime, ptime &eTime)
+    const Engine::Querydata::Q &q, Fmi::DateTime &oTime, Fmi::DateTime &sTime, Fmi::DateTime &eTime)
 {
   try
   {
@@ -1187,7 +1187,7 @@ void DataStreamer::getParameterDetailsFromContentData(
 // ----------------------------------------------------------------------
 
 bool DataStreamer::hasRequestedGridData(
-    const Producer &producer, ptime &oTime, ptime &sTime, ptime &eTime)
+    const Producer &producer, Fmi::DateTime &oTime, Fmi::DateTime &sTime, Fmi::DateTime &eTime)
 {
   try
   {
@@ -1486,7 +1486,7 @@ bool DataStreamer::hasRequestedGridData(
 // ----------------------------------------------------------------------
 
 bool DataStreamer::hasRequestedData(
-    const Producer &producer, ptime &originTime, ptime &startTime, ptime &endTime)
+    const Producer &producer, Fmi::DateTime &originTime, Fmi::DateTime &startTime, Fmi::DateTime &endTime)
 {
   try
   {

@@ -10,7 +10,7 @@
 #include "Query.h"
 #include "Resources.h"
 #include "Tools.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Model.h>
@@ -49,9 +49,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   virtual ~DataStreamer();
 
   void generateValidTimeList(const Engine::Querydata::Q &q,
-                             boost::posix_time::ptime &oTime,
-                             boost::posix_time::ptime &sTime,
-                             boost::posix_time::ptime &eTime);
+                             Fmi::DateTime &oTime,
+                             Fmi::DateTime &sTime,
+                             Fmi::DateTime &eTime);
 
   void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
   void sortLevels();
@@ -64,9 +64,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   const Config &getConfig() const { return itsCfg; }
   bool hasRequestedData(const Producer &producer,
-                        boost::posix_time::ptime &oTime,
-                        boost::posix_time::ptime &sTime,
-                        boost::posix_time::ptime &eTime);
+                        Fmi::DateTime &oTime,
+                        Fmi::DateTime &sTime,
+                        Fmi::DateTime &eTime);
 
   virtual std::string getChunk() = 0;
 
@@ -151,9 +151,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   Engine::Querydata::Q itsQ;    // Q for input querydata file
   Engine::Querydata::Q itsCPQ;  // Q for in-memory querydata object containing current parameter
-  boost::posix_time::ptime itsOriginTime;
-  boost::posix_time::ptime itsFirstDataTime;
-  boost::posix_time::ptime itsLastDataTime;
+  Fmi::DateTime itsOriginTime;
+  Fmi::DateTime itsFirstDataTime;
+  Fmi::DateTime itsLastDataTime;
 
   std::string getWKT(OGRSpatialReference *geometrySRS) const;
   void extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
@@ -318,8 +318,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     ParamGeometries paramGeometries;
 
-    boost::posix_time::ptime originTime;      // Set if fixed (latest non-multifile or given) otime
-    boost::posix_time::ptime gridOriginTime;  // otime of current grid (fixed or latest multifile)
+    Fmi::DateTime originTime;      // Set if fixed (latest non-multifile or given) otime
+    Fmi::DateTime gridOriginTime;  // otime of current grid (fixed or latest multifile)
     T::ForecastType forecastType;
     T::ForecastNumber forecastNumber;
     T::GeometryId geometryId;
@@ -332,12 +332,12 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     bool queryOrderParam;
 
-    boost::posix_time::ptime selectGridLatestValidOriginTime();
-    const std::string &getLatestOriginTime(boost::posix_time::ptime *originTime = NULL,
-                                           const boost::posix_time::ptime *validTime = NULL) const;
+    Fmi::DateTime selectGridLatestValidOriginTime();
+    const std::string &getLatestOriginTime(Fmi::DateTime *originTime = NULL,
+                                           const Fmi::DateTime *validTime = NULL) const;
     bool getDataTimeRange(const std::string &originTimeStr,
-                          boost::posix_time::ptime &firstTime,
-                          boost::posix_time::ptime &lastTime,
+                          Fmi::DateTime &firstTime,
+                          Fmi::DateTime &lastTime,
                           long &timeStep) const;
     boost::shared_ptr<SmartMet::Engine::Querydata::ValidTimeList> getDataTimes(
         const std::string &originTimeStr) const;
@@ -350,16 +350,16 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   };
 
   void generateGridValidTimeList(Query &query,
-                                 boost::posix_time::ptime &oTime,
-                                 boost::posix_time::ptime &sTime,
-                                 boost::posix_time::ptime &eTime);
+                                 Fmi::DateTime &oTime,
+                                 Fmi::DateTime &sTime,
+                                 Fmi::DateTime &eTime);
   void setGridLevels(const Producer &producer, const Query &query);
   void getParameterDetailsFromContentData(
       const std::string &paramName, SmartMet::Engine::Grid::ParameterDetails_vec &parameterDetails);
   bool hasRequestedGridData(const Producer &producer,
-                            boost::posix_time::ptime &oTime,
-                            boost::posix_time::ptime &sTime,
-                            boost::posix_time::ptime &eTime);
+                            Fmi::DateTime &oTime,
+                            Fmi::DateTime &sTime,
+                            Fmi::DateTime &eTime);
   bool isGridLevelRequested(const Producer &producer,
                             const Query &query,
                             FmiLevelType mappingLevelType,

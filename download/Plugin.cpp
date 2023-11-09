@@ -15,7 +15,7 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/bind/bind.hpp>
 #include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <macgyver/DateTime.h>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -690,9 +690,9 @@ static bool getParamConfig(const ParamChangeTable &pTable,
 // ----------------------------------------------------------------------
 
 static string getDownloadFileName(const string &producer,
-                                  const ptime &originTime,
-                                  const ptime &startTime,
-                                  const ptime &endTime,
+                                  const Fmi::DateTime &originTime,
+                                  const Fmi::DateTime &startTime,
+                                  const Fmi::DateTime &endTime,
                                   const string &projection,
                                   OutputFormat outputFormat)
 {
@@ -759,7 +759,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
 
     auto now = getRequestParam(req, producer, "now", "");
 
-    ptime originTime, startTime, endTime;
+    Fmi::DateTime originTime, startTime, endTime;
 
     if ((!reqParams.startTime.empty()) || (!now.empty()))
       startTime = query.tOptions.startTime;
@@ -826,9 +826,9 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
       if (!reqParams.originTime.empty())
       {
         if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
-          originTime = boost::posix_time::ptime(boost::date_time::pos_infin);
+          originTime = Fmi::DateTime(boost::date_time::pos_infin);
         else if (reqParams.originTime == "oldest")
-          originTime = boost::posix_time::ptime(boost::date_time::neg_infin);
+          originTime = Fmi::DateTime(boost::date_time::neg_infin);
         else
           originTime = Fmi::TimeParser::parse(reqParams.originTime);
 
@@ -945,7 +945,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
       }
 
       const int expires_seconds = 60;
-      ptime t_now = second_clock::universal_time();
+      Fmi::DateTime t_now = Fmi::SecondClock::universal_time();
 
       // Excecuting the query
 
@@ -954,7 +954,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
       // Defining the response header information
 
-      ptime t_expires = t_now + seconds(expires_seconds);
+      Fmi::DateTime t_expires = t_now + seconds(expires_seconds);
       boost::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
       std::string cachecontrol =
           "public, max-age=" + boost::lexical_cast<std::string>(expires_seconds);

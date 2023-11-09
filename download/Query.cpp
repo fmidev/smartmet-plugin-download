@@ -15,8 +15,8 @@
 #include <spine/Convenience.h>
 #include <timeseries/OptionParsers.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-using boost::posix_time::ptime;
+#include <macgyver/DateTime.h>
+using Fmi::DateTime;
 
 using namespace std;
 
@@ -460,7 +460,7 @@ bool Query::getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
 // ----------------------------------------------------------------------
 
 void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
-                                           ptime originTime,
+                                           Fmi::DateTime originTime,
                                            const string &paramName,
                                            bool gribOutput,
                                            const list<pair<int, int>> &levelRanges,
@@ -491,7 +491,7 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     T::ContentInfoList contentInfoList;
     map<T::ParamLevel, ParameterContents::iterator> levels;
 
-    ptime sTime, eTime;
+    Fmi::DateTime sTime, eTime;
     if (!tOptions.startTimeData)
       sTime = tOptions.startTime;
     if (!tOptions.endTimeData)
@@ -651,7 +651,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
     {
       // YYYYMMDDHHMM[SS] to YYYYMMDDSSTHHMMSS
 
-      ptime originTime = Fmi::TimeParser::parse(originTimeStr);
+      Fmi::DateTime originTime = Fmi::TimeParser::parse(originTimeStr);
       originTimeStr = to_iso_string(originTime);
 
       auto pos = originTimeStr.find(",");
@@ -664,7 +664,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
     if (!loadOriginTimeGenerations(cS, params, originTimeStr))
       throw Fmi::Exception::Trace(BCP, "No data available");
 
-    ptime originTime(Fmi::TimeParser::parse(originTimeStr));
+    Fmi::DateTime originTime(Fmi::TimeParser::parse(originTimeStr));
 
     list<pair<int, int>> levelRanges, forecastNumberRanges;
 

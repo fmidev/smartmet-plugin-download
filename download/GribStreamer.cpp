@@ -1189,14 +1189,14 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
                                  size_t paramIdx,
                                  bool setOriginTime,
-                                 const ptime &validTime)
+                                 const Fmi::DateTime &validTime)
 {
   try
   {
     // stepUnits always 'minute' to keep it simple
 
     string stepUnits = "m", stepType;
-    time_duration fromOriginTime(validTime - itsGribOriginTime);
+    Fmi::TimeDuration fromOriginTime(validTime - itsGribOriginTime);
     long step = (fromOriginTime.hours() * 60) + fromOriginTime.minutes();
     long startStep = step, endStep = step;
 
@@ -1262,7 +1262,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 
         if (timeStep < minutesInDay)
         {
-          time_duration td(validTime.time_of_day());
+          Fmi::TimeDuration td(validTime.time_of_day());
           long validTimeMinutes = (td.hours() * 60) + td.minutes();
           long periodLengthMinutes = pTable[paramIdx].itsPeriodLengthMinutes;
           long periodStartMinutes = (validTimeMinutes / periodLengthMinutes) * periodLengthMinutes;
@@ -1302,7 +1302,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         // step;
         //		 we do not support cumulative aggregates
         //
-        ptime validTimeDate = ptime(validTime.date()), periodStart, periodEnd;
+        Fmi::DateTime validTimeDate = ptime(validTime.date()), periodStart, periodEnd;
 
         if (bDataIsEndTimeStamped)
         {
@@ -1310,16 +1310,16 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
           {
             // Previous day
             //
-            periodStart = ptime((validTimeDate - time_duration(1, 0, 0)).date());
+            periodStart = ptime((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
             periodEnd = validTimeDate;
           }
           else
           {
             // Previous month
             //
-            boost::gregorian::date d((validTimeDate - time_duration(1, 0, 0)).date());
-            periodStart = ptime(boost::gregorian::date(d.year(), d.month(), 1));
-            periodEnd = ptime(boost::gregorian::date(
+            Fmi::Date d((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
+            periodStart = ptime(Fmi::Date(d.year(), d.month(), 1));
+            periodEnd = ptime(Fmi::Date(
                 validTimeDate.date().year(), validTimeDate.date().month(), 1));
           }
         }
@@ -1330,16 +1330,16 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
             // Current day
             //
             periodStart = validTimeDate;
-            periodEnd = ptime((periodStart + time_duration(25, 0, 0)).date());
+            periodEnd = ptime((periodStart + Fmi::TimeDuration(25, 0, 0)).date());
           }
           else
           {
             // Current month
             //
-            periodStart = ptime(boost::gregorian::date(
+            periodStart = ptime(Fmi::Date(
                 validTimeDate.date().year(), validTimeDate.date().month(), 1));
-            ptime t(periodStart + time_duration(32 * 24, 0, 0));
-            periodEnd = ptime(boost::gregorian::date(t.date().year(), t.date().month(), 1));
+            Fmi::DateTime t(periodStart + Fmi::TimeDuration(32 * 24, 0, 0));
+            periodEnd = ptime(Fmi::Date(t.date().year(), t.date().month(), 1));
           }
         }
 
@@ -1351,7 +1351,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
       {
         // Can't be negative, set start step to 0 and adjust origintime and end step accordingly
         //
-        itsGribOriginTime -= time_duration(0, -startStep, 0);
+        itsGribOriginTime -= Fmi::TimeDuration(0, -startStep, 0);
         endStep -= startStep;
         startStep = 0;
 
@@ -1371,8 +1371,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 
     if (setOriginTime)
     {
-      boost::gregorian::date d = itsGribOriginTime.date();
-      time_duration t = itsGribOriginTime.time_of_day();
+      Fmi::Date d = itsGribOriginTime.date();
+      Fmi::TimeDuration t = itsGribOriginTime.time_of_day();
 
       long dateLong = d.year() * 10000 + d.month() * 100 + d.day();
       long timeLong = t.hours() * 100 + t.minutes();
@@ -1400,7 +1400,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
  */
 // ----------------------------------------------------------------------
 
-ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
+ptime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
 {
   try
   {
@@ -1412,15 +1412,15 @@ ptime adjustToTimeStep(const ptime &pt, long timeStepInMinutes)
     if ((timeStepInMinutes == 60) || (timeStepInMinutes == 180) || (timeStepInMinutes == 360) ||
         (timeStepInMinutes == 720))
       return ptime(pt.date(),
-                   time_duration(pt.time_of_day().hours() -
+                   Fmi::TimeDuration(pt.time_of_day().hours() -
                                      (pt.time_of_day().hours() % (timeStepInMinutes / 60)),
                                  0,
                                  0));
     else if (timeStepInMinutes == DataStreamer::minutesInDay)
-      return ptime(pt.date(), time_duration(0, 0, 0));
+      return ptime(pt.date(), Fmi::TimeDuration(0, 0, 0));
     else if (timeStepInMinutes == DataStreamer::minutesInMonth)
-      return ptime(boost::gregorian::date(pt.date().year(), pt.date().month(), 1),
-                   time_duration(0, 0, 0));
+      return ptime(Fmi::Date(pt.date().year(), pt.date().month(), 1),
+                   Fmi::TimeDuration(0, 0, 0));
 
     return pt;
   }
@@ -1457,8 +1457,8 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
     //		 If the actual data origintime is used, adjust it backwards to even data timestep;
     //		 the output validtimes are set as number of timesteps forwards from the origintime.
 
-    ptime oTime = q->originTime();
-    ptime validTime = vTime;
+    Fmi::DateTime oTime = q->originTime();
+    Fmi::DateTime validTime = vTime;
     bool setOriginTime = (itsOriginTime.is_not_a_date_time() || (itsOriginTime != oTime));
 
     if (setOriginTime)
@@ -1541,7 +1541,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     //		 If the actual data origintime is used, adjust it backwards to even data timestep;
     //		 the output validtimes are set as number of timesteps forwards from the origintime.
 
-    ptime oTime = itsGridMetaData.gridOriginTime, validTime = vTime;
+    Fmi::DateTime oTime = itsGridMetaData.gridOriginTime, validTime = vTime;
     bool setOriginTime = (itsOriginTime.is_not_a_date_time() || (itsOriginTime != oTime));
 
     if (setOriginTime)
