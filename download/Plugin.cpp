@@ -547,7 +547,7 @@ static bool getScaleFactorAndOffset(signed long id,
 
             if (producerName == confProducer)
               break;
-            else if ((j == ptable.size()) && (outputFormat == Grib2) && confProducer.empty())
+            else if ((j == ptable.size()) && confProducer.empty())
               j = i;
           }
         }
