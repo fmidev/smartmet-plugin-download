@@ -460,9 +460,9 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
         else if (name == "name")
           paramName = asString(name, json, i);
         else if (name == "radonproducer")
-          p.itsRadonProducer = asString(name, json, i);
+          p.itsRadonProducer =  boost::to_upper_copy(asString(name, json, i));
         else if (name == "radonname")
-          p.itsRadonName = asString(name, json, i);
+          p.itsRadonName = boost::to_upper_copy(asString(name, json, i));
         else if (name == "offset")
           p.itsConversionBase = asFloat(name, json, i);
         else if (name == "divisor")

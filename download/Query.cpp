@@ -135,7 +135,11 @@ void Query::parseRadonParameterName(
             BCP, string("Invalid '") + partNames[n] + "' in radon parameter name '" + param + "'");
     }
 
-    paramParts.push_back(s);
+    if (n <= 1)
+      paramParts.push_back(boost::to_upper_copy(s));
+    else
+      paramParts.push_back(s);
+
     n++;
   }
 }
