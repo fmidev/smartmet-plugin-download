@@ -45,14 +45,16 @@ ifdef CI
 GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
 TEST_PREPARE_TARGETS += start-geonames-db
 TEST_FINISH_TARGETS += stop-geonames-db
+TEST_TARGETS := test-qd
 else
 GEONAMES_HOST_EDIT := cat
 META_CONF_EDIT := cat
+TEST_TARGETS := test-qd test-grid
 endif
 
 TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
 
-test: test-qd test-grid
+test: $(TEST_TARGETS)
 
 test-qd: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
