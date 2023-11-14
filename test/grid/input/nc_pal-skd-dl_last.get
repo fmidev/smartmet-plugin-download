@@ -1,0 +1,1 @@
+GET	/download?param=T-K:pal_skandinavia2:5908:0:0:0&format=netcdf&starttime=data&source=grid HTTP/1.0

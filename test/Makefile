@@ -52,10 +52,18 @@ endif
 
 TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
 
-test: $(TEST_PREPARE_TARGETS)
+test: test-qd test-grid
+
+test-qd: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
 	@mkdir -p failures tmp
 	ok=true; smartmet-plugin-test $(TESTER_PARAM) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
+
+test-grid: $(TEST_PREPARE_TARGETS)
+	ok=true
+	if $(MAKE) -C grid test; then ok=true; else ok=false; fi; \
+	$(MAKE) $(TEST_FINISH_TARGETS); \
+	$$ok
 
 cnf/geonames.conf: cnf/geonames.conf.in .dummy
 	$(GEONAMES_HOST_EDIT) $< >$@

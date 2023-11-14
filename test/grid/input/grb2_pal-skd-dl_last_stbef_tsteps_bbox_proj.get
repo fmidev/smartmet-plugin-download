@@ -1,0 +1,1 @@
+GET	/download?param=T-K:pal_skandinavia:5900:0:0:0&format=grib2&starttime=20080805T030000&timesteps=4&bbox=15,58,38,71&projection=EPSG:4326&source=grid HTTP/1.0

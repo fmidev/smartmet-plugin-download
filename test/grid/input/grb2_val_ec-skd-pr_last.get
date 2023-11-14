@@ -1,0 +1,1 @@
+GET	/download?param=T-K:ecmwf_skandinavia_painepinta:5901:2:100000;92500;30000-50000:0&ecmwf_skandinavia_painepinta&format=grib2&starttime=data&source=grid HTTP/1.0

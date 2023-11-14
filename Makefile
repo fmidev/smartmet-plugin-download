@@ -50,7 +50,7 @@ OBJS = $(patsubst %.cpp, obj/%.o, $(notdir $(SRCS)))
 
 INCLUDES := -I$(SUBNAME) $(INCLUDES)
 
-.PHONY: test rpm
+.PHONY: test test-qd test-grid rpm
 
 # The rules
 
@@ -79,7 +79,7 @@ install:
 	@mkdir -p $(plugindir)
 	$(INSTALL_PROG) $(LIBFILE) $(plugindir)/$(LIBFILE)
 
-test:
+test test-qd test-grid:
 	$(MAKE) -C test $@
 
 objdir:
