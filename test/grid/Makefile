@@ -13,7 +13,7 @@ clean:
 	rm -rf cnf/grid
 
 test-impl:
-    mkdir -p tmp
+	mkdir -p tmp
 	$(TEST_RUNNER) smartmet-plugin-test \
 		--handler /download \
 		--reactor-config cnf/reactor.conf \
