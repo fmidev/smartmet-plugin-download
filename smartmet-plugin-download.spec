@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.11.10
+Version: 23.11.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Nov 15 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.11.15-1.fmi
+- Use global (not producer specific) radon parameter configuration entries for grib1 output too (BRAINSTORM-2792)
+- Use uppercase radon parameter and producer names (BRAINSTORM-2791)
+- Added grid data tests. Note: currently grid data tests do not work (without few temporary kludges in code) since the test redis database parameter T-K has undefined leveltype 0 (BRAINSTORM-2741)
+
 * Fri Nov 10 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.11.10-1.fmi
 - Repackaged due to API changes in grid-content
 
