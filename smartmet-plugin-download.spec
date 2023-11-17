@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.11.15
+Version: 23.11.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Nov 17 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.11.17-1.fmi
+- Repackaged due to API changes in grid-files and grid-content
+
 * Wed Nov 15 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.11.15-1.fmi
 - Use global (not producer specific) radon parameter configuration entries for grib1 output too (BRAINSTORM-2792)
 - Use uppercase radon parameter and producer names (BRAINSTORM-2791)
