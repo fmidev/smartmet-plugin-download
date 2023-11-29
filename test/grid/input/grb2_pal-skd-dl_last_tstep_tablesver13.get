@@ -1,1 +1,0 @@
-GET	/download?param=T-K:PAL_SKANDINAVIA:5900:0:0:0&format=grib2&starttime=data&origintime=20080805T050000&timestep=180&tablesversion=13&source=grid HTTP/1.0
