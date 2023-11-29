@@ -531,7 +531,9 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
       if (blockQuery)
         throw Fmi::Exception(BCP, "Can't specify block size when fetching function parameters");
 
-      radonParameters.insert(make_pair(paramName, paramParts));
+      if (!radonParameters.insert(make_pair(paramName, paramParts)).second)
+        throw Fmi::Exception(BCP, "Duplicate function result parameter " + paramName);
+
       functionParameters.insert(make_pair(paramName, funcParamDef));
 
       pOptions.add(Spine::Parameter(paramName, Spine::Parameter::Type::Data,
