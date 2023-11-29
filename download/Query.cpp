@@ -144,6 +144,28 @@ void Query::parseRadonParameterName(
   }
 }
 
+bool Query::parseRadonParameterName(
+    const string &paramDef, vector<string> &paramParts, string &param, string &funcParamDef) const
+{
+  // Check for function call; func{args} as resultparam
+
+  vector<string> pdParts;
+
+  boost::algorithm::split(pdParts, paramDef, boost::algorithm::is_any_of(" "));
+  if (
+      ((pdParts.size() != 1) && (pdParts.size() != 3)) ||
+      ((pdParts.size() == 3) && (boost::to_upper_copy(pdParts[1]) != "AS"))
+     )
+    throw Fmi::Exception::Trace(BCP, "Invalid radon parameter name '" + paramDef + "'");
+
+  param = ((pdParts.size() == 1) ? pdParts[0] : pdParts.back());
+  funcParamDef = ((pdParts.size() == 1) ? "" : pdParts[0]);
+
+  parseRadonParameterName(param, paramParts, true);
+
+  return (!funcParamDef.empty());
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse int value
@@ -247,9 +269,11 @@ list<pair<int, int>> Query::parseIntValues(const string &paramName, const string
 // ----------------------------------------------------------------------
 
 void Query::parseParameterLevelAndForecastNumberRanges(
-    const string &param,
+    const string &paramDef,
     bool gribOutput,
-    TimeSeries::OptionParsers::ParameterOptions &pOptions,
+    string &param,
+    string &funcParamDef,
+    vector<string> &paramParts,
     list<pair<int, int>> &levelRanges,
     list<pair<int, int>> &forecastNumberRanges)
 {
@@ -259,10 +283,7 @@ void Query::parseParameterLevelAndForecastNumberRanges(
   // Heigth level value can be negative. Forecast number can have negative value (-1) for
   // deterministic forecast
 
-  vector<string> paramParts;
-  string paramName, fcNumber;
-
-  parseRadonParameterName(param, paramParts, true);
+  parseRadonParameterName(paramDef, paramParts, param, funcParamDef);
 
   auto leveltype = getParamLevelId(param, paramParts);
 
@@ -278,6 +299,19 @@ void Query::parseParameterLevelAndForecastNumberRanges(
 
   forecastNumberRanges =
       parseIntValues(param, "forecast number", paramParts[6], negativeForecastNumberValid, 99);
+
+  // Function parameter's result parameter can have no level or forecastnumber range(s)
+
+  if (
+      (!funcParamDef.empty()) &&
+      (
+       (levelRanges.size() > 1) || (forecastNumberRanges.size() > 1) ||
+       (levelRanges.front().first != levelRanges.front().second) ||
+       (forecastNumberRanges.front().first != forecastNumberRanges.front().second)
+      )
+     )
+    throw Fmi::Exception(
+        BCP, "Function result parameter can't have list or range expressions: " + paramDef);
 
   // Check duplicates/overlapping
 
@@ -313,11 +347,20 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
   try
   {
     vector<string> paramParts;
-    string commonOriginTime;
+    string commonOriginTime, param, funcParamDef;
+    bool hasFuncParam = false;
 
-    for (const string &param : params)
+    originTime.clear();
+
+    for (const string &paramDef : params)
     {
-      parseRadonParameterName(param, paramParts, true);
+      parseRadonParameterName(paramDef, paramParts, param, funcParamDef);
+
+      if (!funcParamDef.empty())
+      {
+        hasFuncParam = true;
+        continue;
+      }
 
       const string &producer = paramParts[1];
       auto pg = producerGenerations.find(producer);
@@ -405,7 +448,7 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
 
     originTime = commonOriginTime;
 
-    return (!originTime.empty());
+    return (hasFuncParam || (!originTime.empty()));
   }
   catch (...)
   {
@@ -465,23 +508,44 @@ bool Query::getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
 
 void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                            Fmi::DateTime originTime,
-                                           const string &paramName,
                                            bool gribOutput,
-                                           const list<pair<int, int>> &levelRanges,
-                                           const list<pair<int, int>> &forecastNumberRanges,
+                                           bool blockQuery,
+                                           const string &paramDef,
                                            TimeSeries::OptionParsers::ParameterOptions &pOptions)
 {
   try
   {
+    vector<string> paramParts;
+    string paramName, funcParamDef;
+    list<pair<int, int>> levelRanges, forecastNumberRanges;
+
+    parseParameterLevelAndForecastNumberRanges(
+        paramDef, gribOutput, paramName, funcParamDef, paramParts, levelRanges,
+        forecastNumberRanges);
+
+    if (!funcParamDef.empty())
+    {
+      // Function parameter is queried without knowing if any source data exists;
+      // just store the result parameter and function parameter
+
+      if (blockQuery)
+        throw Fmi::Exception(BCP, "Can't specify block size when fetching function parameters");
+
+      radonParameters.insert(make_pair(paramName, paramParts));
+      functionParameters.insert(make_pair(paramName, funcParamDef));
+
+      pOptions.add(Spine::Parameter(paramName, Spine::Parameter::Type::Data,
+                                    FmiParameterName(kFmiPressure + pOptions.size())));
+
+      return;
+    }
+
     // Expand parameter names from level/forecastnumber ranges (e.g. 2-2 or 5-8) by checking if
     // they have content available. The expanded parameter names are added to pOptions
 
     if (originTime.is_not_a_date_time())
       throw Fmi::Exception(
           BCP, "expandParameterFromRangeValues: internal: originTime is not set");
-
-    vector<string> paramParts;
-    parseRadonParameterName(paramName, paramParts, true);
 
     T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
 
@@ -651,11 +715,14 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
     vector<string> params;
     boost::algorithm::split(params, opt, boost::algorithm::is_any_of(","));
 
-    if (!originTimeStr.empty())
-    {
-      // YYYYMMDDHHMM[SS] to YYYYMMDDSSTHHMMSS
+    Fmi::DateTime originTime;
+    bool hasOriginTime = (!originTimeStr.empty());
 
-      Fmi::DateTime originTime = Fmi::TimeParser::parse(originTimeStr);
+    if (hasOriginTime)
+    {
+      // YYYYMMDDHHMM[SS] to YYYYMMDDTHHMMSS
+
+      originTime = Fmi::TimeParser::parse(originTimeStr);
       originTimeStr = to_iso_string(originTime);
 
       auto pos = originTimeStr.find(",");
@@ -668,21 +735,18 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
     if (!loadOriginTimeGenerations(cS, params, originTimeStr))
       throw Fmi::Exception::Trace(BCP, "No data available");
 
-    Fmi::DateTime originTime(Fmi::TimeParser::parse(originTimeStr));
+    if ((!hasOriginTime) && (!originTimeStr.empty()))
+      originTime = Fmi::TimeParser::parse(originTimeStr);
 
-    list<pair<int, int>> levelRanges, forecastNumberRanges;
+    bool blockQuery =
+        (
+         (Spine::optional_size(theReq.getParameter("gridparamblocksize"), 0) > 1) ||
+         (Spine::optional_size(theReq.getParameter("gridtimeblocksize"), 0) > 1)
+        );
 
-    for (const string& param : params)
-    {
-      levelRanges.clear();
-      forecastNumberRanges.clear();
-
-      parseParameterLevelAndForecastNumberRanges(
-          param, gribOutput, pOptions, levelRanges, forecastNumberRanges);
-
-      expandParameterFromRangeValues(gridEngine, originTime, param, gribOutput, levelRanges,
-                                     forecastNumberRanges, pOptions);
-    }
+    for (const string &paramDef : params)
+      expandParameterFromRangeValues(
+          gridEngine, originTime, gribOutput, blockQuery, paramDef, pOptions);
 
     if (pOptions.size() == 0)
       throw Fmi::Exception::Trace(BCP, "No data available");
@@ -691,6 +755,54 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check if parameter is a function parameter (result of a grid function)
+ */
+// ----------------------------------------------------------------------
+
+bool Query::isFunctionParameter(const std::string &param) const
+{
+  return (functionParameters.find(param) != functionParameters.end());
+}
+
+bool Query::isFunctionParameter(const std::string &param, string &funcParamDef) const
+{
+  auto it = functionParameters.find(param);
+
+  if (it != functionParameters.end())
+  {
+    funcParamDef = it->second;
+    return true;
+  }
+
+  funcParamDef.clear();
+
+  return false;
+}
+
+bool Query::isFunctionParameter(
+    const std::string &param, T::ParamLevelId &gridLevelType, int &level) const
+{
+  if (! isFunctionParameter(param))
+  {
+    gridLevelType = GridFmiLevelTypeNone;
+    level = 0;
+
+    return false;
+  }
+
+  auto it = radonParameters.find(param);
+
+  if (it == radonParameters.end())
+    throw Fmi::Exception::Trace(BCP, "isFunctionParameter: internal: parameter not found");
+
+  gridLevelType = getParamLevelId(param, it->second);
+  level = getParamLevel(param, it->second);
+
+  return true;
 }
 
 // ----------------------------------------------------------------------

@@ -258,6 +258,13 @@ class Query
 
   void parseRadonParameterName(
       const std::string &param, std::vector<std::string> &paramParts, bool expanding = false) const;
+  bool parseRadonParameterName(
+      const std::string &paramDef, std::vector<std::string> &paramParts, std::string &param,
+      std::string &funcParamDef) const;
+  bool isFunctionParameter(const std::string &param) const;
+  bool isFunctionParameter(const std::string &param, std::string &funcParamDef) const;
+  bool isFunctionParameter(
+      const std::string &param, T::ParamLevelId &gridLevelType, int &level) const;
 
   typedef std::map<uint, T::GenerationInfo> GenerationInfos;
   typedef std::map<std::string, T::ContentInfoList> ParameterContents;
@@ -269,6 +276,7 @@ class Query
   Query();
 
   std::map<std::string, std::vector<std::string>> radonParameters;
+  std::map<std::string, std::string> functionParameters;
   GenerationInfos generationInfos;
   ParameterContents parameterContents;
   typedef std::map<std::string, uint> OriginTimeGenerations;
@@ -285,9 +293,11 @@ class Query
                                                 const std::string &valueStr,
                                                 bool negativeValueValid, int maxValue);
   void parseParameterLevelAndForecastNumberRanges(
-      const std::string &param,
+      const std::string &paramDef,
       bool gribOutput,
-      TimeSeries::OptionParsers::ParameterOptions &pOptions,
+      std::string &param,
+      std::string &funcParamDef,
+      std::vector<std::string> &paramParts,
       std::list<std::pair<int, int>> &levelRanges,
       std::list<std::pair<int, int>> &forecastNumberRanges);
   bool loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
@@ -299,10 +309,9 @@ class Query
                                uint &generationId);
   void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                       Fmi::DateTime originTime,
-                                      const std::string &paramName,
                                       bool gribOutput,
-                                      const std::list<std::pair<int, int>> &levelRanges,
-                                      const std::list<std::pair<int, int>> &forecastNumberRanges,
+                                      bool blockQuery,
+                                      const std::string &paramDef,
                                       TimeSeries::OptionParsers::ParameterOptions &pOptions);
   void parseParameters(const Spine::HTTP::Request &theReq,
                        const Engine::Grid::Engine *gridEngine,

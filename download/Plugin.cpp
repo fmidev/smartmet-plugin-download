@@ -698,7 +698,7 @@ static string getDownloadFileName(const string &producer,
 {
   try
   {
-    string sTime, eTime;
+    string sTime, eTime, oTime;
 
     if (startTime.is_not_a_date_time())
       sTime = "start";
@@ -709,6 +709,11 @@ static string getDownloadFileName(const string &producer,
       eTime = "end";
     else
       eTime = Fmi::to_iso_string(endTime);
+
+    if (originTime.is_not_a_date_time())
+      oTime = sTime;
+    else
+      oTime = Fmi::to_iso_string(originTime);
 
     const char *extn;
 
@@ -721,7 +726,7 @@ static string getDownloadFileName(const string &producer,
     else
       extn = ".sqd";
 
-    return producer + "_" + Fmi::to_iso_string(originTime) + "_" + sTime + "_" + eTime +
+    return producer + "_" + oTime + "_" + sTime + "_" + eTime +
            (!projection.empty() ? ("_" + projection) : "") + extn;
   }
   catch (...)

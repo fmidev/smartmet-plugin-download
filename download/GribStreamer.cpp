@@ -1540,8 +1540,24 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     //
     //		 If the actual data origintime is used, adjust it backwards to even data timestep;
     //		 the output validtimes are set as number of timesteps forwards from the origintime.
+    //
+    // For function parameters analysistime is available only if set in the request since the
+    // parameters can have multiple producers and their latest origintime may not be the same
+    // and/or the function may return data originating from multiple generations, or if the
+    // query includes data parameters too in which case latest valid origintime is selected from
+    // content records prior the data query.
+    //
+    // Grid -engine could (should ?) return analysistime if there's only one function
+    // parameter or all parameters have the same producer, and the input data originates from
+    // single generation
 
     Fmi::DateTime oTime = itsGridMetaData.gridOriginTime, validTime = vTime;
+
+    if (oTime.is_not_a_date_time())
+      // Query has function parameter(s) only, use each validtime as origintime too
+      //
+      oTime = vTime;
+
     bool setOriginTime = (itsOriginTime.is_not_a_date_time() || (itsOriginTime != oTime));
 
     if (setOriginTime)

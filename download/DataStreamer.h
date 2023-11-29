@@ -372,6 +372,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getGridProjection(const QueryServer::Query &gridQuery);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
   void getGridOrigo(const QueryServer::Query& gridQuery);
+  bool setDataTimes(const QueryServer::Query &gridQuery);
   bool getGridQueryInfo(const QueryServer::Query &gridQuery, uint gridIndex);
   uint bufferIndex() const;
   void extractGridData(std::string &chunk);

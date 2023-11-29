@@ -272,6 +272,11 @@ DataStreamer::GridMetaData::GridIterator &DataStreamer::GridMetaData::GridIterat
 
       if (ds->itsTimeIterator != timesEnd)
       {
+        if (gridMetaData->paramGeometries.empty())
+          // Fetching function parameters only, looping time intants returned by each query
+          //
+          break;
+
         auto timeInstant = ds->itsTimeIterator->utc_time();
 
         if ((timeInstant >= ds->itsFirstDataTime) && (timeInstant <= ds->itsLastDataTime))
@@ -380,6 +385,12 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLeve
   try
   {
     auto ds = gridMetaData->dataStreamer;
+
+    if (ds->itsQuery.isFunctionParameter(ds->itsParamIterator->name(), gridLevelType, level))
+      // Function parameter is queried without knowing if any source data exists
+      //
+      return true;
+
     Fmi::DateTime validTime = ds->itsTimeIterator->utc_time();
 
     gridMetaData->gridOriginTime = gridMetaData->originTime;
@@ -703,9 +714,7 @@ boost::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
 
     for (; ott != originTimeTimes.end(); ott++)
     {
-      auto tit = ott->second.begin();
-
-      for (; (tit != ott->second.end()); tit++)
+      for (auto tit = ott->second.cbegin(); (tit != ott->second.cend()); tit++)
         validTimeList->push_back(from_iso_string(*tit));
 
       if (!originTimeStr.empty())
@@ -733,6 +742,18 @@ void DataStreamer::generateGridValidTimeList(Query &query, Fmi::DateTime &oTime,
 {
   try
   {
+    if (itsGridMetaData.paramGeometries.empty())
+    {
+      // Fetching function parameters only, looping time instants returned by each query;
+      // set one (special) time to enable initial/first time iterator step to query data, the
+      // returned time instants are then iterated
+
+      checkDataTimeStep(itsReqParams.timeStep);
+      itsDataTimes.push_back(boost::local_time::local_date_time(not_a_date_time));
+
+      return;
+    }
+
     // Use data times if not given in request
 
     string originTimeStr;
@@ -1197,13 +1218,19 @@ bool DataStreamer::hasRequestedGridData(
     string originTimeStr(oTime.is_not_a_date_time() ? "" : to_iso_string(oTime));
     string forecastType, forecastNumber;
     size_t nMissingParam = 0;
-    bool gridContent = (itsReqParams.dataSource == GridContent);
+    bool gridContent = (itsReqParams.dataSource == GridContent), hasFuncParam = false;
 
     if (gridContent)
       itsReqParams.producer.clear();
 
     for (auto const &param : itsDataParams)
     {
+      if (itsQuery.isFunctionParameter(param.name()))
+      {
+        hasFuncParam = true;
+        continue;
+      }
+
       SmartMet::Engine::Grid::ParameterDetails_vec paramDetails;
 
       if (gridContent)
@@ -1449,7 +1476,7 @@ bool DataStreamer::hasRequestedGridData(
       }
     }
 
-    if (itsGridMetaData.paramLevelId == GridFmiLevelTypeNone)
+    if ((!hasFuncParam) && itsGridMetaData.paramGeometries.empty())
       return false;
 
     // Erase leading missing parameters
@@ -1457,9 +1484,10 @@ bool DataStreamer::hasRequestedGridData(
     if (nMissingParam > 0)
       itsDataParams.erase(itsDataParams.begin(), itsDataParams.begin() + nMissingParam);
 
-    // If origintime is not given, select latest valid origintime from metadata
+    // If origintime is not given and fetching at least one data parameter, select latest
+    // common valid origintime from metadata
 
-    if (originTimeStr.empty())
+    if (originTimeStr.empty() && (!itsGridMetaData.paramGeometries.empty()))
       itsGridMetaData.selectGridLatestValidOriginTime();
 
     // Generate list of validtimes for the data to be loaded.
@@ -4148,13 +4176,62 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     gridQuery.mAttributeList.addAttribute("grid.cell.height", gridCellHeight);
   }
 
-  gridQuery.mAnalysisTime = to_iso_string(itsGridMetaData.gridOriginTime);
+  if (itsGridMetaData.gridOriginTime.is_not_a_date_time())
+  {
+    // Function parameter
 
-  uint nTimes = ((itsReqParams.gridTimeBlockSize > 0) ? itsReqParams.gridTimeBlockSize : 1), nT = 1;
-  for (auto it = itsTimeIterator; ((nT <= nTimes) && (it != itsDataTimes.end())); nT++, it++)
-    gridQuery.mForecastTimeList.insert(toTimeT(it->utc_time()));
+    gridQuery.mAnalysisTime.clear();
+    gridQuery.mFlags = (QueryServer::Query::Flags::LatestGeneration |
+                        QueryServer::Query::Flags::SameAnalysisTime);
+  }
+  else
+  {
+    gridQuery.mAnalysisTime = to_iso_string(itsGridMetaData.gridOriginTime);
+    gridQuery.mFlags = 0;
+  }
 
-  gridQuery.mSearchType = QueryServer::Query::SearchType::TimeSteps;
+  if (!itsGridMetaData.paramGeometries.empty())
+  {
+    // Fetching at least one data parameter, forecast times to query were loaded from
+    // content records
+
+    gridQuery.mSearchType = QueryServer::Query::SearchType::TimeSteps;
+
+    uint nTimes = ((itsReqParams.gridTimeBlockSize > 0) ? itsReqParams.gridTimeBlockSize : 1);
+    uint nT = 1;
+
+    for (auto it = itsTimeIterator; ((nT <= nTimes) && (it != itsDataTimes.end())); nT++, it++)
+      gridQuery.mForecastTimeList.insert(toTimeT(it->utc_time()));
+  }
+  else
+  {
+    // Fetching function parameters only, query with user given time range or all time instants
+    // looping the time instants returned by each query
+
+    gridQuery.mSearchType = QueryServer::Query::SearchType::TimeRange;
+    gridQuery.mTimesteps = itsReqParams.timeSteps;
+
+    if (itsReqParams.timeStep != 0)
+      gridQuery.mTimestepSizeInMinutes = itsDataTimeStep;
+    else
+      gridQuery.mFlags |= QueryServer::Query::Flags::TimeStepIsData;
+
+    if (!itsReqParams.startTime.empty())
+      gridQuery.mStartTime = toTimeT(from_iso_string(itsReqParams.startTime));
+    else
+      gridQuery.mFlags |= QueryServer::Query::Flags::StartTimeFromData;
+
+    if (!itsReqParams.endTime.empty())
+      gridQuery.mEndTime = toTimeT(from_iso_string(itsReqParams.endTime));
+    else
+    {
+      // Bug, mEndTime needs to be set even when EndTimeFromData is set
+
+      gridQuery.mFlags |= QueryServer::Query::Flags::EndTimeFromData;
+      gridQuery.mEndTime = toTimeT(from_iso_string("99991231T235959"));
+    }
+  }
+
   gridQuery.mTimezone = "UTC";
 
   if (itsReqParams.projection.empty())
@@ -4174,28 +4251,38 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
 
     queryParam.mType = QueryServer::QueryParameter::Type::Vector;
     queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
+    queryParam.mFlags = 0;
 
-    queryParam.mParam = itsGridMetaData.paramKeys.find(paramIter->name())->second;
-
-    queryParam.mParameterLevelId = gridLevelType;
-    if ((itsReqParams.dataSource != GridContent) && (itsLevelType == kFmiPressureLevel))
-      level *= 100;
-    queryParam.mParameterLevel = level;
-
-    if (itsReqParams.dataSource == GridContent)
+    if (itsQuery.isFunctionParameter(paramIter->name(), queryParam.mParam))
     {
-      vector<string> paramParts;
-      itsQuery.parseRadonParameterName(paramIter->name(), paramParts);
-
-      queryParam.mForecastType = getForecastType(paramIter->name(), paramParts);
-      queryParam.mForecastNumber = getForecastNumber(paramIter->name(), paramParts);
-      queryParam.mGeometryId = getGeometryId(paramIter->name(), paramParts);
+      queryParam.mOrigParam = queryParam.mParam;
+      queryParam.mSymbolicName = queryParam.mParam;
+      queryParam.mParameterKey = queryParam.mParam;
     }
     else
     {
-      queryParam.mForecastType = itsGridMetaData.forecastType;
-      queryParam.mForecastNumber = itsGridMetaData.forecastNumber;
-      queryParam.mGeometryId = itsGridMetaData.geometryId;
+      queryParam.mParam = itsGridMetaData.paramKeys.find(paramIter->name())->second;
+
+      queryParam.mParameterLevelId = gridLevelType;
+      if ((itsReqParams.dataSource != GridContent) && (itsLevelType == kFmiPressureLevel))
+        level *= 100;
+      queryParam.mParameterLevel = level;
+
+      if (itsReqParams.dataSource == GridContent)
+      {
+        vector<string> paramParts;
+        itsQuery.parseRadonParameterName(paramIter->name(), paramParts);
+
+        queryParam.mForecastType = getForecastType(paramIter->name(), paramParts);
+        queryParam.mForecastNumber = getForecastNumber(paramIter->name(), paramParts);
+        queryParam.mGeometryId = getGeometryId(paramIter->name(), paramParts);
+      }
+      else
+      {
+        queryParam.mForecastType = itsGridMetaData.forecastType;
+        queryParam.mForecastNumber = itsGridMetaData.forecastNumber;
+        queryParam.mGeometryId = itsGridMetaData.geometryId;
+      }
     }
 
     queryParam.mParameterKeyType = T::ParamKeyTypeValue::FMI_NAME;
@@ -4680,6 +4767,9 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
 {
   try
   {
+    if (gridQuery.mQueryParameterList.size() == 0)
+      return nullptr;
+
     if (gridIndex > 0)
     {
       if (gridQuery.mQueryParameterList.size() > 1)
@@ -4689,6 +4779,9 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
 
         auto itp = gridQuery.mQueryParameterList.begin();
         advance(itp, gridIndex);
+
+        if (itp->mValueList.size() == 0)
+          return nullptr;
 
         return itp->mValueList.front();
       }
@@ -4701,6 +4794,9 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
 
       return *itt;
     }
+
+    if (gridQuery.mQueryParameterList.front().mValueList.size() == 0)
+      return nullptr;
 
     return gridQuery.mQueryParameterList.front().mValueList.front();
   }
@@ -4753,6 +4849,46 @@ void DataStreamer::getGridOrigo(const QueryServer::Query &gridQuery)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set data times for looping using function parameter's query result
+ *
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::setDataTimes(const QueryServer::Query &gridQuery)
+{
+  try
+  {
+    if (gridQuery.mForecastTimeList.empty())
+    {
+      itsFirstDataTime = itsLastDataTime = Fmi::DateTime(not_a_date_time);
+      return false;
+    }
+
+    itsDataTimes.clear();
+    itsFirstDataTime = from_time_t(*itsGridQuery.mForecastTimeList.begin());
+    itsLastDataTime = from_time_t(*itsGridQuery.mForecastTimeList.rbegin());
+
+    boost::local_time::time_zone_ptr UTC(new boost::local_time::posix_time_zone("UTC"));
+
+    for (const auto &forecastTime : itsGridQuery.mForecastTimeList)
+    {
+      auto t = boost::posix_time::from_time_t(forecastTime);
+      itsDataTimes.push_back(boost::local_time::local_date_time(t, UTC));
+    }
+
+    itsReqParams.gridTimeBlockSize = itsDataTimes.size();
+    itsTimeIterator = itsDataTimes.begin();
+
+    return true;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get query result grid infomation (projection, grid size etc).
  *        Return false on empty result (missing data assumed),
  *        throw on errors
@@ -4766,10 +4902,27 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
   {
     // Can't rely on returned query status, check first if got any data
 
-    const auto vVec = &(getValueListItem(gridQuery, gridIndex)->mValueVector);
+    if ((gridIndex == 0) && itsGridMetaData.paramGeometries.empty())
+    {
+      // Fetching function parameters only, looping time instants returned by each query
 
+      if (!setDataTimes(gridQuery))
+        return false;
+    }
+
+    const auto valueListItem = getValueListItem(gridQuery, gridIndex);
+    if (!valueListItem)
+      return false;
+
+    const auto vVec = &(valueListItem->mValueVector);
     if (vVec->empty())
       return false;
+
+    // Origintime is not set if it was not given in request and all parameters are
+    // function parameters
+
+    if (!valueListItem->mAnalysisTime.empty())
+      itsGridMetaData.gridOriginTime = from_iso_string(valueListItem->mAnalysisTime);
 
     // Projection and spheroid
 
@@ -4914,8 +5067,6 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
     }
 
     // Ensemble
-
-    auto const valueListItem = getValueListItem(gridQuery, gridIndex);
 
     itsGridMetaData.forecastType = valueListItem->mForecastType;
     itsGridMetaData.forecastNumber = valueListItem->mForecastNumber;
