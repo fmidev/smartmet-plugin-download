@@ -148,10 +148,29 @@ bool Query::parseRadonParameterName(
     const string &paramDef, vector<string> &paramParts, string &param, string &funcParamDef) const
 {
   // Check for function call; func{args} as resultparam
+  //
+  // Note: since PluginTest does not currently handle <param> AS <resultparam> notation,
+  //       trying to parse func{funcparams}AS<resultparam> too
 
   vector<string> pdParts;
 
   boost::algorithm::split(pdParts, paramDef, boost::algorithm::is_any_of(" "));
+
+  if (pdParts.size() == 1)
+  {
+    auto aPos = pdParts[0].find("}");
+
+    if (
+        (aPos != string::npos) && (aPos > 0) &&
+        (boost::to_upper_copy(pdParts[0].substr(aPos + 1, 2)) == "AS")
+       )
+    {
+      pdParts.push_back("AS");
+      pdParts.push_back(pdParts[0].substr(aPos + 3));
+      pdParts[0].erase(aPos + 1);
+    }
+  }
+
   if (
       ((pdParts.size() != 1) && (pdParts.size() != 3)) ||
       ((pdParts.size() == 3) && (boost::to_upper_copy(pdParts[1]) != "AS"))
@@ -347,10 +366,8 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
   try
   {
     vector<string> paramParts;
-    string commonOriginTime, param, funcParamDef;
+    string commonOriginTime = originTime, param, funcParamDef;
     bool hasFuncParam = false;
-
-    originTime.clear();
 
     for (const string &paramDef : params)
     {
@@ -387,9 +404,6 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
         {
           generationInfos.insert(make_pair(generationInfo->mGenerationId, *generationInfo));
           pg->second.insert(make_pair(originTime, generationInfo->mGenerationId));
-
-          if (commonOriginTime.empty())
-            commonOriginTime = originTime;
         }
 
         continue;

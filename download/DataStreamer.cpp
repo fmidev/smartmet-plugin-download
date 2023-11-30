@@ -386,14 +386,14 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLeve
   {
     auto ds = gridMetaData->dataStreamer;
 
+    gridMetaData->gridOriginTime = gridMetaData->originTime;
+
     if (ds->itsQuery.isFunctionParameter(ds->itsParamIterator->name(), gridLevelType, level))
       // Function parameter is queried without knowing if any source data exists
       //
       return true;
 
     Fmi::DateTime validTime = ds->itsTimeIterator->utc_time();
-
-    gridMetaData->gridOriginTime = gridMetaData->originTime;
 
     string originTimeStr = ds->itsMultiFile ? gridMetaData->getLatestOriginTime(
                                                   &gridMetaData->gridOriginTime, &validTime)
@@ -747,6 +747,8 @@ void DataStreamer::generateGridValidTimeList(Query &query, Fmi::DateTime &oTime,
       // Fetching function parameters only, looping time instants returned by each query;
       // set one (special) time to enable initial/first time iterator step to query data, the
       // returned time instants are then iterated
+
+      itsGridMetaData.originTime = oTime;
 
       checkDataTimeStep(itsReqParams.timeStep);
       itsDataTimes.push_back(boost::local_time::local_date_time(not_a_date_time));
