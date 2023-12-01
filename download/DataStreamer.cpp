@@ -380,7 +380,8 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLevelType, int &level)
+bool DataStreamer::GridMetaData::GridIterator::hasData(
+    T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level)
 {
   try
   {
@@ -388,7 +389,7 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::ParamLevelId &gridLeve
 
     gridMetaData->gridOriginTime = gridMetaData->originTime;
 
-    if (ds->itsQuery.isFunctionParameter(ds->itsParamIterator->name(), gridLevelType, level))
+    if (ds->itsQuery.isFunctionParameter(ds->itsParamIterator->name(), geometryId, gridLevelType, level))
       // Function parameter is queried without knowing if any source data exists
       //
       return true;
@@ -4183,8 +4184,15 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     // Function parameter
 
     gridQuery.mAnalysisTime.clear();
+
+   // Currently LatestGeneration does not work with StartTimeFromData
+   //
+   /*
     gridQuery.mFlags = (QueryServer::Query::Flags::LatestGeneration |
                         QueryServer::Query::Flags::SameAnalysisTime);
+   */
+
+    gridQuery.mFlags = QueryServer::Query::Flags::SameAnalysisTime;
   }
   else
   {
@@ -5146,11 +5154,15 @@ void DataStreamer::extractGridData(string &chunk)
     for (gridIterator++; !gridIterator.atEnd(); gridIterator++)
     {
       // Parameter specific level type and level for surface data
+      //
+      // Note: itsGridMetaData.geometryId is set according to result parameter if
+      //       parameter is a function parameter, but currently all data and result
+      //       parameters are required to have the same geometryid
 
       T::ParamLevelId gridLevelType;
       int level;
 
-      if (!gridIterator.hasData(gridLevelType, level))
+      if (!gridIterator.hasData(itsGridMetaData.geometryId, gridLevelType, level))
         continue;
 
       auto gridIndex = bufferIndex();

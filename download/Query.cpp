@@ -542,6 +542,9 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
       // Function parameter is queried without knowing if any source data exists;
       // just store the result parameter and function parameter
 
+      if (!gribOutput)
+        throw Fmi::Exception(BCP, "Function parameter netcdf output not yet supported");
+
       if (blockQuery)
         throw Fmi::Exception(BCP, "Can't specify block size when fetching function parameters");
 
@@ -800,7 +803,7 @@ bool Query::isFunctionParameter(const std::string &param, string &funcParamDef) 
 }
 
 bool Query::isFunctionParameter(
-    const std::string &param, T::ParamLevelId &gridLevelType, int &level) const
+    const std::string &param, T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level) const
 {
   if (! isFunctionParameter(param))
   {
@@ -815,6 +818,7 @@ bool Query::isFunctionParameter(
   if (it == radonParameters.end())
     throw Fmi::Exception::Trace(BCP, "isFunctionParameter: internal: parameter not found");
 
+  geometryId = getGeometryId(param, it->second);
   gridLevelType = getParamLevelId(param, it->second);
   level = getParamLevel(param, it->second);
 

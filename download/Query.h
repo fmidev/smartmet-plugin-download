@@ -264,7 +264,7 @@ class Query
   bool isFunctionParameter(const std::string &param) const;
   bool isFunctionParameter(const std::string &param, std::string &funcParamDef) const;
   bool isFunctionParameter(
-      const std::string &param, T::ParamLevelId &gridLevelType, int &level) const;
+      const std::string &param, T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level) const;
 
   typedef std::map<uint, T::GenerationInfo> GenerationInfos;
   typedef std::map<std::string, T::ContentInfoList> ParameterContents;
