@@ -1,0 +1,8 @@
+d=08080505:VTMP:0 mb:1hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:0 mb:4hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:0 mb:7hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:0 mb:10hr fcst:type=analysis:NAve=0
+d=08080505:TMP:0 mb:1hr fcst:type=analysis:NAve=0
+d=08080505:TMP:0 mb:4hr fcst:type=analysis:NAve=0
+d=08080505:TMP:0 mb:7hr fcst:type=analysis:NAve=0
+d=08080505:TMP:0 mb:10hr fcst:type=analysis:NAve=0

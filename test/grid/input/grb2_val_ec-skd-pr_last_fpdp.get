@@ -1,0 +1,1 @@
+GET	/download?param=/AVG{T-K:ecmwf_skandinavia_painepinta:5901:2:92500:0;-2;0}asT-K2:ecmwf_skandinavia_painepinta:5901:2:92500:0,T-K:ecmwf_skandinavia_painepinta:5901:2:92500:0&format=grib2&starttime=data&source=grid HTTP/1.0

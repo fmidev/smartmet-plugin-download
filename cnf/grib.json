@@ -693,12 +693,29 @@
       }
     },
     {
+      "radonname" : "T-K2",
+      "grib1" :
+      {
+        "table2version" : 1,
+        "parameternumber" : 12
+      }
+    },
+    {
       "radonname" : "T-K",
       "grib2" :
       {
         "discipline" : 0,
         "category" : 0,
         "parameternumber" : 0
+      }
+    },
+    {
+      "radonname" : "T-K2",
+      "grib2" :
+      {
+        "discipline" : 0,
+        "category" : 0,
+        "parameternumber" : 1
       }
     }
 ]
