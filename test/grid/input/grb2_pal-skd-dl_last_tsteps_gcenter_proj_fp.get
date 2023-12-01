@@ -1,0 +1,1 @@
+GET	/download?param=/AVG{T-K:PAL_SKANDINAVIA:5900:0:0:0;-2;0}asT-K:PAL_SKANDINAVIA:5900:0:0:0&format=grib2&starttime=20080805T050000&timesteps=4&gridcenter=25,60,200,200&projection=EPSG:4326&source=grid HTTP/1.0
