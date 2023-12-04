@@ -43,7 +43,6 @@ class GribStreamer : public DataStreamer
   virtual void getGridDataChunk(const QueryServer::Query& gridQuery,
                                 int level,
                                 const NFmiMetTime& mt,
-                                uint gridIndex,
                                 std::string& chunk);
 
  private:
@@ -102,13 +101,11 @@ class GribStreamer : public DataStreamer
   void addGridValuesToGrib(const QueryServer::Query& gridQuery,
                            const NFmiMetTime& vTime,
                            int level,
-                           uint gridIndex,
                            float scale,
                            float offset);
   std::string getGridGribMessage(const QueryServer::Query& gridQuery,
                                  int level,
                                  const NFmiMetTime& mt,
-                                 uint gridIndex,
                                  float scale,
                                  float offset);
 };

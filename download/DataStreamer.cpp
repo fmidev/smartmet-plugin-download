@@ -4773,22 +4773,22 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
 // ----------------------------------------------------------------------
 
 QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
-    const QueryServer::Query &gridQuery, uint gridIndex) const
+    const QueryServer::Query &gridQuery) const
 {
   try
   {
     if (gridQuery.mQueryParameterList.size() == 0)
       return nullptr;
 
-    if (gridIndex > 0)
+    if (itsGridIndex > 0)
     {
       if (gridQuery.mQueryParameterList.size() > 1)
       {
-        if (gridIndex >= gridQuery.mQueryParameterList.size())
+        if (itsGridIndex >= gridQuery.mQueryParameterList.size())
           throw Fmi::Exception(BCP, "getValueListItem: internal: parameter index out of bounds");
 
         auto itp = gridQuery.mQueryParameterList.begin();
-        advance(itp, gridIndex);
+        advance(itp, itsGridIndex);
 
         if (itp->mValueList.size() == 0)
           return nullptr;
@@ -4796,11 +4796,11 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
         return itp->mValueList.front();
       }
 
-      if (gridIndex >= gridQuery.mQueryParameterList.begin()->mValueList.size())
+      if (itsGridIndex >= gridQuery.mQueryParameterList.begin()->mValueList.size())
         throw Fmi::Exception(BCP, "getValueListItem: internal: time index out of bounds");
 
       auto itt = gridQuery.mQueryParameterList.begin()->mValueList.begin();
-      advance(itt, gridIndex);
+      advance(itt, itsGridIndex);
 
       return *itt;
     }
@@ -4906,13 +4906,13 @@ bool DataStreamer::setDataTimes(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gridIndex)
+bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 {
   try
   {
     // Can't rely on returned query status, check first if got any data
 
-    if ((gridIndex == 0) && itsGridMetaData.paramGeometries.empty())
+    if ((itsGridIndex == 0) && itsGridMetaData.paramGeometries.empty())
     {
       // Fetching function parameters only, looping time instants returned by each query
 
@@ -4920,7 +4920,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
         return false;
     }
 
-    const auto valueListItem = getValueListItem(gridQuery, gridIndex);
+    const auto valueListItem = getValueListItem(gridQuery);
     if (!valueListItem)
       return false;
 
@@ -5096,14 +5096,14 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery, uint gr
  */
 // ----------------------------------------------------------------------
 
-uint DataStreamer::bufferIndex() const
+size_t DataStreamer::bufferIndex() const
 {
   try
   {
     if (!((itsReqParams.gridTimeBlockSize > 1) || (itsReqParams.gridParamBlockSize > 0)))
       return 0;
 
-    uint index = 0;
+    size_t index = 0;
 
     if (itsReqParams.gridTimeBlockSize > 1)
     {
@@ -5165,9 +5165,9 @@ void DataStreamer::extractGridData(string &chunk)
       if (!gridIterator.hasData(itsGridMetaData.geometryId, gridLevelType, level))
         continue;
 
-      auto gridIndex = bufferIndex();
+      itsGridIndex = bufferIndex();
 
-      if (! gridIndex)
+      if (! itsGridIndex)
       {
         // Fetch next block of parameters or timesteps
 
@@ -5194,7 +5194,7 @@ void DataStreamer::extractGridData(string &chunk)
       // missing because it got cleaned. Otherwise if the returned grid e.g. does not match
       // requested grid size etc, an error is thrown
 
-      if (!getGridQueryInfo(itsGridQuery, gridIndex))
+      if (!getGridQueryInfo(itsGridQuery))
         continue;
 
       // Load the data chunk from itsGridQuery
@@ -5204,7 +5204,7 @@ void DataStreamer::extractGridData(string &chunk)
 
       NFmiMetTime mt(itsTimeIterator->utc_time());
 
-      getGridDataChunk(itsGridQuery, level, mt, gridIndex, chunk);
+      getGridDataChunk(itsGridQuery, level, mt, chunk);
 
       return;
     }

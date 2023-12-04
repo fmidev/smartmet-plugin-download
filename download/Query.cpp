@@ -542,9 +542,6 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
       // Function parameter is queried without knowing if any source data exists;
       // just store the result parameter and function parameter
 
-      if (!gribOutput)
-        throw Fmi::Exception(BCP, "Function parameter netcdf output not yet supported");
-
       if (blockQuery)
         throw Fmi::Exception(BCP, "Can't specify block size when fetching function parameters");
 

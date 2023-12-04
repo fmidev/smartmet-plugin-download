@@ -2033,14 +2033,14 @@ void NetCdfStreamer::storeParamValues()
     }
     else
     {
-      auto dataValues = itsGridQuery.mQueryParameterList.front().mValueList.front()->mValueVector;
+      const auto vVec = &(getValueListItem(itsGridQuery)->mValueVector);
       bool gridContent = (itsReqParams.dataSource == GridContent);
 
       for (y = y0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, i++)
         {
           auto c = (y * xN) + x;
-          auto value = dataValues[c];
+          auto value = (*vVec)[c];
 
           if (value != ParamValueMissing)
           {
@@ -2245,7 +2245,6 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
 void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
                                       int,
                                       const NFmiMetTime &,
-                                      uint,
                                       string &chunk)
 {
   try

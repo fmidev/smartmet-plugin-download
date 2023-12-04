@@ -604,5 +604,12 @@
     "name" : "air_temperature",
     "longname" : "Temperature",
     "unit" : "K"
+    },
+    {
+    "radonname" : "T-K2",
+    "standardname" : "surface_temperature",
+    "name" : "surface_temperature",
+    "longname" : "surface_temperature",
+    "unit" : "K"
     }
 ]

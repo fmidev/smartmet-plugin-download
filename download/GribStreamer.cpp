@@ -1524,7 +1524,6 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
                                        const NFmiMetTime &vTime,
                                        int level,
-                                       uint gridIndex,
                                        float scale,
                                        float offset)
 {
@@ -1594,7 +1593,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
     int i = 0;
 
-    const auto vVec = &(getValueListItem(gridQuery, gridIndex)->mValueVector);
+    const auto vVec = &(getValueListItem(gridQuery)->mValueVector);
 
     if (itsReqParams.dataSource == GridContent)
     {
@@ -1678,13 +1677,12 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
 string GribStreamer::getGridGribMessage(const QueryServer::Query &gridQuery,
                                         int level,
                                         const NFmiMetTime &mt,
-                                        uint gridIndex,
                                         float scale,
                                         float offset)
 {
   try
   {
-    addGridValuesToGrib(gridQuery, mt, level, gridIndex, scale, offset);
+    addGridValuesToGrib(gridQuery, mt, level, scale, offset);
 
     const void *mesg;
     size_t mesg_len;
@@ -1817,7 +1815,6 @@ void GribStreamer::getDataChunk(Engine::Querydata::Q q,
 void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
                                     int level,
                                     const NFmiMetTime &mt,
-                                    uint gridIndex,
                                     string &chunk)
 {
   try
@@ -1833,7 +1830,7 @@ void GribStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
     // Build and get grib message
 
     chunk = getGridGribMessage(
-        gridQuery, level, mt, gridIndex, itsScalingIterator->first, itsScalingIterator->second);
+        gridQuery, level, mt, itsScalingIterator->first, itsScalingIterator->second);
   }
   catch (...)
   {

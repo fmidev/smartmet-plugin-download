@@ -81,7 +81,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
                                 int level,
                                 const NFmiMetTime &mt,
-                                uint gridIndex,
                                 std::string &chunk){};
 
  protected:
@@ -148,6 +147,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   long itsDataTimeStep = 0;
   std::size_t itsTimeIndex = 0;
   std::size_t itsLevelIndex = 0;
+  std::size_t itsGridIndex = 0;
 
   Engine::Querydata::Q itsQ;    // Q for input querydata file
   Engine::Querydata::Q itsCPQ;  // Q for in-memory querydata object containing current parameter
@@ -373,8 +373,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
   void getGridOrigo(const QueryServer::Query& gridQuery);
   bool setDataTimes(const QueryServer::Query &gridQuery);
-  bool getGridQueryInfo(const QueryServer::Query &gridQuery, uint gridIndex);
-  uint bufferIndex() const;
+  bool getGridQueryInfo(const QueryServer::Query &gridQuery);
+  std::size_t bufferIndex() const;
   void extractGridData(std::string &chunk);
 
  protected:
@@ -384,7 +384,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   QueryServer::Query itsGridQuery;
 
   QueryServer::ParameterValues_sptr getValueListItem(
-       const QueryServer::Query &gridQuery, uint gridIndex) const;
+       const QueryServer::Query &gridQuery) const;
 };
 
 }  // namespace Download
