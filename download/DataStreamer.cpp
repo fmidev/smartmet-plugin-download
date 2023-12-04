@@ -5121,7 +5121,16 @@ size_t DataStreamer::bufferIndex() const
       if (index > 0)
         advance(forecastTime, index);
 
-      return ((*forecastTime == validTime) ? index : 0);
+      bool timeMatch = (*forecastTime == validTime);
+
+      if ((!timeMatch) && itsGridMetaData.paramGeometries.empty())
+      {
+        // Time should have matched since looping forecast times returned by the query
+
+        throw Fmi::Exception(BCP, "bufferIndex: internal: time index and iterator do not match");
+      }
+
+      return (timeMatch ? index : 0);
     }
 
     auto param = itsGridQuery.mQueryParameterList.begin();
