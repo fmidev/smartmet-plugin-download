@@ -556,12 +556,13 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
       return;
     }
 
-    // Expand parameter names from level/forecastnumber ranges (e.g. 2-2 or 5-8) by checking if
-    // they have content available. The expanded parameter names are added to pOptions
+    // If originTime is not set, no generation info was found for the data parameters
 
     if (originTime.is_not_a_date_time())
-      throw Fmi::Exception(
-          BCP, "expandParameterFromRangeValues: internal: originTime is not set");
+      return;
+
+    // Expand parameter names from level/forecastnumber ranges (e.g. 2-2 or 5-8) by checking if
+    // they have content available. The expanded parameter names are added to pOptions
 
     T::ParamLevelId levelTypeId = getParamLevelId(paramName, paramParts);
 
