@@ -556,9 +556,9 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
       return;
     }
 
-    // If originTime is not set, no generation info was found for the data parameters
+    // Check if any generation info was found for data parameter(s)
 
-    if (originTime.is_not_a_date_time())
+    if (generationInfos.empty())
       return;
 
     // Expand parameter names from level/forecastnumber ranges (e.g. 2-2 or 5-8) by checking if
