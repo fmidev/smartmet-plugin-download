@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.12.5
-Release: 2%{?dist}.fmi
+Version: 23.12.7
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Dec  7 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.12.7-1.fmi
+- Bug fix: handle missing generation info (e.g. unknown producer) when fetching both grid data and function parameters; data parameters are omitted
+
 * Tue Dec  5 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.12.5-2.fmi
 - Repackaged due to an ABI change in SmartMetPlugin
 
