@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 23.12.7
+Version: 23.12.22
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -29,12 +29,12 @@ BuildRequires: smartmet-library-spine-devel >= 23.12.5
 BuildRequires: smartmet-library-macgyver-devel >= 23.11.21
 BuildRequires: smartmet-library-timeseries-devel >= 23.11.21
 BuildRequires: smartmet-library-newbase-devel >= 23.11.21
-BuildRequires: smartmet-library-grid-content-devel >= 23.11.27
-BuildRequires: smartmet-library-grid-files-devel >= 23.12.4
+BuildRequires: smartmet-library-grid-content-devel >= 23.12.22
+BuildRequires: smartmet-library-grid-files-devel >= 23.12.22
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 23.12.4
 BuildRequires: smartmet-engine-geonames-devel >= 23.9.6
-BuildRequires: smartmet-engine-grid-devel >= 23.11.17
+BuildRequires: smartmet-engine-grid-devel >= 23.12.22
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal35
@@ -62,7 +62,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 23.9.6
-#TestRequires: smartmet-engine-grid >= 23.11.17
+#TestRequires: smartmet-engine-grid >= 23.12.22
 #TestRequires: smartmet-engine-querydata >= 23.12.4
 #TestRequires: smartmet-utils-devel >= 23.9.6
 #TestRequires: smartmet-library-spine-plugin-test >= 23.12.5
@@ -70,7 +70,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 23.11.2
 #TestRequires: smartmet-test-data >= 23.11.8
 #TestRequires: smartmet-test-db >= 23.7.21
-#TestRequires: smartmet-engine-grid-test >= 23.11.17
+#TestRequires: smartmet-engine-grid-test >= 23.12.22
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -102,6 +102,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Dec 22 2023 Mika Heiskanen <mika.heiskanen@fmi.fi> - 23.12.22-1.fmi
+- Repackaged due to ThreadLock ABI changes
+
 * Thu Dec  7 2023 Pertti Kinnia <pertti.kinnia@fmi.fi> - 23.12.7-1.fmi
 - Bug fix: handle missing generation info (e.g. unknown producer) when fetching both grid data and function parameters; data parameters are omitted
 
