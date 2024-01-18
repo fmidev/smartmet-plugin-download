@@ -400,5 +400,5 @@ https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeed
 </code></pre>
 * Harmonie (MEPS), bbox, timestep, GRIB2
 <pre><code>
-https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&model=harmonie_scandinavia_surface&bbox=19,59,30,70&timestep=180
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&model=harmonie_scandinavia_surface&bbox=19,59,30,70\&timestep=180
 </code></pre>
