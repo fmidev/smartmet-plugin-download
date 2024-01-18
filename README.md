@@ -374,7 +374,6 @@ explains how to how to configure the server when using Docker.
 <pre><code>
 https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2
 </code></pre>
-
 * Default producer, GRIB1
 <pre><code>
 https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib1
