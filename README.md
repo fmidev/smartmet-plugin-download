@@ -372,34 +372,34 @@ explains how to how to configure the server when using Docker.
 
 * Default producer, GRIB2
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2 
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2
 </code></pre>
 
 * Default producer, GRIB1
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib1
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib1
 </code></pre>
-* Hirlam pressure levels, GRIB2
+* Harmonie (MEPS) pressure levels, GRIB2
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=hirlam_eurooppa_painepinta
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=harmonie_scandinavia_pressure
 </code></pre>
-* Hirlam pressure levels, GRIB1
+* Harmonie (MEPS) pressure levels, GRIB1
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib1&producer=hirlam_eurooppa_painepinta
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib1&producer=harmonie_scandinavia_pressure
  </code></pre>
-* Hirlam levels, bbox, GRIB1
+* Harmonie (MEPS), bbox, GRIB2
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=hirlam_eurooppa_pinta&bbox=19,59,30,70
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=harmonie_scandinavia_surface&bbox=19,59,30,70
 </code></pre>
-* Hirlam pressure levels, bbox, GRIB2
+* Harmonie (MEPS), bbox, GRIB1
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-apt-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=hirlam_eurooppa_pinta&bbox=19,59,30,70
+https://data.fmi.fi/fmi-apikey/your-apt-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib1&producer=harmonie_scandinavia_surface&bbox=19,59,30,70
 </code></pre>
-* Hirlam pressure levels, bbox, levels, GRIB2
+* Harmonie (MEPS) pressure levels, bbox, levels, GRIB2
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=hirlam_eurooppa_pinta&bbox=19,59,30,70&levels=50,100,300,400,700
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&producer=harmonie_scandinavia_pressure&bbox=19,59,30,70&levels=50,100,300,400,700
 </code></pre>
-* Hirlam levels, bbox, timestep, GRIB2 
+* Harmonie (MEPS), bbox, timestep, GRIB2
 <pre><code>
-http://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&model=hirlam_eurooppa_pinta&bbox=19,59,30,70&timestep=180
+https://data.fmi.fi/fmi-apikey/your-api-key/download?param=temperature,windspeedms,winddirection,humidity,dewpoint&format=grib2&model=harmonie_scandinavia_surface&bbox=19,59,30,70&timestep=180
 </code></pre>
