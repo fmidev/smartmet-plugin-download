@@ -6,8 +6,9 @@ Table of Contents
   * [Interface](#interface)
     * [Levels](#levels)
     * [Parameters](#parameters)
-      * [Regular parameter names](#regular-parameter-names)
-      * [Numeric parameters](#numeric-parameters)
+      * [Regular querydata parameter names](#regular-querydata-parameter-names)
+      * [Numeric querydata parameters](#numeric-querydata-parameters)
+      * [Grid parameters](#grid-parameters)
     * [Time control](#time-control)
       * [Origintime](#origintime)
       * [Time interval](#time-interval)
@@ -15,6 +16,7 @@ Table of Contents
       * [Number of timesteps](#number-of-timesteps)
     * [Packing](#packing)
     * [Projections](#projections)
+    * [Data sources](#data-sources)
   * [Configuration](#configuration)
     * [Main configuration file](#main-configuration-file)
       * [GRIB Configuration](#grib-configuration)
@@ -101,13 +103,15 @@ The parameter option is used for selecting the parameters that are to be extract
 
 <pre><code>param=name1,name2,...,nameN </code></pre>
 
-### Regular parameter names
+### Regular querydata parameter names
 
-Regular QueryData parameter names such as Temperature, WindSpeedMS are are recognized as it  is.
+Regular QueryData parameter names such as Temperature and WindSpeedMS are recognized as is.
 
-### Numeric parameters
+### Numeric querydata parameters
 QueryData numbers are allowed as parameter identifiers. The QueryData parameters can be fetched using qdinfo. For example, the QueryDataid, 1, referes to the "air_pressure_at_sea_level", which has standardname "air_pressure_at_sea_level" and a longname  "Air pressure at sea level".
 
+### Grid parameters
+FMI-name format parameter names are used when fetching grid data. See [Data sources](#data-sources)
 
 ## Time control
 There are three basic methods for extracting/accessing the data with timestamps:
@@ -204,6 +208,37 @@ This option is used to select the packing type for the GRIB format output. The g
 
 Note: some packing types can cause overhead at the server and these types should not be applied unless there are special reasons such as it is necessary to transfer less data due to the slow communication link etc.
 
+## Data sources
+
+Default data source is querydata (source=querydata, using sqd files).
+If grid data (grib and netcdf source files) is enabled in smartmet-server i.e. grid-engine is available,
+the data can be fetched with source=grid and by using parameter's FMI-names.
+The available grid data producers and their data/parameters can be examined with grid-gui plugin.
+
+FMI-name format is
+<pre><code>
+&lt;paramname&gt;:&lt;producer&gt;:&lt;geometryid&gt;:&lt;leveltypeid&gt;:&lt;level&gt;:&lt;forecasttype&gt;[:&lt;forecastnumber&gt;]
+</code></pre>
+e.g. T-K:SMARTMET:1096:6:2:1.
+
+Every parameter to fetch must have the same geometry. Function parameters calculated on the fly can be fetched using notation
+<pre><code>
+&lt;funcparam&gt; as &lt;outputparam&gt;
+</code></pre>
+where funcparam is an expression accepted by grid-engine and outputparam is a FMI-name;
+e.g. /avg{T-K:SMARTMET:1096:6:2:1;-5;0;60} as T-K-AVG6H:SMARTMET:1096:6:2:1
+
+Output parameters must have grib and/or netcdf parameter configuration just as fetched regular data parameters do, and they must have the same geometry as other output parameters and/or regular data parameters (if any) returned by the query.
+
+Forecast types are
+- 1: Deterministic forecast
+- 2: Analysis
+- 3: Ensemble forecast, perturbation
+- 4: Ensemble forecast, control forecast
+- 5: Statistical post processing
+
+Forecast number (default is -1) applies to ensemble forecasts only.
+
 ## Projections
 
 The plugin uses gdal, <a href="www.gdal.org">Geospatial Data Abstraction Library</a>, so in theory any projection known by proj.4 may work. In practice, only some of them are feasible for GRIB. The following projections are safe choices:
@@ -244,7 +279,6 @@ Supported input projections are as follows
   - Mercator
   - LambertConformal
   - LambertAzimuthalEqualArea
-
 
 # Configuration
 
