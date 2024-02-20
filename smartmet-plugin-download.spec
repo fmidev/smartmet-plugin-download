@@ -25,16 +25,16 @@ BuildRequires: gdal35-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 24.1.30
+BuildRequires: smartmet-library-spine-devel >= 24.2.8
 BuildRequires: smartmet-library-macgyver-devel >= 24.1.17
 BuildRequires: smartmet-library-timeseries-devel >= 24.1.30
 BuildRequires: smartmet-library-newbase-devel >= 24.1.30
-BuildRequires: smartmet-library-grid-content-devel >= 24.2.5
-BuildRequires: smartmet-library-grid-files-devel >= 24.2.5
+BuildRequires: smartmet-library-grid-content-devel >= 24.2.20
+BuildRequires: smartmet-library-grid-files-devel >= 24.2.20
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 24.1.19
 BuildRequires: smartmet-engine-geonames-devel >= 24.1.30
-BuildRequires: smartmet-engine-grid-devel >= 24.2.5
+BuildRequires: smartmet-engine-grid-devel >= 24.2.20
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal35
@@ -43,7 +43,7 @@ Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 24.1.17
 Requires: smartmet-library-timeseries >= 24.1.30
-Requires: smartmet-library-spine >= 24.1.30
+Requires: smartmet-library-spine >= 24.2.8
 Requires: smartmet-library-newbase >= 24.1.30
 Requires: smartmet-engine-querydata >= 24.1.19
 Requires: smartmet-server >= 24.1.29
@@ -62,15 +62,15 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 24.1.30
-#TestRequires: smartmet-engine-grid >= 24.2.5
+#TestRequires: smartmet-engine-grid >= 24.2.20
 #TestRequires: smartmet-engine-querydata >= 24.1.19
 #TestRequires: smartmet-utils-devel >= 23.9.6
-#TestRequires: smartmet-library-spine-plugin-test >= 24.1.30
+#TestRequires: smartmet-library-spine-plugin-test >= 24.2.8
 #TestRequires: smartmet-library-newbase-devel >= 24.1.30
 #TestRequires: smartmet-qdtools >= 24.1.30
 #TestRequires: smartmet-test-data >= 23.11.8
 #TestRequires: smartmet-test-db >= 23.7.21
-#TestRequires: smartmet-engine-grid-test >= 24.2.5
+#TestRequires: smartmet-engine-grid-test >= 24.2.20
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
