@@ -6,6 +6,7 @@
 
 #include "ParamConfig.h"
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <macgyver/StringConversion.h>
@@ -460,9 +461,9 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
         else if (name == "name")
           paramName = asString(name, json, i);
         else if (name == "radonproducer")
-          p.itsRadonProducer =  boost::to_upper_copy(asString(name, json, i));
+          p.itsRadonProducer =  boost::algorithm::to_upper_copy(asString(name, json, i));
         else if (name == "radonname")
-          p.itsRadonName = boost::to_upper_copy(asString(name, json, i));
+          p.itsRadonName = boost::algorithm::to_upper_copy(asString(name, json, i));
         else if (name == "offset")
           p.itsConversionBase = asFloat(name, json, i);
         else if (name == "divisor")

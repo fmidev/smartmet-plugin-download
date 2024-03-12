@@ -455,8 +455,8 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(
       auto originTimeTimes = levelTimes->second.find(originTimeStr);
 
       if ((originTimeTimes == levelTimes->second.end()) ||
-          (validTime < from_iso_string(*(originTimeTimes->second.begin()))) ||
-          (validTime > from_iso_string(*(originTimeTimes->second.rbegin()))))
+          (validTime < Fmi::DateTime::from_iso_string(*(originTimeTimes->second.begin()))) ||
+          (validTime > Fmi::DateTime::from_iso_string(*(originTimeTimes->second.rbegin()))))
         return false;
     }
 
@@ -488,7 +488,7 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(
  */
 // ----------------------------------------------------------------------
 
-ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
+Fmi::DateTime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
 {
   try
   {
@@ -585,7 +585,7 @@ ptime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
       originTimeLevels.erase(next(otl), originTimeLevels.end());
       originTimeTimes.erase(next(ott), originTimeTimes.end());
 
-      return from_iso_string(ot->c_str());
+      return Fmi::DateTime::from_iso_string(ot->c_str());
     }
 
     throw Fmi::Exception(BCP, "Data has no common origintime");
@@ -630,7 +630,7 @@ const string &DataStreamer::GridMetaData::getLatestOriginTime(Fmi::DateTime *ori
     }
 
     if (originTime)
-      *originTime = ((ott == originTimeTimes.rend()) ? ptime() : from_iso_string(ott->first));
+      *originTime = ((ott == originTimeTimes.rend()) ? Fmi::DateTime() : Fmi::DateTime::from_iso_string(ott->first));
 
     return ((ott == originTimeTimes.rend()) ? empty : ott->first);
   }
@@ -662,19 +662,19 @@ bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTimeS
     if (ott == originTimeTimes.end())
       return false;
 
-    firstTime = ptime();
+    firstTime = Fmi::DateTime();
 
     for (; ott != originTimeTimes.end(); ott++)
     {
       auto t = ott->second.begin();
 
       if (firstTime.is_not_a_date_time())
-        firstTime = from_iso_string(*t);
-      lastTime = from_iso_string(*(ott->second.rbegin()));
+        firstTime = Fmi::DateTime::from_iso_string(*t);
+      lastTime = Fmi::DateTime::from_iso_string(*(ott->second.rbegin()));
 
       if (++t != ott->second.end())
       {
-        auto secondTime = from_iso_string(*t);
+        auto secondTime = Fmi::DateTime::from_iso_string(*t);
         timeStep = (secondTime - firstTime).minutes();
       }
       else
@@ -716,7 +716,7 @@ boost::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
     for (; ott != originTimeTimes.end(); ott++)
     {
       for (auto tit = ott->second.cbegin(); (tit != ott->second.cend()); tit++)
-        validTimeList->push_back(from_iso_string(*tit));
+        validTimeList->push_back(Fmi::DateTime::from_iso_string(*tit));
 
       if (!originTimeStr.empty())
         break;
@@ -752,7 +752,7 @@ void DataStreamer::generateGridValidTimeList(Query &query, Fmi::DateTime &oTime,
       itsGridMetaData.originTime = oTime;
 
       checkDataTimeStep(itsReqParams.timeStep);
-      itsDataTimes.push_back(boost::local_time::local_date_time(not_a_date_time));
+      itsDataTimes.push_back(Fmi::LocalDateTime(Fmi::LocalDateTime::NOT_A_DATE_TIME));
 
       return;
     }
@@ -4227,18 +4227,18 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
       gridQuery.mFlags |= QueryServer::Query::Flags::TimeStepIsData;
 
     if (!itsReqParams.startTime.empty())
-      gridQuery.mStartTime = toTimeT(from_iso_string(itsReqParams.startTime));
+      gridQuery.mStartTime = toTimeT(Fmi::DateTime::from_iso_string(itsReqParams.startTime));
     else
       gridQuery.mFlags |= QueryServer::Query::Flags::StartTimeFromData;
 
     if (!itsReqParams.endTime.empty())
-      gridQuery.mEndTime = toTimeT(from_iso_string(itsReqParams.endTime));
+      gridQuery.mEndTime = toTimeT(Fmi::DateTime::from_iso_string(itsReqParams.endTime));
     else
     {
       // Bug, mEndTime needs to be set even when EndTimeFromData is set
 
       gridQuery.mFlags |= QueryServer::Query::Flags::EndTimeFromData;
-      gridQuery.mEndTime = toTimeT(from_iso_string("99991231T235959"));
+      gridQuery.mEndTime = toTimeT(Fmi::DateTime::from_iso_string("99991231T235959"));
     }
   }
 
@@ -4870,20 +4870,20 @@ bool DataStreamer::setDataTimes(const QueryServer::Query &gridQuery)
   {
     if (gridQuery.mForecastTimeList.empty())
     {
-      itsFirstDataTime = itsLastDataTime = Fmi::DateTime(not_a_date_time);
+      itsFirstDataTime = itsLastDataTime = Fmi::DateTime(Fmi::DateTime::NOT_A_DATE_TIME);
       return false;
     }
 
     itsDataTimes.clear();
-    itsFirstDataTime = from_time_t(*itsGridQuery.mForecastTimeList.begin());
-    itsLastDataTime = from_time_t(*itsGridQuery.mForecastTimeList.rbegin());
+    itsFirstDataTime = Fmi::date_time::from_time_t(*itsGridQuery.mForecastTimeList.begin());
+    itsLastDataTime = Fmi::date_time::from_time_t(*itsGridQuery.mForecastTimeList.rbegin());
 
-    boost::local_time::time_zone_ptr UTC(new boost::local_time::posix_time_zone("UTC"));
+    Fmi::TimeZonePtr& UTC = Fmi::TimeZonePtr::utc;
 
     for (const auto &forecastTime : itsGridQuery.mForecastTimeList)
     {
-      auto t = boost::posix_time::from_time_t(forecastTime);
-      itsDataTimes.push_back(boost::local_time::local_date_time(t, UTC));
+      auto t = Fmi::date_time::from_time_t(forecastTime);
+      itsDataTimes.push_back(Fmi::LocalDateTime(t, UTC));
     }
 
     itsReqParams.gridTimeBlockSize = itsDataTimes.size();
@@ -4932,7 +4932,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
     // function parameters
 
     if (!valueListItem->mAnalysisTime.empty())
-      itsGridMetaData.gridOriginTime = from_iso_string(valueListItem->mAnalysisTime);
+      itsGridMetaData.gridOriginTime = Fmi::DateTime::from_iso_string(valueListItem->mAnalysisTime);
 
     // Projection and spheroid
 
