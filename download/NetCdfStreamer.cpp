@@ -318,7 +318,8 @@ int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime t2, long timeStep
     }
     else if (timeStep == DataStreamer::minutesInMonth)
     {
-      date d1(t1.date()), d2(t2.date());
+      Fmi::Date d1(t1.date());
+      Fmi::Date d2(t2.date());
       return (12 * (d1.year() - d2.year())) + (d1.month() - d2.month());
     }
     else if (timeStep == DataStreamer::minutesInYear)
@@ -405,7 +406,7 @@ void NetCdfStreamer::addTimeDimension()
       times[timeSize] = period;
     }
 
-    date d(startTime.date());
+    const Fmi::Date d(startTime.date());
     greg_month gm(d.month());
     Fmi::TimeDuration td(startTime.time_of_day());
 
@@ -1645,11 +1646,11 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
-ptime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMinutes)
+Fmi::DateTime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMinutes)
 {
   try
   {
-    date d = vt.date();
+    Fmi::Date d = vt.date();
     Fmi::TimeDuration td = vt.time_of_day();
     long minutes = (td.hours() * 60) + td.minutes();
 
@@ -1659,30 +1660,30 @@ ptime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMinutes)
         ((periodLengthInMinutes < DataStreamer::minutesInDay) &&
          ((DataStreamer::minutesInDay % periodLengthInMinutes) == 0)))
       if (minutes == 0)
-        return ptime(d, Fmi::TimeDuration(0, -periodLengthInMinutes, 0));
+        return Fmi::DateTime(d, Fmi::TimeDuration(0, -periodLengthInMinutes, 0));
       else if ((minutes % periodLengthInMinutes) != 0)
-        return ptime(
+        return Fmi::DateTime(
             d, Fmi::TimeDuration(0, ((minutes / periodLengthInMinutes) * periodLengthInMinutes), 0));
       else
-        return ptime(d, Fmi::TimeDuration(0, minutes - periodLengthInMinutes, 0));
+        return Fmi::DateTime(d, Fmi::TimeDuration(0, minutes - periodLengthInMinutes, 0));
     else if (periodLengthInMinutes == DataStreamer::minutesInDay)
       if (minutes == 0)
-        return ptime(ptime(d, Fmi::TimeDuration(-1, 0, 0)).date());
+        return Fmi::DateTime(Fmi::DateTime(d, Fmi::TimeDuration(-1, 0, 0)).date());
       else
-        return ptime(d);
+        return Fmi::DateTime(d);
     else if (periodLengthInMinutes == DataStreamer::minutesInMonth)
     {
       if ((d.day() == 1) && (minutes == 0))
-        d = ptime(d, Fmi::TimeDuration(-1, 0, 0)).date();
+        d = Fmi::DateTime(d, Fmi::TimeDuration(-1, 0, 0)).date();
 
-      return ptime(date(d.year(), d.month(), 1));
+      return Fmi::DateTime(Fmi::Date(d.year(), d.month(), 1));
     }
     else if (periodLengthInMinutes == DataStreamer::minutesInYear)
     {
       if ((d.month() == 1) && (d.day() == 1) && (minutes == 0))
-        d = ptime(d, Fmi::TimeDuration(-1, 0, 0)).date();
+        d = Fmi::DateTime(d, Fmi::TimeDuration(-1, 0, 0)).date();
 
-      return ptime(date(d.year(), 1, 1));
+      return Fmi::DateTime(Fmi::Date(d.year(), 1, 1));
     }
 
     throw Fmi::Exception(

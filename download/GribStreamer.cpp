@@ -1302,7 +1302,9 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         // step;
         //		 we do not support cumulative aggregates
         //
-        Fmi::DateTime validTimeDate = ptime(validTime.date()), periodStart, periodEnd;
+        Fmi::DateTime validTimeDate = validTime.date();
+        Fmi::DateTime periodStart;
+        Fmi::DateTime periodEnd;
 
         if (bDataIsEndTimeStamped)
         {
@@ -1310,7 +1312,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
           {
             // Previous day
             //
-            periodStart = ptime((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
+            periodStart = Fmi::DateTime((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
             periodEnd = validTimeDate;
           }
           else
@@ -1318,8 +1320,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
             // Previous month
             //
             Fmi::Date d((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
-            periodStart = ptime(Fmi::Date(d.year(), d.month(), 1));
-            periodEnd = ptime(Fmi::Date(
+            periodStart = Fmi::DateTime(Fmi::Date(d.year(), d.month(), 1));
+            periodEnd = Fmi::DateTime(Fmi::Date(
                 validTimeDate.date().year(), validTimeDate.date().month(), 1));
           }
         }
@@ -1330,16 +1332,16 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
             // Current day
             //
             periodStart = validTimeDate;
-            periodEnd = ptime((periodStart + Fmi::TimeDuration(25, 0, 0)).date());
+            periodEnd = Fmi::DateTime((periodStart + Fmi::TimeDuration(25, 0, 0)).date());
           }
           else
           {
             // Current month
             //
-            periodStart = ptime(Fmi::Date(
+            periodStart = Fmi::DateTime(Fmi::Date(
                 validTimeDate.date().year(), validTimeDate.date().month(), 1));
             Fmi::DateTime t(periodStart + Fmi::TimeDuration(32 * 24, 0, 0));
-            periodEnd = ptime(Fmi::Date(t.date().year(), t.date().month(), 1));
+            periodEnd = Fmi::DateTime(Fmi::Date(t.date().year(), t.date().month(), 1));
           }
         }
 
@@ -1400,7 +1402,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
  */
 // ----------------------------------------------------------------------
 
-ptime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
+Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
 {
   try
   {
@@ -1411,15 +1413,15 @@ ptime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
 
     if ((timeStepInMinutes == 60) || (timeStepInMinutes == 180) || (timeStepInMinutes == 360) ||
         (timeStepInMinutes == 720))
-      return ptime(pt.date(),
+      return Fmi::DateTime(pt.date(),
                    Fmi::TimeDuration(pt.time_of_day().hours() -
                                      (pt.time_of_day().hours() % (timeStepInMinutes / 60)),
                                  0,
                                  0));
     else if (timeStepInMinutes == DataStreamer::minutesInDay)
-      return ptime(pt.date(), Fmi::TimeDuration(0, 0, 0));
+      return Fmi::DateTime(pt.date(), Fmi::TimeDuration(0, 0, 0));
     else if (timeStepInMinutes == DataStreamer::minutesInMonth)
-      return ptime(Fmi::Date(pt.date().year(), pt.date().month(), 1),
+      return Fmi::DateTime(Fmi::Date(pt.date().year(), pt.date().month(), 1),
                    Fmi::TimeDuration(0, 0, 0));
 
     return pt;

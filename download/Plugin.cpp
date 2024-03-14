@@ -40,9 +40,6 @@
 #include <cpl_conv.h>
 
 using namespace std;
-using namespace boost::posix_time;
-using namespace boost::gregorian;
-using namespace boost::local_time;
 
 namespace ph = boost::placeholders;
 
@@ -831,9 +828,9 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
       if (!reqParams.originTime.empty())
       {
         if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
-          originTime = Fmi::DateTime(boost::date_time::pos_infin);
+            originTime = Fmi::DateTime(Fmi::DateTime::POS_INFINITY);
         else if (reqParams.originTime == "oldest")
-          originTime = Fmi::DateTime(boost::date_time::neg_infin);
+          originTime = Fmi::DateTime(Fmi::DateTime::NEG_INFINITY);
         else
           originTime = Fmi::TimeParser::parse(reqParams.originTime);
 
@@ -959,7 +956,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
 
       // Defining the response header information
 
-      Fmi::DateTime t_expires = t_now + seconds(expires_seconds);
+      Fmi::DateTime t_expires = t_now + Fmi::Seconds(expires_seconds);
       boost::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
       std::string cachecontrol =
           "public, max-age=" + boost::lexical_cast<std::string>(expires_seconds);
