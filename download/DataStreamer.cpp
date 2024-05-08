@@ -4634,7 +4634,7 @@ void DataStreamer::getGridBBox()
     auto gridSizeY = gridDef->getGridRowCount();
 
     inputSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-    exterior.assignSpatialReference(inputSRS);
+    exterior.assignSpatialReference(inputSRS.get());
 
     for (size_t y = 1, dx = (gridSizeX - 1); (y <= gridSizeY); y++, it++)
       for (size_t x = 1; (x <= gridSizeX);)
