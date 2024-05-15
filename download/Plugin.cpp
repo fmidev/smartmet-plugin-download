@@ -14,7 +14,6 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/bind/bind.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <macgyver/DateTime.h>
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
