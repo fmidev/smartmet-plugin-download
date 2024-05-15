@@ -7,7 +7,6 @@
 #include "GribStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <boost/foreach.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
@@ -25,7 +24,6 @@
 
 using namespace std;
 
-using namespace boost::posix_time;
 using namespace boost::interprocess;
 
 namespace SmartMet

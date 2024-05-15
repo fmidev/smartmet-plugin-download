@@ -8,7 +8,6 @@
 #include "Datum.h"
 #include "Plugin.h"
 #include <boost/algorithm/string/split.hpp>
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <macgyver/DateTime.h>
 #include <boost/foreach.hpp>
 #include <gis/DEM.h>
@@ -36,9 +35,6 @@ static const uint maxMsgChunks = 30;  // Max # of data chunks collected and retu
 static const uint maxGridQueryBlockSize = 30;  // Max # of grid params/timesteps fetched as a block
 
 using namespace std;
-
-using namespace boost::gregorian;
-using namespace boost::posix_time;
 
 namespace SmartMet
 {

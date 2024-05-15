@@ -5,7 +5,6 @@
 // ======================================================================
 
 #include "NetCdfStreamer.h"
-#include <boost/date_time/gregorian/gregorian.hpp>
 #include <macgyver/DateTime.h>
 #include <boost/foreach.hpp>
 #include <boost/format.hpp>
@@ -23,9 +22,6 @@ SmartMet::Spine::MutexType myFileOpenMutex;
 }  // namespace
 
 using namespace std;
-
-using namespace boost::gregorian;
-using namespace boost::posix_time;
 
 namespace SmartMet
 {
@@ -304,7 +300,7 @@ int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime t2, long timeStep
   {
     if (timeStep < DataStreamer::minutesInDay)
     {
-      Fmi::TimeDuration td(t1 - t2);
+      auto td = t1 - t2;
 
       if ((timeStep < 60) || (timeStep % 60))
         return (td.hours() * 60) + td.minutes();
@@ -313,8 +309,8 @@ int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime t2, long timeStep
     }
     else if (timeStep == DataStreamer::minutesInDay)
     {
-      date_duration dd(t1.date() - t2.date());
-      return dd.days();
+      auto dd = t1.date() - t2.date();
+      return dd;
     }
     else if (timeStep == DataStreamer::minutesInMonth)
     {
@@ -406,13 +402,13 @@ void NetCdfStreamer::addTimeDimension()
       times[timeSize] = period;
     }
 
-    const Fmi::Date d(startTime.date());
-    greg_month gm(d.month());
+    const Fmi::Date d = startTime.date();
+    auto gm = d.month();
     Fmi::TimeDuration td(startTime.time_of_day());
 
     ostringstream os;
 
-    os << d.year() << "-" << boost::format("%02d-%02d") % gm.as_number() % d.day()
+    os << d.year() << "-" << boost::format("%02d-%02d") % gm % d.day()
        << boost::format(" %02d:%02d:%02d") % td.hours() % td.minutes() % td.seconds();
 
     string timeUnitDef = timeUnit + " since " + os.str();
