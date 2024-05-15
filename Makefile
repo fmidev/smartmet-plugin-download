@@ -25,7 +25,6 @@ LIBS += -L$(libdir) \
 	-lsmartmet-macgyver \
 	 $(REQUIRED_LIBS) \
 	 $(CORBA_LIBS) \
-	-lboost_date_time \
 	-lboost_thread \
 	-lboost_iostreams \
 	-lboost_system \
