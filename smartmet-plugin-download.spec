@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 24.6.3
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -29,7 +29,7 @@ BuildRequires: smartmet-library-spine-devel >= 24.5.27
 BuildRequires: smartmet-library-macgyver-devel >= 24.5.30
 BuildRequires: smartmet-library-timeseries-devel >= 24.5.28
 BuildRequires: smartmet-library-newbase-devel >= 24.5.17
-BuildRequires: smartmet-library-grid-content-devel >= 24.5.29
+BuildRequires: smartmet-library-grid-content-devel >= 24.6.3
 BuildRequires: smartmet-library-grid-files-devel >= 24.5.30
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 24.5.29
@@ -101,6 +101,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Jun  3 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.6.3-2.fmi
+- Updated grid-content requirement
+
 * Mon Jun  3 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.6.3-1.fmi
 - Repackaged due to library ABI changes on level information
 
