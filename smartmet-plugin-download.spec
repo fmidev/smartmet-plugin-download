@@ -37,7 +37,7 @@ BuildRequires: smartmet-engine-geonames-devel >= 24.5.16
 BuildRequires: smartmet-engine-grid-devel >= 24.6.3
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
-Requires: gdal38
+Requires: gdal38-libs
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
