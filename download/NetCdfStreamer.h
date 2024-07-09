@@ -57,9 +57,9 @@ class NetCdfStreamer : public DataStreamer
   // Note: netcdf file object owns dimensions and variables (could use plain pointers instead of
   // shared_ptr:s)
 
-  boost::shared_ptr<NcDim> itsEnsembleDim, itsTimeDim, itsTimeBoundsDim, itsLevelDim, itsYDim,
+  std::shared_ptr<NcDim> itsEnsembleDim, itsTimeDim, itsTimeBoundsDim, itsLevelDim, itsYDim,
       itsXDim, itsLatDim, itsLonDim;
-  boost::shared_ptr<NcVar> itsTimeVar;
+  std::shared_ptr<NcVar> itsTimeVar;
 
   std::list<NcVar *>::iterator itsVarIterator;
   std::list<NcVar *> itsDataVars;
@@ -69,21 +69,21 @@ class NetCdfStreamer : public DataStreamer
   typedef std::map<std::string, std::string> LevelDimensions;
   LevelDimensions itsLevelDimensions;
 
-  boost::shared_ptr<NcDim> addDimension(const std::string &dimName, long dimSize);
-  boost::shared_ptr<NcVar> addVariable(const std::string &varName,
+  std::shared_ptr<NcDim> addDimension(const std::string &dimName, long dimSize);
+  std::shared_ptr<NcVar> addVariable(const std::string &varName,
                                        NcType dataType,
                                        NcDim *dim1 = nullptr,
                                        NcDim *dim2 = nullptr,
                                        NcDim *dim3 = nullptr,
                                        NcDim *dim4 = nullptr,
                                        NcDim *dim5 = nullptr);
-  boost::shared_ptr<NcVar> addCoordVariable(const std::string &dimName,
+  std::shared_ptr<NcVar> addCoordVariable(const std::string &dimName,
                                             long dimSize,
                                             NcType dataType,
                                             std::string stdName,
                                             std::string unit,
                                             std::string axisType,
-                                            boost::shared_ptr<NcDim> &dim);
+                                            std::shared_ptr<NcDim> &dim);
   template <typename T1, typename T2>
   void addAttribute(T1 resource, std::string attrName, T2 attrValue);
   template <typename T1, typename T2>
@@ -91,42 +91,42 @@ class NetCdfStreamer : public DataStreamer
 
   std::string getEnsembleDimensionName(
       T::ForecastType forecastType, T::ForecastNumber forecastNumber) const;
-  boost::shared_ptr<NcDim> getEnsembleDimension(
+  std::shared_ptr<NcDim> getEnsembleDimension(
       T::ForecastType forecastType, T::ForecastNumber forecastNumber,
       std::string &ensembleDimensionName) const;
-  boost::shared_ptr<NcDim> getEnsembleDimension(
+  std::shared_ptr<NcDim> getEnsembleDimension(
       T::ForecastType forecastType, T::ForecastNumber forecastNumber) const;
   void addEnsembleDimensions();
   void addEnsembleDimension();
   void addTimeDimension();
-  boost::shared_ptr<NcDim> addTimeDimension(long periodLengthInMinutes,
-                                            boost::shared_ptr<NcVar> &tVar);
+  std::shared_ptr<NcDim> addTimeDimension(long periodLengthInMinutes,
+                                            std::shared_ptr<NcVar> &tVar);
   void getLevelTypeAttributes(FmiLevelType levelType,
                               std::string &name,
                               std::string &positive,
                               std::string &unit) const;
-  boost::shared_ptr<NcDim> getLevelDimension(
+  std::shared_ptr<NcDim> getLevelDimension(
       const std::string &paramName, std::string &levelDimName) const;
-  boost::shared_ptr<NcDim> getLevelDimAndIndex(
+  std::shared_ptr<NcDim> getLevelDimAndIndex(
       const std::string &paramName, int paramLevel, int &levelIndex) const;
   void addLevelDimensions();
   void addLevelDimension();
 
-  void setSpheroidAndWKT(const boost::shared_ptr<NcVar> &crsVar,
+  void setSpheroidAndWKT(const std::shared_ptr<NcVar> &crsVar,
                          OGRSpatialReference *geometrySRS,
                          const std::string &areaWKT = "");
 
-  void setLatLonGeometry(const boost::shared_ptr<NcVar> &crsVar);
-  void setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &crsVar);
-  void setStereographicGeometry(const boost::shared_ptr<NcVar> &crsVar,
+  void setLatLonGeometry(const std::shared_ptr<NcVar> &crsVar);
+  void setRotatedLatlonGeometry(const std::shared_ptr<NcVar> &crsVar);
+  void setStereographicGeometry(const std::shared_ptr<NcVar> &crsVar,
                                 const NFmiArea *area = nullptr);
-  void setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar);
-  void setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar);
-  void setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar,
+  void setMercatorGeometry(const std::shared_ptr<NcVar> &crsVar);
+  void setYKJGeometry(const std::shared_ptr<NcVar> &crsVar);
+  void setLambertConformalGeometry(const std::shared_ptr<NcVar> &crsVar,
                                    const NFmiArea *area = nullptr);
   void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
 
-  boost::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
+  std::shared_ptr<NcDim> addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
 
   bool hasParamVariable(const std::vector<std::string> &paramParts,
                         std::map<std::string, NcVar *> &paramVariables);

@@ -8,7 +8,7 @@
 
 #include "Config.h"
 #include "DataStreamer.h"
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <boost/thread.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>

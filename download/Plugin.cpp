@@ -738,7 +738,7 @@ static string getDownloadFileName(const string &producer,
  */
 // ----------------------------------------------------------------------
 
-static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Request &req,
+static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Request &req,
                                                           const Engine::Querydata::Engine &qEngine,
                                                           const Engine::Grid::Engine *gridEngine,
                                                           const Engine::Geonames::Engine *geoEngine,
@@ -771,13 +771,13 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     // Create format specific streamer and get scaling information for the requested parameters.
     // Unknown (and special) parameters are ignored.
 
-    boost::shared_ptr<DataStreamer> ds;
+    std::shared_ptr<DataStreamer> ds;
     TimeSeries::OptionParsers::ParameterList knownParams;
     Scaling scaling;
 
     if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
     {
-      ds = boost::shared_ptr<DataStreamer>(
+      ds = std::shared_ptr<DataStreamer>(
           new GribStreamer(req, config, query, producer, reqParams));
       getParamConfig(
           config.getParamChangeTable(), query, reqParams.dataSource,
@@ -785,7 +785,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     }
     else if (reqParams.outputFormat == NetCdf)
     {
-      ds = boost::shared_ptr<DataStreamer>(
+      ds = std::shared_ptr<DataStreamer>(
           new NetCdfStreamer(req, config, query, producer, reqParams));
       getParamConfig(
           config.getParamChangeTable(false), query, reqParams.dataSource,
@@ -793,7 +793,7 @@ static boost::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Req
     }
     else
     {
-      ds = boost::shared_ptr<DataStreamer>(
+      ds = std::shared_ptr<DataStreamer>(
           new QDStreamer(req, config, query, producer, reqParams));
 
       BOOST_FOREACH (Spine::Parameter param, query.pOptions.parameters())
@@ -956,7 +956,7 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
       // Defining the response header information
 
       Fmi::DateTime t_expires = t_now + Fmi::Seconds(expires_seconds);
-      boost::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
+      std::shared_ptr<Fmi::TimeFormatter> tformat(Fmi::TimeFormatter::create("http"));
       std::string cachecontrol =
           "public, max-age=" + boost::lexical_cast<std::string>(expires_seconds);
       std::string expiration = tformat->format(t_expires);

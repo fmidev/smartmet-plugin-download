@@ -359,7 +359,7 @@ Config::Config(const string& configfile)
       throw Fmi::Exception(BCP, "DLS configuration file name is empty!");
 
     // Enable sensible relative include paths
-    boost::filesystem::path p = configfile;
+    std::filesystem::path p = configfile;
     p.remove_filename();
     itsConfig.setIncludeDir(p.c_str());
 
@@ -371,7 +371,7 @@ Config::Config(const string& configfile)
     {
       if (itsGribConfig[0] != '/')
       {
-        boost::filesystem::path p(configfile);
+        std::filesystem::path p(configfile);
         itsGribConfig = p.parent_path().string() + "/" + itsGribConfig;
       }
       itsGribPTable = readParamConfig(itsGribConfig);
@@ -382,7 +382,7 @@ Config::Config(const string& configfile)
     {
       if (itsNetCdfConfig[0] != '/')
       {
-        boost::filesystem::path p(configfile);
+        std::filesystem::path p(configfile);
         itsNetCdfConfig = p.parent_path().string() + "/" + itsNetCdfConfig;
       }
       itsNetCdfPTable = readParamConfig(itsNetCdfConfig, false);

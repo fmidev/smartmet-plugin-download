@@ -1,7 +1,7 @@
 #pragma once
 
 #include <boost/algorithm/string/trim.hpp>
-#include <boost/optional.hpp>
+#include <optional>
 #include <engines/querydata/Q.h>
 #include <grid-files/grid/Typedefs.h>
 #include <ogr_spatialref.h>
@@ -93,27 +93,27 @@ void parseRadonParameterName(const std::string &param, std::vector<std::string> 
 std::string getProducerName(
     const std::string &param,
     const std::vector<std::string> &paramParts,
-    boost::optional<std::string> defaultValue = boost::optional<std::string>());
+    std::optional<std::string> defaultValue = std::optional<std::string>());
 T::GeometryId getGeometryId(
     const std::string &param,
     const std::vector<std::string> &paramParts,
-    boost::optional<T::GeometryId> defaultValue = boost::optional<T::GeometryId>());
+    std::optional<T::GeometryId> defaultValue = std::optional<T::GeometryId>());
 T::ParamLevelId getParamLevelId(
     const std::string &param,
     const std::vector<std::string> &paramParts,
-    boost::optional<T::ParamLevelId> defaultValue = boost::optional<T::ParamLevelId>());
+    std::optional<T::ParamLevelId> defaultValue = std::optional<T::ParamLevelId>());
 T::ParamLevel getParamLevel(
     const std::string &param,
     const std::vector<std::string> &paramParts,
-    boost::optional<T::ParamLevel> defaultValue = boost::optional<T::ParamLevel>());
+    std::optional<T::ParamLevel> defaultValue = std::optional<T::ParamLevel>());
 T::ForecastType getForecastType(
     const std::string &param,
     const std::vector<std::string> &paramParts,
-    boost::optional<T::ForecastType> defaultValue = boost::optional<T::ForecastType>());
+    std::optional<T::ForecastType> defaultValue = std::optional<T::ForecastType>());
 T::ForecastNumber getForecastNumber(
     const std::string &param,
     const std::vector<std::string> &paramParts,
-    boost::optional<T::ForecastNumber> defaultValue = boost::optional<T::ForecastNumber>());
+    std::optional<T::ForecastNumber> defaultValue = std::optional<T::ForecastNumber>());
 
 bool isValidGeneration(const T::GenerationInfo *generationInfo);
 bool isEnsembleForecast(T::ForecastType forecastType);
@@ -125,13 +125,13 @@ bool isEnsembleForecast(T::ForecastType forecastType);
 // ----------------------------------------------------------------------
 
 template <typename T>
-boost::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
+std::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
                                                              const char *param,
                                                              std::size_t nPairs)
 {
   try
   {
-    boost::optional<std::vector<std::pair<T, T>>> pvalue;
+    std::optional<std::vector<std::pair<T, T>>> pvalue;
     boost::trim(pvs);
 
     if (pvs.empty())

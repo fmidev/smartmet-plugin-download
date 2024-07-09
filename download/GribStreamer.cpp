@@ -33,7 +33,7 @@ namespace Plugin
 namespace Download
 {
 template <typename T>
-boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
+std::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
 
 GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
@@ -1007,7 +1007,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     NFmiLevel *cfgLevel = nullptr;
     FmiLevelType levelType;
     T::ForecastType forecastType = 0;
-    boost::optional<long> templateNumber;
+    std::optional<long> templateNumber;
     bool gridContent = (itsReqParams.dataSource == GridContent), foundParam = false;
     size_t i, j = pTable.size();
     auto paramIndexIter = paramConfigIndexes.end();
@@ -1213,7 +1213,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     const bool bDataIsEndTimeStamped = true;
     bool hasParamConfig = (paramIdx < pTable.size());
     bool hasStepType = (hasParamConfig && (!pTable[paramIdx].itsStepType.empty()));
-    boost::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
+    std::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
 
     if (hasParamConfig && (!hasStepType))
     {

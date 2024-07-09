@@ -7,7 +7,7 @@
 #include "ParamConfig.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
+#include <filesystem>
 #include <boost/foreach.hpp>
 #include <macgyver/StringConversion.h>
 #include <macgyver/Exception.h>
@@ -38,7 +38,7 @@ ParamChangeItem::ParamChangeItem()
       itsLevel(nullptr),
       itsPeriodLengthMinutes(0),
       itsTemplateNumber(),
-      itsGridRelative(boost::optional<bool>())
+      itsGridRelative(std::optional<bool>())
 {
 }
 
@@ -395,7 +395,7 @@ bool readNetCdfParamConfigField(const std::string& name,
  */
 // ======================================================================
 
-ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, bool grib)
+ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bool grib)
 {
   try
   {

@@ -167,11 +167,11 @@ void dimDeleter(NcDim * /* dim */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addDimension(const string &dimName, long dimSize)
+std::shared_ptr<NcDim> NetCdfStreamer::addDimension(const string &dimName, long dimSize)
 {
   try
   {
-    auto dim = boost::shared_ptr<NcDim>(itsFile->add_dim(dimName.c_str(), dimSize), dimDeleter);
+    auto dim = std::shared_ptr<NcDim>(itsFile->add_dim(dimName.c_str(), dimSize), dimDeleter);
 
     if (dim)
       return dim;
@@ -194,7 +194,7 @@ void varDeleter(NcVar * /* var */) {}
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
+std::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
                                                      NcType dataType,
                                                      NcDim *dim1,
                                                      NcDim *dim2,
@@ -204,7 +204,7 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
 {
   try
   {
-    auto var = boost::shared_ptr<NcVar>(
+    auto var = std::shared_ptr<NcVar>(
         itsFile->add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4, dim5), varDeleter);
 
     if (var)
@@ -225,13 +225,13 @@ boost::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(const string &dimName,
+std::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(const string &dimName,
                                                           long dimSize,
                                                           NcType dataType,
                                                           string stdName,
                                                           string unit,
                                                           string axisType,
-                                                          boost::shared_ptr<NcDim> &dim)
+                                                          std::shared_ptr<NcDim> &dim)
 {
   try
   {
@@ -492,7 +492,7 @@ string NetCdfStreamer::getEnsembleDimensionName(
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
+std::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
     T::ForecastType forecastType, T::ForecastNumber forecastNumber,
     string &ensembleDimensionName) const
 {
@@ -500,9 +500,9 @@ boost::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
   {
     ensembleDimensionName = getEnsembleDimensionName(forecastType, forecastNumber);
     if (ensembleDimensionName.empty())
-      return boost::shared_ptr<NcDim>();
+      return std::shared_ptr<NcDim>();
 
-    return boost::shared_ptr<NcDim>(itsFile->get_dim(ensembleDimensionName.c_str()), dimDeleter);
+    return std::shared_ptr<NcDim>(itsFile->get_dim(ensembleDimensionName.c_str()), dimDeleter);
   }
   catch (...)
   {
@@ -510,7 +510,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
   }
 }
 
-boost::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
+std::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
     T::ForecastType forecastType, T::ForecastNumber forecastNumber) const
 {
   try
@@ -618,8 +618,8 @@ void NetCdfStreamer::addEnsembleDimension()
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
-                                                          boost::shared_ptr<NcVar> &tVar)
+std::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
+                                                          std::shared_ptr<NcVar> &tVar)
 {
   try
   {
@@ -637,11 +637,11 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMin
     addAttribute(tVar, "long_name", "time");
     addAttribute(tVar, "calendar", "gregorian");
 
-    boost::shared_ptr<NcAtt> uAtt(itsTimeVar->get_att("units"));
+    std::shared_ptr<NcAtt> uAtt(itsTimeVar->get_att("units"));
     if (!uAtt)
       throw Fmi::Exception(BCP, "Failed to get time unit attribute");
 
-    boost::shared_ptr<NcValues> uVal(uAtt->values());
+    std::shared_ptr<NcValues> uVal(uAtt->values());
     char *u;
     int uLen;
 
@@ -754,7 +754,7 @@ string paramNameWithoutLevel(const Query &query, const string &paramName)
 }
 }
 
-boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
+std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
     const string &paramName, string &levelDimName) const
 {
   try
@@ -767,11 +767,11 @@ boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
     auto levelDim = itsLevelDimensions.find(paramNameWithoutLevel(itsQuery, paramName));
 
     if (levelDim == itsLevelDimensions.end())
-      return boost::shared_ptr<NcDim>();
+      return std::shared_ptr<NcDim>();
 
     levelDimName = levelDim->second.c_str();
 
-    return boost::shared_ptr<NcDim>(itsFile->get_dim(levelDimName.c_str()), dimDeleter);
+    return std::shared_ptr<NcDim>(itsFile->get_dim(levelDimName.c_str()), dimDeleter);
   }
   catch (...)
   {
@@ -786,7 +786,7 @@ boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::getLevelDimAndIndex(
+std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimAndIndex(
     const string &paramName, int paramLevel, int &levelIndex) const
 {
   try
@@ -990,7 +990,7 @@ void NetCdfStreamer::addLevelDimension()
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setSpheroidAndWKT(const boost::shared_ptr<NcVar> &crsVar,
+void NetCdfStreamer::setSpheroidAndWKT(const std::shared_ptr<NcVar> &crsVar,
                                        OGRSpatialReference *geometrySRS,
                                        const string &areaWKT)
 {
@@ -1025,7 +1025,7 @@ void NetCdfStreamer::setSpheroidAndWKT(const boost::shared_ptr<NcVar> &crsVar,
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLatLonGeometry(const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setLatLonGeometry(const std::shared_ptr<NcVar> &crsVar)
 {
   try
   {
@@ -1044,7 +1044,7 @@ void NetCdfStreamer::setLatLonGeometry(const boost::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setRotatedLatlonGeometry(const std::shared_ptr<NcVar> &crsVar)
 {
   try
   {
@@ -1067,7 +1067,7 @@ void NetCdfStreamer::setRotatedLatlonGeometry(const boost::shared_ptr<NcVar> &cr
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setStereographicGeometry(const boost::shared_ptr<NcVar> &crsVar,
+void NetCdfStreamer::setStereographicGeometry(const std::shared_ptr<NcVar> &crsVar,
                                               const NFmiArea *area)
 {
   try
@@ -1114,7 +1114,7 @@ void NetCdfStreamer::setStereographicGeometry(const boost::shared_ptr<NcVar> &cr
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setMercatorGeometry(const std::shared_ptr<NcVar> &crsVar)
 {
   try
   {
@@ -1152,7 +1152,7 @@ void NetCdfStreamer::setMercatorGeometry(const boost::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setYKJGeometry(const std::shared_ptr<NcVar> &crsVar)
 {
   try
   {
@@ -1180,7 +1180,7 @@ void NetCdfStreamer::setYKJGeometry(const boost::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLambertConformalGeometry(const boost::shared_ptr<NcVar> &crsVar,
+void NetCdfStreamer::setLambertConformalGeometry(const std::shared_ptr<NcVar> &crsVar,
                                                  const NFmiArea *area)
 {
   try
@@ -1317,7 +1317,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
     double *lat = latPtr.get(), *lon = lonPtr.get();
 
-    boost::shared_ptr<NcVar> latVar, lonVar;
+    std::shared_ptr<NcVar> latVar, lonVar;
 
     if (!grid)
       grid = &q->grid();
@@ -1490,7 +1490,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
     double *lat = latPtr.get(), *lon = lonPtr.get();
 
-    boost::shared_ptr<NcVar> latVar, lonVar;
+    std::shared_ptr<NcVar> latVar, lonVar;
 
     auto coords = gridQuery.mQueryParameterList.front().mCoordinates;
 
@@ -1698,7 +1698,7 @@ Fmi::DateTime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMin
  */
 // ----------------------------------------------------------------------
 
-boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
+std::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
                                                        string &timeDimName)
 {
   try
@@ -1707,14 +1707,14 @@ boost::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinute
 
     timeDimName = "time_" + pName;
 
-    boost::shared_ptr<NcDim> tDim(itsFile->get_dim(timeDimName.c_str()), dimDeleter);
+    std::shared_ptr<NcDim> tDim(itsFile->get_dim(timeDimName.c_str()), dimDeleter);
 
     if (tDim)
       return tDim;
 
     // Add aggregate period length specific time dimension and variable
 
-    boost::shared_ptr<NcVar> tVar;
+    std::shared_ptr<NcVar> tVar;
     tDim = addTimeDimension(periodLengthInMinutes, tVar);
 
     // Add time bounds dimension
@@ -1813,7 +1813,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
     NcDim &yOrLat = (itsYDim ? *itsYDim : *itsLatDim);
     NcDim &xOrLon = (itsYDim ? *itsXDim : *itsLonDim);
-    boost::shared_ptr<NcDim> tDim;
+    std::shared_ptr<NcDim> tDim;
     map<string, NcVar *> paramVariables;
     vector<string> paramParts;
     size_t nVars = 0;
@@ -2011,7 +2011,7 @@ void NetCdfStreamer::storeParamValues()
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
 
-    boost::shared_ptr<float[]> values(new float[itsNY * itsNX]);
+    std::shared_ptr<float[]> values(new float[itsNY * itsNX]);
 
     int i = 0;
 
