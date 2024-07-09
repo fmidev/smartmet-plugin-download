@@ -159,9 +159,8 @@ std::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
       }
 
       std::vector<std::pair<T, T>> pvv;
-      std::size_t np;
 
-      for (np = 0, n = 0; (n < nValues); np++, n += 2)
+      for (n = 0; (n < nValues); n += 2)
         pvv.push_back(std::make_pair<T, T>(boost::lexical_cast<T>(flds[n]),
                                            boost::lexical_cast<T>(flds[n + 1])));
 
