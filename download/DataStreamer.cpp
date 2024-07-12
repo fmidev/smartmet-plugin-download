@@ -697,14 +697,14 @@ bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTimeS
 
 using ValidTimeList = SmartMet::Engine::Querydata::ValidTimeList;
 
-boost::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
+std::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
     const std::string &originTimeStr) const
 {
   try
   {
     // If originTime is empty, return validtimes for all data/origintimes
 
-    boost::shared_ptr<ValidTimeList> validTimeList(new ValidTimeList());
+    std::shared_ptr<ValidTimeList> validTimeList(new ValidTimeList());
 
     auto ott =
         originTimeStr.empty() ? originTimeTimes.begin() : originTimeTimes.find(originTimeStr);
@@ -2225,7 +2225,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       auto width = gridcenter[1].first;  // kilometers
       auto height = gridcenter[1].second;
 
-      boost::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
+      std::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
           grid.Area()->SpatialReference(), "WGS84", center, 2 * 1000 * width, 2 * 1000 * height));
 
       bl = area->BottomLeftLatLon();
@@ -2828,7 +2828,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
     // Requested native levels and native levels needed for interpolation
 
     auto reqLevel = itsSortedDataLevels.begin();
-    boost::optional<NFmiLevel> prevNativeLevel;
+    std::optional<NFmiLevel> prevNativeLevel;
 
     for (q->resetLevel(); q->nextLevel();)
     {
@@ -3812,7 +3812,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
                            levelDescriptor,
                            itsQ->infoVersion());
 
-    boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
+    std::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
     NFmiFastQueryInfo dstInfo(data.get());
     auto levelIndex = itsQ->levelIndex();
 
@@ -3852,9 +3852,9 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
     itsQ->levelIndex(levelIndex);
 
     std::size_t hash = 0;
-    auto model = boost::make_shared<Engine::Querydata::Model>(data, hash);
+    auto model = std::make_shared<Engine::Querydata::Model>(data, hash);
 
-    return boost::make_shared<Engine::Querydata::QImpl>(model);
+    return std::make_shared<Engine::Querydata::QImpl>(model);
   }
   catch (...)
   {

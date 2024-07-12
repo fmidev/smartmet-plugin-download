@@ -137,7 +137,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   Cropping itsCropping;
 
-  boost::shared_ptr<NFmiQueryData> itsQueryData;
+  std::shared_ptr<NFmiQueryData> itsQueryData;
 
   TimeSeries::OptionParsers::ParameterList::const_iterator itsParamIterator;
   TimeSeries::OptionParsers::ParameterList itsDataParams;
@@ -243,7 +243,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   Scaling itsValScaling;
 
-  boost::optional<BBoxCorners> itsRegBoundingBox;
+  std::optional<BBoxCorners> itsRegBoundingBox;
 
   bool itsLevelRng = false;
   bool itsHeightRng = false;
@@ -304,7 +304,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     T::GridProjection projType;               // wkt PROJECTION or p4 EXTENSION
     std::string projection;                   //
     bool relativeUV;                          // QueryServer::Query grid.original.relativeUV
-    boost::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
+    std::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
     double southernPoleLat;                   // wkt p4 EXTENSION o_lat_p
     double southernPoleLon;                   // wkt p4 EXTENSION o_lon_p
     std::unique_ptr<double> rotLongitudes;    // rotated coords for rotlat grid
@@ -339,7 +339,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                           Fmi::DateTime &firstTime,
                           Fmi::DateTime &lastTime,
                           long &timeStep) const;
-    boost::shared_ptr<SmartMet::Engine::Querydata::ValidTimeList> getDataTimes(
+    std::shared_ptr<SmartMet::Engine::Querydata::ValidTimeList> getDataTimes(
         const std::string &originTimeStr) const;
 
     GridIterator &getGridIterator() { return gridIterator; }
