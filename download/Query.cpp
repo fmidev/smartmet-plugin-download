@@ -8,7 +8,6 @@
 #include "Config.h"
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
-#include <boost/foreach.hpp>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiPoint.h>
@@ -897,7 +896,7 @@ void Query::parseLevels(const Spine::HTTP::Request& theReq)
 
       vector<string> parts;
       boost::algorithm::split(parts, opt, boost::algorithm::is_any_of(","));
-      BOOST_FOREACH (const string& tmp, parts)
+      for (const string& tmp : parts)
         levels.insert(Fmi::stoi(tmp));
     }
   }

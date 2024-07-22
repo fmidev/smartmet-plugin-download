@@ -9,7 +9,6 @@
 #include "Plugin.h"
 #include <boost/algorithm/string/split.hpp>
 #include <macgyver/DateTime.h>
-#include <boost/foreach.hpp>
 #include <gis/DEM.h>
 #include <gis/LandCover.h>
 #include <gis/ProjInfo.h>
@@ -1535,7 +1534,7 @@ bool DataStreamer::hasRequestedData(
     // Check if any of the requested parameters exists.
 
     size_t nMissingParam = 0;
-    BOOST_FOREACH (auto const &param, itsDataParams)
+    for (auto const &param : itsDataParams)
     {
       if (q->param(param.number()))
       {
@@ -1569,7 +1568,7 @@ bool DataStreamer::hasRequestedData(
 
     // Check if any of the requested levels exist or is interpolatable.
 
-    BOOST_FOREACH (auto const &queryLevel, itsDataLevels)
+    for (auto const &queryLevel : itsDataLevels)
     {
       // Loop over the available data levels. Level interpolation is possible for pressure data
       // only.

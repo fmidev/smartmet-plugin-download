@@ -8,7 +8,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <filesystem>
-#include <boost/foreach.hpp>
 #include <macgyver/StringConversion.h>
 #include <macgyver/Exception.h>
 
@@ -311,7 +310,7 @@ bool readGribParamConfigField(const std::string& name,
         auto &gribParam = (grib1 ? p.itsGrib1Param : p.itsGrib2Param);
         gribParam = GribParamIdentification();
 
-        BOOST_FOREACH (const auto& nm, members)
+        for (const auto& nm : members)
         {
           if (
               ((nm == "templatenumber") && p.itsTemplateNumber) ||
@@ -434,7 +433,7 @@ ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bo
       uint paramId = 0;
 
       const auto members = paramJson.getMemberNames();
-      BOOST_FOREACH (const auto& name, members)
+      for (const auto& name : members)
       {
         const Json::Value& json = paramJson[name];
 

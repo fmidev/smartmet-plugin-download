@@ -15,7 +15,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/bind/bind.hpp>
 #include <macgyver/DateTime.h>
-#include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <macgyver/Exception.h>
@@ -613,7 +612,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
 
     auto const &params = query.pOptions.parameters();
 
-    BOOST_FOREACH (Spine::Parameter param, params)
+    for (Spine::Parameter param : params)
     {
       // We allow special params too if they have a number (WindUMS and WindVMS)
 
@@ -660,7 +659,7 @@ static bool getParamConfig(const ParamChangeTable &pTable,
     std::list<unsigned int>::const_iterator itm = missingParams.begin();
     i = 0;
 
-    BOOST_FOREACH (Spine::Parameter param, params)
+    for (Spine::Parameter param : params)
     {
       if ((itm != missingParams.end()) && (i == *itm))
         itm++;
@@ -796,7 +795,7 @@ static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Reque
       ds = std::shared_ptr<DataStreamer>(
           new QDStreamer(req, config, query, producer, reqParams));
 
-      BOOST_FOREACH (Spine::Parameter param, query.pOptions.parameters())
+      for (Spine::Parameter param : query.pOptions.parameters())
       {
         knownParams.push_back(param);
       }

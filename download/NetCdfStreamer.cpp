@@ -6,7 +6,6 @@
 
 #include "NetCdfStreamer.h"
 #include <macgyver/DateTime.h>
-#include <boost/foreach.hpp>
 #include <boost/format.hpp>
 #include <gis/ProjInfo.h>
 #include <macgyver/Exception.h>

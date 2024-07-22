@@ -5,7 +5,6 @@
 // ======================================================================
 
 #include "QueryDataStreamer.h"
-#include <boost/foreach.hpp>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiQueryData.h>
 #include <string>
@@ -129,7 +128,7 @@ std::string QDStreamer::getChunk()
           // for
           // the current x/y cell
           //
-          BOOST_FOREACH (auto const &grid, itsGrids)
+          for (auto const &grid : itsGrids)
           {
             os.write((const char *)&grid[itsCurrentX][itsCurrentY], valueSize);
             chunkLen += valueSize;

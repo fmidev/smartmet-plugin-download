@@ -7,7 +7,6 @@
 #include "GribStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-#include <boost/foreach.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <fmt/format.h>
