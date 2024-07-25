@@ -41,14 +41,20 @@ TEST_DB_DIR := $(shell pwd)/tmp-geonames-db
 TEST_PREPARE_TARGETS := cnf/geonames.conf start-redis-db
 TEST_FINISH_TARGETS := .dummy stop-redis-db
 ifdef CI
-GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
-TEST_PREPARE_TARGETS += start-geonames-db
-TEST_FINISH_TARGETS += stop-geonames-db
-TEST_TARGETS := test-qd
+  GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
+  TEST_PREPARE_TARGETS += start-geonames-db
+  TEST_FINISH_TARGETS += stop-geonames-db
+  TEST_TARGETS := test-qd
 else
-GEONAMES_HOST_EDIT := cat
-META_CONF_EDIT := cat
-TEST_TARGETS := test-qd test-grid
+  ifdef LOCAL_TESTS_ONLY
+    TEST_TARGETS := test-qd
+    GEONAMES_HOST_EDIT := cat
+    META_CONF_EDIT := cat
+  else
+    GEONAMES_HOST_EDIT := cat
+    META_CONF_EDIT := cat
+    TEST_TARGETS := test-qd test-grid
+  endif
 endif
 
 TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf

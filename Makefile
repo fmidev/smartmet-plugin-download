@@ -19,7 +19,7 @@ CORBA_LIBS = -lomniORB4 -lomnithread
 
 INCLUDES += $(CORBA_INCLUDE)
 
-LIBS += -L$(libdir) \
+LIBS += $(PREFIX_LDFLAGS) \
 	-lsmartmet-spine \
 	-lsmartmet-newbase \
 	-lsmartmet-macgyver \
