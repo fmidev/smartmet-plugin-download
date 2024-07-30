@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 24.7.12
+Version: 24.7.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -101,6 +101,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jul 30 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.7.30-1.fmi
+- DataStreamer: update according to qengine ABI change
+
 * Fri Jul 12 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.7.12-1.fmi
 - Replace many boost library types with C++ standard library ones
 
