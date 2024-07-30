@@ -32,7 +32,7 @@ BuildRequires: smartmet-library-newbase-devel >= 24.7.12
 BuildRequires: smartmet-library-grid-content-devel >= 24.7.12
 BuildRequires: smartmet-library-grid-files-devel >= 24.7.12
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 24.7.12
+BuildRequires: smartmet-engine-querydata-devel >= 24.7.30
 BuildRequires: smartmet-engine-geonames-devel >= 24.7.12
 BuildRequires: smartmet-engine-grid-devel >= 24.7.12
 BuildRequires: netcdf-cxx-devel
@@ -45,7 +45,7 @@ Requires: smartmet-library-macgyver >= 24.7.12
 Requires: smartmet-library-timeseries >= 24.7.12
 Requires: smartmet-library-spine >= 24.7.12
 Requires: smartmet-library-newbase >= 24.7.12
-Requires: smartmet-engine-querydata >= 24.7.12
+Requires: smartmet-engine-querydata >= 24.7.30
 Requires: smartmet-server >= 24.7.12
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
