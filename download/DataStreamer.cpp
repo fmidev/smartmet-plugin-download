@@ -3851,7 +3851,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
     itsQ->levelIndex(levelIndex);
 
     std::size_t hash = 0;
-    auto model = std::make_shared<Engine::Querydata::Model>(data, hash);
+    auto model = Engine::Querydata::Model::create(data, hash);
 
     return std::make_shared<Engine::Querydata::QImpl>(model);
   }
