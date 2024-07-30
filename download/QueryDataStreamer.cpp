@@ -93,7 +93,7 @@ std::string QDStreamer::getChunk()
       }
 
       ostringstream os;
-      size_t valueSize = sizeof(itsGridValues[0][0]);
+      std::size_t valueSize = sizeof(itsGridValues[0][0]);
       long chunkLen = 0;
 
       if (itsMetaFlag)
@@ -209,8 +209,8 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
 
     NFmiDataMatrix<float> croppedValues(itsCropping.gridSizeX, itsCropping.gridSizeY);
 
-    size_t x0 = itsCropping.bottomLeftX, y0 = itsCropping.bottomLeftY;
-    size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx, cy, x, y;
+    std::size_t x0 = itsCropping.bottomLeftX, y0 = itsCropping.bottomLeftY;
+    std::size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx, cy, x, y;
 
     for (y = y0, cy = 0; (y < yN); y++, cy++)
       for (x = x0, cx = 0; (x < xN); x++, cx++)
