@@ -10,8 +10,8 @@
 #include "Datum.h"
 #include "Tools.h"
 
-#include <boost/optional.hpp>
-#include <boost/shared_ptr.hpp>
+#include <optional>
+#include <memory>
 #include <engines/querydata/Engine.h>
 #include <engines/grid/Engine.h>
 #include <macgyver/TimeFormatter.h>
@@ -78,7 +78,7 @@ struct Producer
   NamedSettings::const_iterator namedSettingsBegin() const { return (namedSettings.begin()); }
   NamedSettings::const_iterator namedSettingsEnd() const { return (namedSettings.end()); }
 #ifdef USE_QENGINE_CONFIG
-  boost::optional<const Engine::Querydata::ProducerConfig &> qEngineProducerConfig;
+  std::optional<const Engine::Querydata::ProducerConfig &> qEngineProducerConfig;
 #endif
 };
 
@@ -105,11 +105,11 @@ typedef enum
   QD
 } OutputFormat;
 
-typedef boost::optional<std::vector<std::pair<double, double>>> BBox;
-typedef boost::optional<std::vector<std::pair<unsigned int, unsigned int>>> GridSize;
-typedef boost::optional<std::vector<std::pair<unsigned int, unsigned int>>> GridStep;
-typedef boost::optional<std::vector<std::pair<double, double>>> GridResolution;
-typedef boost::optional<std::vector<std::pair<double, double>>> GridCenter;
+typedef std::optional<std::vector<std::pair<double, double>>> BBox;
+typedef std::optional<std::vector<std::pair<unsigned int, unsigned int>>> GridSize;
+typedef std::optional<std::vector<std::pair<unsigned int, unsigned int>>> GridStep;
+typedef std::optional<std::vector<std::pair<double, double>>> GridResolution;
+typedef std::optional<std::vector<std::pair<double, double>>> GridCenter;
 
 typedef enum
 {

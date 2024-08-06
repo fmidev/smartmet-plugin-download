@@ -9,8 +9,8 @@
 #include <newbase/NFmiLevel.h>
 #include <newbase/NFmiParam.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
+#include <filesystem>
+#include <optional>
 
 #include <string>
 #include <vector>
@@ -25,18 +25,18 @@ namespace Download
 
 typedef struct
 {
-  boost::optional<long> itsParamNumber;
+  std::optional<long> itsParamNumber;
   // grib1
-  boost::optional<long> itsTable2Version;
-  boost::optional<long> itsIndicatorOfTimeRange;
+  std::optional<long> itsTable2Version;
+  std::optional<long> itsIndicatorOfTimeRange;
   // grib2
-  boost::optional<long> itsDiscipline;
-  boost::optional<long> itsCategory;
-  boost::optional<long> itsTemplateNumber;
-  boost::optional<long> itsTypeOfStatisticalProcessing;
+  std::optional<long> itsDiscipline;
+  std::optional<long> itsCategory;
+  std::optional<long> itsTemplateNumber;
+  std::optional<long> itsTypeOfStatisticalProcessing;
 } GribParamIdentification;
 
-typedef boost::optional<GribParamIdentification> GribParamId;
+typedef std::optional<GribParamIdentification> GribParamId;
 
 struct ParamChangeItem
 {
@@ -52,16 +52,16 @@ struct ParamChangeItem
   float itsConversionScale;
   NFmiLevel *itsLevel;
   std::string itsLevelType;             // Temporary storage for level type ..
-  boost::optional<float> itsLevelValue; // .. and value; used when creating NFmiLevel object
+  std::optional<float> itsLevelValue; // .. and value; used when creating NFmiLevel object
   std::string itsStepType;              // Aggregate type, "accum", "max", "min", ...
   unsigned int itsPeriodLengthMinutes;  // Aggregate period length in minutes
   std::string itsUnit;                  // Unit for netcdf parameters
   std::string itsStdName;               // Standfard name for netcdf parameters
   std::string itsLongName;              // Long name for netcdf parameters
   std::string itsCentre;                // Originating centre for grib parameters
-  boost::optional<long> itsTemplateNumber;  // 'productDefinitionTemplateNumber' for grib parameters
+  std::optional<long> itsTemplateNumber;  // 'productDefinitionTemplateNumber' for grib parameters
 
-  boost::optional<bool> itsGridRelative;// Set for grid relative U and V
+  std::optional<bool> itsGridRelative;// Set for grid relative U and V
 
   // Radon parameter data
   //
@@ -72,7 +72,7 @@ struct ParamChangeItem
 };
 
 typedef std::vector<ParamChangeItem> ParamChangeTable;
-ParamChangeTable readParamConfig(const boost::filesystem::path &configFilePath, bool grib = true);
+ParamChangeTable readParamConfig(const std::filesystem::path &configFilePath, bool grib = true);
 
 }  // namespace Download
 }  // namespace Plugin

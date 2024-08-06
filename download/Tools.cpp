@@ -259,7 +259,7 @@ bool isEnsembleForecast(T::ForecastType forecastType)
 // ----------------------------------------------------------------------
 
 T::GeometryId getGeometryId(const string &param, const vector<string> &paramParts,
-                            boost::optional<T::GeometryId> defaultValue)
+                            std::optional<T::GeometryId> defaultValue)
 {
   if ((paramParts.size() < 3) || paramParts[2].empty())
   {
@@ -281,7 +281,7 @@ T::GeometryId getGeometryId(const string &param, const vector<string> &paramPart
 // ----------------------------------------------------------------------
 
 T::ParamLevelId getParamLevelId(const string &param, const vector<string> &paramParts,
-                                boost::optional<T::ParamLevelId> defaultValue)
+                                std::optional<T::ParamLevelId> defaultValue)
 {
   if ((paramParts.size() < 4) || paramParts[3].empty())
   {
@@ -303,7 +303,7 @@ T::ParamLevelId getParamLevelId(const string &param, const vector<string> &param
 // ----------------------------------------------------------------------
 
 T::ParamLevel getParamLevel(const string &param, const vector<string> &paramParts,
-                            boost::optional<T::ParamLevel> defaultValue)
+                            std::optional<T::ParamLevel> defaultValue)
 {
   if ((paramParts.size() < 5) || paramParts[4].empty())
   {
@@ -325,7 +325,7 @@ T::ParamLevel getParamLevel(const string &param, const vector<string> &paramPart
 // ----------------------------------------------------------------------
 
 T::ForecastType getForecastType(const string &param, const vector<string> &paramParts,
-                                boost::optional<T::ForecastType> defaultValue)
+                                std::optional<T::ForecastType> defaultValue)
 {
   if ((paramParts.size() < 6) || paramParts[5].empty())
   {
@@ -347,7 +347,7 @@ T::ForecastType getForecastType(const string &param, const vector<string> &param
 // ----------------------------------------------------------------------
 
 T::ForecastType getForecastNumber(const string &param, const vector<string> &paramParts,
-                                  boost::optional<T::ForecastNumber> defaultValue)
+                                  std::optional<T::ForecastNumber> defaultValue)
 {
   if ((paramParts.size() < 7) || paramParts[6].empty())
   {

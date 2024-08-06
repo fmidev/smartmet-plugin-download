@@ -7,7 +7,6 @@
 #include "GribStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
-#include <boost/foreach.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <fmt/format.h>
@@ -33,7 +32,7 @@ namespace Plugin
 namespace Download
 {
 template <typename T>
-boost::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, size_t nPairs);
+std::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, std::size_t nPairs);
 
 GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
@@ -993,7 +992,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
                                               const NFmiParam &theParam,
                                               const string &paramName,
                                               const ParamChangeTable &pTable,
-                                              size_t &paramIdx)
+                                              std::size_t &paramIdx)
 {
   // Get parameter id, and configured level type and value for surface data.
   //
@@ -1007,9 +1006,9 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     NFmiLevel *cfgLevel = nullptr;
     FmiLevelType levelType;
     T::ForecastType forecastType = 0;
-    boost::optional<long> templateNumber;
+    std::optional<long> templateNumber;
     bool gridContent = (itsReqParams.dataSource == GridContent), foundParam = false;
-    size_t i, j = pTable.size();
+    std::size_t i, j = pTable.size();
     auto paramIndexIter = paramConfigIndexes.end();
 
     paramIdx = pTable.size();
@@ -1185,7 +1184,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 // ----------------------------------------------------------------------
 
 void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
-                                 size_t paramIdx,
+                                 std::size_t paramIdx,
                                  bool setOriginTime,
                                  const Fmi::DateTime &validTime)
 {
@@ -1213,7 +1212,7 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     const bool bDataIsEndTimeStamped = true;
     bool hasParamConfig = (paramIdx < pTable.size());
     bool hasStepType = (hasParamConfig && (!pTable[paramIdx].itsStepType.empty()));
-    boost::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
+    std::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
 
     if (hasParamConfig && (!hasStepType))
     {
@@ -1476,7 +1475,7 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 
     NFmiParam param(*(q->param().GetParam()));
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable();
-    size_t paramIdx = pTable.size();
+    std::size_t paramIdx = pTable.size();
 
     setLevelAndParameterToGrib(level, param, "", pTable, paramIdx);
 
@@ -1487,11 +1486,11 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
     // Load the data, cropping the grid/values it if manual cropping is set
 
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
-    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+    std::size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    std::size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    std::size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+    std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
     int i = 0;
 
@@ -1574,7 +1573,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
 
     NFmiParam param(itsParamIterator->number());
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable();
-    size_t paramIdx = pTable.size();
+    std::size_t paramIdx = pTable.size();
 
     setLevelAndParameterToGrib(level, param, itsParamIterator->name(), pTable, paramIdx);
 
@@ -1585,11 +1584,11 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     // Load the data, cropping the grid/values it if manual cropping is set
 
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+    std::size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    std::size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
            yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+    std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
     int i = 0;
 
@@ -1654,7 +1653,7 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
     addValuesToGrib(q, mt, level, values, scale, offset);
 
     const void *mesg;
-    size_t mesg_len;
+    std::size_t mesg_len;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
     if (mesg_len == 0)
@@ -1685,7 +1684,7 @@ string GribStreamer::getGridGribMessage(const QueryServer::Query &gridQuery,
     addGridValuesToGrib(gridQuery, mt, level, scale, offset);
 
     const void *mesg;
-    size_t mesg_len;
+    std::size_t mesg_len;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
     if (mesg_len == 0)
@@ -1714,7 +1713,7 @@ std::string GribStreamer::getChunk()
     {
       ostringstream chunkBuf;
       string chunk;
-      size_t chunkBufLength = 0, nChunks = 0;
+      std::size_t chunkBufLength = 0, nChunks = 0;
 
       while (!itsDoneFlag)
       {

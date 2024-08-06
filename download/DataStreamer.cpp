@@ -9,7 +9,6 @@
 #include "Plugin.h"
 #include <boost/algorithm/string/split.hpp>
 #include <macgyver/DateTime.h>
-#include <boost/foreach.hpp>
 #include <gis/DEM.h>
 #include <gis/LandCover.h>
 #include <gis/ProjInfo.h>
@@ -697,14 +696,14 @@ bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTimeS
 
 using ValidTimeList = SmartMet::Engine::Querydata::ValidTimeList;
 
-boost::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
+std::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
     const std::string &originTimeStr) const
 {
   try
   {
     // If originTime is empty, return validtimes for all data/origintimes
 
-    boost::shared_ptr<ValidTimeList> validTimeList(new ValidTimeList());
+    std::shared_ptr<ValidTimeList> validTimeList(new ValidTimeList());
 
     auto ott =
         originTimeStr.empty() ? originTimeTimes.begin() : originTimeTimes.find(originTimeStr);
@@ -1535,7 +1534,7 @@ bool DataStreamer::hasRequestedData(
     // Check if any of the requested parameters exists.
 
     size_t nMissingParam = 0;
-    BOOST_FOREACH (auto const &param, itsDataParams)
+    for (auto const &param : itsDataParams)
     {
       if (q->param(param.number()))
       {
@@ -1569,7 +1568,7 @@ bool DataStreamer::hasRequestedData(
 
     // Check if any of the requested levels exist or is interpolatable.
 
-    BOOST_FOREACH (auto const &queryLevel, itsDataLevels)
+    for (auto const &queryLevel : itsDataLevels)
     {
       // Loop over the available data levels. Level interpolation is possible for pressure data
       // only.
@@ -2225,7 +2224,7 @@ void DataStreamer::setCropping(const NFmiGrid &grid)
       auto width = gridcenter[1].first;  // kilometers
       auto height = gridcenter[1].second;
 
-      boost::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
+      std::shared_ptr<NFmiArea> area(NFmiArea::CreateFromCenter(
           grid.Area()->SpatialReference(), "WGS84", center, 2 * 1000 * width, 2 * 1000 * height));
 
       bl = area->BottomLeftLatLon();
@@ -2828,7 +2827,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
     // Requested native levels and native levels needed for interpolation
 
     auto reqLevel = itsSortedDataLevels.begin();
-    boost::optional<NFmiLevel> prevNativeLevel;
+    std::optional<NFmiLevel> prevNativeLevel;
 
     for (q->resetLevel(); q->nextLevel();)
     {
@@ -3812,7 +3811,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
                            levelDescriptor,
                            itsQ->infoVersion());
 
-    boost::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
+    std::shared_ptr<NFmiQueryData> data(NFmiQueryDataUtil::CreateEmptyData(info));
     NFmiFastQueryInfo dstInfo(data.get());
     auto levelIndex = itsQ->levelIndex();
 
@@ -3852,9 +3851,9 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
     itsQ->levelIndex(levelIndex);
 
     std::size_t hash = 0;
-    auto model = boost::make_shared<Engine::Querydata::Model>(data, hash);
+    auto model = Engine::Querydata::Model::create(data, hash);
 
-    return boost::make_shared<Engine::Querydata::QImpl>(model);
+    return std::make_shared<Engine::Querydata::QImpl>(model);
   }
   catch (...)
   {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include <memory>
 #include <newbase/NFmiArea.h>
 #include <newbase/NFmiGrid.h>
 #include <newbase/NFmiPoint.h>
@@ -58,8 +58,8 @@ class Resources
   OGRSpatialReference *getGeometrySRS() const { return geometrySRS; }
 
  private:
-  std::list<boost::shared_ptr<NFmiArea>> areas;
-  boost::shared_ptr<NFmiGrid> grid;
+  std::list<std::shared_ptr<NFmiArea>> areas;
+  std::shared_ptr<NFmiGrid> grid;
   std::list<OGRSpatialReference *> spatialReferences;
   std::list<OGRCoordinateTransformation *> transformations;
   OGRSpatialReference *geometrySRS = nullptr;

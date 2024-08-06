@@ -7,8 +7,7 @@
 #include "ParamConfig.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
-#include <boost/foreach.hpp>
+#include <filesystem>
 #include <macgyver/StringConversion.h>
 #include <macgyver/Exception.h>
 
@@ -38,7 +37,7 @@ ParamChangeItem::ParamChangeItem()
       itsLevel(nullptr),
       itsPeriodLengthMinutes(0),
       itsTemplateNumber(),
-      itsGridRelative(boost::optional<bool>())
+      itsGridRelative(std::optional<bool>())
 {
 }
 
@@ -311,7 +310,7 @@ bool readGribParamConfigField(const std::string& name,
         auto &gribParam = (grib1 ? p.itsGrib1Param : p.itsGrib2Param);
         gribParam = GribParamIdentification();
 
-        BOOST_FOREACH (const auto& nm, members)
+        for (const auto& nm : members)
         {
           if (
               ((nm == "templatenumber") && p.itsTemplateNumber) ||
@@ -395,7 +394,7 @@ bool readNetCdfParamConfigField(const std::string& name,
  */
 // ======================================================================
 
-ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, bool grib)
+ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bool grib)
 {
   try
   {
@@ -434,7 +433,7 @@ ParamChangeTable readParamConfig(const boost::filesystem::path& configFilePath, 
       uint paramId = 0;
 
       const auto members = paramJson.getMemberNames();
-      BOOST_FOREACH (const auto& name, members)
+      for (const auto& name : members)
       {
         const Json::Value& json = paramJson[name];
 
