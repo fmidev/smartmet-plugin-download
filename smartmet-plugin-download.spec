@@ -26,12 +26,12 @@ BuildRequires: smartmet-library-spine-devel >= 24.8.7
 BuildRequires: smartmet-library-macgyver-devel >= 24.8.7
 BuildRequires: smartmet-library-timeseries-devel >= 24.8.7
 BuildRequires: smartmet-library-newbase-devel >= 24.8.7
-BuildRequires: smartmet-library-grid-content-devel >= 24.8.7
-BuildRequires: smartmet-library-grid-files-devel >= 24.8.7
+BuildRequires: smartmet-library-grid-content-devel >= 24.9.3
+BuildRequires: smartmet-library-grid-files-devel >= 24.9.3
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 24.8.7
+BuildRequires: smartmet-engine-querydata-devel >= 24.9.2
 BuildRequires: smartmet-engine-geonames-devel >= 24.8.7
-BuildRequires: smartmet-engine-grid-devel >= 24.8.7
+BuildRequires: smartmet-engine-grid-devel >= 24.9.3
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal38-libs
@@ -42,7 +42,7 @@ Requires: smartmet-library-macgyver >= 24.8.7
 Requires: smartmet-library-timeseries >= 24.8.7
 Requires: smartmet-library-spine >= 24.8.7
 Requires: smartmet-library-newbase >= 24.8.7
-Requires: smartmet-engine-querydata >= 24.8.7
+Requires: smartmet-engine-querydata >= 24.9.2
 Requires: smartmet-server >= 24.8.7
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -58,15 +58,15 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 24.8.7
-#TestRequires: smartmet-engine-grid >= 24.8.7
-#TestRequires: smartmet-engine-querydata >= 24.8.7
+#TestRequires: smartmet-engine-grid >= 24.9.3
+#TestRequires: smartmet-engine-querydata >= 24.9.2
 #TestRequires: smartmet-utils-devel >= 24.8.7
 #TestRequires: smartmet-library-spine-plugin-test >= 24.8.7
 #TestRequires: smartmet-library-newbase-devel >= 24.8.7
 #TestRequires: smartmet-qdtools >= 24.8.7
 #TestRequires: smartmet-test-data >= 24.5.22
 #TestRequires: smartmet-test-db >= 24.8.7
-#TestRequires: smartmet-engine-grid-test >= 24.8.7
+#TestRequires: smartmet-engine-grid-test >= 24.9.3
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
