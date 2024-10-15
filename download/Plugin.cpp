@@ -14,9 +14,9 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/bind/bind.hpp>
-#include <macgyver/DateTime.h>
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/HelmertTransformation.h>
 #include <macgyver/StringConversion.h>
@@ -60,7 +60,6 @@ bool special(const Spine::Parameter &theParam)
     switch (theParam.type())
     {
       case Spine::Parameter::Type::Data:
-      case Spine::Parameter::Type::Landscaped:
         return false;
       case Spine::Parameter::Type::DataDerived:
       case Spine::Parameter::Type::DataIndependent:
@@ -266,8 +265,9 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       reqParams.dataSource = GridContent;
     }
     else
-      throw Fmi::Exception(BCP, "Unknown source '" + reqParams.source +
-                             "', 'querydata', 'gridmapping' or 'gridcontent' expected");
+      throw Fmi::Exception(BCP,
+                           "Unknown source '" + reqParams.source +
+                               "', 'querydata', 'gridmapping' or 'gridcontent' expected");
 
     if (reqParams.dataSource != QueryData)
     {
@@ -301,8 +301,8 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
 
     const Producer &producer = (reqParams.dataSource == QueryData)
-      ? config.getProducer(reqParams.producer, qEngine)
-      : dummyProducer;
+                                   ? config.getProducer(reqParams.producer, qEngine)
+                                   : dummyProducer;
 
     if (reqParams.producer.empty())
       throw Fmi::Exception(BCP, "No producer");
@@ -445,8 +445,8 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
     reqParams.grib2TablesVersion =
         ((reqParams.outputFormat == Grib2)
-            ? getRequestUInt(req, producer, "tablesversion", config.getGrib2TablesVersionDefault())
-            : 0);
+             ? getRequestUInt(req, producer, "tablesversion", config.getGrib2TablesVersionDefault())
+             : 0);
 
     if (reqParams.grib2TablesVersion > 0)
     {
@@ -480,21 +480,19 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
       if (reqParams.dataSource != GridContent)
         throw Fmi::Exception(
-             BCP, "Cannot specify gridparamblocksize or gridtimeblocksize unless source=grid");
+            BCP, "Cannot specify gridparamblocksize or gridtimeblocksize unless source=grid");
 
       if ((reqParams.gridParamBlockSize > 0) && (reqParams.gridTimeBlockSize > 0))
         throw Fmi::Exception(
-             BCP, "Cannot specify gridparamblocksize and gridtimeblocksize simultaneously");
+            BCP, "Cannot specify gridparamblocksize and gridtimeblocksize simultaneously");
 
       // Allow gridtimeblocksize 1 with netcdf output since it has no effect; by default
       // data is fetched one grid (timestep) at a time and parameter runs in outer loop
 
-      if (
-          (reqParams.outputFormat == NetCdf) &&
-          ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 1))
-         )
+      if ((reqParams.outputFormat == NetCdf) &&
+          ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 1)))
         throw Fmi::Exception(
-             BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
+            BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
     }
 
     return producer;
@@ -533,10 +531,8 @@ static bool getScaleFactorAndOffset(signed long id,
           if (outputFormat == NetCdf)
             break;
 
-          if (
-              ((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
-              ((outputFormat == Grib2) && ptable[i].itsGrib2Param)
-             )
+          if (((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
+              ((outputFormat == Grib2) && ptable[i].itsGrib2Param))
           {
             auto const &confProducer = ptable[i].itsRadonProducer;
 
@@ -638,14 +634,14 @@ static bool getParamConfig(const ParamChangeTable &pTable,
             if (geom != geometry)
               throw Fmi::Exception(BCP,
                                    "All parameters must have the same geometryid " +
-                                   Fmi::to_string(geometry) + ": " + param.name());
+                                       Fmi::to_string(geometry) + ": " + param.name());
           }
           else
             geometry = geom;
         }
 
-        ok = getScaleFactorAndOffset(lid, producerName, paramName, outputFormat, &scale, &offset,
-                                     pTable);
+        ok = getScaleFactorAndOffset(
+            lid, producerName, paramName, outputFormat, &scale, &offset, pTable);
       }
 
       if (!ok)
@@ -738,11 +734,11 @@ static string getDownloadFileName(const string &producer,
 // ----------------------------------------------------------------------
 
 static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Request &req,
-                                                          const Engine::Querydata::Engine &qEngine,
-                                                          const Engine::Grid::Engine *gridEngine,
-                                                          const Engine::Geonames::Engine *geoEngine,
-                                                          Config &config,
-                                                          string &fileName)
+                                                        const Engine::Querydata::Engine &qEngine,
+                                                        const Engine::Grid::Engine *gridEngine,
+                                                        const Engine::Geonames::Engine *geoEngine,
+                                                        Config &config,
+                                                        string &fileName)
 {
   try
   {
@@ -776,24 +772,28 @@ static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Reque
 
     if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
     {
-      ds = std::shared_ptr<DataStreamer>(
-          new GribStreamer(req, config, query, producer, reqParams));
-      getParamConfig(
-          config.getParamChangeTable(), query, reqParams.dataSource,
-          reqParams.outputFormat, knownParams, scaling);
+      ds = std::shared_ptr<DataStreamer>(new GribStreamer(req, config, query, producer, reqParams));
+      getParamConfig(config.getParamChangeTable(),
+                     query,
+                     reqParams.dataSource,
+                     reqParams.outputFormat,
+                     knownParams,
+                     scaling);
     }
     else if (reqParams.outputFormat == NetCdf)
     {
       ds = std::shared_ptr<DataStreamer>(
           new NetCdfStreamer(req, config, query, producer, reqParams));
-      getParamConfig(
-          config.getParamChangeTable(false), query, reqParams.dataSource,
-          reqParams.outputFormat, knownParams, scaling);
+      getParamConfig(config.getParamChangeTable(false),
+                     query,
+                     reqParams.dataSource,
+                     reqParams.outputFormat,
+                     knownParams,
+                     scaling);
     }
     else
     {
-      ds = std::shared_ptr<DataStreamer>(
-          new QDStreamer(req, config, query, producer, reqParams));
+      ds = std::shared_ptr<DataStreamer>(new QDStreamer(req, config, query, producer, reqParams));
 
       for (Spine::Parameter param : query.pOptions.parameters())
       {
@@ -826,7 +826,7 @@ static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Reque
       if (!reqParams.originTime.empty())
       {
         if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
-            originTime = Fmi::DateTime(Fmi::DateTime::POS_INFINITY);
+          originTime = Fmi::DateTime(Fmi::DateTime::POS_INFINITY);
         else if (reqParams.originTime == "oldest")
           originTime = Fmi::DateTime(Fmi::DateTime::NEG_INFINITY);
         else
@@ -846,7 +846,7 @@ static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Reque
       if (!reqParams.originTime.empty())
         originTime = Fmi::TimeParser::parse(reqParams.originTime);
 
-      ds->setMultiFile(false); // TODO: always ?
+      ds->setMultiFile(false);  // TODO: always ?
     }
 
     if (reqParams.dataSource == QueryData)
@@ -870,9 +870,8 @@ static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Reque
     if (!ds->hasRequestedData(producer, originTime, startTime, endTime))
     {
       if (reqParams.dataSource != GridContent)
-        throw Fmi::Exception(BCP,
-                               "initStreamer: No data available for producer '" +
-                                   reqParams.producer + "'");
+        throw Fmi::Exception(
+            BCP, "initStreamer: No data available for producer '" + reqParams.producer + "'");
       else
         throw Fmi::Exception(BCP, "initStreamer: No data available");
     }
@@ -908,8 +907,8 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
     // Initialize streamer.
 
     string filename;
-    response.setContent(initializeStreamer(
-        req, *itsQEngine, itsGridEngine, itsGeoEngine, itsConfig, filename));
+    response.setContent(
+        initializeStreamer(req, *itsQEngine, itsGridEngine, itsGeoEngine, itsConfig, filename));
 
     string mime = "application/octet-stream";
     response.setHeader("Content-type", mime.c_str());

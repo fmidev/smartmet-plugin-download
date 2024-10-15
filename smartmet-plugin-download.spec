@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 24.9.3
+Version: 24.10.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -22,15 +22,15 @@ BuildRequires: gdal38-devel
 BuildRequires: eccodes-devel
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 24.8.7
-BuildRequires: smartmet-library-macgyver-devel >= 24.8.7
-BuildRequires: smartmet-library-timeseries-devel >= 24.8.7
-BuildRequires: smartmet-library-newbase-devel >= 24.8.7
+BuildRequires: smartmet-library-spine-devel >= 24.10.15
+BuildRequires: smartmet-library-macgyver-devel >= 24.10.4
+BuildRequires: smartmet-library-timeseries-devel >= 24.10.15
+BuildRequires: smartmet-library-newbase-devel >= 24.10.15
 BuildRequires: smartmet-library-grid-content-devel >= 24.9.3
 BuildRequires: smartmet-library-grid-files-devel >= 24.9.3
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 24.9.2
-BuildRequires: smartmet-engine-geonames-devel >= 24.8.7
+BuildRequires: smartmet-engine-geonames-devel >= 24.9.28
 BuildRequires: smartmet-engine-grid-devel >= 24.9.3
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
@@ -38,10 +38,10 @@ Requires: gdal38-libs
 Requires: eccodes
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 24.8.7
-Requires: smartmet-library-timeseries >= 24.8.7
-Requires: smartmet-library-spine >= 24.8.7
-Requires: smartmet-library-newbase >= 24.8.7
+Requires: smartmet-library-macgyver >= 24.10.4
+Requires: smartmet-library-timeseries >= 24.10.15
+Requires: smartmet-library-spine >= 24.10.15
+Requires: smartmet-library-newbase >= 24.10.15
 Requires: smartmet-engine-querydata >= 24.9.2
 Requires: smartmet-server >= 24.8.7
 Requires: %{smartmet_boost}-iostreams
@@ -57,14 +57,14 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 24.8.7
+#TestRequires: smartmet-engine-geonames >= 24.9.28
 #TestRequires: smartmet-engine-grid >= 24.9.3
 #TestRequires: smartmet-engine-querydata >= 24.9.2
-#TestRequires: smartmet-utils-devel >= 24.8.7
-#TestRequires: smartmet-library-spine-plugin-test >= 24.8.7
-#TestRequires: smartmet-library-newbase-devel >= 24.8.7
+#TestRequires: smartmet-utils-devel >= 24.9.10
+#TestRequires: smartmet-library-spine-plugin-test >= 24.10.15
+#TestRequires: smartmet-library-newbase-devel >= 24.10.15
 #TestRequires: smartmet-qdtools >= 24.8.7
-#TestRequires: smartmet-test-data >= 24.5.22
+#TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 24.8.7
 #TestRequires: smartmet-engine-grid-test >= 24.9.3
 #TestRequires: wgrib
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Oct 15 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.10.15-1.fmi
+- Removed support for landscaped parameters as obsolete
+
 * Tue Sep  3 2024 Andris Pavēnis <andris.pavenis@fmi.fi> 24.9.3-1.fmi
 - Repackage due smartmlibrary-grid-data and smartmet-engine-querydata changes
 

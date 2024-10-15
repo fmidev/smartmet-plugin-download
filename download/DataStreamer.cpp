@@ -8,12 +8,10 @@
 #include "Datum.h"
 #include "Plugin.h"
 #include <boost/algorithm/string/split.hpp>
-#include <macgyver/DateTime.h>
-#include <gis/DEM.h>
-#include <gis/LandCover.h>
 #include <gis/ProjInfo.h>
 #include <gis/SpatialReference.h>
 #include <grid-files/identification/GridDef.h>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiAreaFactory.h>
@@ -201,7 +199,7 @@ DataStreamer::GridMetaData::GridIterator &DataStreamer::GridMetaData::GridIterat
     }
 
     ds->itsParamIterator = ds->itsDataParams.begin();
-    ds->itsScalingIterator =  ds->itsValScaling.begin();
+    ds->itsScalingIterator = ds->itsValScaling.begin();
 
     while (ds->itsTimeIterator != timesEnd)
     {
@@ -375,8 +373,9 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::GridMetaData::GridIterator::hasData(
-    T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level)
+bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId &geometryId,
+                                                       T::ParamLevelId &gridLevelType,
+                                                       int &level)
 {
   try
   {
@@ -384,7 +383,8 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(
 
     gridMetaData->gridOriginTime = gridMetaData->originTime;
 
-    if (ds->itsQuery.isFunctionParameter(ds->itsParamIterator->name(), geometryId, gridLevelType, level))
+    if (ds->itsQuery.isFunctionParameter(
+            ds->itsParamIterator->name(), geometryId, gridLevelType, level))
       // Function parameter is queried without knowing if any source data exists
       //
       return true;
@@ -415,13 +415,14 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(
 
     bool gridContent = (ds->itsReqParams.dataSource == GridContent);
 
-    if (! gridContent)
+    if (!gridContent)
     {
       bool interpolatable =
           (isPressureLevel(ds->itsLevelType) && ds->itsProducer.verticalInterpolation);
       bool exactLevel = isSurfaceLevel(ds->itsLevelType), first = true;
 
-      for (; ((!exactLevel) && (levelTimes != geomLevels->second.end())); first = false, levelTimes++)
+      for (; ((!exactLevel) && (levelTimes != geomLevels->second.end()));
+           first = false, levelTimes++)
       {
         if ((exactLevel = (levelTimes->first == *(ds->itsLevelIterator))))
           break;
@@ -458,15 +459,14 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(
     auto paramLevelId = gridMetaData->paramLevelIds.find(ds->itsParamIterator->name());
 
     if (paramLevelId == gridMetaData->paramLevelIds.end())
-      throw Fmi::Exception(BCP,
-                           "Internal error: Parameter level type not in metadata: " +
-                               ds->itsParamIterator->name());
+      throw Fmi::Exception(
+          BCP,
+          "Internal error: Parameter level type not in metadata: " + ds->itsParamIterator->name());
 
     gridLevelType = paramLevelId->second;
 
-    level = (gridContent || isSurfaceLevel(ds->itsLevelType))
-             ? prevLevelTimes->first
-             : *(ds->itsLevelIterator);
+    level = (gridContent || isSurfaceLevel(ds->itsLevelType)) ? prevLevelTimes->first
+                                                              : *(ds->itsLevelIterator);
 
     return true;
   }
@@ -625,7 +625,8 @@ const string &DataStreamer::GridMetaData::getLatestOriginTime(Fmi::DateTime *ori
     }
 
     if (originTime)
-      *originTime = ((ott == originTimeTimes.rend()) ? Fmi::DateTime() : Fmi::DateTime::from_iso_string(ott->first));
+      *originTime = ((ott == originTimeTimes.rend()) ? Fmi::DateTime()
+                                                     : Fmi::DateTime::from_iso_string(ott->first));
 
     return ((ott == originTimeTimes.rend()) ? empty : ott->first);
   }
@@ -734,7 +735,10 @@ std::shared_ptr<ValidTimeList> DataStreamer::GridMetaData::getDataTimes(
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::generateGridValidTimeList(Query &query, Fmi::DateTime &oTime, Fmi::DateTime &sTime, Fmi::DateTime &eTime)
+void DataStreamer::generateGridValidTimeList(Query &query,
+                                             Fmi::DateTime &oTime,
+                                             Fmi::DateTime &sTime,
+                                             Fmi::DateTime &eTime)
 {
   try
   {
@@ -828,8 +832,10 @@ void DataStreamer::generateGridValidTimeList(Query &query, Fmi::DateTime &oTime,
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::generateValidTimeList(
-    const Engine::Querydata::Q &q, Fmi::DateTime &oTime, Fmi::DateTime &sTime, Fmi::DateTime &eTime)
+void DataStreamer::generateValidTimeList(const Engine::Querydata::Q &q,
+                                         Fmi::DateTime &oTime,
+                                         Fmi::DateTime &sTime,
+                                         Fmi::DateTime &eTime)
 {
   try
   {
@@ -1107,8 +1113,8 @@ void DataStreamer::getParameterDetailsFromContentData(
     auto generationInfo = generationInfos.find(contentInfo->mGenerationId);
 
     if (generationInfo == generationInfos.end())
-      throw Fmi::Exception(
-          BCP, "getParameterDetailsFromContentData: internal: generationId not found");
+      throw Fmi::Exception(BCP,
+                           "getParameterDetailsFromContentData: internal: generationId not found");
 
     if (!isValidGeneration(&(generationInfo->second)))
       return;
@@ -1134,21 +1140,25 @@ void DataStreamer::getParameterDetailsFromContentData(
       auto levelTypeIter = levelGeomParamDetails.find(contentInfo->mFmiParameterLevelId);
 
       if (levelTypeIter == levelGeomParamDetails.end())
-        levelTypeIter = levelGeomParamDetails.insert(make_pair(
-            contentInfo->mFmiParameterLevelId, LevelDetails())).first;
+        levelTypeIter = levelGeomParamDetails
+                            .insert(make_pair(contentInfo->mFmiParameterLevelId, LevelDetails()))
+                            .first;
 
       auto levelIter = levelTypeIter->second.find(contentInfo->mParameterLevel);
 
       if (levelIter == levelTypeIter->second.end())
-      levelIter = levelTypeIter->second.insert(make_pair(
-          contentInfo->mParameterLevel, GeomDetails())).first;
+        levelIter =
+            levelTypeIter->second.insert(make_pair(contentInfo->mParameterLevel, GeomDetails()))
+                .first;
 
       auto geomIter = levelIter->second.find(contentInfo->mGeometryId);
 
       if (geomIter == levelIter->second.end())
       {
-        geomIter = levelIter->second.insert(make_pair(
-            contentInfo->mGeometryId, SmartMet::Engine::Grid::ParameterDetails_vec())).first;
+        geomIter = levelIter->second
+                       .insert(make_pair(contentInfo->mGeometryId,
+                                         SmartMet::Engine::Grid::ParameterDetails_vec()))
+                       .first;
 
         SmartMet::Engine::Grid::ParameterDetails pd;
 
@@ -1177,8 +1187,11 @@ void DataStreamer::getParameterDetailsFromContentData(
           generationInfo->second.mAnalysisTime);
 
       if (timeIter == geomIter->second.front().mMappings.front().mTimes.end())
-        timeIter = geomIter->second.front().mMappings.front().mTimes.insert(make_pair(
-            generationInfo->second.mAnalysisTime, set<string>())).first;
+        timeIter =
+            geomIter->second.front()
+                .mMappings.front()
+                .mTimes.insert(make_pair(generationInfo->second.mAnalysisTime, set<string>()))
+                .first;
 
       timeIter->second.insert(contentInfo->getForecastTime());
     }
@@ -1205,8 +1218,10 @@ void DataStreamer::getParameterDetailsFromContentData(
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::hasRequestedGridData(
-    const Producer &producer, Fmi::DateTime &oTime, Fmi::DateTime &sTime, Fmi::DateTime &eTime)
+bool DataStreamer::hasRequestedGridData(const Producer &producer,
+                                        Fmi::DateTime &oTime,
+                                        Fmi::DateTime &sTime,
+                                        Fmi::DateTime &eTime)
 {
   try
   {
@@ -1247,14 +1262,11 @@ bool DataStreamer::hasRequestedGridData(
               //
               (strcasecmp(paramDetail.mProducerName.c_str(), paramKey.c_str()) == 0) ||
               (
-               // TODO: Currently selecting data matching first forecasttype/number
-               //
-               (itsGridMetaData.paramLevelId != GridFmiLevelTypeNone) &&
-               (
-                (paramDetail.mForecastType != forecastType) ||
-                (paramDetail.mForecastNumber != forecastNumber))
-              )
-             )
+                  // TODO: Currently selecting data matching first forecasttype/number
+                  //
+                  (itsGridMetaData.paramLevelId != GridFmiLevelTypeNone) &&
+                  ((paramDetail.mForecastType != forecastType) ||
+                   (paramDetail.mForecastNumber != forecastNumber))))
             continue;
 
           if (&paramDetail == &(paramDetails.front()))
@@ -1276,20 +1288,18 @@ bool DataStreamer::hasRequestedGridData(
           if ((!gridContent) && (pm.mParameterLevelId == GridFmiLevelTypePressure))
             level = pm.mParameterLevel * 0.01;  // e.g. levels=850
           else
-            level = pm.mParameterLevel;         // e.g. param=T-K::1093:2:85000:...
+            level = pm.mParameterLevel;  // e.g. param=T-K::1093:2:85000:...
 
           if (!gridContent)
           {
             // Check for supported level type
 
-            if (
-                (pm.mParameterLevelId != GridFmiLevelTypeGround) &&
+            if ((pm.mParameterLevelId != GridFmiLevelTypeGround) &&
                 (pm.mParameterLevelId != GridFmiLevelTypePressure) &&
                 (pm.mParameterLevelId != GridFmiLevelTypeHybrid) &&
                 (pm.mParameterLevelId != GridFmiLevelTypeHeight) &&
                 (pm.mParameterLevelId != GridFmiLevelTypeDepth) &&
-                (pm.mParameterLevelId != GridFmiLevelTypeEntireAtmosphere)
-               )
+                (pm.mParameterLevelId != GridFmiLevelTypeEntireAtmosphere))
               continue;
 
             // Check if level is requested by the query
@@ -1329,11 +1339,11 @@ bool DataStreamer::hasRequestedGridData(
 
               if (pKey != paramKey)
                 continue;
-                /*
-                throw Fmi::Exception(BCP,
-                                     "GridMetaData: Multiple mappings: " + param.name() + ": " +
-                                         paramKey + "," + pKey);
-                */
+              /*
+              throw Fmi::Exception(BCP,
+                                   "GridMetaData: Multiple mappings: " + param.name() + ": " +
+                                       paramKey + "," + pKey);
+              */
 
               // Level type must not change, except allow ground and height (e.g. 2m) above ground
               //
@@ -1403,18 +1413,17 @@ bool DataStreamer::hasRequestedGridData(
             using LevelOriginTimes = GridMetaData::LevelOriginTimes;
             using OriginTimeTimes = GridMetaData::OriginTimeTimes;
 
-            auto paramGeom = itsGridMetaData.paramGeometries.insert(
-                make_pair(param.name(), GeometryLevels()));
+            auto paramGeom =
+                itsGridMetaData.paramGeometries.insert(make_pair(param.name(), GeometryLevels()));
             auto geomLevels = paramGeom.first->second.insert(
                 make_pair(itsGridMetaData.geometryId, LevelOriginTimes()));
-            auto levelTimes =
-                geomLevels.first->second.insert(make_pair(level, OriginTimeTimes()));
+            auto levelTimes = geomLevels.first->second.insert(make_pair(level, OriginTimeTimes()));
             auto originTimes =
                 levelTimes.first->second.insert(make_pair(dataTimes.first, set<string>()));
             originTimes.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
 
-            auto otp = itsGridMetaData.originTimeParams.insert(
-                make_pair(dataTimes.first, set<string>()));
+            auto otp =
+                itsGridMetaData.originTimeParams.insert(make_pair(dataTimes.first, set<string>()));
             otp.first->second.insert(param.name());
 
             // Store level 0 for surface data for level iteration; parameter specific
@@ -1426,7 +1435,7 @@ bool DataStreamer::hasRequestedGridData(
                 make_pair(dataTimes.first, set<T::ParamLevel>()));
             auto levels = otl.first->second.insert(surfaceLevel ? 0 : level);
 
-            (void) levels;
+            (void)levels;
             /*
             TODO: Why this check for origintime scoped data, should be at param level if at all ?
 
@@ -1436,8 +1445,8 @@ bool DataStreamer::hasRequestedGridData(
                                        Fmi::to_string(level));
             */
 
-            auto ott = itsGridMetaData.originTimeTimes.insert(
-                make_pair(dataTimes.first, set<string>()));
+            auto ott =
+                itsGridMetaData.originTimeTimes.insert(make_pair(dataTimes.first, set<string>()));
             ott.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
 
             hasParam = true;
@@ -1511,8 +1520,10 @@ bool DataStreamer::hasRequestedGridData(
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::hasRequestedData(
-    const Producer &producer, Fmi::DateTime &originTime, Fmi::DateTime &startTime, Fmi::DateTime &endTime)
+bool DataStreamer::hasRequestedData(const Producer &producer,
+                                    Fmi::DateTime &originTime,
+                                    Fmi::DateTime &startTime,
+                                    Fmi::DateTime &endTime)
 {
   try
   {
@@ -3054,9 +3065,7 @@ static void valBufDeleter(float *ptr)
 
 void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
                                         NFmiGrid &wantedGrid,
-                                        const NFmiMetTime *mt,
-                                        NFmiDataMatrix<float> *demValues,
-                                        NFmiDataMatrix<bool> *waterFlags)
+                                        const NFmiMetTime *mt)
 {
   try
   {
@@ -3077,11 +3086,6 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
       NFmiFastQueryInfo tqi(itsQueryData.get());
       q->calcLatlonCachePoints(tqi, itsLocCache);
     }
-    else if (demValues && waterFlags && (demValues->NX() == 0))
-      // Target grid does not intersect the native grid; the DEM values were loaded (and then
-      // cleared) upon the first call
-      //
-      return;
 
     // Get time cache
 
@@ -3181,40 +3185,6 @@ void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
                              "Internal error: could not switch to parameter " +
                                  boost::lexical_cast<std::string>(id));
       q->setIsSubParamUsed(isSubParamUsed);
-    }
-    else if (demValues && waterFlags)
-    {
-      // Landscaping
-
-      auto &demMatrix = *demValues;
-      auto &waterFlagMatrix = *waterFlags;
-
-      if (demMatrix.NX() == 0)
-      {
-        // Load dem values and water flags for the target area/grid
-        //
-        double resolution = wantedGrid.Area()->WorldXYWidth() / 1000.0 / itsGridValues.NX();
-        auto theDEM = itsGeoEngine->dem();
-        auto theLandCover = itsGeoEngine->landCover();
-
-        if ((!(theDEM && theLandCover)) ||
-            (!(q->loadDEMAndWaterFlags(
-                *theDEM, *theLandCover, resolution, itsLocCache, demMatrix, waterFlagMatrix))))
-        {
-          // No dem/waterflag data or target grid does not intersect the native grid
-          //
-          demMatrix = NFmiDataMatrix<float>();
-          return;
-        }
-      }
-
-      // Note: Because time cache must not be empty (NoValue()), set the current (native)
-      // time instant when no time interpolation (we know a native time has been set to q)
-
-      if (!mt)
-        tc = q->calcTimeCache(q->validTime());
-
-      itsGridValues = q->landscapeCachedInterpolation(itsLocCache, tc, demMatrix, waterFlagMatrix);
     }
     else
     {
@@ -3382,7 +3352,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
 
   switch (id)
   {
-    // clang-format off
+      // clang-format off
     case kNFmiLatLonArea:                return (projection == "latlon");
     case kNFmiMercatorArea:              return (projection == "mercator");
     case kNFmiStereographicArea:         return (projection == "stereographic");
@@ -3594,9 +3564,6 @@ void DataStreamer::createGrid(const NFmiArea &area,
  * \brief 	Inspect request's gridsize and projection related parameters
  *		and create target projection (area object) and grid if needed.
  *
- *		DEM values and open water flags for landscaping are also loaded
- *		for native grid upon 1'st call.
- *
  *		The area (native or projected) and grid (nullptr for native) are
  *		returned in given parameters.
  *
@@ -3609,7 +3576,6 @@ void DataStreamer::createGrid(const NFmiArea &area,
 
 bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                                   bool interpolation,
-                                  bool landscaping,
                                   const NFmiArea **area,
                                   NFmiGrid **grid)
 {
@@ -3703,36 +3669,6 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
     // Note: grid is set to nullptr or owned by the resource manager; *DO NOT DELETE*
 
     *grid = itsResources.getGrid();
-
-    if ((!nonNativeGrid) && landscaping && (itsDEMMatrix.NX() == 0))
-    {
-      // Load dem values and water flags for the native grid
-      //
-      int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-
-      if (itsCropping.cropped && (!itsCropping.cropMan))
-      {
-        x1 = itsCropping.bottomLeftX;
-        y1 = itsCropping.bottomLeftY;
-        x2 = itsCropping.topRightX;
-        y2 = itsCropping.topRightY;
-      }
-
-      auto theDEM = itsGeoEngine->dem();
-      auto theLandCover = itsGeoEngine->landCover();
-
-      if (theDEM && theLandCover)
-        q->loadDEMAndWaterFlags(*theDEM,
-                                *theLandCover,
-                                0,
-                                NFmiDataMatrix<NFmiLocationCache>(),
-                                itsDEMMatrix,
-                                itsWaterFlagMatrix,
-                                x1,
-                                y1,
-                                x2,
-                                y2);
-    }
 
     return nonNativeGrid;
   }
@@ -3952,29 +3888,16 @@ void DataStreamer::extractData(string &chunk)
         }
 
         // Inspect request parameters and get area (projection) and grid.
-        // Upon first call for landscaped parameter DEM values and open water flags are obtained for
-        // the grid.
         //
         // Note: The returned area is the native area or owned by resource manager; *DO NOT DELETE*.
         // Note: The returned grid is nullptr or owned by resource manager; *DO NOT DELETE*.
         //
         // Note: Grid size is set to 'itsReqGridSizeX' and 'itsReqGridSizeY' members.
 
-        // bool landscapedParam =
-        //     (isSurfaceLevel(itsLevelType) && (itsParamIterator->type() ==
-        //     Parameter::Type::Landscaped));
-        bool landscapedParam =
-            false;  // Disable landscaping until sufficiently fast algorithm is found!
-        decltype(itsDEMMatrix) noDEMValues;
-        decltype(itsWaterFlagMatrix) noWaterFlags;
-
         const NFmiArea *area;
         NFmiGrid *grid;
 
-        bool nonNativeGrid = getAreaAndGrid(q, !exactLevel, landscapedParam, &area, &grid);
-
-        auto const &demValues = (landscapedParam ? itsDEMMatrix : noDEMValues);
-        auto const &waterFlags = (landscapedParam ? itsWaterFlagMatrix : noWaterFlags);
+        bool nonNativeGrid = getAreaAndGrid(q, !exactLevel, &area, &grid);
 
         // Heigth level data with negative levels ?
 
@@ -4036,18 +3959,14 @@ void DataStreamer::extractData(string &chunk)
             if (timeInterpolation || nonNativeGrid)
             {
               if (nonNativeGrid)
-                cachedProjGridValues(q,
-                                     *grid,
-                                     timeInterpolation ? &mt : nullptr,
-                                     landscapedParam ? &itsDEMMatrix : nullptr,
-                                     landscapedParam ? &itsWaterFlagMatrix : nullptr);
+                cachedProjGridValues(q, *grid, timeInterpolation ? &mt : nullptr);
               else
               {
                 // Must manually crop the data if bounding was given
                 // ('cropMan' was not set by the call to getAreaAndGrid())
                 //
                 itsCropping.cropMan = itsCropping.crop;
-                itsGridValues = q->values(mt, demValues, waterFlags);
+                itsGridValues = q->values(mt);
               }
             }
             else
@@ -4056,11 +3975,9 @@ void DataStreamer::extractData(string &chunk)
                 itsGridValues = q->croppedValues(itsCropping.bottomLeftX,
                                                  itsCropping.bottomLeftY,
                                                  itsCropping.topRightX,
-                                                 itsCropping.topRightY,
-                                                 demValues,
-                                                 waterFlags);
+                                                 itsCropping.topRightY);
               else
-                itsGridValues = q->values(demValues, waterFlags);
+                itsGridValues = q->values();
             }
           }
           else if (nonNativeGrid)
@@ -4180,12 +4097,12 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
 
     gridQuery.mAnalysisTime.clear();
 
-   // Currently LatestGeneration does not work with StartTimeFromData
-   //
-   /*
-    gridQuery.mFlags = (QueryServer::Query::Flags::LatestGeneration |
-                        QueryServer::Query::Flags::SameAnalysisTime);
-   */
+    // Currently LatestGeneration does not work with StartTimeFromData
+    //
+    /*
+     gridQuery.mFlags = (QueryServer::Query::Flags::LatestGeneration |
+                         QueryServer::Query::Flags::SameAnalysisTime);
+    */
 
     gridQuery.mFlags = QueryServer::Query::Flags::SameAnalysisTime;
   }
@@ -4301,15 +4218,13 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
       // Get grid coordinates for netcdf output
 
       queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates);  // |
-//                         QueryServer::QueryParameter::Flags::NoReturnValues);
+      //                         QueryServer::QueryParameter::Flags::NoReturnValues);
     }
 
     gridQuery.mQueryParameterList.push_back(queryParam);
 
-    if (
-        (itsReqParams.dataSource != GridContent) ||
-        (gridQuery.mQueryParameterList.size() >= itsReqParams.gridParamBlockSize)
-       )
+    if ((itsReqParams.dataSource != GridContent) ||
+        (gridQuery.mQueryParameterList.size() >= itsReqParams.gridParamBlockSize))
       return;
   }
 }
@@ -4873,7 +4788,7 @@ bool DataStreamer::setDataTimes(const QueryServer::Query &gridQuery)
     itsFirstDataTime = Fmi::date_time::from_time_t(*itsGridQuery.mForecastTimeList.begin());
     itsLastDataTime = Fmi::date_time::from_time_t(*itsGridQuery.mForecastTimeList.rbegin());
 
-    Fmi::TimeZonePtr& UTC = Fmi::TimeZonePtr::utc;
+    Fmi::TimeZonePtr &UTC = Fmi::TimeZonePtr::utc;
 
     for (const auto &forecastTime : itsGridQuery.mForecastTimeList)
     {
@@ -4945,12 +4860,9 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     const char *attr;
 
-    if (
-        itsReqParams.projection.empty() &&
-        (itsCropping.crop || (!itsReqParams.gridSizeXY)) &&
+    if (itsReqParams.projection.empty() && (itsCropping.crop || (!itsReqParams.gridSizeXY)) &&
         (!itsReqParams.gridResolutionXY) &&
-        ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty()))
-       )
+        ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty())))
     {
       itsCropping.crop = true;
       attr = "grid.crop.llbox";
@@ -5171,7 +5083,7 @@ void DataStreamer::extractGridData(string &chunk)
 
       itsGridIndex = bufferIndex();
 
-      if (! itsGridIndex)
+      if (!itsGridIndex)
       {
         // Fetch next block of parameters or timesteps
 

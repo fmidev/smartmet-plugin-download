@@ -10,16 +10,16 @@
 #include "Query.h"
 #include "Resources.h"
 #include "Tools.h"
-#include <macgyver/DateTime.h>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Model.h>
 #include <engines/querydata/ValidTimeList.h>
 #include <gis/CoordinateMatrix.h>
 #include <gis/SpatialReference.h>
-#include <grid-files/grid/Typedefs.h>
 #include <grid-content/contentServer/corba/server/ServerInterface.h>
 #include <grid-content/queryServer/definition/ParameterValues.h>
+#include <grid-files/grid/Typedefs.h>
+#include <macgyver/DateTime.h>
 #include <newbase/NFmiGrid.h>
 #include <spine/HTTP.h>
 #include <timeseries/TimeSeriesGenerator.h>
@@ -200,11 +200,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   std::string getGridCenterBBoxStr() const;
 
-  void cachedProjGridValues(Engine::Querydata::Q q,
-                            NFmiGrid &wantedGrid,
-                            const NFmiMetTime *mt,
-                            NFmiDataMatrix<float> *demValues = nullptr,
-                            NFmiDataMatrix<bool> *waterFlags = nullptr);
+  void cachedProjGridValues(Engine::Querydata::Q q, NFmiGrid &wantedGrid, const NFmiMetTime *mt);
 
   bool isLevelAvailable(Engine::Querydata::Q q, int &requestedLevel, bool &exactLevel) const;
 
@@ -219,7 +215,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                   bool interpolation);
   bool getAreaAndGrid(Engine::Querydata::Q q,
                       bool interpolation,
-                      bool landScaping,
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
@@ -259,8 +254,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   const Engine::Querydata::Engine *itsQEngine = nullptr;
   const Engine::Grid::Engine *itsGridEngine = nullptr;
   const Engine::Geonames::Engine *itsGeoEngine = nullptr;
-  NFmiDataMatrix<float> itsDEMMatrix;
-  NFmiDataMatrix<bool> itsWaterFlagMatrix;
 
   std::string itsDataChunk;
 
@@ -300,15 +293,15 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     }
 
     std::string producer;
-    std::string crs;                          // grid.crs/grid.original.crs
-    T::GridProjection projType;               // wkt PROJECTION or p4 EXTENSION
-    std::string projection;                   //
-    bool relativeUV;                          // QueryServer::Query grid.original.relativeUV
+    std::string crs;                        // grid.crs/grid.original.crs
+    T::GridProjection projType;             // wkt PROJECTION or p4 EXTENSION
+    std::string projection;                 //
+    bool relativeUV;                        // QueryServer::Query grid.original.relativeUV
     std::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
-    double southernPoleLat;                   // wkt p4 EXTENSION o_lat_p
-    double southernPoleLon;                   // wkt p4 EXTENSION o_lon_p
-    std::unique_ptr<double> rotLongitudes;    // rotated coords for rotlat grid
-    std::unique_ptr<double> rotLatitudes;     //
+    double southernPoleLat;                 // wkt p4 EXTENSION o_lat_p
+    double southernPoleLon;                 // wkt p4 EXTENSION o_lon_p
+    std::unique_ptr<double> rotLongitudes;  // rotated coords for rotlat grid
+    std::unique_ptr<double> rotLatitudes;   //
 
     typedef std::map<std::string, std::set<std::string>> StringMapSet;
     typedef StringMapSet OriginTimeTimes;
@@ -371,7 +364,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getGridBBox();
   void getGridProjection(const QueryServer::Query &gridQuery);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
-  void getGridOrigo(const QueryServer::Query& gridQuery);
+  void getGridOrigo(const QueryServer::Query &gridQuery);
   bool setDataTimes(const QueryServer::Query &gridQuery);
   bool getGridQueryInfo(const QueryServer::Query &gridQuery);
   std::size_t bufferIndex() const;
@@ -383,8 +376,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   GridMetaData itsGridMetaData;
   QueryServer::Query itsGridQuery;
 
-  QueryServer::ParameterValues_sptr getValueListItem(
-       const QueryServer::Query &gridQuery) const;
+  QueryServer::ParameterValues_sptr getValueListItem(const QueryServer::Query &gridQuery) const;
 };
 
 }  // namespace Download
