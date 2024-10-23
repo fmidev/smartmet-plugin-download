@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 24.10.16
+Version: 24.10.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -26,12 +26,12 @@ BuildRequires: smartmet-library-spine-devel >= 24.10.15
 BuildRequires: smartmet-library-macgyver-devel >= 24.10.15
 BuildRequires: smartmet-library-timeseries-devel >= 24.10.15
 BuildRequires: smartmet-library-newbase-devel >= 24.10.15
-BuildRequires: smartmet-library-grid-content-devel >= 24.10.16
-BuildRequires: smartmet-library-grid-files-devel >= 24.10.16
+BuildRequires: smartmet-library-grid-content-devel >= 24.10.23
+BuildRequires: smartmet-library-grid-files-devel >= 24.10.23
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 24.10.15
 BuildRequires: smartmet-engine-geonames-devel >= 24.9.28
-BuildRequires: smartmet-engine-grid-devel >= 24.10.16
+BuildRequires: smartmet-engine-grid-devel >= 24.10.23
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal38-libs
@@ -58,7 +58,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 24.9.28
-#TestRequires: smartmet-engine-grid >= 24.10.16
+#TestRequires: smartmet-engine-grid >= 24.10.23
 #TestRequires: smartmet-engine-querydata >= 24.10.15
 #TestRequires: smartmet-utils-devel >= 24.9.10
 #TestRequires: smartmet-library-spine-plugin-test >= 24.10.15
@@ -66,7 +66,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 24.8.7
 #TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 24.8.7
-#TestRequires: smartmet-engine-grid-test >= 24.10.16
+#TestRequires: smartmet-engine-grid-test >= 24.10.23
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Oct 23 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.10.23-1.fmi
+- Repackaged due to ABI changes
+
 * Wed Oct 16 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.10.16-1.fmi
 - Repackaged due to ABI changes in grid libraries
 
