@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 24.12.13
+Version: 24.12.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -19,7 +19,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: %{smartmet_boost}-devel
 BuildRequires: gcc-c++
 BuildRequires: gdal38-devel
-BuildRequires: eccodes-devel = 2.27.1
+BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 24.11.27
@@ -35,7 +35,7 @@ BuildRequires: smartmet-engine-grid-devel >= 24.11.8
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal38-libs
-Requires: eccodes = 2.27.1
+Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 24.12.4
@@ -53,7 +53,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: bzip2-devel
-#TestRequires: eccodes = 2.27.1
+#TestRequires: eccodes <= 2.31.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Dec 16 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.12.16-1.fmi
+- Relaxed eccodes dependencies in order to get a RHEL9 build
+
 * Fri Dec 13 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.12.13-1.fmi
 - Fixed eccodes depenency
 
