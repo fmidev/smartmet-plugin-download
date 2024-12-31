@@ -25,6 +25,7 @@
 #include <macgyver/TimeZoneFactory.h>
 #include <newbase/NFmiQueryData.h>
 #include <spine/Convenience.h>
+#include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMet.h>
@@ -983,6 +984,11 @@ void Plugin::requestHandler(Spine::Reactor & /* theReactor */,
       exception.addParameter("URI", theRequest.getURI());
       exception.addParameter("ClientIP", theRequest.getClientIP());
       exception.addParameter("HostName", Spine::HostInfo::getHostName(theRequest.getClientIP()));
+
+      const bool check_token = false;
+      auto apikey = Spine::FmiApiKey::getFmiApiKey(theRequest, check_token);
+      exception.addParameter("Apikey", (apikey ? *apikey : std::string("-")));
+
       exception.printError();
 
       if (isdebug)
