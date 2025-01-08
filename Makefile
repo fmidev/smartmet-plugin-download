@@ -6,6 +6,11 @@ REQUIRES = gdal jsoncpp configpp
 
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
+ECCODES_LIBS = -leccodes
+ifneq ($(wildcard $(libdir)/libeccodes_memfs.so),)
+	ECCODES_LIBS += -leccodes_memfs
+endif
+
 FLAGS += -Wno-vla -Wno-variadic-macros -Wno-deprecated-declarations -Wno-unknown-pragmas
 
 # Compiler options
@@ -29,7 +34,7 @@ LIBS += $(PREFIX_LDFLAGS) \
 	-lboost_iostreams \
 	-lboost_system \
 	-lbz2 -lz \
-	-leccodes -leccodes_memfs \
+	$(ECCODES_LIBS) \
 	-lnetcdf_c++
 
 # What to install
