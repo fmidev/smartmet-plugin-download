@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 24.12.16
+Version: 25.1.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,13 +25,13 @@ BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 24.11.27
 BuildRequires: smartmet-library-macgyver-devel >= 24.12.4
 BuildRequires: smartmet-library-timeseries-devel >= 24.12.11
-BuildRequires: smartmet-library-newbase-devel >= 24.12.3
-BuildRequires: smartmet-library-grid-content-devel >= 24.11.28
-BuildRequires: smartmet-library-grid-files-devel >= 24.12.13
+BuildRequires: smartmet-library-newbase-devel >= 24.12.16
+BuildRequires: smartmet-library-grid-content-devel >= 25.1.9
+BuildRequires: smartmet-library-grid-files-devel >= 25.1.9
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 24.11.30
 BuildRequires: smartmet-engine-geonames-devel >= 24.11.19
-BuildRequires: smartmet-engine-grid-devel >= 24.11.8
+BuildRequires: smartmet-engine-grid-devel >= 25.1.9
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal310-libs
@@ -41,7 +41,7 @@ Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 24.12.4
 Requires: smartmet-library-timeseries >= 24.12.11
 Requires: smartmet-library-spine >= 24.11.27
-Requires: smartmet-library-newbase >= 24.12.3
+Requires: smartmet-library-newbase >= 24.12.16
 Requires: smartmet-engine-querydata >= 24.11.30
 Requires: smartmet-server >= 24.11.27
 Requires: %{smartmet_boost}-iostreams
@@ -58,15 +58,15 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 24.11.19
-#TestRequires: smartmet-engine-grid >= 24.11.8
+#TestRequires: smartmet-engine-grid >= 25.1.9
 #TestRequires: smartmet-engine-querydata >= 24.11.30
 #TestRequires: smartmet-utils-devel >= 24.12.10
 #TestRequires: smartmet-library-spine-plugin-test >= 24.11.27
-#TestRequires: smartmet-library-newbase-devel >= 24.12.3
-#TestRequires: smartmet-qdtools >= 24.11.29
+#TestRequires: smartmet-library-newbase-devel >= 24.12.16
+#TestRequires: smartmet-qdtools >= 24.12.23
 #TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 24.8.7
-#TestRequires: smartmet-engine-grid-test >= 24.11.8
+#TestRequires: smartmet-engine-grid-test >= 25.1.9
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -98,6 +98,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Jan  9 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.1.9-1.fmi
+- Repackaged due to GRID-library changes
+
+* Tue Dec 31 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.12.31-1.fmi
+- Print optional apikey on errors
+
 * Mon Dec 16 2024 Mika Heiskanen <mika.heiskanen@fmi.fi> - 24.12.16-1.fmi
 - Relaxed eccodes dependencies in order to get a RHEL9 build
 
