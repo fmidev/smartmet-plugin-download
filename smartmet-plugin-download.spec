@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.2.18
+Version: 25.2.26
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -26,12 +26,12 @@ BuildRequires: smartmet-library-spine-devel >= 25.2.18
 BuildRequires: smartmet-library-macgyver-devel >= 25.2.18
 BuildRequires: smartmet-library-timeseries-devel >= 25.2.18
 BuildRequires: smartmet-library-newbase-devel >= 25.2.18
-BuildRequires: smartmet-library-grid-content-devel >= 25.2.18
+BuildRequires: smartmet-library-grid-content-devel >= 25.2.20
 BuildRequires: smartmet-library-grid-files-devel >= 25.2.18
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 25.2.18
 BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
-BuildRequires: smartmet-engine-grid-devel >= 25.2.18
+BuildRequires: smartmet-engine-grid-devel >= 25.2.20
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal310-libs
@@ -58,7 +58,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 25.2.18
-#TestRequires: smartmet-engine-grid >= 25.2.18
+#TestRequires: smartmet-engine-grid >= 25.2.20
 #TestRequires: smartmet-engine-querydata >= 25.2.18
 #TestRequires: smartmet-utils-devel >= 25.2.18
 #TestRequires: smartmet-library-spine-plugin-test >= 25.2.18
@@ -66,7 +66,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 25.2.18
 #TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 25.2.18
-#TestRequires: smartmet-engine-grid-test >= 25.2.18
+#TestRequires: smartmet-engine-grid-test >= 25.2.20
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Feb 26 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.2.26-1.fmi
+- Store grib2 ensemble/perturbationnumber for ensemble data (BRAINSTORM-3141)
+
 * Tue Feb 18 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.2.18-1.fmi
 - Update to gdal-3.10, geos-3.13 and proj-9.5
 

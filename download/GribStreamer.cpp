@@ -1006,6 +1006,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     NFmiLevel *cfgLevel = nullptr;
     FmiLevelType levelType;
     T::ForecastType forecastType = 0;
+    T::ForecastNumber forecastNumber = 0;
     std::optional<long> templateNumber;
     bool gridContent = (itsReqParams.dataSource == GridContent), foundParam = false;
     std::size_t i, j = pTable.size();
@@ -1024,6 +1025,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
       levelType = FmiLevelType(getParamLevelId(paramName, paramParts));
       forecastType = getForecastType(paramName, paramParts);
+      forecastNumber = getForecastNumber(paramName, paramParts);
 
       // Search map for the param and producer and return the parameter config index
       // if found and the radon parameter does not change (looping timesteps).
@@ -1140,11 +1142,16 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
     if (!itsGrib1Flag)
     {
+      bool ensemble = isEnsembleForecast(forecastType);
+
       if (gridContent && (!templateNumber))
-        templateNumber = (isEnsembleForecast(forecastType) ? 1 : 0);
+        templateNumber = (ensemble ? 1 : 0);
 
       if (templateNumber && (gridContent || (*templateNumber != 0)))
         gset(itsGribHandle, "productDefinitionTemplateNumber", *templateNumber);
+
+      if (ensemble)
+        gset(itsGribHandle, "perturbationNumber", forecastNumber);
     }
 
     auto const &gribParam = (itsGrib1Flag ? pTable[i].itsGrib1Param : pTable[i].itsGrib2Param);
