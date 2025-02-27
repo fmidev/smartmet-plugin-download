@@ -4954,7 +4954,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
            yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     if ((itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
-        (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon))
+        (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon) &&
+        (itsDX < 100) && (itsDY < 100))
     {
       itsDX *= 1000;
       itsDY *= 1000;
@@ -5032,7 +5033,7 @@ size_t DataStreamer::bufferIndex() const
 
       if ((!timeMatch) && itsGridMetaData.paramGeometries.empty())
       {
-        // Time should have matched since looping forecast times returned by the query
+        // Times should have matched since looping forecast times returned by the query
 
         throw Fmi::Exception(BCP, "bufferIndex: internal: time index and iterator do not match");
       }
@@ -5091,9 +5092,9 @@ void DataStreamer::extractGridData(string &chunk)
 
         buildGridQuery(itsGridQuery, gridLevelType, level);
 
-        // printf("\n*** Query:\n"); itsGridQuery.print(std::cout,0,0);
+        // fprintf(stderr,"\n*** Query:\n"); itsGridQuery.print(std::cerr,0,0);
         int result = itsGridEngine->executeQuery(itsGridQuery);
-        // printf("\n*** Result:\n"); itsGridQuery.print(std::cout,0,0);
+        // fprintf(stderr,"\n*** Result:\n"); itsGridQuery.print(std::cerr,0,0);
 
         if (result != 0)
         {
