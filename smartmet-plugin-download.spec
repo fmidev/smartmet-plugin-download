@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.2.26
+Version: 25.2.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -98,6 +98,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Feb 27 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.2.27-1.fmi
+- Scale grid data dx/dy values by 1000 (km to m) if less than 100 since old grid test data apparently has unscaled values and lot of tests fail. NOTE: should ENFUSER grid data be loaded with download, scaling (hack) must not be done anymore since ENFUSER grid resolution is 50m (or whatever); test data should be fixed/updated (BRAINSTORM-3142)
+- Removed 2 tests which fetched grid data using both bbox and gridresolutiuon which is not supported
+
 * Wed Feb 26 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.2.26-1.fmi
 - Store grib2 ensemble/perturbationnumber for ensemble data (BRAINSTORM-3141)
 
