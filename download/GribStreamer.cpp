@@ -238,9 +238,19 @@ void GribStreamer::setLatlonGeometryToGrib() const
   {
     gset(itsGribHandle, "typeOfGrid", "regular_ll");
 
-    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.X());
+    auto blLon = itsBoundingBox.bottomLeft.X(), trLon = itsBoundingBox.topRight.X();
+
+    if (!itsGrib1Flag)
+    {
+      if (blLon < 0)
+        blLon += 360;
+      if (trLon < 0)
+        trLon += 360;
+    }
+
+    gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", blLon);
     gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
-    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.X());
+    gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", trLon);
     gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
 
     gset(itsGribHandle, "Ni", itsNX);
@@ -249,7 +259,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
     double gridCellHeightInDegrees =
         fabs((itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1));
     double gridCellWidthInDegrees =
-        fabs((itsBoundingBox.topRight.X() - itsBoundingBox.bottomLeft.X()) / (itsNX - 1));
+        fabs((trLon - blLon) / (itsNX - 1));
 
     long iNegative, jPositive;
 
