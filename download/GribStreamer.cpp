@@ -238,14 +238,20 @@ void GribStreamer::setLatlonGeometryToGrib() const
   {
     gset(itsGribHandle, "typeOfGrid", "regular_ll");
 
+    // BS-3150; adjust bbox longitudes for global grid data;
+    //          grid-engine returns blLon -0.1 and trLon 0 e.g. for ECG
+
     auto blLon = itsBoundingBox.bottomLeft.X(), trLon = itsBoundingBox.topRight.X();
 
-    if (!itsGrib1Flag)
+    if ((blLon < 0.0) && (fabs(blLon) < 1.0) && (trLon == 0.0))
     {
-      if (blLon < 0)
+      if (!itsGrib1Flag)
         blLon += 360;
-      if (trLon < 0)
-        trLon += 360;
+      else
+      {
+        blLon = -180 - blLon;
+        trLon = 180;
+      }
     }
 
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", blLon);

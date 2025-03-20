@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.3.19
+Version: 25.3.20
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Mar 20 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.3.20-1.fmi
+- Adjust global grid data corner longitudes (botleft -0.1, topright 0) to -180..180 or 0..360 range on latlon output which fixes iDirectionIncrementInDegrees calculation too (BRAINSTORM-3150)
+
 * Wed Mar 19 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.3.19-1.fmi
 - Repackaged due to base library ABI changes
 
