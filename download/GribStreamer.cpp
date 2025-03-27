@@ -245,13 +245,8 @@ void GribStreamer::setLatlonGeometryToGrib() const
 
     if ((blLon < 0.0) && (fabs(blLon) < 1.0) && (trLon == 0.0))
     {
-      if (!itsGrib1Flag)
-        blLon += 360;
-      else
-      {
-        blLon = -180 - blLon;
-        trLon = 180;
-      }
+      blLon = fabs(blLon);
+      trLon = 360;
     }
 
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", blLon);
