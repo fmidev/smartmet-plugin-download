@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 25.4.3
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Apr  3 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.4.3-2.fmi
+- Fixed jScansPositively to follow bbox latitude value order with grid data grib output (BRAINSTORM-3150)
+
 * Thu Apr  3 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.4.3-1.fmi
 - More grid data corner handling fixes (BRAINSTORM-3150)
 
