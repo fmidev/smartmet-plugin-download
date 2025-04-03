@@ -282,13 +282,13 @@ void GribStreamer::setLatlonGeometryToGrib() const
       //
       // So this swap should later be removed too if the initial bbox lat swapping is removed
 
-      jPositive = 1;
-
       if (! ((itsGridOrigo != kTopLeft) || itsCropping.crop))
       {
         trLat = blLat;
         blLat = itsBoundingBox.topRight.Y();
       }
+
+      jPositive = (blLat < trLat);
     }
 
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", blLon);
