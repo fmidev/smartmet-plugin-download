@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.3.26
+Version: 25.4.3
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -22,7 +22,7 @@ BuildRequires: gdal310-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 25.3.3
+BuildRequires: smartmet-library-spine-devel >= 25.3.24
 BuildRequires: smartmet-library-macgyver-devel >= 25.2.18
 BuildRequires: smartmet-library-timeseries-devel >= 25.2.18
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
@@ -40,7 +40,7 @@ Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: smartmet-library-macgyver >= 25.2.18
 Requires: smartmet-library-timeseries >= 25.2.18
-Requires: smartmet-library-spine >= 25.3.3
+Requires: smartmet-library-spine >= 25.3.24
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-engine-querydata >= 25.2.18
 Requires: smartmet-server >= 25.2.18
@@ -61,9 +61,9 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-grid >= 25.3.19
 #TestRequires: smartmet-engine-querydata >= 25.2.18
 #TestRequires: smartmet-utils-devel >= 25.2.18
-#TestRequires: smartmet-library-spine-plugin-test >= 25.3.3
+#TestRequires: smartmet-library-spine-plugin-test >= 25.3.24
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
-#TestRequires: smartmet-qdtools >= 25.2.18
+#TestRequires: smartmet-qdtools >= 25.3.25
 #TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 25.2.18
 #TestRequires: smartmet-engine-grid-test >= 25.3.19
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Apr  3 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.4.3-1.fmi
+- More grid data corner handling fixes (BRAINSTORM-3150)
+
 * Wed Mar 26 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.3.26-1.fmi
 - Set global grid data corner longitudes to 0.1 and 360 on grib output (BRAINSTORM-3150)
 

@@ -239,32 +239,68 @@ void GribStreamer::setLatlonGeometryToGrib() const
     gset(itsGribHandle, "typeOfGrid", "regular_ll");
 
     // BS-3150; adjust bbox longitudes for global grid data;
-    //          grid-engine returns blLon -0.1 and trLon 0 e.g. for ECG
+    //          grid-engine returns blLon 0 and trLon -0.1 e.g. for ECG
+    //
+    // Note:    grid data/grid is trusted to be returned nonflipped even though
+    //          grid.original.reverseYDirection is 1; forcing jPositive to 1.
+    //          Also swapping corner latitudes, see comment below
 
     auto blLon = itsBoundingBox.bottomLeft.X(), trLon = itsBoundingBox.topRight.X();
+    auto blLat = itsBoundingBox.bottomLeft.Y(), trLat = itsBoundingBox.topRight.Y();
+    auto trLon2 = trLon;
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+    long iNegative, jPositive;
 
-    if ((blLon < 0.0) && (fabs(blLon) < 1.0) && (trLon == 0.0))
+    scanningDirections(iNegative, jPositive);
+
+    if (gridContent)
     {
-      blLon = fabs(blLon);
-      trLon = 360;
+      if ((blLon < 0.0) && (fabs(blLon) < 1.0) && (trLon == 0.0))
+      {
+        // Global grid data
+
+        trLon = trLon2 = 360 + blLon;
+        blLon = 0;
+      }
+      else if ((trLon < 0) && (blLon > 0))
+      {
+        // e.g. bbox 175,-90,-175,90, x -axis span 10 degrees
+
+        trLon2 = trLon + 360;
+      }
+
+      // Note: If y -axis is flipped, bbox latitudes were swapped earlier; swap them back ...
+      //
+      //   getGridQueryInfo():
+      //
+      //   auto BL = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? BOTTOMLEFT : TOPRIGHT);
+      //   auto TR = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? TOPRIGHT : BOTTOMLEFT);
+      //
+      // Did not remove the initial swapping yet should it be needed in some cases i.e.
+      // should grid-engine return the bbox swapped sometimes ? Then the swapping
+      // might be needed ?
+      //
+      // So this swap should later be removed too if the initial bbox lat swapping is removed
+
+      jPositive = 1;
+
+      if (! ((itsGridOrigo != kTopLeft) || itsCropping.crop))
+      {
+        trLat = blLat;
+        blLat = itsBoundingBox.topRight.Y();
+      }
     }
 
     gset(itsGribHandle, "longitudeOfFirstGridPointInDegrees", blLon);
-    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", itsBoundingBox.bottomLeft.Y());
+    gset(itsGribHandle, "latitudeOfFirstGridPointInDegrees", blLat);
     gset(itsGribHandle, "longitudeOfLastGridPointInDegrees", trLon);
-    gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", itsBoundingBox.topRight.Y());
+    gset(itsGribHandle, "latitudeOfLastGridPointInDegrees", trLat);
 
     gset(itsGribHandle, "Ni", itsNX);
     gset(itsGribHandle, "Nj", itsNY);
 
-    double gridCellHeightInDegrees =
-        fabs((itsBoundingBox.topRight.Y() - itsBoundingBox.bottomLeft.Y()) / (itsNY - 1));
-    double gridCellWidthInDegrees =
-        fabs((trLon - blLon) / (itsNX - 1));
-
-    long iNegative, jPositive;
-
-    scanningDirections(iNegative, jPositive);
+    double gridCellHeightInDegrees = fabs((trLat - blLat) / (itsNY - 1));
+    double gridCellWidthInDegrees = fabs((trLon2 - blLon) / (itsNX - 1));
 
     gset(itsGribHandle, "jScansPositively", jPositive);
     gset(itsGribHandle, "iScansNegatively", iNegative);
