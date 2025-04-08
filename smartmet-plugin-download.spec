@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.4.3
-Release: 2%{?dist}.fmi
+Version: 25.4.8
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -26,12 +26,12 @@ BuildRequires: smartmet-library-spine-devel >= 25.3.24
 BuildRequires: smartmet-library-macgyver-devel >= 25.2.18
 BuildRequires: smartmet-library-timeseries-devel >= 25.2.18
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-grid-content-devel >= 25.3.19
-BuildRequires: smartmet-library-grid-files-devel >= 25.3.19
+BuildRequires: smartmet-library-grid-content-devel >= 25.4.8
+BuildRequires: smartmet-library-grid-files-devel >= 25.4.8
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 25.2.18
 BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
-BuildRequires: smartmet-engine-grid-devel >= 25.3.19
+BuildRequires: smartmet-engine-grid-devel >= 25.4.8
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 Requires: gdal310-libs
@@ -58,7 +58,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 25.2.18
-#TestRequires: smartmet-engine-grid >= 25.3.19
+#TestRequires: smartmet-engine-grid >= 25.4.8
 #TestRequires: smartmet-engine-querydata >= 25.2.18
 #TestRequires: smartmet-utils-devel >= 25.2.18
 #TestRequires: smartmet-library-spine-plugin-test >= 25.3.24
@@ -66,7 +66,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 25.3.25
 #TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 25.2.18
-#TestRequires: smartmet-engine-grid-test >= 25.3.19
+#TestRequires: smartmet-engine-grid-test >= 25.4.8
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -98,6 +98,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Apr  8 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.4.8-1.fmi
+- Repackaged due to base library ABI changes
+
 * Thu Apr  3 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.4.3-2.fmi
 - Fixed jScansPositively to follow bbox latitude value order with grid data grib output (BRAINSTORM-3150)
 
