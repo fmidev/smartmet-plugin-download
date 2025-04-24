@@ -20,7 +20,11 @@ namespace
 SmartMet::Spine::MutexType myFileOpenMutex;
 }  // namespace
 
+#define CHECK(x, message) try { x; } catch (...) { throw Fmi::Exception(BCP, message); }
+
+
 using namespace std;
+using namespace netCDF;
 
 namespace SmartMet
 {
@@ -28,13 +32,26 @@ namespace Plugin
 {
 namespace Download
 {
+std::map<std::type_index, netCDF::NcType> NetCdfStreamer::itsTypeMap = {
+    {typeid(uint8_t), NcType::nc_BYTE},
+    {typeid(uint16_t), NcType::nc_USHORT},
+    {typeid(uint32_t), NcType::nc_UINT},
+    {typeid(uint64_t), NcType::nc_UINT64},
+    {typeid(int8_t), NcType::nc_CHAR},
+    {typeid(int16_t), NcType::nc_SHORT},
+    {typeid(int32_t), NcType::nc_INT},
+    {typeid(int64_t), NcType::nc_INT64},
+    {typeid(float), NcType::nc_FLOAT},
+    {typeid(double), NcType::nc_DOUBLE},
+    {typeid(std::string), NcType::nc_STRING}  // FIXME: is this line correct?
+};
+
 NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
                                const Query &query,
                                const Producer &producer,
                                const ReqParams &reqParams)
     : DataStreamer(req, config, query, producer, reqParams),
-      itsError(NcError::verbose_nonfatal),
       itsFilename(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) +
                   "_" + boost::lexical_cast<string>(boost::this_thread::get_id())),
       itsLoadedFlag(false)
@@ -50,16 +67,21 @@ NetCdfStreamer::~NetCdfStreamer()
 }
 
 void NetCdfStreamer::requireNcFile()
+try
 {
   // Require a started NetCDF file
 
   if (itsFile)
     return;
 
-  itsFile.reset(new NcFile(itsFilename.c_str(), NcFile::Replace, nullptr, 0, NcFile::Offset64Bits));
-
-  if (!(itsFile->is_valid()))
-    throw Fmi::Exception(BCP, "Netcdf file object is not valid");
+  itsFile.reset(new netCDF::NcFile(
+      itsFilename,
+      netCDF::NcFile::replace,
+      netCDF::NcFile::classic64));
+}
+catch (...)
+{
+  throw Fmi::Exception(BCP, "Operation failed!");
 }
 
 // ----------------------------------------------------------------------
@@ -156,7 +178,7 @@ std::string NetCdfStreamer::getChunk()
   }
 }
 
-void dimDeleter(NcDim * /* dim */) {}
+// void dimDeleter(const netCDF::NcDim& /* dim */) {}
 
 // ----------------------------------------------------------------------
 /*!
@@ -166,16 +188,11 @@ void dimDeleter(NcDim * /* dim */) {}
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcDim> NetCdfStreamer::addDimension(const string &dimName, long dimSize)
+netCDF::NcDim NetCdfStreamer::addDimension(const string &dimName, long dimSize)
 {
   try
   {
-    auto dim = std::shared_ptr<NcDim>(itsFile->add_dim(dimName.c_str(), dimSize), dimDeleter);
-
-    if (dim)
-      return dim;
-
-    throw Fmi::Exception(BCP, "Failed to add dimension ('" + dimName + "')");
+    return itsFile->addDim(dimName, dimSize);
   }
   catch (...)
   {
@@ -183,7 +200,7 @@ std::shared_ptr<NcDim> NetCdfStreamer::addDimension(const string &dimName, long 
   }
 }
 
-void varDeleter(NcVar * /* var */) {}
+// void varDeleter(NcVar * /* var */) {}
 
 // ----------------------------------------------------------------------
 /*!
@@ -193,23 +210,24 @@ void varDeleter(NcVar * /* var */) {}
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
-                                                     NcType dataType,
-                                                     NcDim *dim1,
-                                                     NcDim *dim2,
-                                                     NcDim *dim3,
-                                                     NcDim *dim4,
-                                                     NcDim *dim5)
+netCDF::NcVar NetCdfStreamer::addVariable(const string &varName,
+                                          netCDF::NcType dataType,
+                                          const netCDF::NcDim& dim1,
+                                          const netCDF::NcDim& dim2,
+                                          const netCDF::NcDim& dim3,
+                                          const netCDF::NcDim& dim4,
+                                          const netCDF::NcDim& dim5)
 {
   try
   {
-    auto var = std::shared_ptr<NcVar>(
-        itsFile->add_var(varName.c_str(), dataType, dim1, dim2, dim3, dim4, dim5), varDeleter);
+    std::vector<netCDF::NcDim> dims;
+    if (not dim1.isNull()) dims.push_back(dim1);
+    if (not dim2.isNull()) dims.push_back(dim2);
+    if (not dim3.isNull()) dims.push_back(dim3);
+    if (not dim4.isNull()) dims.push_back(dim4);
+    if (not dim5.isNull()) dims.push_back(dim5);
 
-    if (var)
-      return var;
-
-    throw Fmi::Exception(BCP, "Failed to add variable ('" + varName + "')");
+    auto var = itsFile->addVar(varName, dataType, dims);
   }
   catch (...)
   {
@@ -224,24 +242,24 @@ std::shared_ptr<NcVar> NetCdfStreamer::addVariable(const string &varName,
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcVar> NetCdfStreamer::addCoordVariable(const string &dimName,
-                                                          long dimSize,
-                                                          NcType dataType,
-                                                          string stdName,
-                                                          string unit,
-                                                          string axisType,
-                                                          std::shared_ptr<NcDim> &dim)
+netCDF::NcVar NetCdfStreamer::addCoordVariable(const string &dimName,
+                                               long dimSize,
+                                               netCDF::NcType dataType,
+                                               string stdName,
+                                               string unit,
+                                               string axisType,
+                                               netCDF::NcDim &dim)
 {
   try
   {
     dim = addDimension(dimName, dimSize);
 
-    auto var = addVariable(dimName, dataType, &(*dim));
-    addAttribute(&(*var), "standard_name", stdName.c_str());
-    addAttribute(&(*var), "units", unit.c_str());
+    auto var = addVariable(dimName, dataType, dim);
+    addAttribute(var, "standard_name", stdName);
+    addAttribute(var, "units", unit);
 
     if (!axisType.empty())
-      addAttribute(&(*var), "axis", axisType.c_str());
+      addAttribute(var, "axis", axisType);
 
     return var;
   }
@@ -414,13 +432,19 @@ void NetCdfStreamer::addTimeDimension()
 
     itsTimeDim = addDimension("time", timeSize);
 
-    itsTimeVar = addVariable("time", ncInt, &(*itsTimeDim));
+    itsTimeVar = addVariable("time", ncInt, itsTimeDim);
     addAttribute(itsTimeVar, "long_name", "time");
     addAttribute(itsTimeVar, "calendar", "gregorian");
     addAttribute(itsTimeVar, "units", timeUnitDef.c_str());
 
-    if (!itsTimeVar->put(times, timeSize))
+    try
+    {
+      itsTimeVar.putVar(times);
+    }
+    catch(const std::exception& e)
+    {
       throw Fmi::Exception(BCP, "Failed to store validtimes");
+    }
   }
   catch (...)
   {
@@ -491,7 +515,7 @@ string NetCdfStreamer::getEnsembleDimensionName(
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
+NcDim NetCdfStreamer::getEnsembleDimension(
     T::ForecastType forecastType, T::ForecastNumber forecastNumber,
     string &ensembleDimensionName) const
 {
@@ -499,9 +523,9 @@ std::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
   {
     ensembleDimensionName = getEnsembleDimensionName(forecastType, forecastNumber);
     if (ensembleDimensionName.empty())
-      return std::shared_ptr<NcDim>();
+      return NcDim();
 
-    return std::shared_ptr<NcDim>(itsFile->get_dim(ensembleDimensionName.c_str()), dimDeleter);
+    return itsFile->getDim(ensembleDimensionName);
   }
   catch (...)
   {
@@ -509,7 +533,7 @@ std::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
   }
 }
 
-std::shared_ptr<NcDim> NetCdfStreamer::getEnsembleDimension(
+NcDim NetCdfStreamer::getEnsembleDimension(
     T::ForecastType forecastType, T::ForecastNumber forecastNumber) const
 {
   try
@@ -550,7 +574,7 @@ void NetCdfStreamer::addEnsembleDimensions()
       // Ensemble dimension might already be created or is not created at all for given parameter
 
       if (
-          getEnsembleDimension(forecastType, forecastNumber, ensembleDimName) ||
+          getEnsembleDimension(forecastType, forecastNumber, ensembleDimName).isNull() ||
           ensembleDimName.empty()
          )
         continue;
@@ -562,8 +586,7 @@ void NetCdfStreamer::addEnsembleDimensions()
       addAttribute(ensembleVar, "long_name", "Ensemble member");
 
       short forecastNumberDimValue = forecastNumber;
-      if (!ensembleVar->put(&forecastNumberDimValue, 1))
-        throw Fmi::Exception(BCP, "Failed to store ensemble");
+      ensembleVar.putVar(&forecastNumberDimValue);
     }
   }
   catch (...)
@@ -601,8 +624,7 @@ void NetCdfStreamer::addEnsembleDimension()
     addAttribute(ensembleVar, "long_name", "Ensemble member");
 
     short forecastNumberDimValue = itsGridMetaData.forecastNumber;
-    if (!ensembleVar->put(&forecastNumberDimValue, 1))
-      throw Fmi::Exception(BCP, "Failed to store ensemble");
+    ensembleVar.putVar(&forecastNumberDimValue);
   }
   catch (...)
   {
@@ -617,38 +639,31 @@ void NetCdfStreamer::addEnsembleDimension()
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcDim> NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
-                                                          std::shared_ptr<NcVar> &tVar)
+NcDim NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
+                                       NcVar &tVar)
 {
   try
   {
     string name("time_" + getPeriodName(periodLengthInMinutes));
 
-    auto tDim = addDimension(name, itsTimeDim->size());
-    tVar = addVariable(name, ncInt, &(*tDim));
+    auto tDim = addDimension(name, itsTimeDim.getSize());
+    tVar = addVariable(name, ncInt, tDim);
 
-    int times[itsTimeDim->size()];
-    itsTimeVar->get(times, itsTimeDim->size());
+    int times[itsTimeDim.getSize()];
+    itsTimeVar.getVar(times);
 
-    if (!tVar->put(times, itsTimeDim->size()))
+    tVar.putVar(times);
       throw Fmi::Exception(BCP, "Failed to store validtimes");
 
     addAttribute(tVar, "long_name", "time");
     addAttribute(tVar, "calendar", "gregorian");
 
-    std::shared_ptr<NcAtt> uAtt(itsTimeVar->get_att("units"));
-    if (!uAtt)
-      throw Fmi::Exception(BCP, "Failed to get time unit attribute");
+    NcVarAtt uAtt = itsTimeVar.getAtt("units");
+    const std::size_t uAttSize = uAtt.getAttLength();
+    std::vector<char> uAttBuf(uAttSize);
+    uAtt.getValues(uAttBuf.data());
 
-    std::shared_ptr<NcValues> uVal(uAtt->values());
-    char *u;
-    int uLen;
-
-    if ((!uVal) || (!(u = (char *)uVal->base())) ||
-        ((uLen = (uVal->num() * uVal->bytes_for_one())) < 1))
-      throw Fmi::Exception(BCP, "Failed to get time unit attribute value");
-
-    string unit(u, uLen);
+    string unit(uAttBuf.data(), uAttBuf.size());
     addAttribute(tVar, "units", unit.c_str());
 
     return tDim;
@@ -753,7 +768,7 @@ string paramNameWithoutLevel(const Query &query, const string &paramName)
 }
 }
 
-std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
+NcDim NetCdfStreamer::getLevelDimension(
     const string &paramName, string &levelDimName) const
 {
   try
@@ -766,11 +781,11 @@ std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
     auto levelDim = itsLevelDimensions.find(paramNameWithoutLevel(itsQuery, paramName));
 
     if (levelDim == itsLevelDimensions.end())
-      return std::shared_ptr<NcDim>();
+      return NcDim();
 
     levelDimName = levelDim->second.c_str();
 
-    return std::shared_ptr<NcDim>(itsFile->get_dim(levelDimName.c_str()), dimDeleter);
+    return itsFile->getDim(levelDimName);
   }
   catch (...)
   {
@@ -785,7 +800,7 @@ std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimension(
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimAndIndex(
+NcDim NetCdfStreamer::getLevelDimAndIndex(
     const string &paramName, int paramLevel, int &levelIndex) const
 {
   try
@@ -796,7 +811,7 @@ std::shared_ptr<NcDim> NetCdfStreamer::getLevelDimAndIndex(
 
     auto levelDim = getLevelDimension(paramName, levelDimName);
 
-    if (!levelDim)
+    if (levelDim.isNull())
       return levelDim;
 
     auto it = itsDimensionLevels.find(levelDimName);
@@ -926,8 +941,7 @@ void NetCdfStreamer::addLevelDimensions()
       for (auto level : itd->second)
         levels[nLevels++] = (hPa ? (level / 100) : level);
 
-      if (!levelVar->put(levels, nLevels))
-        throw Fmi::Exception(BCP, "Failed to store levels");
+      levelVar.putVar(levels);
     }
   }
   catch (...)
@@ -962,8 +976,8 @@ void NetCdfStreamer::addLevelDimension()
     auto levelVar =
         addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", unit, "Z", itsLevelDim);
 
-    addAttribute(levelVar, "long_name", (string(levelVar->name()) + " level").c_str());
-    addAttribute(levelVar, "positive", positive.c_str());
+    addAttribute(levelVar, "long_name", (levelVar.getName()) + " level");
+    addAttribute(levelVar, "positive", positive);
 
     float levels[itsDataLevels.size()];
     int i = 0;
@@ -973,8 +987,7 @@ void NetCdfStreamer::addLevelDimension()
       levels[i] = (float)*level;
     }
 
-    if (!levelVar->put(levels, itsDataLevels.size()))
-      throw Fmi::Exception(BCP, "Failed to store levels");
+    levelVar.putVar(levels);
   }
   catch (...)
   {
@@ -989,7 +1002,7 @@ void NetCdfStreamer::addLevelDimension()
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setSpheroidAndWKT(const std::shared_ptr<NcVar> &crsVar,
+void NetCdfStreamer::setSpheroidAndWKT(const NcVar &crsVar,
                                        OGRSpatialReference *geometrySRS,
                                        const string &areaWKT)
 {
@@ -1024,7 +1037,7 @@ void NetCdfStreamer::setSpheroidAndWKT(const std::shared_ptr<NcVar> &crsVar,
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLatLonGeometry(const std::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setLatLonGeometry(const NcVar &crsVar)
 {
   try
   {
@@ -1043,7 +1056,7 @@ void NetCdfStreamer::setLatLonGeometry(const std::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setRotatedLatlonGeometry(const std::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setRotatedLatlonGeometry(const NcVar &crsVar)
 {
   try
   {
@@ -1066,7 +1079,7 @@ void NetCdfStreamer::setRotatedLatlonGeometry(const std::shared_ptr<NcVar> &crsV
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setStereographicGeometry(const std::shared_ptr<NcVar> &crsVar,
+void NetCdfStreamer::setStereographicGeometry(const NcVar &crsVar,
                                               const NFmiArea *area)
 {
   try
@@ -1113,7 +1126,7 @@ void NetCdfStreamer::setStereographicGeometry(const std::shared_ptr<NcVar> &crsV
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setMercatorGeometry(const std::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setMercatorGeometry(const NcVar &crsVar)
 {
   try
   {
@@ -1151,7 +1164,7 @@ void NetCdfStreamer::setMercatorGeometry(const std::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setYKJGeometry(const std::shared_ptr<NcVar> &crsVar)
+void NetCdfStreamer::setYKJGeometry(const NcVar &crsVar)
 {
   try
   {
@@ -1179,7 +1192,7 @@ void NetCdfStreamer::setYKJGeometry(const std::shared_ptr<NcVar> &crsVar)
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setLambertConformalGeometry(const std::shared_ptr<NcVar> &crsVar,
+void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
                                                  const NFmiArea *area)
 {
   try
@@ -1316,7 +1329,7 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
     double *lat = latPtr.get(), *lon = lonPtr.get();
 
-    std::shared_ptr<NcVar> latVar, lonVar;
+    NcVar latVar, lonVar;
 
     if (!grid)
       grid = &q->grid();
@@ -1359,14 +1372,11 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       for (x = 0; (x < itsNX); wX += stepX, x++)
         worldX[x] = wX;
 
-      if (!yVar->put(worldY, itsNY))
-        throw Fmi::Exception(BCP, "Failed to store y -coordinates");
+      CHECK(yVar.putVar(worldY), "Failed to store y -coordinates");
+      CHECK(xVar.putVar(worldX), "Failed to store x -coordinates");
 
-      if (!xVar->put(worldX, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store x -coordinates");
-
-      latVar = addVariable("lat", ncFloat, &(*itsYDim), &(*itsXDim));
-      lonVar = addVariable("lon", ncFloat, &(*itsYDim), &(*itsXDim));
+      latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
+      lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
 
       for (y = y0, n = 0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep, n++)
@@ -1379,10 +1389,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
           lon[n] = p.X();
         }
 
-      if (!latVar->put(lat, itsNY, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store latitude(y,x) coordinates");
-      if (!lonVar->put(lon, itsNY, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store longitude(y,x) coordinates");
+      CHECK(latVar.putVar(lat), "Failed to store latitude(y,x) coordinates");
+      CHECK(lonVar.putVar(lon), "Failed to store longitude(y,x) coordinates");
     }
     else
     {
@@ -1401,11 +1409,8 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
             ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
                                                                   : itsTargetLatLons.x(x, 0));
 
-      if (!latVar->put(lat, itsNY))
-        throw Fmi::Exception(BCP, "Failed to store latitude coordinates");
-
-      if (!lonVar->put(lon, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store longitude coordinates");
+      CHECK(latVar.putVar(lat), "Failed to store latitude coordinates");
+      CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
     }
 
     addAttribute(latVar, "standard_name", "latitude");
@@ -1489,7 +1494,7 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
     double *lat = latPtr.get(), *lon = lonPtr.get();
 
-    std::shared_ptr<NcVar> latVar, lonVar;
+    NcVar latVar, lonVar;
 
     auto coords = gridQuery.mQueryParameterList.front().mCoordinates;
 
@@ -1549,14 +1554,11 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       for (x = 0; (x < itsNX); wX += stepX, x++)
         worldX[x] = wX;
 
-      if (!yVar->put(worldY, itsNY))
-        throw Fmi::Exception(BCP, "Failed to store y -coordinates");
+      CHECK(yVar.putVar(worldY), "Failed to store y -coordinates");
+      CHECK(xVar.putVar(worldX), "Failed to store x -coordinates");
 
-      if (!xVar->put(worldX, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store x -coordinates");
-
-      latVar = addVariable("lat", ncFloat, &(*itsYDim), &(*itsXDim));
-      lonVar = addVariable("lon", ncFloat, &(*itsYDim), &(*itsXDim));
+      latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
+      lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
 
       addAttribute(latVar, "standard_name", "latitude");
       addAttribute(latVar, "units", "degrees_north");
@@ -1573,10 +1575,8 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
           lon[n] = p.X();
         }
 
-      if (!latVar->put(lat, itsNY, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store latitude(y,x) coordinates");
-      if (!lonVar->put(lon, itsNY, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store longitude(y,x) coordinates");
+      CHECK(latVar.putVar(lat), "Failed to store latitude(y,x) coordinates");
+      CHECK(lonVar.putVar(lon), "Failed to store longitude(y,x) coordinates");
     }
     else
     {
@@ -1616,11 +1616,8 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
           lon[n] = rotLon[x];
       }
 
-      if (!latVar->put(lat, itsNY))
-        throw Fmi::Exception(BCP, "Failed to store latitude coordinates");
-
-      if (!lonVar->put(lon, itsNX))
-        throw Fmi::Exception(BCP, "Failed to store longitude coordinates");
+      CHECK(latVar.putVar(lat), "Failed to store latitude coordinates");
+      CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
     }
 
     addAttribute(latVar, "long_name", "latitude");
@@ -1697,7 +1694,7 @@ Fmi::DateTime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMin
  */
 // ----------------------------------------------------------------------
 
-std::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
+NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
                                                        string &timeDimName)
 {
   try
@@ -1706,26 +1703,26 @@ std::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
 
     timeDimName = "time_" + pName;
 
-    std::shared_ptr<NcDim> tDim(itsFile->get_dim(timeDimName.c_str()), dimDeleter);
+    NcDim tDim = itsFile->getDim(timeDimName);
 
-    if (tDim)
+    if (tDim.isNull())
       return tDim;
 
     // Add aggregate period length specific time dimension and variable
 
-    std::shared_ptr<NcVar> tVar;
+    NcVar tVar;
     tDim = addTimeDimension(periodLengthInMinutes, tVar);
 
     // Add time bounds dimension
 
-    if (!itsTimeBoundsDim)
+    if (itsTimeBoundsDim.isNull())
       itsTimeBoundsDim = addDimension("time_bounds", 2);
 
     // Determine and store time bounds
 
     TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     Fmi::DateTime startTime = itsDataTimes.front().utc_time(), vt;
-    int bounds[2 * itsTimeDim->size()];
+    int bounds[2 * itsTimeDim.getSize()];
     size_t i = 0;
 
     for (; (timeIter != itsDataTimes.end()); timeIter++)
@@ -1746,10 +1743,9 @@ std::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
 
     string name("time_bounds_" + pName);
 
-    auto timeBoundsVar = addVariable(name, ncInt, &(*tDim), &(*itsTimeBoundsDim));
+    auto timeBoundsVar = addVariable(name, ncInt, tDim, itsTimeBoundsDim);
 
-    if (!timeBoundsVar->put(bounds, itsTimeDim->size(), 2))
-      throw Fmi::Exception(BCP, "Failed to store time bounds");
+    CHECK(timeBoundsVar.putVar(bounds), "Failed to store time bounds");
 
     // Connect the bounds to the time variable
 
@@ -1771,7 +1767,7 @@ std::shared_ptr<NcDim> NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
 // ----------------------------------------------------------------------
 
 bool NetCdfStreamer::hasParamVariable
-    (const vector<string> &paramParts, map<string, NcVar *> &paramVariables)
+    (const vector<string> &paramParts, const map<string, NcVar> &paramVariables)
 {
   try
   {
@@ -1791,9 +1787,9 @@ bool NetCdfStreamer::hasParamVariable
   }
 }
 
-void NetCdfStreamer::addParamVariable(NcVar *var,
+void NetCdfStreamer::addParamVariable(const NcVar& var,
                                       const vector<string> &paramParts,
-                                      map<string, NcVar *> &paramVariables)
+                                      map<string, NcVar> &paramVariables)
 {
   try
   {
@@ -1810,10 +1806,10 @@ void NetCdfStreamer::addVariables(bool relative_uv)
   try
   {
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
-    NcDim &yOrLat = (itsYDim ? *itsYDim : *itsLatDim);
-    NcDim &xOrLon = (itsYDim ? *itsXDim : *itsLonDim);
-    std::shared_ptr<NcDim> tDim;
-    map<string, NcVar *> paramVariables;
+    NcDim &yOrLat = (!itsYDim.isNull() ? itsYDim : itsLatDim);
+    NcDim &xOrLon = (!itsYDim.isNull() ? itsXDim : itsLonDim);
+    NcDim tDim;
+    map<string, NcVar> paramVariables;
     vector<string> paramParts;
     size_t nVars = 0;
     bool gridContent = (itsReqParams.dataSource == GridContent);
@@ -1863,7 +1859,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
 
         // Get ensemble dimension
 
-        if (itsEnsembleDim)
+        if (!itsEnsembleDim.isNull())
         {
           auto forecastType = getForecastType(paramName, paramParts);
           auto forecastNumber = getForecastNumber(paramName, paramParts);
@@ -1873,7 +1869,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
 
         // Get level dimension
 
-        if (itsLevelDim)
+        if (!itsLevelDim.isNull())
         {
           string levelDimName;
           levelDim = getLevelDimension(paramName, levelDimName);
@@ -1897,12 +1893,12 @@ void NetCdfStreamer::addVariables(bool relative_uv)
           }
       }
 
-      NcDim *dimensions[] = {
-          ensembleDim ? &(*ensembleDim) : nullptr,  // Ensemble
-          &(*itsTimeDim),                           // Time dimension
-          levelDim ? &(*levelDim) : &yOrLat,        // Level or Y/lat
-          levelDim ? &yOrLat : &xOrLon,             // Y/lat or X/lon dimension
-          levelDim ? &xOrLon : nullptr              // X dimension or n/a
+      NcDim dimensions[] = {
+          !ensembleDim.isNull() ? ensembleDim : NcDim(),    // Ensemble
+          itsTimeDim,                                       // Time dimension
+          !levelDim.isNull() ? levelDim : yOrLat,           // Level or Y/lat
+          !levelDim.isNull() ? yOrLat : xOrLon,             // Y/lat or X/lon dimension
+          !levelDim.isNull() ? xOrLon : NcDim()             // X dimension or n/a
       };
 
       if ((i >= pTable.size()) && (j > 0))
@@ -1924,22 +1920,22 @@ void NetCdfStreamer::addVariables(bool relative_uv)
                                    ? pTable[i].itsPeriodLengthMinutes
                                    : itsDataTimeStep,
                                timeDimName);
-          dimensions[1] = &(*tDim);
+          dimensions[1] = tDim;
         }
       }
       else
         paramName = theParam.GetName();
 
-      NcDim **dim = dimensions;
+      const NcDim *dim = dimensions;
 
-      if (!ensembleDim)
+      if (ensembleDim.isNull())
         dim++;
 
-      NcDim *dim1 = *(dim++);
-      NcDim *dim2 = *(dim++);
-      NcDim *dim3 = *(dim++);
-      NcDim *dim4 = *(dim++);
-      NcDim *dim5 = (ensembleDim ? *dim : nullptr);
+      const NcDim& dim1 = *(dim++);
+      const NcDim& dim2 = *(dim++);
+      const NcDim& dim3 = *(dim++);
+      const NcDim& dim4 = *(dim++);
+      const NcDim dim5 = (!ensembleDim.isNull() ? *dim : NcDim());
 
       auto dataVar = addVariable(paramName + "_" + Fmi::to_string(usedParId),
                                  ncFloat,
@@ -1968,15 +1964,15 @@ void NetCdfStreamer::addVariables(bool relative_uv)
         //
         addAttribute(dataVar, "cell_methods", (timeDimName + ": " + pTable[i].itsStepType).c_str());
 
-      if (itsYDim)
+      if (!itsYDim.isNull())
         addAttribute(dataVar, "coordinates", "lat lon");
 
-      itsDataVars.push_back(dataVar.get());
+      itsDataVars.push_back(dataVar);
 
       if (gridContent)
         // Store the netcdf variable for the parameter
         //
-        addParamVariable(dataVar.get(), paramParts, paramVariables);
+        addParamVariable(dataVar, paramParts, paramVariables);
     }
 
     itsVarIterator = itsDataVars.begin();
@@ -2088,7 +2084,7 @@ void NetCdfStreamer::storeParamValues()
       vector<string> paramParts;
       itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
 
-      if (itsEnsembleDim)
+      if (!itsEnsembleDim.isNull())
       {
         // Get ensemble dimension
 
@@ -2098,7 +2094,7 @@ void NetCdfStreamer::storeParamValues()
         ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
       }
 
-      if (itsLevelDim)
+      if (!itsLevelDim.isNull())
       {
         // Get level dimension and index
 
@@ -2108,18 +2104,19 @@ void NetCdfStreamer::storeParamValues()
       }
     }
 
+    const bool hasLevelDim = !levelDim.isNull();
     long nX = (long)itsNX, nY = (long)itsNY;
     long edgeLengths[] = {
         1,                      // Ensemble dimension, edge length 1
         1,                      // Time dimension, edge length 1
-        levelDim ? 1 : nY,      // Level (edge length 1) or Y dimension
-        levelDim ? nY : nX,     // Y or X dimension
-        levelDim ? nX : -1      // X dimension or n/a
+        hasLevelDim ? 1 : nY,      // Level (edge length 1) or Y dimension
+        hasLevelDim ? nY : nX,     // Y or X dimension
+        hasLevelDim ? nX : -1      // X dimension or n/a
     };
     long *edge = edgeLengths;
-    uint nEdges = (levelDim ? 5 : 4);
+    uint nEdges = (hasLevelDim ? 5 : 4);
 
-    if (!ensembleDim)
+    if (ensembleDim.isNull())
     {
       if (!(*itsVarIterator)->set_cur(timeIndex, levelDim ? levelIndex : -1))
         throw Fmi::Exception(BCP, "Failed to set current netcdf time/level");
@@ -2134,7 +2131,7 @@ void NetCdfStreamer::storeParamValues()
     long edge2 = *(edge++);
     long edge3 = *(edge++);
     long edge4 = *(edge++);
-    long edge5 = (ensembleDim ? *edge : -1);
+    long edge5 = (!ensembleDim.isNull() ? *edge : -1);
 
     // It seems there can be at max 1 missing (-1) edge at the end of parameter edges
     //
@@ -2142,11 +2139,7 @@ void NetCdfStreamer::storeParamValues()
     // n,n,n and n,n,n,-1 are both valid for surface data without ensemble
     // n,n,n,n and n,n,n,n,-1 are both valid (level data without ensemble or surface data with it)
 
-    if (((nEdges == 3) && (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3))) ||
-        ((nEdges == 4) && (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4))) ||
-        ((nEdges == 5) &&
-         (!(*itsVarIterator)->put(values.get(), edge1, edge2, edge3, edge4, edge5))))
-      throw Fmi::Exception(BCP, "Failed to store netcdf variable values");
+    CHECK((*itsVarIterator).putVar(values.get()), "Failed to store netcdf variable values");
   }
   catch (...)
   {
