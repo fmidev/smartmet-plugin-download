@@ -748,7 +748,7 @@ static std::shared_ptr<DataStreamer> initializeStreamer(const Spine::HTTP::Reque
     ReqParams reqParams;
     const auto &producer = getRequestParams(req, reqParams, config, qEngine, gridEngine);
 
-    auto query = Query(req, gridEngine, reqParams.originTime);
+    auto query = Query(req, gridEngine, reqParams.originTime, reqParams.test);
 
     // Overwrite timeparsers's starttime (now --> data), endtime (starttime + 24h --> data) and
     // timestep (60m --> data) defaults.

@@ -246,7 +246,8 @@ class Query
  public:
   Query(const Spine::HTTP::Request &req,
         const Engine::Grid::Engine *gridEngine,
-        std::string &originTime);
+        std::string &originTime,
+        uint queryTestValue = 0);
 
   typedef std::set<int> Levels;
   Levels levels;
@@ -319,6 +320,8 @@ class Query
   void parseTimeOptions(const Spine::HTTP::Request &theReq);
   void parseModel(const Spine::HTTP::Request &theReq);
   void parseLevels(const Spine::HTTP::Request &theReq);
+
+  uint expectedContentRecordCount;
 };
 
 }  // namespace Download

@@ -35,10 +35,14 @@ static const char* defaultTimeZone = "utc";
 
 Query::Query(const Spine::HTTP::Request& req,
              const Engine::Grid::Engine *gridEngine,
-             string &originTime)
+             string &originTime,
+             uint queryTestValue)
 {
   try
   {
+    // PAK-4808
+    expectedContentRecordCount = queryTestValue;
+
     parseTimeOptions(req);
     parseParameters(req, gridEngine, originTime);
     parseLevels(req);
@@ -641,6 +645,14 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
                                                        contentInfoList);
 
           auto contentLength = contentInfoList.getLength();
+
+          if ((expectedContentRecordCount > 0) && (contentLength != expectedContentRecordCount))
+            cerr << "Got " << contentLength << "/" << expectedContentRecordCount
+                 << " records: " << paramDef << " oT=" << originTimeStr
+                 << " gen=" << generationId << " geo=" << geometryId << " lT=" << levelTypeId
+                 << " lvls=" << levelRange.first << "-" << levelRange.second
+                 << " fT=" << forecastType << " fN=" << fN
+                 << " sT=" << startTimeStr << " eT=" << endTimeStr << std::endl;
 
           for (size_t idx = 0; (idx < contentLength); idx++)
           {
