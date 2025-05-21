@@ -273,7 +273,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
       GridIterator(GridMetaData *gM) : gridMetaData(gM) { init = true; }
 
       bool atEnd();
-      bool hasData(T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level);
+      bool hasData(T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level, int test);
       GridIterator &nextParam();
       GridIterator &operator++();
       GridIterator operator++(int);

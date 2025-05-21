@@ -375,7 +375,8 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
 
 bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId &geometryId,
                                                        T::ParamLevelId &gridLevelType,
-                                                       int &level)
+                                                       int &level,
+                                                       int test)
 {
   try
   {
@@ -396,17 +397,41 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId &geometryId
                                             : to_iso_string(gridMetaData->gridOriginTime);
 
     if (gridMetaData->gridOriginTime.is_not_a_date_time())
+{
+if (test > 0)
+{
+std::cerr << "!!! PAK-5541: hasData: " << ds->itsParamIterator->name() << ": "
+          << originTimeStr << " " << to_iso_string(validTime)
+          << ": metadata origintime is not set" << std::endl;
+}
       return false;
+}
 
     // Check if param/level/otime/validtime data is available
 
     auto const paramGeom = gridMetaData->paramGeometries.find(ds->itsParamIterator->name());
     if (paramGeom == gridMetaData->paramGeometries.end())
+{
+if (test > 0)
+{
+std::cerr << "!!! PAK-5541: hasData: " << ds->itsParamIterator->name() << ": "
+          << originTimeStr << " " << to_iso_string(validTime)
+          << ": geometry data not found" << std::endl;
+}
       return false;
+}
 
     auto const geomLevels = paramGeom->second.find(gridMetaData->geometryId);
     if (geomLevels == paramGeom->second.end())
+{
+if (test > 0)
+{
+std::cerr << "!!! PAK-5541: hasData: " << ds->itsParamIterator->name() << ": "
+          << originTimeStr << " " << to_iso_string(validTime) << ": " << gridMetaData->geometryId
+          << ": level data not found" << std::endl;
+}
       return false;
+}
 
     auto levelTimes = geomLevels->second.begin();
     auto prevLevelTimes = levelTimes;
@@ -453,7 +478,21 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId &geometryId
       if ((originTimeTimes == levelTimes->second.end()) ||
           (validTime < Fmi::DateTime::from_iso_string(*(originTimeTimes->second.begin()))) ||
           (validTime > Fmi::DateTime::from_iso_string(*(originTimeTimes->second.rbegin()))))
+{
+if (test > 0)
+{
+if (originTimeTimes == levelTimes->second.end())
+std::cerr << "!!! PAK-5541: hasData: " << ds->itsParamIterator->name() << ": "
+          << originTimeStr << " " << to_iso_string(validTime)
+          << ": time data not found" << std::endl;
+else
+std::cerr << "!!! PAK-5541: hasData: " << ds->itsParamIterator->name() << ": "
+          << originTimeStr << " " << to_iso_string(validTime) << ": "
+          << *(originTimeTimes->second.begin()) << "-" << *(originTimeTimes->second.rbegin())
+          << ": time not available" << std::endl;
+}
         return false;
+}
     }
 
     auto paramLevelId = gridMetaData->paramLevelIds.find(ds->itsParamIterator->name());
@@ -783,6 +822,13 @@ void DataStreamer::generateGridValidTimeList(Query &query,
                                "; ot=" + (originTimeStr.empty() ? "none" : originTimeStr) +
                                ", ft=" + to_iso_string(itsFirstDataTime) +
                                ", lt=" + to_iso_string(itsLastDataTime) + ")");
+if (itsReqParams.test > 0)
+{
+std::cerr << "=== PAK-5541: generateGridValidTimeList: getDataTimeRange "
+          << (originTimeStr.empty() ? "none" : originTimeStr) << " "
+          << to_iso_string(itsFirstDataTime) << "-" << to_iso_string(itsLastDataTime)
+          << std::endl;
+}
 
     if (sTime.is_not_a_date_time() || (sTime < itsFirstDataTime))
       sTime = query.tOptions.startTime = itsFirstDataTime;
@@ -808,7 +854,26 @@ void DataStreamer::generateGridValidTimeList(Query &query,
     if ((query.tOptions.mode == TimeSeries::TimeSeriesGeneratorOptions::DataTimes) ||
         query.tOptions.startTimeData || query.tOptions.endTimeData)
     {
-      query.tOptions.setDataTimes(itsGridMetaData.getDataTimes(originTimeStr), false);
+auto dT = itsGridMetaData.getDataTimes(originTimeStr);
+if (itsReqParams.test > 0)
+{
+/*
+auto sT = dT->front().to_iso_string();
+std::replace(sT.begin(), sT.end(), ' ', 'T');
+sT.erase(std::remove(sT.begin(), sT.end(), '-'), sT.end());
+sT.erase(std::remove(sT.begin(), sT.end(), ':'), sT.end());
+auto eT = dT->back().to_iso_string();
+std::replace(eT.begin(), eT.end(), ' ', 'T');
+eT.erase(std::remove(eT.begin(), eT.end(), '-'), eT.end());
+eT.erase(std::remove(eT.begin(), eT.end(), ':'), eT.end());
+*/
+std::cerr << "=== PAK-5541: generateGridValidTimeList: getDataTimes "
+          << (originTimeStr.empty() ? "none" : originTimeStr) << " "
+          << dT->size() << " " << to_iso_string(dT->front()) << "-" << to_iso_string(dT->back())
+          << std::endl;
+}
+query.tOptions.setDataTimes(dT, false);
+//    query.tOptions.setDataTimes(itsGridMetaData.getDataTimes(originTimeStr), false);
     }
 
     auto tz = itsGeoEngine->getTimeZones().time_zone_from_string(query.timeZone);
@@ -816,6 +881,23 @@ void DataStreamer::generateGridValidTimeList(Query &query,
 
     if (itsDataTimes.empty())
       throw Fmi::Exception(BCP, "No valid times in the requested time period").disableStackTrace();
+if (itsReqParams.test > 0)
+{
+/*
+auto sT = itsDataTimes.front().to_iso_string(); 
+std::replace(sT.begin(), sT.end(), ' ', 'T');
+sT.erase(std::remove(sT.begin(), sT.end(), '-'), sT.end());
+sT.erase(std::remove(sT.begin(), sT.end(), ':'), sT.end());
+auto eT = itsDataTimes.back().to_iso_string();
+std::replace(eT.begin(), eT.end(), ' ', 'T');
+eT.erase(std::remove(eT.begin(), eT.end(), '-'), eT.end());
+eT.erase(std::remove(eT.begin(), eT.end(), ':'), eT.end());
+*/
+std::cerr << "=== PAK-5541: generateGridValidTimeList: TimeSeriesGenerator "
+          << (originTimeStr.empty() ? "none" : originTimeStr) << " " << itsDataTimes.size() << " "
+          << to_iso_string(itsDataTimes.front()) << "-" << to_iso_string(itsDataTimes.back())
+          << std::endl;
+}
   }
   catch (...)
   {
@@ -1101,7 +1183,16 @@ void DataStreamer::getParameterDetailsFromContentData(
     auto const &paramContent = paramContents.find(paramName);
 
     if ((paramContent == paramContents.end()) || (paramContent->second.getLength() == 0))
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: getParameterDetailsFromContentData: " << paramName << ": no "
+          << ((paramContent == paramContents.end()) ? "paramContents" : "paramContent")
+          << std::endl;
+}
+
       return;
+}
 
     auto const &generationInfos = itsQuery.getGenerationInfos();
     auto const &contentInfoList = paramContent->second;
@@ -1117,7 +1208,22 @@ void DataStreamer::getParameterDetailsFromContentData(
                            "getParameterDetailsFromContentData: internal: generationId not found");
 
     if (!isValidGeneration(&(generationInfo->second)))
+{
+if (itsReqParams.test > 0)
+{
+auto gI = &generationInfo->second;
+bool isReadyG = (gI->mStatus == T::GenerationInfo::Status::Ready);
+std::cerr << "!!! PAK-5541: getParameterDetailsFromContentData: " << paramName << ":" << " generation "
+          << contentInfo->mGenerationId << " " << gI->mDeletionTime
+          << " ignored:" << (isReadyG ? "" : " not ready") << (isReadyG ? " too old" : "")
+          << std::endl;
+}
+
       return;
+}
+std::string logMsg,s0;
+std::string sep = ",";
+uint detailCount = 0;
 
     vector<string> paramParts;
     itsQuery.parseRadonParameterName(paramName, paramParts);
@@ -1194,15 +1300,66 @@ void DataStreamer::getParameterDetailsFromContentData(
                 .first;
 
       timeIter->second.insert(contentInfo->getForecastTime());
+if (itsReqParams.test > 0)
+{
+std::string s1 = contentInfo->getForecastTime(),s2;
+if (logMsg.empty()) { logMsg = s1; }
+else
+{
+auto mismatchPair = std::mismatch(s0.begin(), s0.end(), s1.begin());
+auto s3 = std::string(mismatchPair.second, s1.end());
+auto T = s3.find("T");
+if (T != std::string::npos)
+{
+if (T == 1) { auto T1 = s1.find("T"); s3 = s1.substr(T1-2,1) + s3; }
+}
+else if (s3.size() % 2) s3 = s1.substr(s1.size()-1-s3.size(),1) + s3;
+auto trZ = s3.find_last_not_of('0');
+if (trZ == std::string::npos) s2 = "00";
+else
+{
+auto len = s3.size(); auto nZ = len - trZ - 1;
+if (nZ % 2) nZ--; if (nZ == 6) nZ -= 2;
+s2 = s3.substr(0, len - nZ);
+}
+logMsg += (sep + s2);
+}
+s0 = s1;
+detailCount++;
+}
     }
+if (!logMsg.empty())
+{
+auto pfx = ((detailCount >= itsReqParams.test) ? "=== " : "!!! ");
+std::cerr << pfx << "PAK-5541: getParameterDetailsFromContentData: " << paramName
+          << ": " << logMsg << std::endl;
+}
 
     // Return details for first (only) leveltype, level and geometry
 
     if (!levelGeomParamDetails.empty())
+{
       parameterDetails.insert(
           parameterDetails.begin(),
           levelGeomParamDetails.begin()->second.begin()->second.begin()->second.begin(),
           levelGeomParamDetails.begin()->second.begin()->second.begin()->second.end());
+if (itsReqParams.test > 0)
+{
+auto pfx = ((parameterDetails.front().mMappings.front().mTimes.begin()->second.size() >= itsReqParams.test)
+           ? "=== " : "!!! ");
+std::cerr << pfx << "PAK-5541: getParameterDetailsFromContentData: " << paramName << ": "
+          << parameterDetails.front().mMappings.front().mTimes.begin()->second.size() << " details"
+          << std::endl;
+}
+}
+else
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: getParameterDetailsFromContentData: " << paramName << ": no details"
+          << std::endl;
+}
+}
   }
   catch (...)
   {
@@ -1388,7 +1545,15 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
           for (auto const &dataTimes : paramMapping.mTimes)
           {
             if ((!originTimeStr.empty()) && (originTimeStr != dataTimes.first))
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: hasRequestedGridData: " << paramKey << ": origintime does not match mapping: "
+          << originTimeStr << dataTimes.first
+          << std::endl;
+}
               continue;
+}
             else if (dataTimes.second.empty())
               throw Fmi::Exception(BCP,
                                    "GridMetaData: Mapping with no validtimes: " + param.name());
@@ -1448,6 +1613,14 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
             auto ott =
                 itsGridMetaData.originTimeTimes.insert(make_pair(dataTimes.first, set<string>()));
             ott.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
+if (itsReqParams.test > 0)
+{
+auto pfx = ((ott.first->second.size() >= itsReqParams.test) ? "=== " : "!!! ");
+std::cerr << pfx << "PAK-5541: hasRequestedGridData: " << paramKey << ": validtime range "
+          << dataTimes.first << " " << ott.first->second.size() << " "
+          << *dataTimes.second.begin() << "-" << *dataTimes.second.rbegin()
+          << std::endl;
+}
 
             hasParam = true;
           }
@@ -1474,6 +1647,11 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
 
       if (itsGridMetaData.paramLevelId == GridFmiLevelTypeNone)
       {
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: hasRequestedGridData: " << param.name() << ": no mappings found"
+          << std::endl;
+}
         nMissingParam++;
 
         if (!itsValScaling.empty())
@@ -1484,7 +1662,14 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
     }
 
     if ((!hasFuncParam) && itsGridMetaData.paramGeometries.empty())
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: hasRequestedGridData: no mappings found"
+          << std::endl;
+}
       return false;
+}
 
     // Erase leading missing parameters
 
@@ -4688,7 +4873,15 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
   try
   {
     if (gridQuery.mQueryParameterList.size() == 0)
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: getValueListItem: " << itsParamIterator->name() << ": "
+          << to_iso_string(itsTimeIterator->utc_time()) << ": mQueryParameterList is empty"
+          << std::endl;
+}
       return nullptr;
+}
 
     if (itsGridIndex > 0)
     {
@@ -4701,7 +4894,15 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
         advance(itp, itsGridIndex);
 
         if (itp->mValueList.size() == 0)
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: getValueListItem: " << itsParamIterator->name() << ": "
+          << to_iso_string(itsTimeIterator->utc_time()) << ": itp->mValueList is empty"
+          << std::endl;
+}
           return nullptr;
+}
 
         return itp->mValueList.front();
       }
@@ -4716,7 +4917,15 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
     }
 
     if (gridQuery.mQueryParameterList.front().mValueList.size() == 0)
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: getValueListItem: " << itsParamIterator->name() << ": "
+          << to_iso_string(itsTimeIterator->utc_time()) << ": mValueList is empty"
+          << std::endl;
+}
       return nullptr;
+}
 
     return gridQuery.mQueryParameterList.front().mValueList.front();
   }
@@ -4836,7 +5045,15 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     const auto vVec = &(valueListItem->mValueVector);
     if (vVec->empty())
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: getGridQueryInfo: " << itsParamIterator->name() << ": "
+          << to_iso_string(itsTimeIterator->utc_time()) << ": mValueVector is empty"
+          << std::endl;
+}
       return false;
+}
 
     // Origintime is not set if it was not given in request and all parameters are
     // function parameters
@@ -5079,10 +5296,16 @@ void DataStreamer::extractGridData(string &chunk)
       T::ParamLevelId gridLevelType;
       int level;
 
-      if (!gridIterator.hasData(itsGridMetaData.geometryId, gridLevelType, level))
+      if (!gridIterator.hasData(itsGridMetaData.geometryId, gridLevelType, level, itsReqParams.test))
         continue;
 
       itsGridIndex = bufferIndex();
+if (itsGridIndex && (itsReqParams.test > 0))
+{
+std::cerr << "!!! PAK-5541: extractGridData: " << itsParamIterator->name() << ": "
+          << to_iso_string(itsTimeIterator->utc_time()) << ": bufferIndex is nonzero"
+          << std::endl;
+}
 
       if (!itsGridIndex)
       {
@@ -5112,7 +5335,15 @@ void DataStreamer::extractGridData(string &chunk)
       // requested grid size etc, an error is thrown
 
       if (!getGridQueryInfo(itsGridQuery))
+{
+if (itsReqParams.test > 0)
+{
+std::cerr << "!!! PAK-5541: extractGridData: getGridQueryInfo failed: "
+          << itsParamIterator->name() << ": " << to_iso_string(itsTimeIterator->utc_time())
+          << std::endl;
+}
         continue;
+}
 
       // Load the data chunk from itsGridQuery
       //

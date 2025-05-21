@@ -402,12 +402,27 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
       if (! originTime.empty())
       {
         auto generationInfo = generationInfoList.getGenerationInfoByAnalysisTime(originTime);
+if ((!generationInfo) && expectedContentRecordCount)
+{
+std::cerr << "!!! PAK-5541: getGenerationInfoByAnalysisTime: generation "
+          << producer << ":" << originTime << " not found"
+          << std::endl;
+}
 
         if (generationInfo && isValidGeneration(generationInfo))
         {
           generationInfos.insert(make_pair(generationInfo->mGenerationId, *generationInfo));
           pg->second.insert(make_pair(originTime, generationInfo->mGenerationId));
         }
+else if (generationInfo && (expectedContentRecordCount > 0))
+{
+bool isReadyG = (generationInfo->mStatus == T::GenerationInfo::Status::Ready);
+std::cerr << "!!! PAK-5541: getGenerationInfoByAnalysisTime: generation "
+          << producer << ":" << originTime << " "
+          << generationInfo->mGenerationId << " " << generationInfo->mDeletionTime << " ignored:"
+          << (isReadyG ? "" : " not ready") << (isReadyG ? " too old" : "")
+          << std::endl;
+}
 
         continue;
       }
@@ -506,8 +521,25 @@ bool Query::getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
 
       // Ignore too old content
 
-      return (isValidGeneration(&(generationInfo->second)));
+auto gI = &generationInfo->second;
+bool isValidG = isValidGeneration(gI);
+bool isReadyG = (gI->mStatus == T::GenerationInfo::Status::Ready);
+if ((!isValidG) && expectedContentRecordCount)
+{
+std::cerr << "!!! PAK-5541: getOriginTimeGeneration: generation "
+          << producer << ":" << originTime << " " << generationId << " " << gI->mDeletionTime
+          << " ignored:" << (isReadyG ? "" : " not ready") << (isReadyG ? " too old" : "")
+          << std::endl;
+}
+return isValidG;
+//    return (isValidGeneration(&(generationInfo->second)));
     }
+else if (expectedContentRecordCount)
+{
+std::cerr << "!!! PAK-5541: getOriginTimeGeneration: generationInfos.find: generation "
+          << producer << ":" << originTime << " not found"
+          << std::endl;
+}
 
     return false;
   }
@@ -562,7 +594,15 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     // Check if any generation info was found for data parameter(s)
 
     if (generationInfos.empty())
+{
+if (expectedContentRecordCount)
+{
+std::cerr << "!!! PAK-5541: expandParameterFromRangeValues: no generationInfos: " << paramDef
+          << std::endl;
+}
+
       return;
+}
 
     // Expand parameter names from level/forecastnumber ranges (e.g. 2-2 or 5-8) by checking if
     // they have content available. The expanded parameter names are added to pOptions
@@ -618,7 +658,16 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     uint generationId;
 
     if (!getOriginTimeGeneration(cS, producer, originTimeStr, generationId))
+{
+if (expectedContentRecordCount)
+{
+std::cerr << "!!! PAK-5541: expandParameterFromRangeValues: generation "
+          << producer << ":" << originTimeStr << " not found"
+          << std::endl;
+}
+
       return;
+}
 
     for (auto const &levelRange : levelRanges)
     {
@@ -646,8 +695,8 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
 
           auto contentLength = contentInfoList.getLength();
 
-          if ((expectedContentRecordCount > 0) && (contentLength != expectedContentRecordCount))
-            cerr << "Got " << contentLength << "/" << expectedContentRecordCount
+          if ((expectedContentRecordCount > 0) && (contentLength < expectedContentRecordCount))
+            cerr << "!!! PAK-5541: Got " << contentLength << "/" << expectedContentRecordCount
                  << " records: " << paramDef << " oT=" << originTimeStr
                  << " gen=" << generationId << " geo=" << geometryId << " lT=" << levelTypeId
                  << " lvls=" << levelRange.first << "-" << levelRange.second
