@@ -966,6 +966,8 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
+// "typeOfLevel": grib_ls -n vertical somegrib.grb2
+
 #define GroundLevel "groundOrWaterSurface"
 #define PressureLevel "isobaricInhPa"
 #define HybridLevel "hybrid"
@@ -975,6 +977,7 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
 #define DepthLevel "depthBelowSea"
 #define NominalTopLevel "nominalTop"
 #define MeanSeaLevel "meanSea"
+#define MostUnstableParcelLevel "mostUnstableParcel"
 
 string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelType,
                                            NFmiLevel *cfgLevel, int &level) const
@@ -1029,6 +1032,11 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
       return MeanSeaLevel;
 
     return HeightLevel;
+  }
+  else if (isMostUnstableParcelLevel(levelType, gridContent))
+  {
+    level = 0;
+    return MostUnstableParcelLevel;
   }
 
   throw Fmi::Exception(
