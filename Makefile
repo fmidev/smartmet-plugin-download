@@ -7,7 +7,7 @@ REQUIRES = gdal jsoncpp configpp
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
 ECCODES_LIBS = -leccodes
-ifneq ($(wildcard $(foreach ext, so a, $(libdir)/libeccodes_memfs.$(ext))),)
+ifneq ($(foreach ext, so a, $(wildcard $(libdir)/libeccodes.$(ext))),)
 	ECCODES_LIBS += -leccodes_memfs
 endif
 
