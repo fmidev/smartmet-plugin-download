@@ -1,4 +1,4 @@
 #/bin/bash
 #
 
-grib_ls $1 -wgribMasterTablesVersionNumber=13 | egrep "20130917|20080805"
+grib_ls $1 -wgribMasterTablesVersionNumber=13 | grep -E "20130917|20080805"
