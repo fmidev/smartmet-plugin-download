@@ -35,6 +35,7 @@ LIBS += $(PREFIX_LDFLAGS) \
 	-lboost_system \
 	-lbz2 -lz \
 	$(ECCODES_LIBS) \
+	-ljasper \
 	-lnetcdf_c++
 
 # What to install

@@ -37,10 +37,12 @@ BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
 BuildRequires: smartmet-engine-grid-devel >= 25.6.3
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
+BuildRequires: jasper-devel
 Requires: gdal310-libs
 Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
+Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 25.5.30
 Requires: smartmet-library-timeseries >= 25.6.9
 Requires: smartmet-library-spine >= 25.5.13
