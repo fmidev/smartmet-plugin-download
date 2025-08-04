@@ -2,13 +2,16 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.5.2
+Version: 25.6.17
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
 Source0: %{name}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+
+# https://fedoraproject.org/wiki/Changes/Broken_RPATH_will_fail_rpmbuild
+%global __brp_check_rpaths %{nil}
 
 %if 0%{?rhel} && 0%{rhel} < 9
 %define smartmet_boost boost169
@@ -22,28 +25,30 @@ BuildRequires: gdal310-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 25.4.9
-BuildRequires: smartmet-library-macgyver-devel >= 25.2.18
-BuildRequires: smartmet-library-timeseries-devel >= 25.2.18
+BuildRequires: smartmet-library-spine-devel >= 25.5.13
+BuildRequires: smartmet-library-macgyver-devel >= 25.5.30
+BuildRequires: smartmet-library-timeseries-devel >= 25.6.9
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-grid-content-devel >= 25.4.8
-BuildRequires: smartmet-library-grid-files-devel >= 25.4.8
+BuildRequires: smartmet-library-grid-content-devel >= 25.5.22
+BuildRequires: smartmet-library-grid-files-devel >= 25.5.30
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 25.2.18
+BuildRequires: smartmet-engine-querydata-devel >= 25.5.22
 BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
-BuildRequires: smartmet-engine-grid-devel >= 25.4.8
+BuildRequires: smartmet-engine-grid-devel >= 25.6.3
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
+BuildRequires: jasper-devel
 Requires: gdal310-libs
 Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
-Requires: smartmet-library-macgyver >= 25.2.18
-Requires: smartmet-library-timeseries >= 25.2.18
-Requires: smartmet-library-spine >= 25.4.9
+Requires: jasper-libs
+Requires: smartmet-library-macgyver >= 25.5.30
+Requires: smartmet-library-timeseries >= 25.6.9
+Requires: smartmet-library-spine >= 25.5.13
 Requires: smartmet-library-newbase >= 25.3.20
-Requires: smartmet-engine-querydata >= 25.2.18
-Requires: smartmet-server >= 25.4.9
+Requires: smartmet-engine-querydata >= 25.5.22
+Requires: smartmet-server >= 25.5.13
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
@@ -58,15 +63,15 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 25.2.18
-#TestRequires: smartmet-engine-grid >= 25.4.8
-#TestRequires: smartmet-engine-querydata >= 25.2.18
+#TestRequires: smartmet-engine-grid >= 25.6.3
+#TestRequires: smartmet-engine-querydata >= 25.5.22
 #TestRequires: smartmet-utils-devel >= 25.2.18
-#TestRequires: smartmet-library-spine-plugin-test >= 25.4.9
+#TestRequires: smartmet-library-spine-plugin-test >= 25.5.13
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
-#TestRequires: smartmet-qdtools >= 25.4.16
+#TestRequires: smartmet-qdtools >= 25.5.26
 #TestRequires: smartmet-test-data >= 24.8.12
 #TestRequires: smartmet-test-db >= 25.2.18
-#TestRequires: smartmet-engine-grid-test >= 25.4.8
+#TestRequires: smartmet-engine-grid-test >= 25.6.3
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -98,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 17 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.6.17-1.fmi
+- Support for grid level type 21 on grib output (MostUnstableParcelDeparture, typeOfFirstFixedLevel 17); BRAINSTORM-3210
+
 * Fri May  2 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.5.2-1.fmi
 - Log content record count and content server query parameters if number of content records is not what expected (PAK-4808)
 

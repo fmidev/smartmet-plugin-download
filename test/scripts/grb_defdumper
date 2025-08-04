@@ -12,7 +12,7 @@ else
   grb=$1
   shift
 
-  f=$(echo "$1" | egrep "\-f[[:digit:]]+[\-]$")
+  f=$(echo "$1" | grep -E "\-f[[:digit:]]+[\-]$")
 
   if [ "$f" != "" ]; then
     shift

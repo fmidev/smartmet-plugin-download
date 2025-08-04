@@ -62,6 +62,7 @@ static const T::ParamLevelId GridFmiLevelTypeHeight = 6;
 static const T::ParamLevelId GridFmiLevelTypeMeanSea = 7;
 static const T::ParamLevelId GridFmiLevelTypeEntireAtmosphere = 8;
 static const T::ParamLevelId GridFmiLevelTypeDepth = 10;
+static const T::ParamLevelId GridFmiLevelTypeMostUnstableParcel = 21;
 
 bool isGroundLevel(FmiLevelType levelType);
 bool isSurfaceLevel(FmiLevelType levelType);
@@ -74,6 +75,7 @@ bool isDepthLevel(FmiLevelType levelType, int levelValue, bool gridContent = fal
 bool isNominalTopLevel(FmiLevelType levelType, bool gridContent = false);
 bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType);
 bool isMeanSeaLevel(FmiLevelType levelType, bool gridContent = false);
+bool isMostUnstableParcelLevel(FmiLevelType levelType, bool gridContent = false);
 
 FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
                                   const std::string &producer,
