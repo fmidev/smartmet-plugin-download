@@ -4631,7 +4631,7 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query &gridQuery)
 
     itsGridMetaData.rotLongitudes.reset(new double[coords.size()]);
     itsGridMetaData.rotLatitudes.reset(new double[coords.size()]);
-    std::unique_ptr<int> pS(new int[coords.size()]);
+    std::unique_ptr<int[]> pS(new int[coords.size()]);
 
     auto rotLons = itsGridMetaData.rotLongitudes.get();
     auto rotLon = rotLons;
