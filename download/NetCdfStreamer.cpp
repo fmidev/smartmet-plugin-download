@@ -281,8 +281,20 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
 {
   try
   {
-    if (!((resource)->add_att(attrName.c_str(), attrValue)))
-      throw Fmi::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
+    resource.putAtt(attrName, &attrValue);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+template <typename T1>
+void NetCdfStreamer::addAttribute(T1 resource, string attrName, const std::string &attrValue)
+{
+  try
+  {
+    resource.putAtt(attrName, attrValue.length(), attrValue.c_str());
   }
   catch (...)
   {
@@ -295,8 +307,7 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, int nValues, T2 
 {
   try
   {
-    if (!((resource)->add_att(attrName.c_str(), nValues, attrValues)))
-      throw Fmi::Exception(BCP, "Failed to add attribute ('" + attrName + "')");
+    resource.putAtt(attrName.c_str(), nValues, attrValues);
   }
   catch (...)
   {
@@ -2105,41 +2116,35 @@ void NetCdfStreamer::storeParamValues()
     }
 
     const bool hasLevelDim = !levelDim.isNull();
-    long nX = (long)itsNX, nY = (long)itsNY;
-    long edgeLengths[] = {
-        1,                      // Ensemble dimension, edge length 1
-        1,                      // Time dimension, edge length 1
-        hasLevelDim ? 1 : nY,      // Level (edge length 1) or Y dimension
-        hasLevelDim ? nY : nX,     // Y or X dimension
-        hasLevelDim ? nX : -1      // X dimension or n/a
-    };
-    long *edge = edgeLengths;
-    uint nEdges = (hasLevelDim ? 5 : 4);
+    std::size_t nX = (long)itsNX, nY = (long)itsNY;
 
-    if (ensembleDim.isNull())
+    std::vector<std::size_t> offsets, edges;
+
+    // Ensemble dimension is always first, if it exists
+    if (!ensembleDim.isNull())
     {
-      if (!(*itsVarIterator)->set_cur(timeIndex, levelDim ? levelIndex : -1))
-        throw Fmi::Exception(BCP, "Failed to set current netcdf time/level");
-
-      edge++;
-      nEdges--;
+      offsets.push_back(0);
+      edges.push_back(1);  // Ensemble dimension, edge length 1
     }
-    else if (!(*itsVarIterator)->set_cur(0, timeIndex, levelDim ? levelIndex : -1))
-      throw Fmi::Exception(BCP, "Failed to set current netcdf ensemble/time/level");
 
-    long edge1 = *(edge++);
-    long edge2 = *(edge++);
-    long edge3 = *(edge++);
-    long edge4 = *(edge++);
-    long edge5 = (!ensembleDim.isNull() ? *edge : -1);
+    // Time dimension is always after it or the first if ensemble is not used
+    offsets.push_back(timeIndex);
+    edges.push_back(1);  // Time dimension, edge length 1
 
-    // It seems there can be at max 1 missing (-1) edge at the end of parameter edges
-    //
-    // e.g.
-    // n,n,n and n,n,n,-1 are both valid for surface data without ensemble
-    // n,n,n,n and n,n,n,n,-1 are both valid (level data without ensemble or surface data with it)
+    if (hasLevelDim)
+    {
+      offsets.push_back(levelIndex);
+      edges.push_back(1);  // Level dimension, edge length 1
+    }
 
-    CHECK((*itsVarIterator).putVar(values.get()), "Failed to store netcdf variable values");
+    offsets.push_back(y0);
+    edges.push_back(nY);  // Y dimension, edge length nY
+
+    offsets.push_back(x0);
+    edges.push_back(nX);  // X dimension, edge length nX
+
+    itsVarIterator->putVar(offsets, edges, values.get());
+
   }
   catch (...)
   {
