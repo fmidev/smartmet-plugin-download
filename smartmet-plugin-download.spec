@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.6.17
+Version: 25.9.1
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Sep  1 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.9.1-1.fmi
+- Update according to smartmet-library-spine ABI changes
+
 * Tue Jun 17 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.6.17-1.fmi
 - Support for grid level type 21 on grib output (MostUnstableParcelDeparture, typeOfFirstFixedLevel 17); BRAINSTORM-3210
 
