@@ -283,6 +283,10 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     string model = getRequestParam(req, config.defaultProducer(), "model", "");
     reqParams.producer = getRequestParam(req, config.defaultProducer(), "producer", "");
 
+    auto gId = getRequestInt(req, config.defaultProducer(), "geometryid", -1);
+    (void) gId;
+    reqParams.geometryId = getRequestParam(req, config.defaultProducer(), "geometryid", "");
+
     if (reqParams.dataSource == GridContent)
     {
       // Common producer name is not used by data query, just setting some nonempty value.
@@ -293,6 +297,8 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
       reqParams.producer = "gridcontent";
     }
+    else if (!reqParams.geometryId.empty())
+      throw Fmi::Exception(BCP, "Cannot specify geometryid option with non grid content data");
     else if (!reqParams.producer.empty())
     {
       if ((!model.empty()) && (model != reqParams.producer))
@@ -350,6 +356,9 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     // Projection, bounding and grid size/step
 
     reqParams.projection = getRequestParam(req, producer, "projection", "");
+    if ((! reqParams.projection.empty()) && (! reqParams.geometryId.empty()))
+      throw Fmi::Exception(BCP, "Cannot specify projection and geometryid simultaneously");
+
     if (reqParams.dataSource == QueryData)
       reqParams.projType = getProjectionType(reqParams, config.getLegacyMode());
 
@@ -363,6 +372,19 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     reqParams.gridSize = getRequestParam(req, producer, "gridsize", "");
     reqParams.gridResolution = getRequestParam(req, producer, "gridresolution", "");
     reqParams.gridStep = getRequestParam(req, producer, "gridstep", "");
+
+    if (
+        (! reqParams.geometryId.empty()) &&
+        (!
+         (
+          reqParams.bbox.empty() &&
+          reqParams.gridCenter.empty() &&
+          reqParams.gridSize.empty() &&
+          reqParams.gridResolution.empty()
+         )
+        )
+       )
+      throw Fmi::Exception(BCP, "Cannot specify grid bounding or resolution with geometryid");
 
     if (!reqParams.bbox.empty())
       // Bottom left lon,lat and top right lon,lat; bllon,bllat,trlon,trlat
