@@ -7,7 +7,7 @@ REQUIRES = gdal jsoncpp configpp
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
 ECCODES_LIBS = -leccodes
-ifneq ($(foreach ext, so a, $(wildcard $(libdir)/libeccodes.$(ext))),)
+ifneq ($(words $(foreach ext, so a, $(wildcard $(libdir)/libeccodes_memfs.$(ext)))),0)
 	ECCODES_LIBS += -leccodes_memfs
 endif
 
@@ -36,7 +36,7 @@ LIBS += $(PREFIX_LDFLAGS) \
 	-lbz2 -lz \
 	$(ECCODES_LIBS) \
 	-ljasper \
-	-lnetcdf_c++
+	-lnetcdf_c++4
 
 # What to install
 

@@ -32,19 +32,6 @@ namespace Plugin
 {
 namespace Download
 {
-std::map<std::type_index, netCDF::NcType> NetCdfStreamer::itsTypeMap = {
-    {typeid(uint8_t), NcType::nc_BYTE},
-    {typeid(uint16_t), NcType::nc_USHORT},
-    {typeid(uint32_t), NcType::nc_UINT},
-    {typeid(uint64_t), NcType::nc_UINT64},
-    {typeid(int8_t), NcType::nc_CHAR},
-    {typeid(int16_t), NcType::nc_SHORT},
-    {typeid(int32_t), NcType::nc_INT},
-    {typeid(int64_t), NcType::nc_INT64},
-    {typeid(float), NcType::nc_FLOAT},
-    {typeid(double), NcType::nc_DOUBLE},
-    {typeid(std::string), NcType::nc_STRING}  // FIXME: is this line correct?
-};
 
 NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
@@ -228,6 +215,7 @@ netCDF::NcVar NetCdfStreamer::addVariable(const string &varName,
     if (not dim5.isNull()) dims.push_back(dim5);
 
     auto var = itsFile->addVar(varName, dataType, dims);
+    return var;
   }
   catch (...)
   {
@@ -255,11 +243,11 @@ netCDF::NcVar NetCdfStreamer::addCoordVariable(const string &dimName,
     dim = addDimension(dimName, dimSize);
 
     auto var = addVariable(dimName, dataType, dim);
-    addAttribute(var, "standard_name", stdName);
-    addAttribute(var, "units", unit);
+    var.putAtt("standard_name", stdName);
+    var.putAtt("units", unit);
 
     if (!axisType.empty())
-      addAttribute(var, "axis", axisType);
+      var.putAtt("axis", axisType);
 
     return var;
   }
@@ -269,32 +257,30 @@ netCDF::NcVar NetCdfStreamer::addCoordVariable(const string &dimName,
   }
 }
 
+#if 0
 // ----------------------------------------------------------------------
 /*!
  * \brief Add attribute
  *
  */
 // ----------------------------------------------------------------------
-
 template <typename T1, typename T2>
-void NetCdfStreamer::addAttribute(T1 resource, string attrName, T2 attrValue)
+void NetCdfStreamer::addAttribute(T1 resource, const std::string& attrName,const T2& attrValue)
 {
   try
   {
-    resource.putAtt(attrName, &attrValue);
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-template <typename T1>
-void NetCdfStreamer::addAttribute(T1 resource, string attrName, const std::string &attrValue)
-{
-  try
-  {
-    resource.putAtt(attrName, attrValue.length(), attrValue.c_str());
+    if constexpr (std::is_same<T2, char *>::value)
+    {
+      resource.putAtt(attrName, std::string(attrValue));
+    }
+    else if constexpr (std::is_same<T2, std::string>::value)
+    {
+      resource.putAtt(attrName, attrValue);
+    }
+    else
+    {
+      resource.putAtt(attrName, getNcType<T2>(), attrValue);
+    }
   }
   catch (...)
   {
@@ -303,17 +289,35 @@ void NetCdfStreamer::addAttribute(T1 resource, string attrName, const std::strin
 }
 
 template <typename T1, typename T2>
-void NetCdfStreamer::addAttribute(T1 resource, string attrName, int nValues, T2 *attrValues)
+void NetCdfStreamer::addAttribute(T1 resource, const std::string& attrName, int nValues, const T2 *attrValues)
 {
   try
   {
-    resource.putAtt(attrName.c_str(), nValues, attrValues);
+    if constexpr (std::is_same<T2, char *>::value)
+    {
+      std::vector<std::string> strValues;
+      strValues.reserve(nValues);
+      for (int i = 0; i < nValues; i++)
+      {
+        strValues.push_back(attrValues[i]);
+      }
+      resource.putAtt(attrName.c_str(), nValues, strValues.data());
+    }
+    else if constexpr (std::is_same<T2, std::string>::value)
+    {
+      resource.putAtt(attrName.c_str(), nValues, attrValues);
+    }
+    else
+    {
+      resource.putAtt(attrName.c_str(), getNcType<T2>(), nValues, attrValues);
+    }
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+#endif
 
 // ----------------------------------------------------------------------
 /*!
@@ -444,9 +448,9 @@ void NetCdfStreamer::addTimeDimension()
     itsTimeDim = addDimension("time", timeSize);
 
     itsTimeVar = addVariable("time", ncInt, itsTimeDim);
-    addAttribute(itsTimeVar, "long_name", "time");
-    addAttribute(itsTimeVar, "calendar", "gregorian");
-    addAttribute(itsTimeVar, "units", timeUnitDef.c_str());
+    itsTimeVar.putAtt("long_name", "time");
+    itsTimeVar.putAtt("calendar", "gregorian");
+    itsTimeVar.putAtt("units", timeUnitDef);
 
     try
     {
@@ -594,7 +598,7 @@ void NetCdfStreamer::addEnsembleDimensions()
           addCoordVariable(ensembleDimName, 1, ncShort, "ensemble", "", "Ensemble", itsEnsembleDim);
 //        addCoordVariable(ensembleDimName, 1, ncShort, "realization", "", "E", itsEnsembleDim);
 
-      addAttribute(ensembleVar, "long_name", "Ensemble member");
+      ensembleVar.putAtt("long_name", "Ensemble member");
 
       short forecastNumberDimValue = forecastNumber;
       ensembleVar.putVar(&forecastNumberDimValue);
@@ -632,7 +636,7 @@ void NetCdfStreamer::addEnsembleDimension()
         addCoordVariable("ensemble", 1, ncShort, "ensemble", "", "Ensemble", itsEnsembleDim);
 //      addCoordVariable("ensemble", 1, ncShort, "realization", "", "E", itsEnsembleDim);
 
-    addAttribute(ensembleVar, "long_name", "Ensemble member");
+    ensembleVar.putAtt("long_name", "Ensemble member");
 
     short forecastNumberDimValue = itsGridMetaData.forecastNumber;
     ensembleVar.putVar(&forecastNumberDimValue);
@@ -666,8 +670,8 @@ NcDim NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
     tVar.putVar(times);
       throw Fmi::Exception(BCP, "Failed to store validtimes");
 
-    addAttribute(tVar, "long_name", "time");
-    addAttribute(tVar, "calendar", "gregorian");
+    tVar.putAtt("long_name", "time");
+    tVar.putAtt("calendar", "gregorian");
 
     NcVarAtt uAtt = itsTimeVar.getAtt("units");
     const std::size_t uAttSize = uAtt.getAttLength();
@@ -675,7 +679,7 @@ NcDim NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
     uAtt.getValues(uAttBuf.data());
 
     string unit(uAttBuf.data(), uAttBuf.size());
-    addAttribute(tVar, "units", unit.c_str());
+    tVar.putAtt("units", unit);
 
     return tDim;
   }
@@ -942,8 +946,8 @@ void NetCdfStreamer::addLevelDimensions()
       auto levelVar = addCoordVariable(
           itd->first, itd->second.size(), ncFloat, "level", itda->second.second, "Z", itsLevelDim);
 
-      addAttribute(levelVar, "long_name", (itd->first + " levels").c_str());
-      addAttribute(levelVar, "positive", itda->second.first.c_str());
+      levelVar.putAtt("long_name", itd->first + " levels");
+      levelVar.putAtt("positive", itda->second.first);
 
       float levels[itd->second.size()];
       size_t nLevels = 0;
@@ -987,8 +991,8 @@ void NetCdfStreamer::addLevelDimension()
     auto levelVar =
         addCoordVariable(name, itsDataLevels.size(), ncFloat, "level", unit, "Z", itsLevelDim);
 
-    addAttribute(levelVar, "long_name", (levelVar.getName()) + " level");
-    addAttribute(levelVar, "positive", positive);
+    levelVar.putAtt("long_name", (levelVar.getName()) + " level");
+    levelVar.putAtt("positive", positive);
 
     float levels[itsDataLevels.size()];
     int i = 0;
@@ -1027,13 +1031,13 @@ void NetCdfStreamer::setSpheroidAndWKT(const NcVar &crsVar,
 
     if (invFlattening > 0)
     {
-      addAttribute(crsVar, "semi_major", radiusOrSemiMajor);
-      addAttribute(crsVar, "inverse_flattening", invFlattening);
+      crsVar.putAtt("semi_major", NcType::nc_DOUBLE, radiusOrSemiMajor);
+      crsVar.putAtt("inverse_flattening", NcType::nc_DOUBLE, invFlattening);
     }
     else
-      addAttribute(crsVar, "earth_radius", radiusOrSemiMajor);
+      crsVar.putAtt("earth_radius", NcType::nc_DOUBLE, radiusOrSemiMajor);
 
-    addAttribute(crsVar, "crs_wkt", WKT.c_str());
+    crsVar.putAtt("crs_wkt", WKT);
   }
   catch (...)
   {
@@ -1052,7 +1056,7 @@ void NetCdfStreamer::setLatLonGeometry(const NcVar &crsVar)
 {
   try
   {
-    addAttribute(crsVar, "grid_mapping_name", "latitude_longitude");
+    crsVar.putAtt("grid_mapping_name", "latitude_longitude");
   }
   catch (...)
   {
@@ -1073,9 +1077,9 @@ void NetCdfStreamer::setRotatedLatlonGeometry(const NcVar &crsVar)
   {
     // Note: grid north pole longitude (0 +) 180 works for longitude 0 atleast
 
-    addAttribute(crsVar, "grid_mapping_name", "rotated_latitude_longitude");
-    addAttribute(crsVar, "grid_north_pole_latitude", 0 - itsGridMetaData.southernPoleLat);
-    addAttribute(crsVar, "grid_north_pole_longitude", itsGridMetaData.southernPoleLon + 180);
+    crsVar.putAtt("grid_mapping_name", "rotated_latitude_longitude");
+    crsVar.putAtt("grid_north_pole_latitude", NcType::nc_DOUBLE, 0 - itsGridMetaData.southernPoleLat);
+    crsVar.putAtt("grid_north_pole_longitude", NcType::nc_DOUBLE, itsGridMetaData.southernPoleLon + 180);
   }
   catch (...)
   {
@@ -1119,10 +1123,10 @@ void NetCdfStreamer::setStereographicGeometry(const NcVar &crsVar,
       lat_0 = (lat_ts > 0) ? 90 : -90;
     }
 
-    addAttribute(crsVar, "grid_mapping_name", "polar_stereographic");
-    addAttribute(crsVar, "straight_vertical_longitude_from_pole", lon_0);
-    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
-    addAttribute(crsVar, "standard_parallel", lat_ts);
+    crsVar.putAtt("grid_mapping_name", "polar_stereographic");
+    crsVar.putAtt("straight_vertical_longitude_from_pole", NcType::nc_DOUBLE, lon_0);
+    crsVar.putAtt("latitude_of_projection_origin", NcType::nc_DOUBLE, lat_0);
+    crsVar.putAtt("standard_parallel", NcType::nc_DOUBLE, lat_ts);
   }
   catch (...)
   {
@@ -1148,18 +1152,18 @@ void NetCdfStreamer::setMercatorGeometry(const NcVar &crsVar)
 
     double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
 
-    addAttribute(crsVar, "grid_mapping_name", "mercator");
-    addAttribute(crsVar, "longitude_of_projection_origin", lon_0);
+    crsVar.putAtt("grid_mapping_name", "mercator");
+    crsVar.putAtt("longitude_of_projection_origin", NcType::nc_DOUBLE, lon_0);
 
     if (geometrySRS->FindProjParm(SRS_PP_STANDARD_PARALLEL_1) >= 0)
     {
       double lat_ts = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
-      addAttribute(crsVar, "standard_parallel", lat_ts);
+      crsVar.putAtt("standard_parallel", NcType::nc_DOUBLE, lat_ts);
     }
     else
     {
       double scale_factor = getProjParam(*geometrySRS, SRS_PP_SCALE_FACTOR);
-      addAttribute(crsVar, "scale_factor_at_projection_origin", scale_factor);
+      crsVar.putAtt("scale_factor_at_projection_origin", NcType::nc_DOUBLE, scale_factor);
     }
   }
   catch (...)
@@ -1183,10 +1187,10 @@ void NetCdfStreamer::setYKJGeometry(const NcVar &crsVar)
     const double lat_0 = 0;                // SRS_PP_LATITUDE_OF_ORIGIN
     const double false_easting = 3500000;  // SRS_PP_FALSE_EASTING
 
-    addAttribute(crsVar, "grid_mapping_name", "transverse_mercator");
-    addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
-    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
-    addAttribute(crsVar, "false_easting", false_easting);
+    crsVar.putAtt("grid_mapping_name", "transverse_mercator");
+    crsVar.putAtt("longitude_of_central_meridian", NcType::nc_DOUBLE, lon_0);
+    crsVar.putAtt("latitude_of_projection_origin", NcType::nc_DOUBLE, lat_0);
+    crsVar.putAtt("false_easting", NcType::nc_DOUBLE, false_easting);
 
     setSpheroidAndWKT(crsVar, Fmi::SpatialReference(2393).get());
   }
@@ -1233,9 +1237,9 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
     double lat_0 = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
     double latin1 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
 
-    addAttribute(crsVar, "grid_mapping_name", "lambert_conformal_conic");
-    addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
-    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
+    crsVar.putAtt("grid_mapping_name", "lambert_conformal_conic");
+    crsVar.putAtt("longitude_of_central_meridian", NcType::nc_DOUBLE, lon_0);
+    crsVar.putAtt("latitude_of_projection_origin", NcType::nc_DOUBLE, lat_0);
 
     if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
     {
@@ -1257,14 +1261,14 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
 
       double sp[] = {sp1, sp2};
 
-      addAttribute(crsVar, "standard_parallel", 2, sp);
+      crsVar.putAtt("standard_parallel", NcType::nc_DOUBLE, 2, sp);
     }
     else
-      addAttribute(crsVar, "standard_parallel", latin1);
+      crsVar.putAtt("standard_parallel", NcType::nc_DOUBLE, latin1);
 
-    addAttribute(crsVar, "grid_mapping_name", "lambert_conformal_conic");
-    addAttribute(crsVar, "longitude_of_central_meridian", lon_0);
-    addAttribute(crsVar, "latitude_of_projection_origin", lat_0);
+    crsVar.putAtt("grid_mapping_name", "lambert_conformal_conic");
+    crsVar.putAtt("longitude_of_central_meridian", NcType::nc_DOUBLE, lon_0);
+    crsVar.putAtt("latitude_of_projection_origin", NcType::nc_DOUBLE, lat_0);
   }
   catch (...)
   {
@@ -1285,10 +1289,10 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
   {
     // Conventions
 
-    addAttribute(itsFile.get(), "Conventions", "CF-1.6");
-    addAttribute(itsFile.get(), "title", "<title>");
-    addAttribute(itsFile.get(), "institution", "fmi.fi");
-    addAttribute(itsFile.get(), "source", "<producer>");
+    itsFile->putAtt("Conventions", "CF-1.6");
+    itsFile->putAtt("title", "<title>");
+    itsFile->putAtt("institution", "fmi.fi");
+    itsFile->putAtt("source", "<producer>");
 
     // Time dimension
 
@@ -1424,12 +1428,12 @@ void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, c
       CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
     }
 
-    addAttribute(latVar, "standard_name", "latitude");
-    addAttribute(latVar, "long_name", "latitude");
-    addAttribute(latVar, "units", "degrees_north");
-    addAttribute(lonVar, "standard_name", "longitude");
-    addAttribute(lonVar, "long_name", "longitude");
-    addAttribute(lonVar, "units", "degrees_east");
+    latVar.putAtt("standard_name", "latitude");
+    latVar.putAtt("long_name", "latitude");
+    latVar.putAtt("units", "degrees_north");
+    lonVar.putAtt("standard_name", "longitude");
+    lonVar.putAtt("long_name", "longitude");
+    lonVar.putAtt("units", "degrees_east");
 
     // For YKJ spheroid is already set from epsg:2393
 
@@ -1448,10 +1452,10 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
   {
     // Conventions
 
-    addAttribute(itsFile.get(), "Conventions", "CF-1.6");
-    addAttribute(itsFile.get(), "title", "<title>");
-    addAttribute(itsFile.get(), "institution", "fmi.fi");
-    addAttribute(itsFile.get(), "source", "<producer>");
+    itsFile->putAtt("Conventions", "CF-1.6");
+    itsFile->putAtt("title", "<title>");
+    itsFile->putAtt("institution", "fmi.fi");
+    itsFile->putAtt("source", "<producer>");
 
     // Ensemble dimension
 
@@ -1571,10 +1575,10 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
       lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
 
-      addAttribute(latVar, "standard_name", "latitude");
-      addAttribute(latVar, "units", "degrees_north");
-      addAttribute(lonVar, "standard_name", "longitude");
-      addAttribute(lonVar, "units", "degrees_east");
+      latVar.putAtt("standard_name", "latitude");
+      latVar.putAtt("units", "degrees_north");
+      lonVar.putAtt("standard_name", "longitude");
+      lonVar.putAtt("units", "degrees_east");
 
       for (y = 0, n = 0; (y < yN); y += yStep)
         for (x = 0; (x < xN); x += xStep, n++)
@@ -1631,8 +1635,8 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
     }
 
-    addAttribute(latVar, "long_name", "latitude");
-    addAttribute(lonVar, "long_name", "longitude");
+    latVar.putAtt("long_name", "latitude");
+    lonVar.putAtt("long_name", "longitude");
 
     setSpheroidAndWKT(crsVar, geometrySRS);
   }
@@ -1760,7 +1764,7 @@ NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
 
     // Connect the bounds to the time variable
 
-    addAttribute(tVar, "bounds", name.c_str());
+    tVar.putAtt("bounds", name);
 
     return tDim;
   }
@@ -1959,24 +1963,24 @@ void NetCdfStreamer::addVariables(bool relative_uv)
       float missingValue =
           (itsReqParams.dataSource == QueryData) ? kFloatMissing : gribMissingValue;
 
-      addAttribute(dataVar, "units", unit.c_str());
-      addAttribute(dataVar, "_FillValue", missingValue);
-      addAttribute(dataVar, "missing_value", missingValue);
-      addAttribute(dataVar, "grid_mapping", "crs");
+      dataVar.putAtt("units", unit);
+      dataVar.putAtt("_FillValue", NcType::nc_FLOAT, missingValue);
+      dataVar.putAtt("missing_value", NcType::nc_FLOAT, missingValue);
+      dataVar.putAtt("grid_mapping", "crs");
 
       if (!stdName.empty())
-        addAttribute(dataVar, "standard_name", stdName.c_str());
+        dataVar.putAtt("standard_name", stdName);
 
       if (!longName.empty())
-        addAttribute(dataVar, "long_name", longName.c_str());
+        dataVar.putAtt("long_name", longName);
 
       if ((i < pTable.size()) && (!pTable[i].itsStepType.empty()))
         // Cell method for aggregate data
         //
-        addAttribute(dataVar, "cell_methods", (timeDimName + ": " + pTable[i].itsStepType).c_str());
+        dataVar.putAtt("cell_methods", (timeDimName + ": " + pTable[i].itsStepType));
 
       if (!itsYDim.isNull())
-        addAttribute(dataVar, "coordinates", "lat lon");
+        dataVar.putAtt("coordinates", "lat lon");
 
       itsDataVars.push_back(dataVar);
 

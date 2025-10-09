@@ -8,6 +8,7 @@
 
 #include "DataStreamer.h"
 #include <memory>
+#include <type_traits>
 #include <typeindex>
 #include <ncDim.h>
 #include <ncFile.h>
@@ -86,10 +87,6 @@ class NetCdfStreamer : public DataStreamer
                                  std::string unit,
                                  std::string axisType,
                                  netCDF::NcDim &dim);
-  template <typename T1, typename T2>
-  void addAttribute(T1 resource, std::string attrName, T2 attrValue);
-  template <typename T1, typename T2>
-  void addAttribute(T1 resource, std::string attrName, int nValues, T2 *attrValues);
 
   std::string getEnsembleDimensionName(
       T::ForecastType forecastType, T::ForecastNumber forecastNumber) const;
@@ -145,20 +142,6 @@ class NetCdfStreamer : public DataStreamer
   //
 
   void setGridGeometry(const QueryServer::Query &gridQuery);
-
-  static std::map<std::type_index, netCDF::NcType> itsTypeMap;
-
-  // Mappping from C++ types to netCDF types
-  template <typename T>
-  netCDF::NcType getNcType()
-  {
-    auto it = NetCdfStreamer::itsTypeMap.find(typeid(T));
-    if (it != NetCdfStreamer::itsTypeMap.end())
-      return it->second;
-
-    throw Fmi::Exception(BCP, "Unsupported type");
-  }
-
 };
 
 }  // namespace Download

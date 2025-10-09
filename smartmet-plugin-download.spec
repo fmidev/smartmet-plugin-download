@@ -35,7 +35,7 @@ BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 25.6.17
 BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
 BuildRequires: smartmet-engine-grid-devel >= 25.8.25
-BuildRequires: netcdf-cxx-devel
+BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
 Requires: gdal310-libs
@@ -52,7 +52,7 @@ Requires: smartmet-server >= 25.9.9
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
-Requires: netcdf-cxx
+Requires: netcdf-cxx4
 Provides: %{SPECNAME}
 Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
