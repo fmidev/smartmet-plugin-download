@@ -178,6 +178,7 @@ struct ReqParams
   //
   std::string projection;   // Newbase projection name (and parameters), e.g. 'latlon'
                             // or epsg projection code, e.g. 'epsg:4326'
+  std::string geometryId;   // Target geometry id for grid content data, e.g. 1110 (VIRE)
                             //
   ProjType projType;        // Derived; projection type based on projection
   AreaClassId areaClassId;  // Derived; area class id based on projection

@@ -4158,11 +4158,16 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
 
   if (itsReqParams.projection.empty())
   {
-    auto crs = (((!nativeArea) && nativeResolution) ? "crop" : "data");
-    gridQuery.mAttributeList.addAttribute("grid.crs", crs);
+    if (itsReqParams.geometryId.empty())
+    {
+      auto crs = (((!nativeArea) && nativeResolution) ? "crop" : "data");
+      gridQuery.mAttributeList.addAttribute("grid.crs", crs);
 
-    if (nativeArea && nativeResolution)
-      gridQuery.mAttributeList.addAttribute("grid.size", "1");
+      if (nativeArea && nativeResolution)
+        gridQuery.mAttributeList.addAttribute("grid.size", "1");
+    }
+    else
+      gridQuery.mAttributeList.addAttribute("grid.geometryId", itsReqParams.geometryId);
   }
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
@@ -4240,11 +4245,24 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
 {
   try
   {
+    std::unique_ptr<SmartMet::T::Attribute> crsPtr;
+
     auto attr = "grid.crs";
     auto crsAttr = gridQuery.mAttributeList.getAttribute(attr);
     auto gridProjection = T::GridProjectionValue::Unknown;
 
-    if (crsAttr && (crsAttr->mValue == "crop"))
+    if ((!crsAttr) || crsAttr->mValue.empty())
+    {
+      if (! itsReqParams.geometryId.empty())
+      {
+        auto geometryId = atoi(itsReqParams.geometryId.c_str());
+        auto def = Identification::gridDef.getGrib2DefinitionByGeometryId(geometryId);
+
+        crsPtr.reset(new SmartMet::T::Attribute(attr, def->getWKT()));
+        crsAttr = crsPtr.get();
+      }
+    }
+    else if (crsAttr->mValue == "crop")
     {
       attr = "grid.original.crs";
       crsAttr = gridQuery.mAttributeList.getAttribute(attr);
