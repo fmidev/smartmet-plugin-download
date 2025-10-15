@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.9.9
+Version: 25.10.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,16 +25,16 @@ BuildRequires: gdal310-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 25.9.2
-BuildRequires: smartmet-library-macgyver-devel >= 25.9.4
+BuildRequires: smartmet-library-spine-devel >= 25.9.16
+BuildRequires: smartmet-library-macgyver-devel >= 25.9.30
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-grid-content-devel >= 25.8.25
-BuildRequires: smartmet-library-grid-files-devel >= 25.8.25
+BuildRequires: smartmet-library-grid-content-devel >= 25.10.15
+BuildRequires: smartmet-library-grid-files-devel >= 25.10.15
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 25.6.17
-BuildRequires: smartmet-engine-geonames-devel >= 25.2.18
-BuildRequires: smartmet-engine-grid-devel >= 25.8.25
+BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
+BuildRequires: smartmet-engine-geonames-devel >= 25.9.29
+BuildRequires: smartmet-engine-grid-devel >= 25.10.15
 BuildRequires: netcdf-cxx-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
@@ -43,11 +43,11 @@ Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 25.9.4
+Requires: smartmet-library-macgyver >= 25.9.30
 Requires: smartmet-library-timeseries >= 25.8.1
-Requires: smartmet-library-spine >= 25.9.2
+Requires: smartmet-library-spine >= 25.9.16
 Requires: smartmet-library-newbase >= 25.3.20
-Requires: smartmet-engine-querydata >= 25.6.17
+Requires: smartmet-engine-querydata >= 25.9.17
 Requires: smartmet-server >= 25.9.9
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -62,16 +62,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 25.2.18
-#TestRequires: smartmet-engine-grid >= 25.8.25
-#TestRequires: smartmet-engine-querydata >= 25.6.17
-#TestRequires: smartmet-utils-devel >= 25.8.19
-#TestRequires: smartmet-library-spine-plugin-test >= 25.9.2
+#TestRequires: smartmet-engine-geonames >= 25.9.29
+#TestRequires: smartmet-engine-grid >= 25.10.15
+#TestRequires: smartmet-engine-querydata >= 25.9.17
+#TestRequires: smartmet-utils-devel >= 25.10.10
+#TestRequires: smartmet-library-spine-plugin-test >= 25.9.16
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
-#TestRequires: smartmet-qdtools >= 25.5.26
+#TestRequires: smartmet-qdtools >= 25.10.8
 #TestRequires: smartmet-test-data >= 25.8.13
 #TestRequires: smartmet-test-db >= 25.6.18
-#TestRequires: smartmet-engine-grid-test >= 25.8.25
+#TestRequires: smartmet-engine-grid-test >= 25.10.15
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Oct 15 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.10.15-1.fmi
+- Repackaged due to grid-files API changes
+
 * Tue Sep  9 2025 Pertti Kinnia <pertti.kinnia@fmi.fi> - 25.9.9-1.fmi
 - Added support for fetching grid content data reprojected to given grid geometry (BRAINSTORM-3241)
 
