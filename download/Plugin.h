@@ -51,9 +51,9 @@ class Plugin : public SmartMetPlugin
   Config itsConfig;
 
   Spine::Reactor* itsReactor;
-  Engine::Querydata::Engine* itsQEngine;
-  Engine::Grid::Engine* itsGridEngine;
-  Engine::Geonames::Engine* itsGeoEngine;
+  std::shared_ptr<Engine::Querydata::Engine> itsQEngine;
+  std::shared_ptr<Engine::Grid::Engine> itsGridEngine;
+  std::shared_ptr<Engine::Geonames::Engine> itsGeoEngine;
 };
 
 }  // namespace Download

@@ -25,7 +25,7 @@ BuildRequires: gdal310-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 25.9.16
+BuildRequires: smartmet-library-spine-devel >= 25.10.27
 BuildRequires: smartmet-library-macgyver-devel >= 25.9.30
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
@@ -45,10 +45,10 @@ Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 25.9.30
 Requires: smartmet-library-timeseries >= 25.8.1
-Requires: smartmet-library-spine >= 25.9.16
+Requires: smartmet-library-spine >= 25.10.27
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-engine-querydata >= 25.9.17
-Requires: smartmet-server >= 25.9.9
+Requires: smartmet-server >= 25.10.27
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
@@ -66,7 +66,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-grid >= 25.10.15
 #TestRequires: smartmet-engine-querydata >= 25.9.17
 #TestRequires: smartmet-utils-devel >= 25.10.10
-#TestRequires: smartmet-library-spine-plugin-test >= 25.9.16
+#TestRequires: smartmet-library-spine-plugin-test >= 25.10.27
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
 #TestRequires: smartmet-qdtools >= 25.10.8
 #TestRequires: smartmet-test-data >= 25.8.13

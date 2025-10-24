@@ -931,7 +931,7 @@ void Plugin::query(const Spine::HTTP::Request &req, Spine::HTTP::Response &respo
 
     string filename;
     response.setContent(
-        initializeStreamer(req, *itsQEngine, itsGridEngine, itsGeoEngine, itsConfig, filename));
+        initializeStreamer(req, *itsQEngine, itsGridEngine.get(), itsGeoEngine.get(), itsConfig, filename));
 
     string mime = "application/octet-stream";
     response.setHeader("Content-type", mime.c_str());
@@ -1070,24 +1070,17 @@ void Plugin::init()
 
     /* QEngine */
 
-    auto *engine = itsReactor->getSingleton("Querydata", nullptr);
-    if (!engine)
-      throw Fmi::Exception(BCP, "Querydata engine unavailable");
-    itsQEngine = reinterpret_cast<Engine::Querydata::Engine *>(engine);
+    itsQEngine = itsReactor->getEngine<Engine::Querydata::Engine>("Querydata", nullptr);
 
     /* GridEngine */
 
-    engine = itsReactor->getSingleton("grid", nullptr);
-    itsGridEngine = reinterpret_cast<Engine::Grid::Engine *>(engine);
+    itsGridEngine = itsReactor->getEngine<Engine::Grid::Engine>("grid", nullptr);
 
     /* GeoEngine */
 
-    engine = itsReactor->getSingleton("Geonames", nullptr);
-    if (!engine)
-      throw Fmi::Exception(BCP, "Geonames engine unavailable");
-    itsGeoEngine = reinterpret_cast<Engine::Geonames::Engine *>(engine);
+    itsGeoEngine = itsReactor->getEngine<Engine::Geonames::Engine>("Geonames", nullptr);
 
-    itsConfig.init(itsQEngine, itsGridEngine);
+    itsConfig.init(itsQEngine.get(), itsGridEngine.get());
 
     if (!itsReactor->addContentHandler(
             this,
