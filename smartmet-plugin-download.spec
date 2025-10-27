@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.10.20
+Version: 25.10.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Oct 27 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.10.27-1.fmi
+- Update due to smartmet-library-spine ABI changes
+
 * Mon Oct 20 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.10.20-1.fmi
 - Use netcdf-cxx4 instead of old netcdf-cxx
 
