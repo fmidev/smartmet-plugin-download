@@ -32,7 +32,6 @@ LIBS += $(PREFIX_LDFLAGS) \
 	 $(CORBA_LIBS) \
 	-lboost_thread \
 	-lboost_iostreams \
-	-lboost_system \
 	-lbz2 -lz \
 	$(ECCODES_LIBS) \
 	-ljasper \
