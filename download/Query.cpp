@@ -777,7 +777,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
           gridEngine, originTime, gribOutput, blockQuery, paramDef, pOptions);
 
     if (pOptions.size() == 0)
-      throw Fmi::Exception::Trace(BCP, "No data available");
+      throw Fmi::Exception::Trace(BCP, "No data available").disableStackTrace();
   }
   catch (...)
   {
