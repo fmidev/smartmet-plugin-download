@@ -9,6 +9,7 @@
 #include <boost/format.hpp>
 #include <gis/ProjInfo.h>
 #include <macgyver/Exception.h>
+#include <macgyver/Join.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
@@ -2147,8 +2148,20 @@ void NetCdfStreamer::storeParamValues()
     offsets.push_back(x0);
     edges.push_back(nX);  // X dimension, edge length nX
 
-    itsVarIterator->putVar(offsets, edges, values.get());
-
+    try
+    {
+      itsVarIterator->putVar(offsets, edges, values.get());
+    }
+    catch(const std::exception& e)
+    {
+      auto error = Fmi::Exception::Trace(BCP, "Storing parameter values failed!");
+      const auto dims = itsVarIterator->getDims();
+      error.addParameter("Name", itsParamIterator->name());
+      error.addParameter("offsets", Fmi::join(offsets, [](std::size_t v) { return Fmi::to_string(v); }, ","));
+      error.addParameter("edges", Fmi::join(edges, [](std::size_t v) { return Fmi::to_string(v); }, ","));
+      error.addParameter("Variable dimensions", Fmi::join(dims, [](const NcDim& d) { return d.isNull() ? "-" : Fmi::to_string(d.getSize()); }, ","));
+      throw error;
+    }
   }
   catch (...)
   {
