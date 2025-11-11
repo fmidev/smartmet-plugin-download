@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.10.27
+Version: 25.11.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -26,14 +26,14 @@ BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 25.10.27
-BuildRequires: smartmet-library-macgyver-devel >= 25.9.30
+BuildRequires: smartmet-library-macgyver-devel >= 25.11.5
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-grid-content-devel >= 25.10.15
+BuildRequires: smartmet-library-grid-content-devel >= 25.11.4
 BuildRequires: smartmet-library-grid-files-devel >= 25.10.15
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
-BuildRequires: smartmet-engine-geonames-devel >= 25.9.29
+BuildRequires: smartmet-engine-geonames-devel >= 25.11.3
 BuildRequires: smartmet-engine-grid-devel >= 25.10.15
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
@@ -43,7 +43,7 @@ Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 25.9.30
+Requires: smartmet-library-macgyver >= 25.11.5
 Requires: smartmet-library-timeseries >= 25.8.1
 Requires: smartmet-library-spine >= 25.10.27
 Requires: smartmet-library-newbase >= 25.3.20
@@ -62,13 +62,13 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 25.9.29
+#TestRequires: smartmet-engine-geonames >= 25.11.3
 #TestRequires: smartmet-engine-grid >= 25.10.15
 #TestRequires: smartmet-engine-querydata >= 25.9.17
 #TestRequires: smartmet-utils-devel >= 25.10.10
 #TestRequires: smartmet-library-spine-plugin-test >= 25.10.27
 #TestRequires: smartmet-library-newbase-devel >= 25.3.20
-#TestRequires: smartmet-qdtools >= 25.10.8
+#TestRequires: smartmet-qdtools >= 25.11.3
 #TestRequires: smartmet-test-data >= 25.8.13
 #TestRequires: smartmet-test-db >= 25.6.18
 #TestRequires: smartmet-engine-grid-test >= 25.10.15
@@ -103,6 +103,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Nov 11 2025 Mika Heiskanen <mika.heiskanen@fmi.fi> - 25.11.11-1.fmi
+- Disabled useless stack trace when client requests data that is not available
+
 * Mon Oct 27 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.10.27-1.fmi
 - Update due to smartmet-library-spine ABI changes
 
