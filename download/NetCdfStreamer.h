@@ -63,6 +63,7 @@ class NetCdfStreamer : public DataStreamer
   netCDF::NcDim itsEnsembleDim, itsTimeDim, itsTimeBoundsDim, itsLevelDim, itsYDim,
       itsXDim, itsLatDim, itsLonDim;
   netCDF::NcVar itsTimeVar;
+  std::vector<int> itsTimeValues;
 
   std::list<netCDF::NcVar>::iterator itsVarIterator;
   std::list<netCDF::NcVar> itsDataVars;

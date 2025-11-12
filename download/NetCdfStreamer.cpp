@@ -417,7 +417,8 @@ void NetCdfStreamer::addTimeDimension()
     TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
     Fmi::DateTime startTime = itsDataTimes.front().utc_time();
     size_t timeSize = 0;
-    int times[itsDataTimes.size()];
+    itsTimeValues.reserve(itsDataTimes.size());
+    int *times = itsTimeValues.data();
 
     for (; (timeIter != itsDataTimes.end()); timeIter++, timeSize++)
     {
@@ -664,11 +665,7 @@ NcDim NetCdfStreamer::addTimeDimension(long periodLengthInMinutes,
     auto tDim = addDimension(name, itsTimeDim.getSize());
     tVar = addVariable(name, ncInt, tDim);
 
-    int times[itsTimeDim.getSize()];
-    itsTimeVar.getVar(times);
-
-    tVar.putVar(times);
-      throw Fmi::Exception(BCP, "Failed to store validtimes");
+    CHECK(tVar.putVar(itsTimeValues.data()), "Storing time values failed");
 
     tVar.putAtt("long_name", "time");
     tVar.putAtt("calendar", "gregorian");
