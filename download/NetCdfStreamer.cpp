@@ -1720,7 +1720,7 @@ NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
 
     NcDim tDim = itsFile->getDim(timeDimName);
 
-    if (tDim.isNull())
+    if (not tDim.isNull())
       return tDim;
 
     // Add aggregate period length specific time dimension and variable
