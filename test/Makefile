@@ -64,7 +64,7 @@ test: $(TEST_TARGETS)
 test-qd: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
 	@mkdir -p failures tmp
-	ok=true; smartmet-plugin-test $(TESTER_PARAM) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
+	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
 
 test-grid: $(TEST_PREPARE_TARGETS)
 	ok=true
