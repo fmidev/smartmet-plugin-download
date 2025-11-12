@@ -1,0 +1,1 @@
+GET	/download?producer=pal_skandinavia&format=netcdf&starttime=data&timesteps=2&timestep=60&param=Precipitation1h HTTP/1.0
