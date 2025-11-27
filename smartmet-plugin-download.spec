@@ -30,11 +30,11 @@ BuildRequires: smartmet-library-macgyver-devel >= 25.11.5
 BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
 BuildRequires: smartmet-library-newbase-devel >= 25.3.20
 BuildRequires: smartmet-library-grid-content-devel >= 25.11.4
-BuildRequires: smartmet-library-grid-files-devel >= 25.10.15
+BuildRequires: smartmet-library-grid-files-devel >= 25.11.27
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
 BuildRequires: smartmet-engine-geonames-devel >= 25.11.3
-BuildRequires: smartmet-engine-grid-devel >= 25.10.15
+BuildRequires: smartmet-engine-grid-devel >= 25.11.27
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
@@ -48,6 +48,9 @@ Requires: smartmet-library-timeseries >= 25.8.1
 Requires: smartmet-library-spine >= 25.10.27
 Requires: smartmet-library-newbase >= 25.3.20
 Requires: smartmet-engine-querydata >= 25.9.17
+Requires: smartmet-library-grid-content >= 25.11.4
+Requires: smartmet-library-grid-files >= 25.11.27
+Requires: smartmet-engine-grid >= 25.11.27
 Requires: smartmet-server >= 25.10.27
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
