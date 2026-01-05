@@ -16,7 +16,6 @@ LIBS += $(REQUIRED_LIBS) \
 	-lboost_thread \
 	-lboost_filesystem \
 	-lboost_iostreams \
-	-lboost_system \
 	-lconfig++ \
 	-lbz2 -lz \
 	-leccodes \
