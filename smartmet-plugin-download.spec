@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 25.11.27
+Version: 26.2.4
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Feb  4 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.2.4-1.fmi
+- Update to proj-9.7, gdal-3.12, fmt-12
+
 * Thu Nov 27 2025 Andris Pavēnis <andris.pavenis@fmi.fi> 25.11.27-1.fmi
 - Repackage due to grid-file changes
 
