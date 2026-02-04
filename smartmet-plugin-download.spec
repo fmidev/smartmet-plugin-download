@@ -21,37 +21,37 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 BuildRequires: %{smartmet_boost}-devel
 BuildRequires: gcc-c++
-BuildRequires: gdal310-devel
+BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 25.10.27
-BuildRequires: smartmet-library-macgyver-devel >= 25.11.5
-BuildRequires: smartmet-library-timeseries-devel >= 25.8.1
-BuildRequires: smartmet-library-newbase-devel >= 25.3.20
-BuildRequires: smartmet-library-grid-content-devel >= 25.11.4
-BuildRequires: smartmet-library-grid-files-devel >= 25.11.27
+BuildRequires: smartmet-library-spine-devel >= 26.2.4
+BuildRequires: smartmet-library-macgyver-devel >= 26.2.4
+BuildRequires: smartmet-library-timeseries-devel >= 26.2.4
+BuildRequires: smartmet-library-newbase-devel >= 26.2.4
+BuildRequires: smartmet-library-grid-content-devel >= 26.2.4
+BuildRequires: smartmet-library-grid-files-devel >= 26.2.4
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 25.9.17
-BuildRequires: smartmet-engine-geonames-devel >= 25.11.3
-BuildRequires: smartmet-engine-grid-devel >= 25.11.27
+BuildRequires: smartmet-engine-querydata-devel >= 26.2.4
+BuildRequires: smartmet-engine-geonames-devel >= 26.2.4
+BuildRequires: smartmet-engine-grid-devel >= 26.2.4
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
-Requires: gdal310-libs
+Requires: gdal312-libs
 Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 25.11.5
-Requires: smartmet-library-timeseries >= 25.8.1
-Requires: smartmet-library-spine >= 25.10.27
-Requires: smartmet-library-newbase >= 25.3.20
-Requires: smartmet-engine-querydata >= 25.9.17
-Requires: smartmet-library-grid-content >= 25.11.4
-Requires: smartmet-library-grid-files >= 25.11.27
-Requires: smartmet-engine-grid >= 25.11.27
-Requires: smartmet-server >= 25.10.27
+Requires: smartmet-library-macgyver >= 26.2.4
+Requires: smartmet-library-timeseries >= 26.2.4
+Requires: smartmet-library-spine >= 26.2.4
+Requires: smartmet-library-newbase >= 26.2.4
+Requires: smartmet-engine-querydata >= 26.2.4
+Requires: smartmet-library-grid-content >= 26.2.4
+Requires: smartmet-library-grid-files >= 26.2.4
+Requires: smartmet-engine-grid >= 26.2.4
+Requires: smartmet-server >= 26.2.4
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
@@ -65,22 +65,22 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 25.11.3
-#TestRequires: smartmet-engine-grid >= 25.10.15
-#TestRequires: smartmet-engine-querydata >= 25.9.17
-#TestRequires: smartmet-utils-devel >= 25.10.10
-#TestRequires: smartmet-library-spine-plugin-test >= 25.10.27
-#TestRequires: smartmet-library-newbase-devel >= 25.3.20
-#TestRequires: smartmet-qdtools >= 25.11.3
+#TestRequires: smartmet-engine-geonames >= 26.2.4
+#TestRequires: smartmet-engine-grid >= 26.2.4
+#TestRequires: smartmet-engine-querydata >= 26.2.4
+#TestRequires: smartmet-utils-devel >= 26.2.4
+#TestRequires: smartmet-library-spine-plugin-test >= 26.2.4
+#TestRequires: smartmet-library-newbase-devel >= 26.2.4
+#TestRequires: smartmet-qdtools >= 26.2.4
 #TestRequires: smartmet-test-data >= 25.8.13
-#TestRequires: smartmet-test-db >= 25.6.18
-#TestRequires: smartmet-engine-grid-test >= 25.10.15
+#TestRequires: smartmet-test-db >= 26.2.4
+#TestRequires: smartmet-engine-grid-test >= 26.2.4
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
 
 # makefile.inc side effect (otherwise fails on top level Makefile)
-#TestRequires: gdal310-devel
+#TestRequires: gdal312-devel
 #TestRequires: jsoncpp-devel
 #TestRequires: ctpp2-devel
 
