@@ -464,6 +464,25 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
         throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
     }
 
+    try
+    {
+      auto bitsPerValue = getRequestParam(req, producer, "bitspervalue", "");
+
+      if (!bitsPerValue.empty())
+      {
+        auto bpv = Fmi::stoi(bitsPerValue);
+
+        if ((bpv < 0) || (bpv > 32))
+          throw Fmi::Exception(BCP, "");
+
+        reqParams.bitsPerValue = bpv;
+      }
+    }
+    catch (...)
+    {
+      throw Fmi::Exception(BCP, "Invalid packing bitspervalue, must be in range 0-32");
+    }
+
     // Tables version for grib2
 
     reqParams.grib2TablesVersion =

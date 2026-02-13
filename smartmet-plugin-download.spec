@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.2.4
+Version: 26.2.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Feb 13 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.2.13-1.fmi
+- Fixed handling of output grib packingType by setting it after the data values are set, otherwise the used packing type was ignored (overwritten by default grid_simple). Added request parameter 'bitspervalue' to set nondefault (default is 24) number of bits used for packing (BRAINSTORM-3370)
+
 * Wed Feb  4 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.2.4-1.fmi
 - Update to proj-9.7, gdal-3.12, fmt-12
 

@@ -859,11 +859,6 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }
 
-    // Set packing type
-
-    if (!itsReqParams.packing.empty())
-      gset(itsGribHandle, "packingType", itsReqParams.packing);
-
     // Set shape of the earth
 
     setShapeOfTheEarth(area);
@@ -926,11 +921,6 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
     }
-
-    // Set packing type
-
-    if (!itsReqParams.packing.empty())
-      gset(itsGribHandle, "packingType", itsReqParams.packing);
 
     // Set shape of the earth
 
@@ -1568,6 +1558,13 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
       }
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
+
+    // Seems packing type and number of bits needs to be set after values is set
+
+    if (!itsReqParams.packing.empty())
+      gset(itsGribHandle, "packingType", itsReqParams.packing);
+    if (itsReqParams.bitsPerValue >= 0)
+      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
   }
   catch (...)
   {
@@ -1690,6 +1687,13 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     }
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
+
+    // Seems packing type and number of bits needs to be set after values is set
+
+    if (!itsReqParams.packing.empty())
+      gset(itsGribHandle, "packingType", itsReqParams.packing);
+    if (itsReqParams.bitsPerValue >= 0)
+      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
   }
   catch (...)
   {

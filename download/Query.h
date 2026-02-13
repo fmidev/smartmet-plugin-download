@@ -222,9 +222,10 @@ struct ReqParams
                               //
   OutputFormat outputFormat;  // Derived; set based on format
   //
-  // Packing type and tables version for grib
+  // Packing type, bitsPerValue and tables version for grib
   //
   std::string packing;              // If given, set to grib as is
+  int bitsPerValue = -1;            // 0-32, default -1 for using grib_api default
                                     //
   unsigned int grib2TablesVersion;  // If given (nonzero), set as grib2
                                     // 'gribMasterTablesVersionNumber'
