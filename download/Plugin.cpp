@@ -453,6 +453,13 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     reqParams.packing = getRequestParam(req, producer, "packing", "");
     Fmi::ascii_tolower(reqParams.packing);
 
+    // Packing bitspervalue for grib
+
+    auto bitsPerValue = getRequestParam(req, producer, "bitspervalue", "");
+
+    if (reqParams.packing.empty() != bitsPerValue.empty())
+      throw Fmi::Exception(BCP, "Both packing and bitspervalue must be given");
+
     if (!reqParams.packing.empty())
     {
       if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
@@ -466,8 +473,6 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
     try
     {
-      auto bitsPerValue = getRequestParam(req, producer, "bitspervalue", "");
-
       if (!bitsPerValue.empty())
       {
         auto bpv = Fmi::stoi(bitsPerValue);

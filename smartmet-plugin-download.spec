@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.2.13
+Version: 26.2.27
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Feb 27 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.2.27-1.fmi
+- Added kludge for setting grib packing needed atleast with old eccodes (2.27.1) since grid_second_order results 1'st message to have 0 as referenceValue, binaryScaleFactor and decimalScaleFactor and the data is corrupt, and grid_simple results to test error "Detected a size mismatch, Section 7" if bitsPerValue is not 24 (the default). Build first message twice getting it inbetween to get correct results (BRAINSTORM-3378). Added tests for packing and test dumper script (grb2_defpackingdumper) for grid_second_order packed data since wgrib2 (grb2_defdumper) does not support it. Require both packing type and bitspervalue to be given simultaneously
+
 * Fri Feb 13 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.2.13-1.fmi
 - Fixed handling of output grib packingType by setting it after the data values are set, otherwise the used packing type was ignored (overwritten by default grid_simple). Added request parameter 'bitspervalue' to set nondefault (default is 24) number of bits used for packing (BRAINSTORM-3370)
 

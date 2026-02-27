@@ -6,8 +6,7 @@ if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
   exit 1
 fi
 
-defdumper=$(dirname $(readlink -f "$0"))/grb2_defdumper
-
+scr=$0
 ok=0
 
 if [ $# -eq 1 ]; then
@@ -69,12 +68,18 @@ if [ $ok -eq 0 ]; then
   exit 1
 fi
 
+if [[ "$grb" =~ _packing\.get$ ]]; then
+  defdumper=$(dirname $(readlink -f "$scr"))/grb2_defpackingdumper
+else
+  nr=""
+  defdumper=$(dirname $(readlink -f "$scr"))/grb2_defdumper
+fi
+
 y=1
 x=1
 
 while [ $y -le $3 ]
 do
-
   ijlat=""
 
   if [ $x -gt $1 ]; then
@@ -96,6 +101,6 @@ do
   fi
 
   if [ "$ijlat" != "" ]; then
-    $defdumper $grb -f3- -for_n 1::$5 -vt $ijlat
+    $defdumper $grb -f3- -for_n 1:$nr:$5 -vt $ijlat
   fi
 done

@@ -1559,12 +1559,14 @@ void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
 
-    // Seems packing type and number of bits needs to be set after values is set
+    // At least with older eccodes (2.27.1) it seems number of bits and packing type needs
+    // to be set after values is set
+
+    if (itsReqParams.bitsPerValue >= 0)
+      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
 
     if (!itsReqParams.packing.empty())
       gset(itsGribHandle, "packingType", itsReqParams.packing);
-    if (itsReqParams.bitsPerValue >= 0)
-      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
   }
   catch (...)
   {
@@ -1688,12 +1690,14 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
 
-    // Seems packing type and number of bits needs to be set after values is set
+    // At least with older eccodes (2.27.1) it seems number of bits and packing type needs
+    // to be set after values is set
+
+    if (itsReqParams.bitsPerValue >= 0)
+      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
 
     if (!itsReqParams.packing.empty())
       gset(itsGribHandle, "packingType", itsReqParams.packing);
-    if (itsReqParams.bitsPerValue >= 0)
-      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
   }
   catch (...)
   {
@@ -1716,11 +1720,29 @@ string GribStreamer::getGribMessage(Engine::Querydata::Q q,
 {
   try
   {
+    auto firstMessage = itsOriginTime.is_not_a_date_time();
+
     addValuesToGrib(q, mt, level, values, scale, offset);
 
     const void *mesg;
     std::size_t mesg_len;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
+
+    // BRAINSTORM-3378; kludge for setting packing needed atleast with old eccodes (2.27.1)
+    //
+    // grid_second_order results 1'st message to have 0 as referenceValue, binaryScaleFactor and
+    // decimalScaleFactor and the data is corrupt.
+    //
+    // grid_simple results to test error "Detected a size mismatch, Section 7" if bitsPerValue is
+    // not 24 (the default).
+    //
+    // Build first message twice getting it inbetween to get correct results
+
+    if (firstMessage && (! itsReqParams.packing.empty()))
+    {
+      addValuesToGrib(q, mt, level, values, scale, offset);
+      grib_get_message(itsGribHandle, &mesg, &mesg_len);
+    }
 
     if (mesg_len == 0)
       throw Fmi::Exception(BCP, "Empty grib message returned");
