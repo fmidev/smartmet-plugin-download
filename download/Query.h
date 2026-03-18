@@ -269,7 +269,7 @@ class Query
   bool isFunctionParameter(
       const std::string &param, T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level) const;
 
-  typedef std::map<uint, T::GenerationInfo> GenerationInfos;
+  typedef std::map<T::GenerationId, T::GenerationInfo> GenerationInfos;
   typedef std::map<std::string, T::ContentInfoList> ParameterContents;
 
   const GenerationInfos &getGenerationInfos() { return generationInfos; }
@@ -282,7 +282,7 @@ class Query
   std::map<std::string, std::string> functionParameters;
   GenerationInfos generationInfos;
   ParameterContents parameterContents;
-  typedef std::map<std::string, uint> OriginTimeGenerations;
+  typedef std::map<std::string, T::GenerationId> OriginTimeGenerations;
   typedef std::map<std::string, OriginTimeGenerations> ProducerGenerations;
   ProducerGenerations producerGenerations;
 
@@ -309,7 +309,7 @@ class Query
   bool getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
                                const std::string &producer,
                                const std::string &originTime,
-                               uint &generationId);
+                               T::GenerationId &generationId);
   void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
                                       Fmi::DateTime originTime,
                                       bool gribOutput,

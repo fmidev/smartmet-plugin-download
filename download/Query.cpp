@@ -482,7 +482,7 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
 bool Query::getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
                                     const string &producer,
                                     const string &originTime,
-                                    uint &generationId)
+                                    T::GenerationId &generationId)
 {
   try
   {
@@ -615,7 +615,7 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     // Get generation id for the requested or latest common origintime
 
     auto cS = gridEngine->getContentServer_sptr();
-    uint generationId;
+    T::GenerationId generationId;
 
     if (!getOriginTimeGeneration(cS, producer, originTimeStr, generationId))
       return;
