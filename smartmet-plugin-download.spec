@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.2.27
+Version: 26.3.18
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,16 +25,16 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.2.4
+BuildRequires: smartmet-library-spine-devel >= 26.3.13
 BuildRequires: smartmet-library-macgyver-devel >= 26.2.4
 BuildRequires: smartmet-library-timeseries-devel >= 26.2.4
 BuildRequires: smartmet-library-newbase-devel >= 26.2.4
-BuildRequires: smartmet-library-grid-content-devel >= 26.2.4
-BuildRequires: smartmet-library-grid-files-devel >= 26.2.4
+BuildRequires: smartmet-library-grid-content-devel >= 26.3.18
+BuildRequires: smartmet-library-grid-files-devel >= 26.3.18
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 26.2.4
-BuildRequires: smartmet-engine-geonames-devel >= 26.2.4
-BuildRequires: smartmet-engine-grid-devel >= 26.2.4
+BuildRequires: smartmet-engine-geonames-devel >= 26.3.10
+BuildRequires: smartmet-engine-grid-devel >= 26.3.18
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
@@ -45,13 +45,13 @@ Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 26.2.4
 Requires: smartmet-library-timeseries >= 26.2.4
-Requires: smartmet-library-spine >= 26.2.4
+Requires: smartmet-library-spine >= 26.3.13
 Requires: smartmet-library-newbase >= 26.2.4
 Requires: smartmet-engine-querydata >= 26.2.4
-Requires: smartmet-library-grid-content >= 26.2.4
-Requires: smartmet-library-grid-files >= 26.2.4
-Requires: smartmet-engine-grid >= 26.2.4
-Requires: smartmet-server >= 26.2.4
+Requires: smartmet-library-grid-content >= 26.3.18
+Requires: smartmet-library-grid-files >= 26.3.18
+Requires: smartmet-engine-grid >= 26.3.18
+Requires: smartmet-server >= 26.3.9
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
@@ -65,16 +65,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 26.2.4
-#TestRequires: smartmet-engine-grid >= 26.2.4
+#TestRequires: smartmet-engine-geonames >= 26.3.10
+#TestRequires: smartmet-engine-grid >= 26.3.18
 #TestRequires: smartmet-engine-querydata >= 26.2.4
 #TestRequires: smartmet-utils-devel >= 26.2.4
-#TestRequires: smartmet-library-spine-plugin-test >= 26.2.4
+#TestRequires: smartmet-library-spine-plugin-test >= 26.3.13
 #TestRequires: smartmet-library-newbase-devel >= 26.2.4
-#TestRequires: smartmet-qdtools >= 26.2.4
+#TestRequires: smartmet-qdtools >= 26.2.6
 #TestRequires: smartmet-test-data >= 25.8.13
-#TestRequires: smartmet-test-db >= 26.2.4
-#TestRequires: smartmet-engine-grid-test >= 26.2.4
+#TestRequires: smartmet-test-db >= 26.2.17
+#TestRequires: smartmet-engine-grid-test >= 26.3.18
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Mar 18 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.3.18-1.fmi
+- Harmonizing GRID data types
+
 * Fri Feb 27 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.2.27-1.fmi
 - Added kludge for setting grib packing needed atleast with old eccodes (2.27.1) since grid_second_order results 1'st message to have 0 as referenceValue, binaryScaleFactor and decimalScaleFactor and the data is corrupt, and grid_simple results to test error "Detected a size mismatch, Section 7" if bitsPerValue is not 24 (the default). Build first message twice getting it inbetween to get correct results (BRAINSTORM-3378). Added tests for packing and test dumper script (grb2_defpackingdumper) for grid_second_order packed data since wgrib2 (grb2_defdumper) does not support it. Require both packing type and bitspervalue to be given simultaneously
 
