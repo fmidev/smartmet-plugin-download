@@ -1,109 +1,10 @@
-Table of Contents
-=================
+# smartmet-plugin-download
 
-  * [SmartMet Server](#SmartMet Server)
-  * [Introduction](#introduction)
-  * [Interface](#interface)
-    * [Levels](#levels)
-    * [Parameters](#parameters)
-      * [Regular querydata parameter names](#regular-querydata-parameter-names)
-      * [Numeric querydata parameters](#numeric-querydata-parameters)
-      * [Grid data parameters](#grid-data-parameters)
-    * [Time control](#time-control)
-      * [Origintime](#origintime)
-      * [Time interval](#time-interval)
-      * [Timestep](#timestep)
-      * [Number of timesteps](#number-of-timesteps)
-    * [Packing](#packing)
-    * [Projections](#projections)
-    * [Data sources](#data-sources)
-      * [Grid data parameter name format](#grid-data-parameter-name-format)
-      * [Grid data geometry id](#grid-data-geometry-id)
-      * [Grid data level types](#grid-data-level-types)
-      * [Grid data forecast types](#grid-data-forecast-types)
-      * [Grid data forecast number](#grid-data-forecast-number)
-  * [Configuration](#configuration)
-    * [Main configuration file](#main-configuration-file)
-      * [GRIB Configuration](#grib-configuration)
-      * [NetCDF Configuration](#netcdf-configuration)
-      * [Producers](#producers)
-      * [Path for temporary NetCDF files](#path-for-temporary-netcdf-files)
-    * [GRIB_API to QueryData parameter mapping](#grib_api-to-querydata-parameter-mapping)
-      * [gribid](#gribid)
-      * [newbaseid](#newbaseid)
-      * [name](#name)
-      * [offset](#offset)
-      * [divisor](#divisor)
-      * [leveltype](#leveltype)
-      * [levelvalue](#levelvalue)
-      * [centre](#centre)
-      * [templatenumber](#templatenumber)
-      * [aggregatetype](#aggregatetype)
-      * [aggregatelength](#aggregatelength)
-      * [Grib to QueryData parameter configuration example](#grib-to-querydata-parameter-configuration-example)
-    * [GRIB_API to grid data parameter mapping](#grib_api-to-grid-data-parameter-mapping)
-      * [radonname](#radonname)
-      * [radonproducer](#radonproducer)
-      * [name](#name-1)
-      * [centre](#centre-1)
-      * [discipline](#discipline)
-      * [category](#category)
-      * [parameternumber](#parameternumber)
-      * [table2version](#table2version)
-      * [indicatoroftimerange](#indicatoroftimerange)
-      * [typeofstatisticalprocessing](#typeofstatisticalprocessing)
-      * [templatenumber](#templatenumber-1)
-      * [aggregatelength](#aggregatelength-1)
-      * [Grib1 to grid data parameter configuration example](#grib1-to-grid-data-parameter-configuration-example)
-      * [Grib2 to grid data parameter configuration example](#grib2-to-grid-data-parameter-configuration-example)
-    * [NetCDF to QueryData parameter mapping](#netcdf-to-querydata-parameter-mapping)
-      * [newbaseid](#newbaseid-1)
-      * [name](#name-2)
-      * [standardname](#standardname)
-      * [longname](#longname)
-      * [unit](#unit)
-      * [offset](#offset-1)
-      * [divisor](#divisor-1)
-      * [aggregatetype](#aggregatetype-1)
-      * [aggregatelength](#aggregatelength-2)
-      * [NetCDF to QueryData parameter configuration example](#netcdf-to-querydata-parameter-configuration-example)
-    * [NetCDF to grid data parameter mapping](#netcdf-to-grid-data-parameter-mapping)
-      * [radonname](#radonname-1)
-      * [radonproducer](#radonproducer-1)
-      * [name](#name-3)
-      * [standardname](#standardname-1)
-      * [longname](#longname-1)
-      * [unit](#unit-1)
-      * [aggregatetype](#aggregatetype-2)
-      * [aggregatelength](#aggregatelength-3)
-      * [NetCDF to grid data parameter configuration example](#netcdf-to-grid-data-parameter-configuration-example)
-    * [Docker](#docker)
-  * [Example queries](#example-queries)
+Part of [SmartMet Server](https://github.com/fmidev/smartmet-server). See the [SmartMet Server documentation](https://github.com/fmidev/smartmet-server) for a full overview of the ecosystem.
 
-# SmartMet Server
+The download plugin provides bulk data download from SmartMet Server in GRIB, NetCDF, and QueryData formats. It supports parameter selection, time range specification, level filtering, and projection definition.
 
-[SmartMet Server](https://github.com/fmidev/smartmet-server) is a data and product server for MetOcean data. It
-provides a high capacity and high availability data and product server
-for MetOcean data. The server is written in C++, since 2008 it has
-been in operational use by the Finnish Meteorological Institute FMI.
-
-
-# Introduction 
-
-The SmartMet download plugin provides access to the timeseries data
-interpolated from the QueryData. It provides grid data from the qengine as
-binary data. The plugin supports GRIB (GRIB1 or GRIB2), NetCDF and
-QueryData formats. Supports all proj.4 projections depending on the
-output format.
-
-Download plugin supports slicing the data by area (bbox), elevation
-(pressure and/or model level) and time (start time, end time and
-origin time). With this plugin we can define the grid size and/or resolution by
-selecting every Nth grid cell on the x and the y axis,
-by grid size based on the number of cells on the x and the y
-axis, or by grid cell width/height.
-
-# Interface
+## Interface
 The interface derives from the timeseries module. See it's documentation for the options below.
 level/levels and model(producer) options are not used when fetching grid data; see [Data sources](#data-sources).
 
@@ -320,15 +221,15 @@ Supported input projections are as follows
   - LambertAzimuthalEqualArea
 
 
-# Configuration
+## Configuration
 
-## Main configuration file
+### Main configuration file
 
 The Download plugin's main configuration file is
 set in SmartMet server's configuration. The configuration file defines
 format specific configuration files for parameter mapping.
 
-### GRIB Configuration
+#### GRIB Configuration
 Configuration file for GRIB parameter mapping can be given as follows. If GRIB
 output is not required this setting can be omitted. See [GRIB_API to QueryData parameter mapping](#grib_api-to-querydata-parameter-mapping)
 and [GRIB_API to grid data parameter mapping](#grib_api-to-grid-data-parameter-mapping) for configuration details.
@@ -337,7 +238,7 @@ and [GRIB_API to grid data parameter mapping](#grib_api-to-grid-data-parameter-m
 gribconfig = <filename>;
 </code></pre>
 
-### NetCDF Configuration
+#### NetCDF Configuration
 
 Configuration file for NetCDF parameter mapping can be given as follows. If NetCDF output is not required this setting can be omitted. See [NetCDF to QueryData parameter mapping](#netcdf-to-querydata-parameter-mapping)
 and [NetCDF to grid data parameter mapping](#netcdf-to-grid-data-parameter-mapping) for configuration details.
@@ -346,10 +247,10 @@ and [NetCDF to grid data parameter mapping](#netcdf-to-grid-data-parameter-mappi
 netcdfconfig = <filename>;
 </code></pre>
 
-### Producers
+#### Producers
 The Default producer at FMI is "pal_skandinavia". All available QueryData producers can be used or only a subset of producers can be enabled by configuration.
 
-### Path for temporary NetCDF files.
+#### Path for temporary NetCDF files.
 <pre><code> 
 tempdirectory = <pathname>;
 </code></pre>
@@ -357,7 +258,7 @@ tempdirectory = <pathname>;
 * default: /dev/shm. 
 * Note: for better performance memory mapped file system should be used. Complete NetCDF files (multiple files when  processing simultaneous download requests) are written to this  location; disk space availability could become an issue.
 
-## GRIB_API to QueryData parameter mapping
+### GRIB_API to QueryData parameter mapping
 
 Configuration file grib.json contains a list of elements and each element represents a single QueryData-GRIB_API mapping [ mapping_node1, mapping_node2 ...]
 
@@ -365,47 +266,47 @@ Each mapping_node contains key-value-pairs where the key can be any of the follo
 
 gribid, newbaseid, name, offset, divisor, leveltype, levelvalue, centre, templatenumber, aggregatetype, aggregatelength
 
-### gribid
+#### gribid
 GRIB-API edition independent paramId
 
-### newbaseid
+#### newbaseid
 QueryData parameter number
 
-### name
+#### name
 Text representing the name of the parameter
 
-### offset
+#### offset
 Parameter value scaling offset. Default: 0
 
 out_value = ( in_value + offset ) / divisor
 
-### divisor
+#### divisor
 Parameter value scaling divisor. Default: 1
 
 out_value = ( in_value + offset ) / divisor
 
-### leveltype
+#### leveltype
 GRIB-API level type
 
-### levelvalue
+#### levelvalue
 Level value
 
-### centre
+#### centre
 GRIB-API centre name. efkl for the local FMI definitions.
 
-### templatenumber
+#### templatenumber
 GRIB-API grib2 product definition template number
 
 See <a href="https://codes.ecmwf.int/grib/format/grib2/ctables/4/0/">GRIB-API productDefinitionTemplateNumber</a>
 
-### aggregatetype
+#### aggregatetype
 GRIB-API method of aggregate
 
-### aggregatelength
+#### aggregatelength
 Duration of aggregation in minutes
 For example, for 00-24 UTC maximum temperature at 2 meters, which has a gribid of 51 and newbaseid 358, has an aggregate length of 1440 minutes, i.e., 24 hours * 60 minutes.
 
-### Grib to QueryData parameter configuration example
+#### Grib to QueryData parameter configuration example
 
 {
   "gribid" : 167,
@@ -416,7 +317,7 @@ For example, for 00-24 UTC maximum temperature at 2 meters, which has a gribid o
   "levelvalue" : 2
 }
 
-## GRIB_API to grid data parameter mapping
+### GRIB_API to grid data parameter mapping
 
 Configuration file grib.json contains a list of elements and each element represents a single grid data-GRIB_API mapping [ mapping_node1, mapping_node2 ...]
 
@@ -424,49 +325,49 @@ Each mapping_node contains key-value-pairs where the key can be any of the follo
 
 radonname, radonproducer, name, centre, discipline, category, parameternumber, indicatoroftimerange, typeofstatisticalprocessing, templatenumber, aggregatelength
 
-### radonname
+#### radonname
 Grid data parameter name
 
-### radonproducer
+#### radonproducer
 Grid data producer name. If producer name is omitted, the configuration entry is used as the default for the parameter for producers which have no named entry.
 
-### name
+#### name
 Text representing the name of the parameter
 
-### centre
+#### centre
 GRIB-API centre name
 
-### discipline
+#### discipline
 GRIB-API grib2 discipline
 
-### category
+#### category
 GRIB-API grib2 category
 
-### parameternumber
+#### parameternumber
 GRIB-API parameter number
 
-### table2version
+#### table2version
 GRIB-API grib1 tables version
 
-### indicatoroftimerange
+#### indicatoroftimerange
 GRIB-API grib1 method of aggregate
 
 See <a href="https://codes.ecmwf.int/grib/format/grib1/ctable/5/">GRIB-API indicatoroftimerange</a>
 
-### typeofstatisticalprocessing
+#### typeofstatisticalprocessing
 GRIB-API grib2 method of aggregate
 
 See <a href="https://codes.ecmwf.int/grib/format/grib2/ctables/4/10/">GRIB-API typeofstatisticalprocessing</a>
 
-### templatenumber
+#### templatenumber
 GRIB-API grib2 product definition template number
 
 See <a href="http://apps.ecmwf.int/codes/grib/format/grib2/ctables/4/0/">GRIB-API productDefinitionTemplateNumber</a>
 
-### aggregatelength
+#### aggregatelength
 Duration of aggregation in minutes
 
-### Grib1 to grid data parameter configuration example
+#### Grib1 to grid data parameter configuration example
 
 {
   "radonname" : "P-STDDEV-PA",
@@ -479,7 +380,7 @@ Duration of aggregation in minutes
   }
 }
 
-### Grib2 to grid data parameter configuration example
+#### Grib2 to grid data parameter configuration example
 
 {
   "radonname" : "WGV-MS",
@@ -494,7 +395,7 @@ Duration of aggregation in minutes
   "aggregatelength" : 60
 }
 
-## NetCDF to QueryData parameter mapping
+### NetCDF to QueryData parameter mapping
 
 The configuration file netcdf.json which contains a list of elements and each element represents a single QueryData-NetCDF_API mapping [ mapping_node1, mapping_node2 ...]
 
@@ -502,38 +403,38 @@ Each mapping_node contains key-value-pairs where the key can be any of the follo
 
 newbaseid, name, standardname, longname, unit, offset, divisor, aggregatetype, aggregatelength
 
-### newbaseid
+#### newbaseid
 QueryData parameter number
 
-### name
+#### name
 Text representing the name of the parameter
 
-### standardname
+#### standardname
 NetCDF CF parameter standard name
 
-### longname
+#### longname
 NetCDF CF parameter long name
 
-### unit
+#### unit
 NetCDF CF parameter unit
 
-### offset
+#### offset
 Parameter value scaling offset. Default: 0
 
 out_value = ( in_value + offset ) / divisor
 
-### divisor
+#### divisor
 Parameter value scaling divisor. Default: 1
 
 out_value = ( in_value + offset ) / divisor
 
-### aggregatetype
+#### aggregatetype
 NetCFD method of aggregate
 
-### aggregatelength
+#### aggregatelength
 Aggregate duration in minutes
 
-### NetCDF to QueryData parameter configuration example
+#### NetCDF to QueryData parameter configuration example
 
 {
   "newbaseid" : 1,
@@ -544,7 +445,7 @@ Aggregate duration in minutes
   "unit" : "Pa"
 }
 
-## NetCDF to grid data parameter mapping
+### NetCDF to grid data parameter mapping
 
 The configuration file netcdf.json which contains a list of elements and each element represents a single grid data-NetCDF_API mapping [ mapping_node1, mapping_node2 ...]
 
@@ -552,31 +453,31 @@ Each mapping_node contains key-value-pairs where the key can be any of the follo
 
 radonname, radonproducer, name, standardname, longname, unit, aggregatetype, aggregatelength
 
-### radonname
+#### radonname
 Grid data parameter name
 
-### radonproducer
+#### radonproducer
 Grid data producer name. If producer name is omitted, the configuration entry is used as the default for the parameter for producers which have no named entry.
 
-### name
+#### name
 Text representing the name of the parameter
 
-### standardname
+#### standardname
 NetCDF CF parameter standard name
 
-### longname
+#### longname
 NetCDF CF parameter long name
 
-### unit
+#### unit
 NetCDF CF parameter unit
 
-### aggregatetype
+#### aggregatetype
 NetCFD method of aggregate
 
-### aggregatelength
+#### aggregatelength
 Aggregate duration in minutes
 
-### NetCDF to grid data parameter configuration example
+#### NetCDF to grid data parameter configuration example
 
 {
   "radonname" : "T-K",
@@ -586,13 +487,13 @@ Aggregate duration in minutes
   "unit" : "K"
 }
 
-## Docker
+### Docker
 
 SmartMet Server can be dockerized. This [tutorial](docs/docker.md)
 explains how to how to configure the server when using Docker.
 
 
-# Example queries
+## Example queries
 
 * Default producer, GRIB2
 <pre><code>
