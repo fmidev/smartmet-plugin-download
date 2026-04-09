@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.3.18
+Version: 26.4.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -71,8 +71,8 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-utils-devel >= 26.2.4
 #TestRequires: smartmet-library-spine-plugin-test >= 26.3.13
 #TestRequires: smartmet-library-newbase-devel >= 26.2.4
-#TestRequires: smartmet-qdtools >= 26.2.6
-#TestRequires: smartmet-test-data >= 25.8.13
+#TestRequires: smartmet-qdtools >= 26.3.26
+#TestRequires: smartmet-test-data >= 26.4.1
 #TestRequires: smartmet-test-db >= 26.2.17
 #TestRequires: smartmet-engine-grid-test >= 26.3.18
 #TestRequires: wgrib
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Apr  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.4.9-1.fmi
+- Added support for grid level types 12, 13 and 16 and some grib parameter mappings (BRAINSTORM-3392)
+
 * Wed Mar 18 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.3.18-1.fmi
 - Harmonizing GRID data types
 
