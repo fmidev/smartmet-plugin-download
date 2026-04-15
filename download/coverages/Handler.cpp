@@ -10,6 +10,7 @@
 // ======================================================================
 
 #include "coverages/Handler.h"
+#include "ParamConfig.h"
 #include "Query.h"
 #include "StreamerFactory.h"
 #include <boost/algorithm/string.hpp>
@@ -948,13 +949,71 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request & /* theRequest *
                                     Spine::HTTP::Response &theResponse,
                                     const std::string & /* collectionId */)
 {
-  // TODO: Build from parameter configuration (grib.json / netcdf.json)
+  // Build field schema from the parameter configuration tables.
+  // Use the NetCDF table as the primary source since it has CF standard names,
+  // long names and units.  Supplement with GRIB table for parameters that
+  // only appear there.
+
+  const auto &ncTable = itsConfig->getParamChangeTable(false);  // NetCDF
+  const auto &gribTable = itsConfig->getParamChangeTable(true); // GRIB
+
+  // Collect unique parameters by newbase ID to avoid duplicates
+  std::map<long, const ParamChangeItem *> params;
+
+  // NetCDF entries first (richer metadata)
+  for (const auto &item : ncTable)
+  {
+    long id = item.itsWantedParam.GetIdent();
+    if (id > 0)
+      params[id] = &item;
+  }
+
+  // GRIB entries for parameters not already covered
+  for (const auto &item : gribTable)
+  {
+    long id = item.itsWantedParam.GetIdent();
+    if (id > 0 && params.find(id) == params.end())
+      params[id] = &item;
+  }
 
   string json =
       "{\n"
       "  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n"
       "  \"type\": \"object\",\n"
-      "  \"properties\": {}\n"
+      "  \"properties\": {\n";
+
+  bool first = true;
+  for (const auto &entry : params)
+  {
+    const auto &item = *entry.second;
+    string name = item.itsWantedParam.GetName().CharPtr();
+    long id = entry.first;
+
+    if (name.empty())
+      continue;
+
+    if (!first)
+      json += ",\n";
+    first = false;
+
+    json += "    \"" + name + "\": {\n";
+    json += "      \"type\": \"number\",\n";
+    json += "      \"x-fmi-id\": " + Fmi::to_string(id);
+
+    if (!item.itsLongName.empty())
+      json += ",\n      \"title\": \"" + item.itsLongName + "\"";
+
+    if (!item.itsStdName.empty())
+      json += ",\n      \"x-ogc-propertyName\": \"" + item.itsStdName + "\"";
+
+    if (!item.itsUnit.empty())
+      json += ",\n      \"x-ogc-unit\": \"" + item.itsUnit + "\"";
+
+    json += "\n    }";
+  }
+
+  json +=
+      "\n  }\n"
       "}\n";
 
   setJsonResponse(theResponse, json);
