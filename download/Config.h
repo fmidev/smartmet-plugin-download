@@ -41,6 +41,7 @@ class Config
   const Producer& getProducer(const std::string& name) const;
 
   const std::string& defaultSource() const { return itsDefaultSource; }
+  const Producers& getProducers() const { return itsProducers; }
 
   const std::string& defaultProducerName() const { return itsDefaultProducer->first; }
   const Producer& defaultProducer() const { return itsDefaultProducer->second; }

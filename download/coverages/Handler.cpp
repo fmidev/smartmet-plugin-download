@@ -815,8 +815,7 @@ void CoveragesHandler::handleConformance(const Spine::HTTP::Request & /* theRequ
 void CoveragesHandler::handleCollections(const Spine::HTTP::Request & /* theRequest */,
                                          Spine::HTTP::Response &theResponse)
 {
-  // TODO: Build from Config producer list.  Each configured producer
-  //       becomes a collection.  For now return a placeholder.
+  const auto &producers = itsConfig->getProducers();
 
   string json =
       "{\n"
@@ -827,7 +826,38 @@ void CoveragesHandler::handleCollections(const Spine::HTTP::Request & /* theRequ
       "      \"type\": \"application/json\"\n"
       "    }\n"
       "  ],\n"
-      "  \"collections\": []\n"
+      "  \"collections\": [\n";
+
+  bool first = true;
+  for (const auto &entry : producers)
+  {
+    const string &id = entry.first;
+
+    if (!first)
+      json += ",\n";
+    first = false;
+
+    json +=
+        "    {\n"
+        "      \"id\": \"" + id + "\",\n"
+        "      \"title\": \"" + id + "\",\n"
+        "      \"links\": [\n"
+        "        {\n"
+        "          \"href\": \"/coverages/collections/" + id + "\",\n"
+        "          \"rel\": \"self\",\n"
+        "          \"type\": \"application/json\"\n"
+        "        },\n"
+        "        {\n"
+        "          \"href\": \"/coverages/collections/" + id + "/coverage\",\n"
+        "          \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
+        "          \"type\": \"application/netcdf\"\n"
+        "        }\n"
+        "      ]\n"
+        "    }";
+  }
+
+  json +=
+      "\n  ]\n"
       "}\n";
 
   setJsonResponse(theResponse, json);
@@ -843,7 +873,38 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theReque
                                         Spine::HTTP::Response &theResponse,
                                         const std::string &collectionId)
 {
-  // TODO: Look up producer from Config and build proper extent/CRS/parameter metadata
+  const auto &producers = itsConfig->getProducers();
+  auto it = producers.find(collectionId);
+
+  if (it == producers.end())
+  {
+    // Collection not in config — still allow it (the querydata engine may
+    // know the producer even without explicit download.conf configuration),
+    // but return minimal metadata
+
+    string json =
+        "{\n"
+        "  \"id\": \"" + collectionId + "\",\n"
+        "  \"title\": \"" + collectionId + "\",\n"
+        "  \"links\": [\n"
+        "    {\n"
+        "      \"href\": \"/coverages/collections/" + collectionId + "/coverage\",\n"
+        "      \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
+        "      \"type\": \"application/netcdf\"\n"
+        "    }\n"
+        "  ]\n"
+        "}\n";
+
+    setJsonResponse(theResponse, json);
+    return;
+  }
+
+  const auto &producer = it->second;
+
+  // Build output format list based on what's not disabled
+  string formats = "\"application/x-grib2\", \"application/x-grib\", \"application/netcdf\"";
+  if (!producer.disabledReqParam("format"))
+    formats += ", \"application/x-fmi-querydata\"";
 
   string json =
       "{\n"
@@ -868,6 +929,7 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theReque
       "    }\n"
       "  ],\n"
       "  \"extent\": {},\n"
+      "  \"outputFormats\": [" + formats + "],\n"
       "  \"crs\": [\n"
       "    \"http://www.opengis.net/def/crs/OGC/1.3/CRS84\"\n"
       "  ]\n"
