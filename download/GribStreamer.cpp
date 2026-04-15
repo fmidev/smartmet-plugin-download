@@ -25,6 +25,23 @@ using namespace std;
 
 using namespace boost::interprocess;
 
+namespace {
+  // "typeOfLevel": grib_ls -n vertical somegrib.grb2
+  //
+  const string GroundLevel("groundOrWaterSurface");
+  const string PressureLevel("isobaricInhPa");
+  const string HybridLevel("hybrid");
+  const string EntireAtmosphere("entireAtmosphere");
+  const string HeightLevel("heightAboveSea");
+  const string HeightAboveGroundLevel("heightAboveGround");
+  const string DepthLevel("depthBelowSea");
+  const string NominalTopLevel("nominalTop");
+  const string MeanSeaLevel("meanSea");
+  const string MostUnstableParcelLevel("mostUnstableParcel");
+  const string HeightLayerLevel("heightAboveGroundLayer");
+  const string MaxWindLevel("maxWind");
+}
+
 namespace SmartMet
 {
 namespace Plugin
@@ -956,19 +973,6 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
-// "typeOfLevel": grib_ls -n vertical somegrib.grb2
-
-#define GroundLevel "groundOrWaterSurface"
-#define PressureLevel "isobaricInhPa"
-#define HybridLevel "hybrid"
-#define EntireAtmosphere "entireAtmosphere"
-#define HeightLevel "heightAboveSea"
-#define HeightAboveGroundLevel "heightAboveGround"
-#define DepthLevel "depthBelowSea"
-#define NominalTopLevel "nominalTop"
-#define MeanSeaLevel "meanSea"
-#define MostUnstableParcelLevel "mostUnstableParcel"
-
 string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelType,
                                            NFmiLevel *cfgLevel, int &level) const
 {
@@ -1027,6 +1031,18 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   {
     level = 0;
     return MostUnstableParcelLevel;
+  }
+  else if (isMaxThetaELevel(levelType, gridContent))
+  {
+    return HeightAboveGroundLevel;
+  }
+  else if (isHeightLayerLevel(levelType, gridContent))
+  {
+    return HeightAboveGroundLevel;
+  }
+  else if (isMaxWindLevel(levelType, gridContent))
+  {
+    return HeightAboveGroundLevel;
   }
 
   throw Fmi::Exception(

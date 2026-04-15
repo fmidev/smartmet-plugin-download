@@ -92,6 +92,30 @@ bool isMostUnstableParcelLevel(FmiLevelType levelType, bool gridContent)
   return false;
 }
 
+bool isMaxThetaELevel(FmiLevelType levelType, bool gridContent)
+{
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeMaxThetaE);
+
+  return false;
+}
+
+bool isHeightLayerLevel(FmiLevelType levelType, bool gridContent)
+{
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeHeightLayer);
+
+  return false;
+}
+
+bool isMaxWindLevel(FmiLevelType levelType, bool gridContent)
+{
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeMaxWind);
+
+  return false;
+}
+
 bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
 {
   if (gribOutput)
@@ -104,7 +128,10 @@ bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
             isDepthLevel(levelType, 0, true) ||
             isNominalTopLevel(levelType, true) ||
             isMeanSeaLevel(levelType, true) ||
-            isMostUnstableParcelLevel(levelType, true)
+            isMostUnstableParcelLevel(levelType, true) ||
+            isMaxThetaELevel(levelType, true) ||
+            isHeightLayerLevel(levelType, true) ||
+            isMaxWindLevel(levelType, true)
            );
 
   return (

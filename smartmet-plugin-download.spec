@@ -107,7 +107,10 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Mon Apr 13 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.13-1.fmi
-- Repackaged due to API changes
+- Added OGC API Coverages support
+
+* Thu Apr  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.4.9-1.fmi
+- Added support for grid level types 12, 13 and 16 and some grib parameter mappings (BRAINSTORM-3392)
 
 * Wed Mar 18 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.3.18-1.fmi
 - Harmonizing GRID data types
