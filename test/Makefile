@@ -57,6 +57,7 @@ else
 endif
 
 TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
+TESTER_PARAM_COV := --handler=/coverages --reactor-config=cnf/reactor.conf --input-dir=input-coverages
 
 test: $(TEST_TARGETS)
 
@@ -64,6 +65,11 @@ test-qd: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
 	@mkdir -p failures tmp
 	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
+
+test-coverages: $(TEST_PREPARE_TARGETS)
+	@rm -rf failures tmp
+	@mkdir -p failures tmp
+	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM_COV) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
 
 test-grid: $(TEST_PREPARE_TARGETS)
 	ok=true

@@ -1,0 +1,1 @@
+GET	/coverages/collections/pal_skandinavia_dl/coverage?properties=4&f=netcdf&starttime=201309170000 HTTP/1.0

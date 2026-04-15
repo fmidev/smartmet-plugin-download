@@ -1,0 +1,1 @@
+GET	/coverages/collections/pal_skandinavia_dl/coverage?properties=4&f=grib1&starttime=20130917T1000&timesteps=4&bbox=15,58,38,71 HTTP/1.0

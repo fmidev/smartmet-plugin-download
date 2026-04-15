@@ -120,7 +120,9 @@ void Plugin::init()
     if (!itsReactor->addContentHandler(
             this,
             "/coverages",
-            boost::bind(&Plugin::coveragesRequestHandler, this, ph::_1, ph::_2, ph::_3)))
+            boost::bind(&Plugin::coveragesRequestHandler, this, ph::_1, ph::_2, ph::_3),
+            {},
+            true))  // handlesUriPrefix: /coverages/collections/{id}/coverage etc.
       throw Fmi::Exception(BCP, "Failed to register coverages content handler");
   }
   catch (...)

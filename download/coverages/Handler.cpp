@@ -604,6 +604,13 @@ static const Producer &fillReqParams(const Spine::HTTP::Request &req,
     reqParams.packing = Spine::optional_string(req.getParameter("packing"), "");
     Fmi::ascii_tolower(reqParams.packing);
 
+    // GRIB2 tables version
+    reqParams.grib2TablesVersion =
+        ((reqParams.outputFormat == Grib2)
+             ? Spine::optional_unsigned_long(req.getParameter("tablesversion"),
+                                            config.getGrib2TablesVersionDefault())
+             : 0);
+
     // Block sizes and chunk size (not typically used via OGC API)
     reqParams.gridParamBlockSize = 0;
     reqParams.gridTimeBlockSize = 0;

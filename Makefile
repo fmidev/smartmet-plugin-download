@@ -62,7 +62,7 @@ OBJS += $(DOWNLOAD_OBJS) $(COVERAGES_OBJS)
 
 INCLUDES := -I$(SUBNAME) $(INCLUDES)
 
-.PHONY: test test-qd test-grid rpm
+.PHONY: test test-qd test-coverages test-grid rpm
 
 # The rules
 
@@ -91,7 +91,7 @@ install:
 	@mkdir -p $(plugindir)
 	$(INSTALL_PROG) $(LIBFILE) $(plugindir)/$(LIBFILE)
 
-test test-qd test-grid:
+test test-qd test-coverages test-grid:
 	$(MAKE) -C test $@
 
 objdir:
