@@ -4,7 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-SmartMet Server download plugin (`smartmet-plugin-download`). Provides bulk meteorological data download from SmartMet Server in GRIB1, GRIB2, NetCDF, and QueryData formats. Handles parameter selection, time ranges, level filtering, bounding box cropping, reprojection, and grid resampling.
+SmartMet Server download plugin (`smartmet-plugin-download`). Provides bulk meteorological data download from SmartMet Server in GRIB1, GRIB2, NetCDF, and QueryData formats via two API surfaces:
+
+- **`/download`** — legacy SmartMet query string interface (format, producer, param, bbox, etc.)
+- **`/coverages`** — OGC API Coverages interface (OGC 19-087: collections, subsetting, field selection, scaling, CRS)
+
+Both APIs produce identical binary output for equivalent requests, sharing the same streaming and encoding infrastructure.
 
 ## Build commands
 
@@ -39,6 +44,25 @@ Test naming convention: `{format}[_val]_{producer}_{timesel}[_{options}].get`
 
 ## Architecture
 
+### Source layout
+
+The plugin follows the WMS plugin's multi-standard pattern with shared code at the top level and API-specific handlers in subdirectories:
+
+```
+download/
+├── Plugin.cpp/h              — Router: registers /download + /coverages, dispatches
+├── StreamerFactory.cpp/h     — Shared: createStreamer(), getParamConfig(), getDownloadFileName()
+├── DataStreamer.cpp/h        — Shared: base streaming class (grid setup, coord transforms, chunking)
+├── GribStreamer.cpp/h        — Shared: GRIB1/GRIB2 encoding via eccodes
+├── NetCdfStreamer.cpp/h      — Shared: NetCDF4 encoding via libnetcdf_c++4
+├── QueryDataStreamer.cpp/h   — Shared: FMI QueryData format via newbase
+├── Config.cpp/h, Query.cpp/h, etc. — Shared support classes
+├── download/
+│   └── Handler.cpp/h         — /download: HTTP query string → ReqParams → createStreamer()
+└── coverages/
+    └── Handler.cpp/h         — /coverages: OGC REST routing, metadata endpoints, OGC → ReqParams translation
+```
+
 ### Class hierarchy
 
 `DataStreamer` (abstract base, inherits `Spine::HTTP::ContentStreamer`) is the core — it handles grid setup, coordinate transforms, bounding box logic, level iteration, and the chunked streaming loop. Three concrete streamers:
@@ -49,7 +73,13 @@ Test naming convention: `{format}[_val]_{producer}_{timesel}[_{options}].get`
 
 ### Request flow
 
-`Plugin::query()` → parses `ReqParams` from HTTP query string → creates `Query` (parameter/time/level parsing) → selects `Producer` from config → instantiates appropriate streamer → calls `extractData()` / `extractGridData()` which iterates params × times × levels, calling virtual `getDataChunk()` / `getGridDataChunk()` for each message.
+Both APIs follow the same flow, differing only in how `ReqParams` is populated:
+
+1. **Handler** parses the incoming HTTP request into `ReqParams` and `Query`:
+   - `/download`: `DownloadHandler` reads legacy query string parameters directly
+   - `/coverages`: `CoveragesHandler` translates OGC parameters (properties, datetime, subset, scale-size, crs, f) to download-equivalent parameters via `setParameter()`, then passes the modified request through the same `Query` constructor
+2. **`createStreamer()`** (in StreamerFactory) selects the appropriate streamer based on `ReqParams.outputFormat`, wires up engines, checks data availability
+3. **`DataStreamer::extractData()`** iterates params × times × levels, calling virtual `getDataChunk()` / `getGridDataChunk()` for each message
 
 ### Two data sources
 
