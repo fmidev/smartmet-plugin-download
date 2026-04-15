@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.4.13
+Version: 26.4.15
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,8 +106,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Mon Apr 13 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.13-1.fmi
-- Added OGC API Coverages support
+* Wed Apr 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.15-1.fmi
+- Added OGC Coverages support
 
 * Thu Apr  9 2026 Pertti Kinnia <pertti.kinnia@fmi.fi> - 26.4.9-1.fmi
 - Added support for grid level types 12, 13 and 16 and some grib parameter mappings (BRAINSTORM-3392)
