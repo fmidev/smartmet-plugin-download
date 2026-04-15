@@ -1,21 +1,24 @@
 // ======================================================================
 /*!
  * \brief SmartMet download service plugin interface
+ *
+ *        Top-level plugin that routes requests to the appropriate handler:
+ *        - /download   → DownloadHandler  (legacy SmartMet query interface)
+ *        - /coverages  → CoveragesHandler (OGC API Coverages)
  */
 // ======================================================================
 
 #pragma once
 
 #include "Config.h"
-#include "DataStreamer.h"
+#include "download/Handler.h"
+#include "coverages/Handler.h"
 #include <memory>
-#include <boost/thread.hpp>
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <spine/HTTP.h>
 #include <spine/Reactor.h>
 #include <spine/SmartMetPlugin.h>
-#include <map>
 #include <string>
 
 namespace SmartMet
@@ -45,7 +48,10 @@ class Plugin : public SmartMetPlugin
 
  private:
   Plugin();
-  void query(const Spine::HTTP::Request& req, Spine::HTTP::Response& response);
+
+  void coveragesRequestHandler(Spine::Reactor& theReactor,
+                               const Spine::HTTP::Request& theRequest,
+                               Spine::HTTP::Response& theResponse);
 
   const std::string itsModuleName;
   Config itsConfig;
@@ -54,6 +60,9 @@ class Plugin : public SmartMetPlugin
   std::shared_ptr<Engine::Querydata::Engine> itsQEngine;
   std::shared_ptr<Engine::Grid::Engine> itsGridEngine;
   std::shared_ptr<Engine::Geonames::Engine> itsGeoEngine;
+
+  DownloadHandler itsDownloadHandler;
+  CoveragesHandler itsCoveragesHandler;
 };
 
 }  // namespace Download

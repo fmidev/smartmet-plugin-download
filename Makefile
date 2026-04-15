@@ -52,6 +52,14 @@ SRCS = $(wildcard $(SUBNAME)/*.cpp)
 HDRS = $(wildcard $(SUBNAME)/*.h)
 OBJS = $(patsubst %.cpp, obj/%.o, $(notdir $(SRCS)))
 
+DOWNLOAD_SRCS = $(wildcard $(SUBNAME)/download/*.cpp)
+DOWNLOAD_OBJS = $(patsubst $(SUBNAME)/download/%.cpp, obj/download/%.o, $(DOWNLOAD_SRCS))
+
+COVERAGES_SRCS = $(wildcard $(SUBNAME)/coverages/*.cpp)
+COVERAGES_OBJS = $(patsubst $(SUBNAME)/coverages/%.cpp, obj/coverages/%.o, $(COVERAGES_SRCS))
+
+OBJS += $(DOWNLOAD_OBJS) $(COVERAGES_OBJS)
+
 INCLUDES := -I$(SUBNAME) $(INCLUDES)
 
 .PHONY: test test-qd test-grid rpm
@@ -71,13 +79,13 @@ $(LIBFILE): $(OBJS)
 #	exit 1; \
 #fi
 
-clean: 
+clean:
 	rm -f $(LIBFILE) *~ $(SUBNAME)/*~
 	rm -rf obj
 	$(MAKE) -C test $@
 
 format:
-	clang-format -i -style=file $(SUBNAME)/*.h $(SUBNAME)/*.cpp
+	clang-format -i -style=file $(SUBNAME)/*.h $(SUBNAME)/*.cpp $(SUBNAME)/download/*.h $(SUBNAME)/download/*.cpp $(SUBNAME)/coverages/*.h $(SUBNAME)/coverages/*.cpp
 
 install:
 	@mkdir -p $(plugindir)
@@ -87,7 +95,7 @@ test test-qd test-grid:
 	$(MAKE) -C test $@
 
 objdir:
-	@mkdir -p $(objdir)
+	@mkdir -p $(objdir) $(objdir)/download $(objdir)/coverages
 
 # Forcibly lower RPM_BUILD_NCPUs in CircleCI cloud(but not on local builds)
 RPMBUILD=$(shell test "$$CIRCLE_BUILD_NUM" && echo RPM_BUILD_NCPUS=2 rpmbuild || echo rpmbuild)
@@ -103,5 +111,12 @@ rpm: clean $(SPEC).spec
 obj/%.o: %.cpp
 	$(CXX) $(CFLAGS) $(INCLUDES) -c -MD -MF $(patsubst obj/%.o, obj/%.d, $@) -MT $@ -o $@ $<
 
--include $(wildcard obj/*.d)
+obj/download/%.o: $(SUBNAME)/download/%.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) -c -MD -MF obj/download/$*.d -MT $@ -o $@ $<
 
+obj/coverages/%.o: $(SUBNAME)/coverages/%.cpp
+	$(CXX) $(CFLAGS) $(INCLUDES) -c -MD -MF obj/coverages/$*.d -MT $@ -o $@ $<
+
+-include $(wildcard obj/*.d)
+-include $(wildcard obj/download/*.d)
+-include $(wildcard obj/coverages/*.d)
