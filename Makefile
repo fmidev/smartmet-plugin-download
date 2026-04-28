@@ -25,6 +25,9 @@ CORBA_LIBS = -lomniORB4 -lomnithread
 INCLUDES += $(CORBA_INCLUDE)
 
 LIBS += $(PREFIX_LDFLAGS) \
+	-lsmartmet-grid-content \
+	-lsmartmet-grid-files \
+	-lsmartmet-timeseries \
 	-lsmartmet-spine \
 	-lsmartmet-newbase \
 	-lsmartmet-macgyver \
