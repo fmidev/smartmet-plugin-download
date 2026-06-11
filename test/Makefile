@@ -43,23 +43,28 @@ ifdef CI
   GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
   TEST_PREPARE_TARGETS += start-geonames-db
   TEST_FINISH_TARGETS += stop-geonames-db
-  TEST_TARGETS := test-qd
+  TEST_TARGETS := test-qd test-coverages
 else
   ifdef LOCAL_TESTS_ONLY
-    TEST_TARGETS := test-qd
+    TEST_TARGETS := test-qd test-coverages
     GEONAMES_HOST_EDIT := cat
     META_CONF_EDIT := cat
   else
     GEONAMES_HOST_EDIT := cat
     META_CONF_EDIT := cat
-    TEST_TARGETS := test-qd test-grid
+    TEST_TARGETS := test-qd test-coverages test-grid
   endif
 endif
 
 TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf
 TESTER_PARAM_COV := --handler=/coverages --reactor-config=cnf/reactor.conf --input-dir=input-coverages
 
-test: $(TEST_TARGETS)
+# Each test target stops the databases when it finishes, so run the targets
+# in separate make invocations to get a fresh prepare/finish cycle for each
+test:
+	@ok=true; \
+	for t in $(TEST_TARGETS); do $(MAKE) $$t || ok=false; done; \
+	$$ok
 
 test-qd: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp

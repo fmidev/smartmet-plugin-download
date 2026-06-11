@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.4.28
+Version: 26.6.11
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Jun 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.11-1.fmi
+- Converted remaining /download tests to OGC API Coverages tests, run them by default
+- Added missing gridcenter and packing bitspervalue support to /coverages requests
+
 * Tue Apr 28 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.4.28-1.fmi
 - Link explicitly against smartmet-library-grid-content, -grid-files,
   and -timeseries (was relying on transitive linking)

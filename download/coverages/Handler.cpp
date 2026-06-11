@@ -562,6 +562,17 @@ static const Producer &fillReqParams(const Spine::HTTP::Request &req,
     if (!reqParams.bbox.empty())
       reqParams.bboxRect = nPairsOfValues<double>(reqParams.bbox, "bbox", 2);
 
+    // Grid center lon,lat and width and height in km; lon,lat,width,height
+    reqParams.gridCenter = Spine::optional_string(req.getParameter("gridcenter"), "");
+
+    if (!reqParams.gridCenter.empty())
+    {
+      if (reqParams.bboxRect)
+        throw Fmi::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
+
+      reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
+    }
+
     // Grid size (translated from scale-size)
     reqParams.gridSize = Spine::optional_string(req.getParameter("gridsize"), "");
     if (!reqParams.gridSize.empty())
@@ -601,9 +612,42 @@ static const Producer &fillReqParams(const Spine::HTTP::Request &req,
     else
       throw Fmi::Exception(BCP, "Unsupported output format: " + reqParams.format);
 
-    // Packing (pass through if given)
+    // Packing type and bitspervalue for grib
     reqParams.packing = Spine::optional_string(req.getParameter("packing"), "");
     Fmi::ascii_tolower(reqParams.packing);
+
+    auto bitsPerValue = Spine::optional_string(req.getParameter("bitspervalue"), "");
+
+    if (reqParams.packing.empty() != bitsPerValue.empty())
+      throw Fmi::Exception(BCP, "Both packing and bitspervalue must be given");
+
+    if (!reqParams.packing.empty())
+    {
+      if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
+        throw Fmi::Exception(BCP, "Packing can be specified with grib format only")
+            .addParameter("packing", reqParams.packing);
+
+      auto msg = config.packingErrorMessage(reqParams.packing);
+      if (!msg.empty())
+        throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
+    }
+
+    try
+    {
+      if (!bitsPerValue.empty())
+      {
+        auto bpv = Fmi::stoi(bitsPerValue);
+
+        if ((bpv < 0) || (bpv > 32))
+          throw Fmi::Exception(BCP, "");
+
+        reqParams.bitsPerValue = bpv;
+      }
+    }
+    catch (...)
+    {
+      throw Fmi::Exception(BCP, "Invalid packing bitspervalue, must be in range 0-32");
+    }
 
     // GRIB2 tables version
     reqParams.grib2TablesVersion =

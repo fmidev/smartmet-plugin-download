@@ -1,0 +1,1 @@
+GET	/coverages/collections/pal_skandinavia_dl/coverage?properties=4&f=grib2&packing=grid_second_order&bitspervalue=12&starttime=data&origintime=20130920T1237 HTTP/1.0

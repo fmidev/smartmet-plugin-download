@@ -1,0 +1,1 @@
+GET	/coverages/collections/pal_skandinavia_dl/coverage?properties=4&f=qd&starttime=20130917T0400&timestep=180&timesteps=4 HTTP/1.0
