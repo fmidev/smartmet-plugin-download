@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.12
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Jun 12 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.12-3.fmi
+- Accepted small grid data test result changes (value packing noise from updated coordinate stack)
+- Ignore grid function parameter tests using bbox and gridsize until grid-engine
+  query result grid attributes are fixed (BRAINSTORM-3142)
+- Grid data tests require smartmet-library-grid-files >= 26.6.12 (grid border value fix)
+
 * Fri Jun 12 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.12-2.fmi
 - Take undefined grid level type 0 as ground level (BRAINSTORM-2741)
 - Accept ground and entire atmosphere level grid data on netcdf output

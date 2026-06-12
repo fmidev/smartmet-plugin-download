@@ -1,0 +1,6 @@
+# Function parameter queries with bbox and gridsize produce a broken grid georeference:
+# the query result grid.llbox/grid.cell attributes contain projected coordinates divided
+# by 1000 (km) instead of a latlon bounding box (grid-engine/grid-content function query
+# path; same km/m inconsistency as in BRAINSTORM-3142). Ignored until fixed upstream.
+grb2_val_pal-skd-dl_last_tsteps_gsize_bbox_fp.get
+grb2_val_pal-skd-dl_last_tsteps_gsize_bbox_fpdp.get
