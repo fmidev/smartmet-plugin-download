@@ -4,6 +4,11 @@ Part of [SmartMet Server](https://github.com/fmidev/smartmet-server). See the [S
 
 The download plugin provides bulk data download from SmartMet Server in GRIB, NetCDF, and QueryData formats. It supports parameter selection, time range specification, level filtering, and projection definition.
 
+The plugin offers two API surfaces backed by the same streaming and encoding infrastructure:
+
+* **`/download`** — the legacy SmartMet query-string interface documented below
+* **`/coverages`** — an [OGC API Coverages](docs/ogc-api-coverages.md) interface (OGC 19-087): collections, subsetting, field selection, scaling, CRS
+
 ## Interface
 The interface derives from the timeseries module. See it's documentation for the options below.
 level/levels and model(producer) options are not used when fetching grid data; see [Data sources](#data-sources).
