@@ -1398,9 +1398,13 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
               // With radon parameters leveltype, level and geometry are taken from name.
               //
               // Since metadata's paramLevelId (grid level type) is tested later against None
-              // to check if data is available, set it from 1'st parameter
+              // to check if data is available, set it from 1'st parameter. Undefined level
+              // type (e.g. in old test data) is taken as ground level (BRAINSTORM-2741);
+              // the parameter's level type used when fetching data is not changed
 
-              itsGridMetaData.paramLevelId = pm.mParameterLevelId;
+              itsGridMetaData.paramLevelId = ((pm.mParameterLevelId == GridFmiLevelTypeNone)
+                                                  ? GridFmiLevelTypeGround
+                                                  : pm.mParameterLevelId);
               itsGridMetaData.geometryId = pm.mGeometryId;
 
               itsLevelType = mappingLevelType;

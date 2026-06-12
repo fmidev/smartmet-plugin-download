@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.12
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Jun 12 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.12-2.fmi
+- Take undefined grid level type 0 as ground level (BRAINSTORM-2741)
+- Accept ground and entire atmosphere level grid data on netcdf output
+- Print a banner identifying the test suite when tests start
+
 * Fri Jun 12 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.12-1.fmi
 - Accept EPSG codes and GDAL CRS descriptions (e.g. PROJ or WKT strings) in /coverages crs parameter
 - Translate GDAL CRS descriptions matching a newbase projection to the equivalent newbase projection string

@@ -14,6 +14,14 @@ clean:
 
 test-impl:
 	mkdir -p tmp
+	@echo ""
+	@echo "*******************************************************************"
+	@echo "*** Testing legacy /download interface, grid-engine source      ***"
+	@echo "*** (requests: test/grid/input, failures: test/grid/failures)   ***"
+	@echo "*** NOTE: test names are the same as in the querydata and       ***"
+	@echo "*** coverages suites; these are separate grid-source tests      ***"
+	@echo "*******************************************************************"
+	@echo ""
 	$(TEST_RUNNER) smartmet-plugin-test \
 		--handler /download \
 		--reactor-config cnf/reactor.conf \

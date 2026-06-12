@@ -69,11 +69,23 @@ test:
 test-qd: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
 	@mkdir -p failures tmp
+	@echo ""
+	@echo "*******************************************************************"
+	@echo "*** Testing legacy /download interface, querydata source        ***"
+	@echo "*** (requests: test/input, failures: test/failures)             ***"
+	@echo "*******************************************************************"
+	@echo ""
 	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
 
 test-coverages: $(TEST_PREPARE_TARGETS)
 	@rm -rf failures tmp
 	@mkdir -p failures tmp
+	@echo ""
+	@echo "*******************************************************************"
+	@echo "*** Testing OGC API Coverages interface (/coverages)            ***"
+	@echo "*** (requests: test/input-coverages, failures: test/failures)   ***"
+	@echo "*******************************************************************"
+	@echo ""
 	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM_COV) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
 
 test-grid: $(TEST_PREPARE_TARGETS)

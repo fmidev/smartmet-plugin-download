@@ -18,7 +18,9 @@ static time_t GridGenerationDeletionTimeOffset = 5;
 
 bool isGroundLevel(FmiLevelType levelType)
 {
-  return (levelType == GridFmiLevelTypeGround);
+  // Undefined level type (e.g. in old test data) is taken as ground level (BRAINSTORM-2741)
+
+  return ((levelType == GridFmiLevelTypeGround) || (levelType == GridFmiLevelTypeNone));
 }
 
 bool isSurfaceLevel(FmiLevelType levelType)
@@ -134,7 +136,11 @@ bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
             isMaxWindLevel(levelType, true)
            );
 
+  // Ground and entire atmosphere data is stored without a level dimension on netcdf output
+
   return (
+          isGroundLevel(levelType) ||
+          isEntireAtmosphereLevel(levelType) ||
           isPressureLevel(levelType, true) || isHybridLevel(levelType, true) ||
           isHeightLevel(levelType, 0, true) || isDepthLevel(levelType, 0, true)
          );
