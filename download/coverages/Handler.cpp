@@ -15,6 +15,8 @@
 #include "StreamerFactory.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <cpl_conv.h>
+#include <gis/ProjInfo.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -280,6 +282,112 @@ static void parseDatetime(const string &datetime,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Translate an OGC crs parameter to a download projection string
+ *
+ *        OGC CRS URIs and EPSG codes are translated to epsg:n form.
+ *        Any other description must be one GDAL understands (e.g. a
+ *        WKT or PROJ string); newbase projection strings are not
+ *        accepted.
+ *
+ *        A GDAL description matching a newbase projection is translated
+ *        to the equivalent newbase projection string so that the output
+ *        is identical to the legacy /download API's. Newbase projections
+ *        are taken to use the WGS84 datum or the legacy spherical earth.
+ */
+// ----------------------------------------------------------------------
+
+static string crsToProjection(const string &crs)
+{
+  // OGC CRS URIs
+  const string epsgPrefix = "http://www.opengis.net/def/crs/EPSG/0/";
+  if (crs.find(epsgPrefix) == 0)
+    return "epsg:" + crs.substr(epsgPrefix.size());
+
+  // http://www.opengis.net/def/crs/OGC/1.3/CRS84
+  if (crs.find("CRS84") != string::npos)
+    return "epsg:4326";
+
+  string lcrs = Fmi::ascii_tolower_copy(crs);
+  if (lcrs.find("epsg:") == 0)
+    return lcrs;
+
+  OGRSpatialReference srs;
+  if (srs.SetFromUserInput(crs.c_str()) != OGRERR_NONE)
+    throw Fmi::Exception(BCP, "Unsupported crs '" + crs + "'");
+
+  if (!srs.IsProjected())
+    return "latlon";
+
+  char *projStrC = nullptr;
+  if ((srs.exportToProj4(&projStrC) != OGRERR_NONE) || !projStrC)
+  {
+    CPLFree(projStrC);
+    throw Fmi::Exception(BCP, "Unsupported crs '" + crs + "'");
+  }
+
+  string projStr(projStrC);
+  CPLFree(projStrC);
+
+  Fmi::ProjInfo projInfo(projStr);
+
+  // Newbase projections assume the WGS84 datum or a spherical earth, and
+  // no false easting/northing or scaling
+
+  auto datum = projInfo.getString("datum");
+  auto ellps = projInfo.getString("ellps");
+  auto r = projInfo.getDouble("R");
+  auto a = projInfo.getDouble("a");
+  auto b = projInfo.getDouble("b");
+
+  bool newbaseDatum = ((datum && (*datum == "WGS84")) || (ellps && (*ellps == "sphere")) ||
+                       (r && (*r > 0)) || (a && (*a > 0) && ((!b) || (*a == *b))));
+
+  auto x0 = projInfo.getDouble("x_0");
+  auto y0 = projInfo.getDouble("y_0");
+  auto k0 = projInfo.getDouble("k") ? projInfo.getDouble("k") : projInfo.getDouble("k_0");
+
+  if ((x0 && (*x0 != 0)) || (y0 && (*y0 != 0)) || (k0 && (*k0 != 1)))
+    newbaseDatum = false;
+
+  auto name = projInfo.getString("proj");
+
+  if (newbaseDatum && name)
+  {
+    auto getDouble = [&projInfo](const string &param, double defaultValue)
+    {
+      auto value = projInfo.getDouble(param);
+      return (value ? *value : defaultValue);
+    };
+
+    double lon0 = getDouble("lon_0", 0);
+    double lat0 = getDouble("lat_0", 0);
+    double latts = getDouble("lat_ts", lat0);
+
+    if ((*name == "eqc") && (lon0 == 0) && (latts == 0))
+      return "latlon";
+    if ((*name == "merc") && (lon0 == 0) && (latts == 0))
+      return "mercator";
+    if (*name == "stere")
+      return "stereographic," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0) + "," +
+             Fmi::to_string(latts);
+    if (*name == "aeqd")
+      return "equidist," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0);
+    if (*name == "lcc")
+    {
+      double lat1 = getDouble("lat_1", lat0);
+      double lat2 = getDouble("lat_2", lat1);
+      return "lcc," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0) + "," +
+             Fmi::to_string(lat1) + "," + Fmi::to_string(lat2);
+    }
+  }
+
+  // No newbase equivalent; pass the GDAL description through as such
+
+  return crs;
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Translate OGC API parameters to download parameters
  *
  *        Creates a copy of the HTTP request with OGC parameters
@@ -354,18 +462,7 @@ static Spine::HTTP::Request translateRequest(const Spine::HTTP::Request &theRequ
   auto crs = dlReq.getParameter("crs");
   if (crs)
   {
-    // Map OGC CRS URIs to EPSG codes
-    // http://www.opengis.net/def/crs/EPSG/0/4326 → epsg:4326
-    string proj = *crs;
-    const string epsgPrefix = "http://www.opengis.net/def/crs/EPSG/0/";
-    if (proj.find(epsgPrefix) == 0)
-      proj = "epsg:" + proj.substr(epsgPrefix.size());
-
-    // Also handle http://www.opengis.net/def/crs/OGC/1.3/CRS84
-    if (proj.find("CRS84") != string::npos)
-      proj = "epsg:4326";
-
-    dlReq.setParameter("projection", proj);
+    dlReq.setParameter("projection", crsToProjection(*crs));
     dlReq.removeParameter("crs");
   }
 

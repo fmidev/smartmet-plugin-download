@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.6.11
+Version: 26.6.12
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Jun 12 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.12-1.fmi
+- Accept EPSG codes and GDAL CRS descriptions (e.g. PROJ or WKT strings) in /coverages crs parameter
+- Translate GDAL CRS descriptions matching a newbase projection to the equivalent newbase projection string
+
 * Thu Jun 11 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.11-1.fmi
 - Converted remaining /download tests to OGC API Coverages tests, run them by default
 - Added missing gridcenter and packing bitspervalue support to /coverages requests
