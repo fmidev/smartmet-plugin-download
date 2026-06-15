@@ -2,6 +2,13 @@ include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
 TEST_TIMEOUT ?= 300
 
+# Additional grid test data from the smartmet-qdtools-test-data package; a latlon
+# grid scanned from north to south, for testing that the data is not vertically
+# flipped when fetching data using the original geometry
+
+QDTOOLS_GRIB := $(datadir)/smartmet/test/data/qdtools/input/grib/LC-0TO1_ground_0_ll_3600_1801_0_000.grib
+REDIS_PORT = $(shell awk -F= '/^REDIS_CONTENT_SERVER_PORT/{gsub(/[ \t]/,"",$$2); print $$2}' cnf/environment.conf)
+
 all:
 
 test test-grid:	start-redis-db
@@ -34,6 +41,22 @@ start-redis-db:
 	smartmet-grid-test-config-creator cnf/environment.conf cnf/grid/redis/redis-template.conf cnf/grid/redis/redis.conf
 	@echo "*** Starting the Redis database."
 	@redis-server cnf/grid/redis/redis.conf
+	$(MAKE) register-qdtools-data
+
+register-qdtools-data:
+	@test -s $(QDTOOLS_GRIB) || { \
+	    echo "$(QDTOOLS_GRIB) not found; install smartmet-qdtools-test-data"; false; }
+	@echo "*** Registering qdtools test data into the Redis database."
+	cat extra/fmi_geometries_qdtools.csv >> cnf/grid/library/test/fmi_geometries.csv
+	echo "qdtools_ll:5204" >> cnf/grid/engine/producers_test.csv
+	echo "qdtools_ll;LC-0TO1;2;LC-0TO1;5204;1;1;00000;1;1;1;0;E;;;;" >> cnf/grid/engine/mapping_fmi_test.csv
+	@redis-cli -p $(REDIS_PORT) zadd test.producers 0 "12;qdtools_ll;qdtools_ll;;0;0" > /dev/null
+	@redis-cli -p $(REDIS_PORT) zadd test.generations 0 "13;0;12;qdtools_ll:20190606T180000;;20190606T180000;1;0;0" > /dev/null
+	@redis-cli -p $(REDIS_PORT) zadd test.files 0 "20;2;/qdtools/input/grib/LC-0TO1_ground_0_ll_3600_1801_0_000.grib;12;13;0;1;0;;" > /dev/null
+	@redis-cli -p $(REDIS_PORT) zadd test.content 0 "20;0;2;0;6483708;12;13;0;20190606T180000;143;LC-0TO1;0;0;0;0;0;1;1;1;0;0to1;;1;-1;0;0;0;5204;;" > /dev/null
+	@redis-cli -p $(REDIS_PORT) set test.producerCounter 12 > /dev/null
+	@redis-cli -p $(REDIS_PORT) set test.generationCounter 13 > /dev/null
+	@redis-cli -p $(REDIS_PORT) set test.fileCounter 20 > /dev/null
 
 stop-redis-db:
 	@if [ -f cnf/grid/redis/redis-server.pid ] ; then \

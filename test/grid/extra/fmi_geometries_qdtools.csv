@@ -1,0 +1,7 @@
+# Geometries for additional grid data test files from the smartmet-qdtools-test-data package.
+#
+# TEST_LL_NS: latlon grid scanned from north to south (+x-y); used for testing that the
+# data is not vertically flipped when fetching data using the original geometry (e.g. by
+# direct copying of the message data)
+#
+1;5204;TEST_LL_NS;3600;1801;0.000000;90.000000;0.100000;0.100000;+x-y;0.000000;0.000000;Latlon, north to south scanning;

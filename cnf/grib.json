@@ -717,5 +717,22 @@
         "category" : 0,
         "parameternumber" : 1
       }
+    },
+    {
+      "radonname" : "LC-0TO1",
+      "grib1" :
+      {
+        "table2version" : 128,
+        "parameternumber" : 172
+      }
+    },
+    {
+      "radonname" : "LC-0TO1",
+      "grib2" :
+      {
+        "discipline" : 2,
+        "category" : 0,
+        "parameternumber" : 0
+      }
     }
 ]
