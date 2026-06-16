@@ -734,5 +734,14 @@
         "category" : 0,
         "parameternumber" : 0
       }
+    },
+    {
+      "radonname" : "POT-PRCNT",
+      "grib2" :
+      {
+        "discipline" : 0,
+        "category" : 19,
+        "parameternumber" : 2
+      }
     }
 ]

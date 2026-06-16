@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.6.15
+Version: 26.6.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.16-1.fmi
+- Added grid data tests for north to south scanned data to verify the fast-path direct
+  copy is not vertically flipped: a global land-sea mask (LC-0TO1, from
+  smartmet-qdtools-test-data) and a global thunderstorm probability grid
+  (ecgmta_pot_prcnt.grib, from smartmet-test-data)
+- Added LC-0TO1 and POT-PRCNT grib parameter mappings for the tests
+
 * Mon Jun 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.15-1.fmi
 - Repackaged due to ABI changes
 
