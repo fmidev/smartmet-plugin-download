@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.6.16
+Version: 26.6.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.23-1.fmi
+- Added GeoTIFF output format for both the /download and /coverages (OGC API
+  Coverages) interfaces. Each extracted parameter/time/level slice is written as
+  a separate raster band into a single multi-band GeoTIFF via the GDAL GTiff
+  driver. Selectable with format=geotiff (f=geotiff, f=image/tiff). Honours
+  arbitrary target spatial references (e.g. EPSG:3067 / TM35FIN)
+
 * Tue Jun 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.16-1.fmi
 - Added grid data tests for north to south scanned data to verify the fast-path direct
   copy is not vertically flipped: a global land-sea mask (LC-0TO1, from

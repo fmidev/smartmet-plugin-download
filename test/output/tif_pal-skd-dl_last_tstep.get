@@ -1,0 +1,346 @@
+Driver: GTiff/GeoTIFF
+Size is 135, 150
+Coordinate System is:
+PROJCRS["FMI_Polar_Stereographic",
+    BASEGEOGCRS["FMI_Sphere",
+        DATUM["FMI_2007",
+            ELLIPSOID["FMI_Sphere",6371220,0,
+                LENGTHUNIT["metre",1,
+                    ID["EPSG",9001]]]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433,
+                ID["EPSG",9122]]]],
+    CONVERSION["Polar Stereographic (variant B)",
+        METHOD["Polar Stereographic (variant B)",
+            ID["EPSG",9829]],
+        PARAMETER["Latitude of standard parallel",60,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8832]],
+        PARAMETER["Longitude of origin",20,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8833]],
+        PARAMETER["False easting",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",south,
+            MERIDIAN[90,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",south,
+            MERIDIAN[180,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            ORDER[2],
+            LENGTHUNIT["metre",1]]]
+Data axis to CRS axis mapping: 1,2
+Origin = (-1017563.176102370838635,-1807277.355508235748857)
+Pixel Size = (15044.706725234960686,-15008.529220262373201)
+Corner Coordinates:
+Upper Left  (-1017563.176,-1807277.356) (  9d22'51.96"W, 70d12'29.88"N)
+Lower Left  (-1017563.176,-4058556.739) (  5d55'29.68"E, 51d13'18.83"N)
+Upper Right ( 1013472.232,-1807277.356) ( 49d16'57.10"E, 70d13'37.36"N)
+Lower Right ( 1013472.232,-4058556.739) ( 34d 1'14.65"E, 51d13'49.49"N)
+Center      (   -2045.472,-2932917.047) ( 19d57'36.15"E, 62d17' 3.39"N)
+Band 1 Block=135x1 Type=Float32, ColorInterp=Gray
+  Description = 4 20130917T120000
+  NoData Value=3.27e+04
+Band 2 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T150000
+  NoData Value=3.27e+04
+Band 3 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T180000
+  NoData Value=3.27e+04
+Band 4 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T210000
+  NoData Value=3.27e+04
+Band 5 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T000000
+  NoData Value=3.27e+04
+Band 6 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T030000
+  NoData Value=3.27e+04
+Band 7 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T060000
+  NoData Value=3.27e+04
+Band 8 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T090000
+  NoData Value=3.27e+04
+Band 9 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T120000
+  NoData Value=3.27e+04
+Band 10 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T150000
+  NoData Value=3.27e+04
+Band 11 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T180000
+  NoData Value=3.27e+04
+Band 12 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T210000
+  NoData Value=3.27e+04
+Band 13 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T000000
+  NoData Value=3.27e+04
+Band 14 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T030000
+  NoData Value=3.27e+04
+Band 15 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T060000
+  NoData Value=3.27e+04
+Band 16 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T090000
+  NoData Value=3.27e+04
+Band 17 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T120000
+  NoData Value=3.27e+04
+Band 18 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T150000
+  NoData Value=3.27e+04
+Band 19 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T180000
+  NoData Value=3.27e+04
+Band 20 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T210000
+  NoData Value=3.27e+04
+Band 21 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T000000
+  NoData Value=3.27e+04
+Band 22 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T030000
+  NoData Value=3.27e+04
+Band 23 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T060000
+  NoData Value=3.27e+04
+Band 24 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T090000
+  NoData Value=3.27e+04
+Band 25 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T120000
+  NoData Value=3.27e+04
+Band 26 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T150000
+  NoData Value=3.27e+04
+Band 27 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T180000
+  NoData Value=3.27e+04
+Band 28 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T210000
+  NoData Value=3.27e+04
+Band 29 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T000000
+  NoData Value=3.27e+04
+Band 30 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T030000
+  NoData Value=3.27e+04
+Band 31 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T060000
+  NoData Value=3.27e+04
+Band 32 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T090000
+  NoData Value=3.27e+04
+Band 33 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T120000
+  NoData Value=3.27e+04
+Band 34 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T150000
+  NoData Value=3.27e+04
+Band 35 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T180000
+  NoData Value=3.27e+04
+Band 36 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T210000
+  NoData Value=3.27e+04
+Band 37 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T000000
+  NoData Value=3.27e+04
+Band 38 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T030000
+  NoData Value=3.27e+04
+Band 39 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T060000
+  NoData Value=3.27e+04
+Band 40 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T090000
+  NoData Value=3.27e+04
+Band 41 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T120000
+  NoData Value=3.27e+04
+Band 42 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T150000
+  NoData Value=3.27e+04
+Band 43 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T180000
+  NoData Value=3.27e+04
+Band 44 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T210000
+  NoData Value=3.27e+04
+Band 45 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T000000
+  NoData Value=3.27e+04
+Band 46 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T030000
+  NoData Value=3.27e+04
+Band 47 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T060000
+  NoData Value=3.27e+04
+Band 48 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T090000
+  NoData Value=3.27e+04
+Band 49 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T120000
+  NoData Value=3.27e+04
+Band 50 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T150000
+  NoData Value=3.27e+04
+Band 51 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T180000
+  NoData Value=3.27e+04
+Band 52 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T210000
+  NoData Value=3.27e+04
+Band 53 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T000000
+  NoData Value=3.27e+04
+Band 54 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T030000
+  NoData Value=3.27e+04
+Band 55 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T060000
+  NoData Value=3.27e+04
+Band 56 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T090000
+  NoData Value=3.27e+04
+Band 57 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T120000
+  NoData Value=3.27e+04
+Band 58 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T150000
+  NoData Value=3.27e+04
+Band 59 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T180000
+  NoData Value=3.27e+04
+Band 60 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T210000
+  NoData Value=3.27e+04
+Band 61 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T000000
+  NoData Value=3.27e+04
+Band 62 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T030000
+  NoData Value=3.27e+04
+Band 63 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T060000
+  NoData Value=3.27e+04
+Band 64 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T090000
+  NoData Value=3.27e+04
+Band 65 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T120000
+  NoData Value=3.27e+04
+Band 66 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T150000
+  NoData Value=3.27e+04
+Band 67 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T180000
+  NoData Value=3.27e+04
+Band 68 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T210000
+  NoData Value=3.27e+04
+Band 69 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T000000
+  NoData Value=3.27e+04
+Band 70 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T030000
+  NoData Value=3.27e+04
+Band 71 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T060000
+  NoData Value=3.27e+04
+Band 72 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T090000
+  NoData Value=3.27e+04
+Band 73 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T120000
+  NoData Value=3.27e+04
+Band 74 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T150000
+  NoData Value=3.27e+04
+Band 75 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T180000
+  NoData Value=3.27e+04
+Band 76 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T210000
+  NoData Value=3.27e+04
+Band 77 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T000000
+  NoData Value=3.27e+04
+Band 78 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T030000
+  NoData Value=3.27e+04
+Band 79 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T060000
+  NoData Value=3.27e+04
+Band 80 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T090000
+  NoData Value=3.27e+04
+Band 81 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T120000
+  NoData Value=3.27e+04
+Band 82 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T150000
+  NoData Value=3.27e+04
+Band 83 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T180000
+  NoData Value=3.27e+04
+Band 84 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T210000
+  NoData Value=3.27e+04
+Band 85 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T000000
+  NoData Value=3.27e+04
+Band 86 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T030000
+  NoData Value=3.27e+04
+Band 87 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T060000
+  NoData Value=3.27e+04
+Band 88 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T090000
+  NoData Value=3.27e+04
+Band 89 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T120000
+  NoData Value=3.27e+04
+Band 90 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T150000
+  NoData Value=3.27e+04
+Band 91 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T180000
+  NoData Value=3.27e+04
+Band 92 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T210000
+  NoData Value=3.27e+04
+Band 93 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T000000
+  NoData Value=3.27e+04
+Band 94 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T030000
+  NoData Value=3.27e+04
+Band 95 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T060000
+  NoData Value=3.27e+04
+Band 96 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T090000
+  NoData Value=3.27e+04
+Band 97 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T120000
+  NoData Value=3.27e+04
+Band 98 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T150000
+  NoData Value=3.27e+04
+Band 99 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T180000
+  NoData Value=3.27e+04

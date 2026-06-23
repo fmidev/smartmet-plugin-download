@@ -1,0 +1,15 @@
+#/bin/bash
+#
+# Default GeoTIFF value dumper: in addition to the geometry/projection metadata,
+# dumps per-band statistics (min/max/mean/stddev) and a CRC checksum, giving a
+# deterministic, compact summary of the actual raster values for comparison.
+# The temporary input file name and any .aux.xml sidecar lines are filtered out.
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+GDALINFO=$(command -v gdalinfo || echo /usr/gdal312/bin/gdalinfo)
+
+$GDALINFO -stats -checksum -norat -nomd $1 2>/dev/null | grep -vE "(^Files:|tmp/|\.aux\.xml)"

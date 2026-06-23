@@ -1,0 +1,15 @@
+#/bin/bash
+#
+# Default GeoTIFF metadata dumper: dumps geotransform, projection and per-band
+# descriptions/metadata as deterministic text for comparison. The temporary
+# input file name and any .aux.xml sidecar lines are filtered out as they vary
+# between runs.
+
+if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
+  echo $0: args: file expected
+  exit 1
+fi
+
+GDALINFO=$(command -v gdalinfo || echo /usr/gdal312/bin/gdalinfo)
+
+$GDALINFO -norat -nomd $1 2>/dev/null | grep -vE "(^Files:|tmp/|\.aux\.xml)"

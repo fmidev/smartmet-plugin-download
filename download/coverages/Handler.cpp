@@ -87,6 +87,9 @@ static string mapOutputFormat(const string &f)
     return "GRIB1";
   if (fl == "application/netcdf" || fl == "application/x-netcdf" || fl == "netcdf")
     return "NETCDF";
+  if (fl == "image/tiff" || fl == "image/geotiff" || fl == "application/x-geotiff" ||
+      fl == "geotiff" || fl == "gtiff" || fl == "tiff")
+    return "GEOTIFF";
   if (fl == "application/x-fmi-querydata" || fl == "qd" || fl == "querydata")
     return "QD";
 
@@ -512,6 +515,8 @@ static string getMimeType(OutputFormat fmt)
       return "application/x-grib2";
     case NetCdf:
       return "application/netcdf";
+    case GeoTiff:
+      return "image/tiff";
     case QD:
       return "application/x-fmi-querydata";
     default:
@@ -700,6 +705,9 @@ static const Producer &fillReqParams(const Spine::HTTP::Request &req,
       reqParams.outputFormat = Grib2;
     else if (reqParams.format == "NETCDF")
       reqParams.outputFormat = NetCdf;
+    else if ((reqParams.format == "GEOTIFF") || (reqParams.format == "GTIFF") ||
+             (reqParams.format == "TIFF"))
+      reqParams.outputFormat = GeoTiff;
     else if (reqParams.format == "QD")
     {
       if (reqParams.dataSource != QueryData)
@@ -1044,7 +1052,8 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theReque
   const auto &producer = it->second;
 
   // Build output format list based on what's not disabled
-  string formats = "\"application/x-grib2\", \"application/x-grib\", \"application/netcdf\"";
+  string formats =
+      "\"application/x-grib2\", \"application/x-grib\", \"application/netcdf\", \"image/tiff\"";
   if (!producer.disabledReqParam("format"))
     formats += ", \"application/x-fmi-querydata\"";
 

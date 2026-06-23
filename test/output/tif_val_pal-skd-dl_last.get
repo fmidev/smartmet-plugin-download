@@ -1,0 +1,1579 @@
+Driver: GTiff/GeoTIFF
+Size is 135, 150
+Coordinate System is:
+PROJCRS["FMI_Polar_Stereographic",
+    BASEGEOGCRS["FMI_Sphere",
+        DATUM["FMI_2007",
+            ELLIPSOID["FMI_Sphere",6371220,0,
+                LENGTHUNIT["metre",1,
+                    ID["EPSG",9001]]]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433,
+                ID["EPSG",9122]]]],
+    CONVERSION["Polar Stereographic (variant B)",
+        METHOD["Polar Stereographic (variant B)",
+            ID["EPSG",9829]],
+        PARAMETER["Latitude of standard parallel",60,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8832]],
+        PARAMETER["Longitude of origin",20,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8833]],
+        PARAMETER["False easting",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",south,
+            MERIDIAN[90,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",south,
+            MERIDIAN[180,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            ORDER[2],
+            LENGTHUNIT["metre",1]]]
+Data axis to CRS axis mapping: 1,2
+Origin = (-1017563.176102370838635,-1807277.355508235748857)
+Pixel Size = (15044.706725234960686,-15008.529220262373201)
+Corner Coordinates:
+Upper Left  (-1017563.176,-1807277.356) (  9d22'51.96"W, 70d12'29.88"N)
+Lower Left  (-1017563.176,-4058556.739) (  5d55'29.68"E, 51d13'18.83"N)
+Upper Right ( 1013472.232,-1807277.356) ( 49d16'57.10"E, 70d13'37.36"N)
+Lower Right ( 1013472.232,-4058556.739) ( 34d 1'14.65"E, 51d13'49.49"N)
+Center      (   -2045.472,-2932917.047) ( 19d57'36.15"E, 62d17' 3.39"N)
+Band 1 Block=135x1 Type=Float32, ColorInterp=Gray
+  Description = 4 20130917T010000
+  Minimum=269.142, Maximum=289.336, Mean=283.264, StdDev=2.835
+  Checksum=28453
+  NoData Value=3.27e+04
+Band 2 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T020000
+  Minimum=269.612, Maximum=288.967, Mean=283.233, StdDev=2.681
+  Checksum=29655
+  NoData Value=3.27e+04
+Band 3 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T030000
+  Minimum=269.506, Maximum=289.509, Mean=283.469, StdDev=2.851
+  Checksum=28072
+  NoData Value=3.27e+04
+Band 4 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T040000
+  Minimum=268.037, Maximum=289.081, Mean=283.201, StdDev=2.800
+  Checksum=28733
+  NoData Value=3.27e+04
+Band 5 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T050000
+  Minimum=268.852, Maximum=289.422, Mean=283.539, StdDev=2.647
+  Checksum=31596
+  NoData Value=3.27e+04
+Band 6 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T060000
+  Minimum=268.354, Maximum=289.550, Mean=283.806, StdDev=2.548
+  Checksum=31111
+  NoData Value=3.27e+04
+Band 7 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T070000
+  Minimum=269.057, Maximum=289.985, Mean=284.205, StdDev=2.383
+  Checksum=30904
+  NoData Value=3.27e+04
+Band 8 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T080000
+  Minimum=268.979, Maximum=289.952, Mean=284.971, StdDev=2.412
+  Checksum=20653
+  NoData Value=3.27e+04
+Band 9 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T090000
+  Minimum=269.223, Maximum=291.522, Mean=285.425, StdDev=2.505
+  Checksum=16950
+  NoData Value=3.27e+04
+Band 10 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T100000
+  Minimum=270.401, Maximum=293.040, Mean=286.054, StdDev=2.506
+  Checksum=12265
+  NoData Value=3.27e+04
+Band 11 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T110000
+  Minimum=270.671, Maximum=293.566, Mean=286.323, StdDev=2.581
+  Checksum=7794
+  NoData Value=3.27e+04
+Band 12 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T120000
+  Minimum=269.753, Maximum=293.566, Mean=286.509, StdDev=2.686
+  Checksum=3343
+  NoData Value=3.27e+04
+Band 13 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T130000
+  Minimum=270.314, Maximum=293.028, Mean=286.477, StdDev=2.601
+  Checksum=4605
+  NoData Value=3.27e+04
+Band 14 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T140000
+  Minimum=270.636, Maximum=292.380, Mean=286.370, StdDev=2.484
+  Checksum=5865
+  NoData Value=3.27e+04
+Band 15 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T150000
+  Minimum=270.932, Maximum=294.472, Mean=286.204, StdDev=2.395
+  Checksum=8980
+  NoData Value=3.27e+04
+Band 16 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T160000
+  Minimum=271.204, Maximum=294.068, Mean=285.888, StdDev=2.355
+  Checksum=13747
+  NoData Value=3.27e+04
+Band 17 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T170000
+  Minimum=270.934, Maximum=291.025, Mean=285.195, StdDev=2.258
+  Checksum=23148
+  NoData Value=3.27e+04
+Band 18 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T180000
+  Minimum=271.382, Maximum=290.078, Mean=284.697, StdDev=2.316
+  Checksum=28769
+  NoData Value=3.27e+04
+Band 19 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T190000
+  Minimum=271.248, Maximum=290.811, Mean=284.652, StdDev=2.372
+  Checksum=26540
+  NoData Value=3.27e+04
+Band 20 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T200000
+  Minimum=271.024, Maximum=290.579, Mean=284.402, StdDev=2.360
+  Checksum=28334
+  NoData Value=3.27e+04
+Band 21 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T210000
+  Minimum=270.921, Maximum=290.152, Mean=284.285, StdDev=2.452
+  Checksum=27584
+  NoData Value=3.27e+04
+Band 22 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T220000
+  Minimum=271.298, Maximum=289.472, Mean=284.170, StdDev=2.444
+  Checksum=28606
+  NoData Value=3.27e+04
+Band 23 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T230000
+  Minimum=271.515, Maximum=289.284, Mean=284.072, StdDev=2.431
+  Checksum=29092
+  NoData Value=3.27e+04
+Band 24 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T000000
+  Minimum=270.571, Maximum=289.815, Mean=284.024, StdDev=2.581
+  Checksum=26507
+  NoData Value=3.27e+04
+Band 25 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T010000
+  Minimum=270.651, Maximum=289.347, Mean=283.971, StdDev=2.614
+  Checksum=26945
+  NoData Value=3.27e+04
+Band 26 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T020000
+  Minimum=270.756, Maximum=289.321, Mean=283.800, StdDev=2.571
+  Checksum=28645
+  NoData Value=3.27e+04
+Band 27 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T030000
+  Minimum=270.579, Maximum=289.600, Mean=283.750, StdDev=2.666
+  Checksum=28992
+  NoData Value=3.27e+04
+Band 28 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T040000
+  Minimum=270.814, Maximum=288.965, Mean=283.834, StdDev=2.510
+  Checksum=28645
+  NoData Value=3.27e+04
+Band 29 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T050000
+  Minimum=270.591, Maximum=289.045, Mean=283.905, StdDev=2.528
+  Checksum=28979
+  NoData Value=3.27e+04
+Band 30 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T060000
+  Minimum=271.122, Maximum=288.985, Mean=284.230, StdDev=2.480
+  Checksum=25930
+  NoData Value=3.27e+04
+Band 31 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T070000
+  Minimum=270.991, Maximum=291.085, Mean=284.788, StdDev=2.429
+  Checksum=18469
+  NoData Value=3.27e+04
+Band 32 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T080000
+  Minimum=271.200, Maximum=292.829, Mean=285.415, StdDev=2.511
+  Checksum=13414
+  NoData Value=3.27e+04
+Band 33 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T090000
+  Minimum=270.674, Maximum=293.942, Mean=285.950, StdDev=2.666
+  Checksum=9352
+  NoData Value=3.27e+04
+Band 34 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T100000
+  Minimum=270.929, Maximum=294.690, Mean=286.373, StdDev=2.764
+  Checksum=5532
+  NoData Value=3.27e+04
+Band 35 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T110000
+  Minimum=271.434, Maximum=295.349, Mean=286.727, StdDev=2.897
+  Checksum=1624
+  NoData Value=3.27e+04
+Band 36 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T120000
+  Minimum=271.820, Maximum=295.596, Mean=287.029, StdDev=2.956
+  Checksum=65164
+  NoData Value=3.27e+04
+Band 37 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T130000
+  Minimum=272.938, Maximum=294.818, Mean=286.921, StdDev=2.912
+  Checksum=274
+  NoData Value=3.27e+04
+Band 38 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T140000
+  Minimum=273.498, Maximum=294.010, Mean=286.746, StdDev=2.838
+  Checksum=1356
+  NoData Value=3.27e+04
+Band 39 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T150000
+  Minimum=273.594, Maximum=293.074, Mean=286.463, StdDev=2.643
+  Checksum=2654
+  NoData Value=3.27e+04
+Band 40 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T160000
+  Minimum=273.551, Maximum=292.100, Mean=286.009, StdDev=2.414
+  Checksum=7572
+  NoData Value=3.27e+04
+Band 41 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T170000
+  Minimum=270.738, Maximum=291.720, Mean=285.585, StdDev=2.587
+  Checksum=14119
+  NoData Value=3.27e+04
+Band 42 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T180000
+  Minimum=270.595, Maximum=291.190, Mean=285.123, StdDev=2.623
+  Checksum=18704
+  NoData Value=3.27e+04
+Band 43 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T190000
+  Minimum=269.970, Maximum=291.158, Mean=284.961, StdDev=2.678
+  Checksum=18727
+  NoData Value=3.27e+04
+Band 44 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T200000
+  Minimum=269.241, Maximum=290.793, Mean=284.622, StdDev=2.751
+  Checksum=20324
+  NoData Value=3.27e+04
+Band 45 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T210000
+  Minimum=269.361, Maximum=289.824, Mean=284.493, StdDev=2.669
+  Checksum=22746
+  NoData Value=3.27e+04
+Band 46 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T220000
+  Minimum=268.616, Maximum=292.725, Mean=285.205, StdDev=3.181
+  Checksum=12377
+  NoData Value=3.27e+04
+Band 47 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130918T230000
+  Minimum=268.233, Maximum=292.323, Mean=284.749, StdDev=3.115
+  Checksum=15042
+  NoData Value=3.27e+04
+Band 48 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T000000
+  Minimum=267.947, Maximum=292.392, Mean=284.434, StdDev=3.014
+  Checksum=19066
+  NoData Value=3.27e+04
+Band 49 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T010000
+  Minimum=267.933, Maximum=292.337, Mean=284.215, StdDev=2.932
+  Checksum=22806
+  NoData Value=3.27e+04
+Band 50 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T020000
+  Minimum=269.680, Maximum=290.001, Mean=283.919, StdDev=2.805
+  Checksum=26849
+  NoData Value=3.27e+04
+Band 51 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T030000
+  Minimum=269.641, Maximum=290.753, Mean=283.627, StdDev=3.048
+  Checksum=26441
+  NoData Value=3.27e+04
+Band 52 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T040000
+  Minimum=269.744, Maximum=291.018, Mean=283.678, StdDev=3.007
+  Checksum=26466
+  NoData Value=3.27e+04
+Band 53 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T050000
+  Minimum=269.341, Maximum=290.854, Mean=283.855, StdDev=2.949
+  Checksum=25558
+  NoData Value=3.27e+04
+Band 54 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T060000
+  Minimum=266.081, Maximum=290.960, Mean=283.961, StdDev=2.916
+  Checksum=26415
+  NoData Value=3.27e+04
+Band 55 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T070000
+  Minimum=270.721, Maximum=291.189, Mean=284.721, StdDev=2.575
+  Checksum=21543
+  NoData Value=3.27e+04
+Band 56 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T080000
+  Minimum=270.329, Maximum=292.047, Mean=285.199, StdDev=2.638
+  Checksum=18122
+  NoData Value=3.27e+04
+Band 57 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T090000
+  Minimum=271.047, Maximum=293.363, Mean=285.747, StdDev=2.556
+  Checksum=10579
+  NoData Value=3.27e+04
+Band 58 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T100000
+  Minimum=271.959, Maximum=293.483, Mean=286.205, StdDev=2.474
+  Checksum=8848
+  NoData Value=3.27e+04
+Band 59 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T110000
+  Minimum=271.934, Maximum=294.178, Mean=286.461, StdDev=2.521
+  Checksum=6720
+  NoData Value=3.27e+04
+Band 60 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T120000
+  Minimum=272.130, Maximum=294.751, Mean=286.692, StdDev=2.536
+  Checksum=3093
+  NoData Value=3.27e+04
+Band 61 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T130000
+  Minimum=272.247, Maximum=294.414, Mean=286.632, StdDev=2.419
+  Checksum=4300
+  NoData Value=3.27e+04
+Band 62 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T140000
+  Minimum=271.841, Maximum=293.947, Mean=286.514, StdDev=2.291
+  Checksum=5412
+  NoData Value=3.27e+04
+Band 63 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T150000
+  Minimum=273.447, Maximum=292.648, Mean=286.217, StdDev=2.297
+  Checksum=8787
+  NoData Value=3.27e+04
+Band 64 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T160000
+  Minimum=274.521, Maximum=291.602, Mean=285.901, StdDev=2.308
+  Checksum=12003
+  NoData Value=3.27e+04
+Band 65 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T170000
+  Minimum=273.236, Maximum=291.432, Mean=285.454, StdDev=2.332
+  Checksum=18352
+  NoData Value=3.27e+04
+Band 66 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T180000
+  Minimum=273.632, Maximum=290.641, Mean=284.897, StdDev=2.483
+  Checksum=20851
+  NoData Value=3.27e+04
+Band 67 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T190000
+  Minimum=271.136, Maximum=290.709, Mean=284.683, StdDev=2.538
+  Checksum=21191
+  NoData Value=3.27e+04
+Band 68 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T200000
+  Minimum=270.514, Maximum=291.243, Mean=284.427, StdDev=2.731
+  Checksum=21862
+  NoData Value=3.27e+04
+Band 69 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T210000
+  Minimum=270.671, Maximum=290.169, Mean=284.249, StdDev=2.696
+  Checksum=23276
+  NoData Value=3.27e+04
+Band 70 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T220000
+  Minimum=270.756, Maximum=289.481, Mean=284.078, StdDev=2.668
+  Checksum=26114
+  NoData Value=3.27e+04
+Band 71 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130919T230000
+  Minimum=270.604, Maximum=289.343, Mean=283.967, StdDev=2.712
+  Checksum=27254
+  NoData Value=3.27e+04
+Band 72 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T000000
+  Minimum=270.618, Maximum=289.385, Mean=283.840, StdDev=2.740
+  Checksum=28353
+  NoData Value=3.27e+04
+Band 73 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T010000
+  Minimum=270.839, Maximum=289.132, Mean=283.664, StdDev=2.832
+  Checksum=28698
+  NoData Value=3.27e+04
+Band 74 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T020000
+  Minimum=270.038, Maximum=289.244, Mean=283.578, StdDev=2.833
+  Checksum=29778
+  NoData Value=3.27e+04
+Band 75 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T030000
+  Minimum=268.354, Maximum=290.576, Mean=283.698, StdDev=3.166
+  Checksum=26550
+  NoData Value=3.27e+04
+Band 76 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T040000
+  Minimum=269.037, Maximum=289.712, Mean=283.654, StdDev=3.151
+  Checksum=25755
+  NoData Value=3.27e+04
+Band 77 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T050000
+  Minimum=268.130, Maximum=289.762, Mean=283.084, StdDev=3.367
+  Checksum=27309
+  NoData Value=3.27e+04
+Band 78 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T060000
+  Minimum=267.341, Maximum=289.694, Mean=283.441, StdDev=3.166
+  Checksum=25815
+  NoData Value=3.27e+04
+Band 79 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T070000
+  Minimum=267.161, Maximum=288.695, Mean=283.844, StdDev=2.821
+  Checksum=26832
+  NoData Value=3.27e+04
+Band 80 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T080000
+  Minimum=269.786, Maximum=290.075, Mean=284.757, StdDev=2.557
+  Checksum=20722
+  NoData Value=3.27e+04
+Band 81 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T090000
+  Minimum=270.839, Maximum=290.539, Mean=285.273, StdDev=2.324
+  Checksum=17521
+  NoData Value=3.27e+04
+Band 82 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T100000
+  Minimum=272.069, Maximum=290.867, Mean=285.662, StdDev=2.349
+  Checksum=12632
+  NoData Value=3.27e+04
+Band 83 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T110000
+  Minimum=272.429, Maximum=291.407, Mean=285.813, StdDev=2.406
+  Checksum=10385
+  NoData Value=3.27e+04
+Band 84 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T120000
+  Minimum=273.187, Maximum=291.212, Mean=285.900, StdDev=2.385
+  Checksum=9468
+  NoData Value=3.27e+04
+Band 85 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T130000
+  Minimum=273.372, Maximum=291.386, Mean=285.867, StdDev=2.387
+  Checksum=10494
+  NoData Value=3.27e+04
+Band 86 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T140000
+  Minimum=273.404, Maximum=291.259, Mean=285.744, StdDev=2.390
+  Checksum=11926
+  NoData Value=3.27e+04
+Band 87 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T150000
+  Minimum=272.737, Maximum=290.530, Mean=285.363, StdDev=2.242
+  Checksum=16262
+  NoData Value=3.27e+04
+Band 88 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T160000
+  Minimum=272.473, Maximum=289.895, Mean=285.157, StdDev=2.195
+  Checksum=18573
+  NoData Value=3.27e+04
+Band 89 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T170000
+  Minimum=270.717, Maximum=289.907, Mean=284.644, StdDev=2.235
+  Checksum=25015
+  NoData Value=3.27e+04
+Band 90 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T180000
+  Minimum=269.471, Maximum=289.820, Mean=284.270, StdDev=2.359
+  Checksum=27160
+  NoData Value=3.27e+04
+Band 91 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T190000
+  Minimum=269.356, Maximum=289.695, Mean=283.988, StdDev=2.476
+  Checksum=28267
+  NoData Value=3.27e+04
+Band 92 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T200000
+  Minimum=268.845, Maximum=289.554, Mean=283.732, StdDev=2.604
+  Checksum=29326
+  NoData Value=3.27e+04
+Band 93 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T210000
+  Minimum=268.592, Maximum=289.426, Mean=283.510, StdDev=2.704
+  Checksum=30021
+  NoData Value=3.27e+04
+Band 94 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T220000
+  Minimum=268.503, Maximum=289.330, Mean=283.322, StdDev=2.775
+  Checksum=29690
+  NoData Value=3.27e+04
+Band 95 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130920T230000
+  Minimum=268.671, Maximum=289.293, Mean=283.148, StdDev=2.842
+  Checksum=28878
+  NoData Value=3.27e+04
+Band 96 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T000000
+  Minimum=269.166, Maximum=289.325, Mean=283.008, StdDev=2.915
+  Checksum=28198
+  NoData Value=3.27e+04
+Band 97 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T010000
+  Minimum=269.744, Maximum=289.329, Mean=282.898, StdDev=2.981
+  Checksum=28076
+  NoData Value=3.27e+04
+Band 98 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T020000
+  Minimum=270.146, Maximum=289.354, Mean=282.798, StdDev=3.032
+  Checksum=27873
+  NoData Value=3.27e+04
+Band 99 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T030000
+  Minimum=271.245, Maximum=289.251, Mean=282.729, StdDev=3.056
+  Checksum=27448
+  NoData Value=3.27e+04
+Band 100 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T040000
+  Minimum=271.498, Maximum=289.373, Mean=282.846, StdDev=3.091
+  Checksum=28847
+  NoData Value=3.27e+04
+Band 101 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T050000
+  Minimum=270.954, Maximum=289.594, Mean=283.096, StdDev=3.162
+  Checksum=27570
+  NoData Value=3.27e+04
+Band 102 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T060000
+  Minimum=270.497, Maximum=289.357, Mean=283.475, StdDev=2.936
+  Checksum=26870
+  NoData Value=3.27e+04
+Band 103 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T070000
+  Minimum=271.726, Maximum=289.242, Mean=283.975, StdDev=2.636
+  Checksum=24795
+  NoData Value=3.27e+04
+Band 104 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T080000
+  Minimum=272.951, Maximum=289.160, Mean=284.485, StdDev=2.469
+  Checksum=21547
+  NoData Value=3.27e+04
+Band 105 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T090000
+  Minimum=274.167, Maximum=290.262, Mean=285.057, StdDev=2.536
+  Checksum=13259
+  NoData Value=3.27e+04
+Band 106 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T100000
+  Minimum=274.570, Maximum=290.875, Mean=285.479, StdDev=2.665
+  Checksum=10292
+  NoData Value=3.27e+04
+Band 107 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T110000
+  Minimum=274.548, Maximum=291.755, Mean=285.942, StdDev=2.854
+  Checksum=6268
+  NoData Value=3.27e+04
+Band 108 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T120000
+  Minimum=274.484, Maximum=292.450, Mean=286.301, StdDev=3.057
+  Checksum=2481
+  NoData Value=3.27e+04
+Band 109 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T130000
+  Minimum=274.504, Maximum=292.162, Mean=286.273, StdDev=3.056
+  Checksum=2640
+  NoData Value=3.27e+04
+Band 110 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T140000
+  Minimum=274.305, Maximum=291.228, Mean=285.962, StdDev=2.920
+  Checksum=5275
+  NoData Value=3.27e+04
+Band 111 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T150000
+  Minimum=273.918, Maximum=290.482, Mean=285.472, StdDev=2.742
+  Checksum=10938
+  NoData Value=3.27e+04
+Band 112 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T160000
+  Minimum=273.841, Maximum=290.421, Mean=284.972, StdDev=2.640
+  Checksum=15714
+  NoData Value=3.27e+04
+Band 113 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T170000
+  Minimum=273.805, Maximum=290.204, Mean=284.453, StdDev=2.630
+  Checksum=19781
+  NoData Value=3.27e+04
+Band 114 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T180000
+  Minimum=273.559, Maximum=289.747, Mean=283.969, StdDev=2.712
+  Checksum=23335
+  NoData Value=3.27e+04
+Band 115 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T190000
+  Minimum=273.005, Maximum=289.603, Mean=283.677, StdDev=2.786
+  Checksum=24379
+  NoData Value=3.27e+04
+Band 116 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T200000
+  Minimum=272.512, Maximum=289.476, Mean=283.455, StdDev=2.859
+  Checksum=24763
+  NoData Value=3.27e+04
+Band 117 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T210000
+  Minimum=272.156, Maximum=289.487, Mean=283.283, StdDev=2.920
+  Checksum=24656
+  NoData Value=3.27e+04
+Band 118 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T220000
+  Minimum=272.119, Maximum=289.387, Mean=283.120, StdDev=2.947
+  Checksum=24266
+  NoData Value=3.27e+04
+Band 119 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130921T230000
+  Minimum=271.860, Maximum=289.342, Mean=282.982, StdDev=2.968
+  Checksum=23437
+  NoData Value=3.27e+04
+Band 120 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T000000
+  Minimum=271.656, Maximum=289.450, Mean=282.862, StdDev=2.990
+  Checksum=22789
+  NoData Value=3.27e+04
+Band 121 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T010000
+  Minimum=271.744, Maximum=289.501, Mean=282.719, StdDev=3.025
+  Checksum=21790
+  NoData Value=3.27e+04
+Band 122 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T020000
+  Minimum=272.060, Maximum=289.572, Mean=282.611, StdDev=3.056
+  Checksum=21269
+  NoData Value=3.27e+04
+Band 123 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T030000
+  Minimum=272.111, Maximum=289.634, Mean=282.562, StdDev=3.071
+  Checksum=20971
+  NoData Value=3.27e+04
+Band 124 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T040000
+  Minimum=272.037, Maximum=289.585, Mean=282.598, StdDev=3.005
+  Checksum=22014
+  NoData Value=3.27e+04
+Band 125 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T050000
+  Minimum=272.061, Maximum=289.661, Mean=282.735, StdDev=2.941
+  Checksum=23522
+  NoData Value=3.27e+04
+Band 126 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T060000
+  Minimum=272.209, Maximum=289.848, Mean=282.989, StdDev=2.906
+  Checksum=24163
+  NoData Value=3.27e+04
+Band 127 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T070000
+  Minimum=272.645, Maximum=290.463, Mean=283.523, StdDev=2.966
+  Checksum=20425
+  NoData Value=3.27e+04
+Band 128 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T080000
+  Minimum=273.154, Maximum=291.146, Mean=284.107, StdDev=3.122
+  Checksum=14546
+  NoData Value=3.27e+04
+Band 129 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T090000
+  Minimum=273.657, Maximum=292.092, Mean=284.652, StdDev=3.328
+  Checksum=8563
+  NoData Value=3.27e+04
+Band 130 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T100000
+  Minimum=273.959, Maximum=293.246, Mean=284.955, StdDev=3.393
+  Checksum=6159
+  NoData Value=3.27e+04
+Band 131 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T110000
+  Minimum=274.189, Maximum=294.021, Mean=285.128, StdDev=3.421
+  Checksum=5505
+  NoData Value=3.27e+04
+Band 132 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T120000
+  Minimum=274.358, Maximum=294.391, Mean=285.169, StdDev=3.418
+  Checksum=5976
+  NoData Value=3.27e+04
+Band 133 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T130000
+  Minimum=274.485, Maximum=294.340, Mean=285.034, StdDev=3.377
+  Checksum=6692
+  NoData Value=3.27e+04
+Band 134 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T140000
+  Minimum=274.528, Maximum=294.087, Mean=284.792, StdDev=3.326
+  Checksum=9119
+  NoData Value=3.27e+04
+Band 135 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T150000
+  Minimum=274.299, Maximum=293.941, Mean=284.472, StdDev=3.283
+  Checksum=12739
+  NoData Value=3.27e+04
+Band 136 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T160000
+  Minimum=274.166, Maximum=293.072, Mean=284.088, StdDev=3.246
+  Checksum=15715
+  NoData Value=3.27e+04
+Band 137 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T170000
+  Minimum=274.043, Maximum=292.036, Mean=283.692, StdDev=3.260
+  Checksum=15509
+  NoData Value=3.27e+04
+Band 138 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T180000
+  Minimum=273.757, Maximum=291.048, Mean=283.320, StdDev=3.326
+  Checksum=15029
+  NoData Value=3.27e+04
+Band 139 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T190000
+  Minimum=273.312, Maximum=290.574, Mean=283.083, StdDev=3.381
+  Checksum=14201
+  NoData Value=3.27e+04
+Band 140 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T200000
+  Minimum=272.828, Maximum=290.202, Mean=282.893, StdDev=3.435
+  Checksum=13367
+  NoData Value=3.27e+04
+Band 141 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T210000
+  Minimum=272.519, Maximum=290.131, Mean=282.733, StdDev=3.485
+  Checksum=12562
+  NoData Value=3.27e+04
+Band 142 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T220000
+  Minimum=272.539, Maximum=289.964, Mean=282.565, StdDev=3.529
+  Checksum=11907
+  NoData Value=3.27e+04
+Band 143 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130922T230000
+  Minimum=272.164, Maximum=289.753, Mean=282.412, StdDev=3.571
+  Checksum=10909
+  NoData Value=3.27e+04
+Band 144 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T000000
+  Minimum=271.945, Maximum=289.620, Mean=282.276, StdDev=3.609
+  Checksum=10044
+  NoData Value=3.27e+04
+Band 145 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T010000
+  Minimum=271.932, Maximum=289.371, Mean=282.142, StdDev=3.649
+  Checksum=9323
+  NoData Value=3.27e+04
+Band 146 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T020000
+  Minimum=272.110, Maximum=289.239, Mean=282.039, StdDev=3.672
+  Checksum=9007
+  NoData Value=3.27e+04
+Band 147 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T030000
+  Minimum=272.406, Maximum=289.184, Mean=281.982, StdDev=3.663
+  Checksum=8573
+  NoData Value=3.27e+04
+Band 148 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T040000
+  Minimum=272.609, Maximum=289.123, Mean=281.984, StdDev=3.563
+  Checksum=8824
+  NoData Value=3.27e+04
+Band 149 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T050000
+  Minimum=272.711, Maximum=289.017, Mean=282.059, StdDev=3.434
+  Checksum=9927
+  NoData Value=3.27e+04
+Band 150 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T060000
+  Minimum=272.964, Maximum=288.939, Mean=282.220, StdDev=3.292
+  Checksum=11587
+  NoData Value=3.27e+04
+Band 151 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T070000
+  Minimum=273.512, Maximum=288.922, Mean=282.547, StdDev=3.132
+  Checksum=14740
+  NoData Value=3.27e+04
+Band 152 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T080000
+  Minimum=273.672, Maximum=289.175, Mean=282.936, StdDev=3.021
+  Checksum=17557
+  NoData Value=3.27e+04
+Band 153 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T090000
+  Minimum=273.865, Maximum=290.570, Mean=283.350, StdDev=2.982
+  Checksum=18705
+  NoData Value=3.27e+04
+Band 154 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T100000
+  Minimum=274.129, Maximum=292.002, Mean=283.775, StdDev=3.036
+  Checksum=17272
+  NoData Value=3.27e+04
+Band 155 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T110000
+  Minimum=274.373, Maximum=293.186, Mean=284.134, StdDev=3.136
+  Checksum=15327
+  NoData Value=3.27e+04
+Band 156 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T120000
+  Minimum=274.552, Maximum=293.818, Mean=284.374, StdDev=3.244
+  Checksum=13256
+  NoData Value=3.27e+04
+Band 157 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T130000
+  Minimum=274.529, Maximum=293.674, Mean=284.331, StdDev=3.267
+  Checksum=13795
+  NoData Value=3.27e+04
+Band 158 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T140000
+  Minimum=274.422, Maximum=293.147, Mean=284.143, StdDev=3.273
+  Checksum=14536
+  NoData Value=3.27e+04
+Band 159 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T150000
+  Minimum=274.255, Maximum=292.319, Mean=283.839, StdDev=3.273
+  Checksum=15133
+  NoData Value=3.27e+04
+Band 160 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T160000
+  Minimum=274.003, Maximum=291.208, Mean=283.408, StdDev=3.245
+  Checksum=16283
+  NoData Value=3.27e+04
+Band 161 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T170000
+  Minimum=273.761, Maximum=290.489, Mean=282.946, StdDev=3.262
+  Checksum=16190
+  NoData Value=3.27e+04
+Band 162 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T180000
+  Minimum=273.542, Maximum=289.908, Mean=282.513, StdDev=3.326
+  Checksum=14858
+  NoData Value=3.27e+04
+Band 163 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T190000
+  Minimum=273.386, Maximum=289.545, Mean=282.282, StdDev=3.352
+  Checksum=13980
+  NoData Value=3.27e+04
+Band 164 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T200000
+  Minimum=273.235, Maximum=289.284, Mean=282.108, StdDev=3.366
+  Checksum=13557
+  NoData Value=3.27e+04
+Band 165 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T210000
+  Minimum=273.010, Maximum=289.036, Mean=281.964, StdDev=3.380
+  Checksum=13446
+  NoData Value=3.27e+04
+Band 166 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T220000
+  Minimum=272.781, Maximum=288.949, Mean=281.768, StdDev=3.436
+  Checksum=13544
+  NoData Value=3.27e+04
+Band 167 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130923T230000
+  Minimum=272.341, Maximum=288.900, Mean=281.583, StdDev=3.500
+  Checksum=13177
+  NoData Value=3.27e+04
+Band 168 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T000000
+  Minimum=271.871, Maximum=288.838, Mean=281.416, StdDev=3.560
+  Checksum=12784
+  NoData Value=3.27e+04
+Band 169 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T010000
+  Minimum=271.767, Maximum=288.739, Mean=281.301, StdDev=3.558
+  Checksum=13563
+  NoData Value=3.27e+04
+Band 170 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T020000
+  Minimum=271.835, Maximum=288.652, Mean=281.224, StdDev=3.529
+  Checksum=13410
+  NoData Value=3.27e+04
+Band 171 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T030000
+  Minimum=271.800, Maximum=288.567, Mean=281.187, StdDev=3.481
+  Checksum=13738
+  NoData Value=3.27e+04
+Band 172 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T040000
+  Minimum=271.677, Maximum=288.485, Mean=281.193, StdDev=3.417
+  Checksum=13835
+  NoData Value=3.27e+04
+Band 173 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T050000
+  Minimum=271.607, Maximum=288.409, Mean=281.245, StdDev=3.345
+  Checksum=14225
+  NoData Value=3.27e+04
+Band 174 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T060000
+  Minimum=271.601, Maximum=288.344, Mean=281.345, StdDev=3.265
+  Checksum=14645
+  NoData Value=3.27e+04
+Band 175 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T070000
+  Minimum=271.961, Maximum=288.341, Mean=281.652, StdDev=3.140
+  Checksum=16467
+  NoData Value=3.27e+04
+Band 176 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T080000
+  Minimum=272.331, Maximum=288.494, Mean=281.985, StdDev=3.045
+  Checksum=17842
+  NoData Value=3.27e+04
+Band 177 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T090000
+  Minimum=272.686, Maximum=289.224, Mean=282.320, StdDev=2.998
+  Checksum=18354
+  NoData Value=3.27e+04
+Band 178 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T100000
+  Minimum=272.987, Maximum=289.924, Mean=282.632, StdDev=3.002
+  Checksum=17386
+  NoData Value=3.27e+04
+Band 179 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T110000
+  Minimum=273.194, Maximum=291.136, Mean=282.896, StdDev=3.049
+  Checksum=17158
+  NoData Value=3.27e+04
+Band 180 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T120000
+  Minimum=273.265, Maximum=292.413, Mean=283.089, StdDev=3.121
+  Checksum=16671
+  NoData Value=3.27e+04
+Band 181 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T130000
+  Minimum=272.683, Maximum=292.287, Mean=282.938, StdDev=3.164
+  Checksum=15816
+  NoData Value=3.27e+04
+Band 182 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T140000
+  Minimum=271.968, Maximum=291.970, Mean=282.708, StdDev=3.212
+  Checksum=15371
+  NoData Value=3.27e+04
+Band 183 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T150000
+  Minimum=271.162, Maximum=291.429, Mean=282.419, StdDev=3.275
+  Checksum=14324
+  NoData Value=3.27e+04
+Band 184 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T160000
+  Minimum=270.306, Maximum=290.712, Mean=282.088, StdDev=3.358
+  Checksum=13518
+  NoData Value=3.27e+04
+Band 185 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T170000
+  Minimum=269.444, Maximum=290.124, Mean=281.733, StdDev=3.460
+  Checksum=11621
+  NoData Value=3.27e+04
+Band 186 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T180000
+  Minimum=268.615, Maximum=289.717, Mean=281.372, StdDev=3.574
+  Checksum=10364
+  NoData Value=3.27e+04
+Band 187 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T190000
+  Minimum=268.073, Maximum=288.962, Mean=281.109, StdDev=3.626
+  Checksum=9421
+  NoData Value=3.27e+04
+Band 188 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T200000
+  Minimum=267.613, Maximum=288.635, Mean=280.862, StdDev=3.674
+  Checksum=8510
+  NoData Value=3.27e+04
+Band 189 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T210000
+  Minimum=267.241, Maximum=288.575, Mean=280.634, StdDev=3.717
+  Checksum=8674
+  NoData Value=3.27e+04
+Band 190 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T220000
+  Minimum=266.964, Maximum=288.619, Mean=280.430, StdDev=3.755
+  Checksum=8055
+  NoData Value=3.27e+04
+Band 191 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130924T230000
+  Minimum=266.787, Maximum=288.705, Mean=280.254, StdDev=3.785
+  Checksum=7514
+  NoData Value=3.27e+04
+Band 192 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T000000
+  Minimum=266.716, Maximum=288.737, Mean=280.107, StdDev=3.805
+  Checksum=7138
+  NoData Value=3.27e+04
+Band 193 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T010000
+  Minimum=266.872, Maximum=288.455, Mean=279.995, StdDev=3.791
+  Checksum=7153
+  NoData Value=3.27e+04
+Band 194 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T020000
+  Minimum=267.127, Maximum=288.183, Mean=279.921, StdDev=3.766
+  Checksum=6831
+  NoData Value=3.27e+04
+Band 195 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T030000
+  Minimum=267.467, Maximum=287.917, Mean=279.889, StdDev=3.731
+  Checksum=6849
+  NoData Value=3.27e+04
+Band 196 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T040000
+  Minimum=267.876, Maximum=288.038, Mean=279.902, StdDev=3.688
+  Checksum=6915
+  NoData Value=3.27e+04
+Band 197 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T050000
+  Minimum=268.206, Maximum=288.219, Mean=279.964, StdDev=3.638
+  Checksum=6694
+  NoData Value=3.27e+04
+Band 198 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T060000
+  Minimum=268.373, Maximum=288.345, Mean=280.080, StdDev=3.582
+  Checksum=6321
+  NoData Value=3.27e+04
+Band 199 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T070000
+  Minimum=269.011, Maximum=288.144, Mean=280.419, StdDev=3.470
+  Checksum=5342
+  NoData Value=3.27e+04
+Band 200 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T080000
+  Minimum=269.716, Maximum=288.119, Mean=280.790, StdDev=3.389
+  Checksum=4394
+  NoData Value=3.27e+04
+Band 201 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T090000
+  Minimum=270.441, Maximum=289.580, Mean=281.167, StdDev=3.352
+  Checksum=5578
+  NoData Value=3.27e+04
+Band 202 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T100000
+  Minimum=271.135, Maximum=291.146, Mean=281.526, StdDev=3.359
+  Checksum=6738
+  NoData Value=3.27e+04
+Band 203 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T110000
+  Minimum=271.750, Maximum=292.746, Mean=281.840, StdDev=3.402
+  Checksum=8265
+  NoData Value=3.27e+04
+Band 204 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T120000
+  Minimum=272.020, Maximum=294.111, Mean=282.085, StdDev=3.462
+  Checksum=9932
+  NoData Value=3.27e+04
+Band 205 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T130000
+  Minimum=271.150, Maximum=293.982, Mean=281.988, StdDev=3.489
+  Checksum=9625
+  NoData Value=3.27e+04
+Band 206 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T140000
+  Minimum=270.088, Maximum=293.514, Mean=281.814, StdDev=3.518
+  Checksum=9035
+  NoData Value=3.27e+04
+Band 207 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T150000
+  Minimum=268.910, Maximum=292.777, Mean=281.581, StdDev=3.561
+  Checksum=8208
+  NoData Value=3.27e+04
+Band 208 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T160000
+  Minimum=267.693, Maximum=291.843, Mean=281.306, StdDev=3.623
+  Checksum=6838
+  NoData Value=3.27e+04
+Band 209 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T170000
+  Minimum=266.515, Maximum=290.782, Mean=281.006, StdDev=3.707
+  Checksum=5607
+  NoData Value=3.27e+04
+Band 210 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T180000
+  Minimum=265.454, Maximum=289.718, Mean=280.699, StdDev=3.807
+  Checksum=6126
+  NoData Value=3.27e+04
+Band 211 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T190000
+  Minimum=265.257, Maximum=289.067, Mean=280.487, StdDev=3.844
+  Checksum=6405
+  NoData Value=3.27e+04
+Band 212 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T200000
+  Minimum=265.215, Maximum=288.425, Mean=280.288, StdDev=3.877
+  Checksum=6866
+  NoData Value=3.27e+04
+Band 213 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T210000
+  Minimum=265.222, Maximum=287.876, Mean=280.105, StdDev=3.908
+  Checksum=8199
+  NoData Value=3.27e+04
+Band 214 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T220000
+  Minimum=265.095, Maximum=287.809, Mean=279.942, StdDev=3.935
+  Checksum=9777
+  NoData Value=3.27e+04
+Band 215 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130925T230000
+  Minimum=265.000, Maximum=287.723, Mean=279.800, StdDev=3.956
+  Checksum=10586
+  NoData Value=3.27e+04
+Band 216 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T000000
+  Minimum=264.968, Maximum=287.619, Mean=279.684, StdDev=3.965
+  Checksum=11114
+  NoData Value=3.27e+04
+Band 217 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T010000
+  Minimum=264.702, Maximum=287.571, Mean=279.573, StdDev=3.944
+  Checksum=10728
+  NoData Value=3.27e+04
+Band 218 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T020000
+  Minimum=264.503, Maximum=287.515, Mean=279.498, StdDev=3.911
+  Checksum=10542
+  NoData Value=3.27e+04
+Band 219 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T030000
+  Minimum=264.398, Maximum=287.452, Mean=279.463, StdDev=3.866
+  Checksum=10032
+  NoData Value=3.27e+04
+Band 220 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T040000
+  Minimum=264.411, Maximum=287.380, Mean=279.475, StdDev=3.810
+  Checksum=9273
+  NoData Value=3.27e+04
+Band 221 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T050000
+  Minimum=264.391, Maximum=287.363, Mean=279.541, StdDev=3.740
+  Checksum=8716
+  NoData Value=3.27e+04
+Band 222 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T060000
+  Minimum=264.512, Maximum=287.433, Mean=279.668, StdDev=3.656
+  Checksum=8394
+  NoData Value=3.27e+04
+Band 223 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T070000
+  Minimum=265.561, Maximum=287.465, Mean=280.066, StdDev=3.482
+  Checksum=9109
+  NoData Value=3.27e+04
+Band 224 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T080000
+  Minimum=266.742, Maximum=287.937, Mean=280.503, StdDev=3.335
+  Checksum=11628
+  NoData Value=3.27e+04
+Band 225 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T090000
+  Minimum=267.860, Maximum=289.044, Mean=280.950, StdDev=3.237
+  Checksum=13170
+  NoData Value=3.27e+04
+Band 226 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T100000
+  Minimum=268.813, Maximum=290.147, Mean=281.377, StdDev=3.198
+  Checksum=13530
+  NoData Value=3.27e+04
+Band 227 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T110000
+  Minimum=269.675, Maximum=291.187, Mean=281.757, StdDev=3.213
+  Checksum=13538
+  NoData Value=3.27e+04
+Band 228 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T120000
+  Minimum=270.382, Maximum=292.105, Mean=282.061, StdDev=3.264
+  Checksum=14104
+  NoData Value=3.27e+04
+Band 229 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T130000
+  Minimum=270.190, Maximum=292.472, Mean=281.972, StdDev=3.293
+  Checksum=14024
+  NoData Value=3.27e+04
+Band 230 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T140000
+  Minimum=269.830, Maximum=292.663, Mean=281.798, StdDev=3.330
+  Checksum=13556
+  NoData Value=3.27e+04
+Band 231 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T150000
+  Minimum=269.354, Maximum=292.681, Mean=281.561, StdDev=3.386
+  Checksum=11502
+  NoData Value=3.27e+04
+Band 232 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T160000
+  Minimum=268.814, Maximum=292.532, Mean=281.283, StdDev=3.466
+  Checksum=10013
+  NoData Value=3.27e+04
+Band 233 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T170000
+  Minimum=268.262, Maximum=292.220, Mean=280.983, StdDev=3.569
+  Checksum=8910
+  NoData Value=3.27e+04
+Band 234 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T180000
+  Minimum=267.704, Maximum=291.750, Mean=280.683, StdDev=3.687
+  Checksum=7467
+  NoData Value=3.27e+04
+Band 235 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T190000
+  Minimum=267.642, Maximum=290.883, Mean=280.522, StdDev=3.742
+  Checksum=7069
+  NoData Value=3.27e+04
+Band 236 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T200000
+  Minimum=267.673, Maximum=289.908, Mean=280.383, StdDev=3.790
+  Checksum=6475
+  NoData Value=3.27e+04
+Band 237 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T210000
+  Minimum=267.778, Maximum=288.901, Mean=280.266, StdDev=3.831
+  Checksum=6519
+  NoData Value=3.27e+04
+Band 238 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T220000
+  Minimum=267.938, Maximum=289.020, Mean=280.171, StdDev=3.866
+  Checksum=7149
+  NoData Value=3.27e+04
+Band 239 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130926T230000
+  Minimum=268.132, Maximum=289.155, Mean=280.101, StdDev=3.893
+  Checksum=7003
+  NoData Value=3.27e+04
+Band 240 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T000000
+  Minimum=268.343, Maximum=289.250, Mean=280.054, StdDev=3.910
+  Checksum=7111
+  NoData Value=3.27e+04
+Band 241 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T010000
+  Minimum=268.359, Maximum=289.185, Mean=280.018, StdDev=3.905
+  Checksum=6915
+  NoData Value=3.27e+04
+Band 242 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T020000
+  Minimum=268.372, Maximum=289.080, Mean=280.010, StdDev=3.888
+  Checksum=6666
+  NoData Value=3.27e+04
+Band 243 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T030000
+  Minimum=268.373, Maximum=288.948, Mean=280.034, StdDev=3.863
+  Checksum=6104
+  NoData Value=3.27e+04
+Band 244 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T040000
+  Minimum=268.399, Maximum=288.875, Mean=280.092, StdDev=3.832
+  Checksum=5343
+  NoData Value=3.27e+04
+Band 245 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T050000
+  Minimum=268.464, Maximum=288.961, Mean=280.188, StdDev=3.799
+  Checksum=4672
+  NoData Value=3.27e+04
+Band 246 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T060000
+  Minimum=268.579, Maximum=289.044, Mean=280.325, StdDev=3.766
+  Checksum=4516
+  NoData Value=3.27e+04
+Band 247 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T070000
+  Minimum=268.987, Maximum=289.056, Mean=280.656, StdDev=3.722
+  Checksum=4742
+  NoData Value=3.27e+04
+Band 248 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T080000
+  Minimum=269.433, Maximum=289.052, Mean=281.008, StdDev=3.715
+  Checksum=5806
+  NoData Value=3.27e+04
+Band 249 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T090000
+  Minimum=269.891, Maximum=290.136, Mean=281.360, StdDev=3.753
+  Checksum=7008
+  NoData Value=3.27e+04
+Band 250 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T100000
+  Minimum=270.333, Maximum=291.358, Mean=281.691, StdDev=3.829
+  Checksum=7227
+  NoData Value=3.27e+04
+Band 251 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T110000
+  Minimum=270.735, Maximum=292.660, Mean=281.977, StdDev=3.929
+  Checksum=7565
+  NoData Value=3.27e+04
+Band 252 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T120000
+  Minimum=271.069, Maximum=293.997, Mean=282.196, StdDev=4.034
+  Checksum=7604
+  NoData Value=3.27e+04
+Band 253 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T130000
+  Minimum=271.064, Maximum=294.081, Mean=282.097, StdDev=4.052
+  Checksum=7251
+  NoData Value=3.27e+04
+Band 254 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T140000
+  Minimum=270.981, Maximum=293.870, Mean=281.927, StdDev=4.058
+  Checksum=7118
+  NoData Value=3.27e+04
+Band 255 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T150000
+  Minimum=270.837, Maximum=293.417, Mean=281.702, StdDev=4.062
+  Checksum=5942
+  NoData Value=3.27e+04
+Band 256 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T160000
+  Minimum=270.646, Maximum=292.771, Mean=281.440, StdDev=4.073
+  Checksum=5088
+  NoData Value=3.27e+04
+Band 257 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T170000
+  Minimum=270.324, Maximum=291.984, Mean=281.158, StdDev=4.095
+  Checksum=5179
+  NoData Value=3.27e+04
+Band 258 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T180000
+  Minimum=270.023, Maximum=291.104, Mean=280.873, StdDev=4.126
+  Checksum=5420
+  NoData Value=3.27e+04
+Band 259 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T190000
+  Minimum=269.867, Maximum=290.331, Mean=280.692, StdDev=4.136
+  Checksum=5369
+  NoData Value=3.27e+04
+Band 260 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T200000
+  Minimum=269.756, Maximum=289.585, Mean=280.528, StdDev=4.142
+  Checksum=5107
+  NoData Value=3.27e+04
+Band 261 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T210000
+  Minimum=269.685, Maximum=288.974, Mean=280.381, StdDev=4.142
+  Checksum=5044
+  NoData Value=3.27e+04
+Band 262 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T220000
+  Minimum=269.613, Maximum=288.412, Mean=280.254, StdDev=4.136
+  Checksum=5504
+  NoData Value=3.27e+04
+Band 263 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130927T230000
+  Minimum=269.484, Maximum=288.106, Mean=280.148, StdDev=4.121
+  Checksum=5754
+  NoData Value=3.27e+04
+Band 264 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T000000
+  Minimum=269.364, Maximum=287.859, Mean=280.065, StdDev=4.094
+  Checksum=6721
+  NoData Value=3.27e+04
+Band 265 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T010000
+  Minimum=269.208, Maximum=287.579, Mean=279.992, StdDev=4.029
+  Checksum=8381
+  NoData Value=3.27e+04
+Band 266 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T020000
+  Minimum=269.072, Maximum=287.385, Mean=279.949, StdDev=3.955
+  Checksum=9847
+  NoData Value=3.27e+04
+Band 267 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T030000
+  Minimum=268.966, Maximum=287.175, Mean=279.938, StdDev=3.873
+  Checksum=10998
+  NoData Value=3.27e+04
+Band 268 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T040000
+  Minimum=268.897, Maximum=286.952, Mean=279.965, StdDev=3.787
+  Checksum=12044
+  NoData Value=3.27e+04
+Band 269 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T050000
+  Minimum=268.877, Maximum=286.807, Mean=280.032, StdDev=3.696
+  Checksum=12917
+  NoData Value=3.27e+04
+Band 270 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T060000
+  Minimum=268.914, Maximum=286.850, Mean=280.144, StdDev=3.603
+  Checksum=13370
+  NoData Value=3.27e+04
+Band 271 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T070000
+  Minimum=269.242, Maximum=287.072, Mean=280.462, StdDev=3.469
+  Checksum=14607
+  NoData Value=3.27e+04
+Band 272 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T080000
+  Minimum=269.608, Maximum=287.322, Mean=280.807, StdDev=3.360
+  Checksum=16137
+  NoData Value=3.27e+04
+Band 273 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T090000
+  Minimum=269.982, Maximum=287.656, Mean=281.155, StdDev=3.286
+  Checksum=17580
+  NoData Value=3.27e+04
+Band 274 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T100000
+  Minimum=270.335, Maximum=288.049, Mean=281.485, StdDev=3.249
+  Checksum=18748
+  NoData Value=3.27e+04
+Band 275 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T110000
+  Minimum=270.558, Maximum=288.478, Mean=281.772, StdDev=3.243
+  Checksum=19127
+  NoData Value=3.27e+04
+Band 276 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T120000
+  Minimum=270.673, Maximum=288.780, Mean=281.995, StdDev=3.254
+  Checksum=18894
+  NoData Value=3.27e+04
+Band 277 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T130000
+  Minimum=270.598, Maximum=288.402, Mean=281.899, StdDev=3.227
+  Checksum=19727
+  NoData Value=3.27e+04
+Band 278 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T140000
+  Minimum=270.306, Maximum=287.890, Mean=281.732, StdDev=3.209
+  Checksum=20542
+  NoData Value=3.27e+04
+Band 279 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T150000
+  Minimum=269.819, Maximum=287.479, Mean=281.512, StdDev=3.214
+  Checksum=20477
+  NoData Value=3.27e+04
+Band 280 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T160000
+  Minimum=269.304, Maximum=287.011, Mean=281.256, StdDev=3.248
+  Checksum=20342
+  NoData Value=3.27e+04
+Band 281 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T170000
+  Minimum=268.803, Maximum=287.148, Mean=280.980, StdDev=3.313
+  Checksum=19031
+  NoData Value=3.27e+04
+Band 282 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T180000
+  Minimum=268.346, Maximum=287.418, Mean=280.703, StdDev=3.400
+  Checksum=16823
+  NoData Value=3.27e+04
+Band 283 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T190000
+  Minimum=268.187, Maximum=287.305, Mean=280.535, StdDev=3.445
+  Checksum=15883
+  NoData Value=3.27e+04
+Band 284 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T200000
+  Minimum=267.613, Maximum=287.167, Mean=280.383, StdDev=3.489
+  Checksum=15136
+  NoData Value=3.27e+04
+Band 285 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T210000
+  Minimum=266.602, Maximum=287.036, Mean=280.247, StdDev=3.531
+  Checksum=14083
+  NoData Value=3.27e+04
+Band 286 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T220000
+  Minimum=265.648, Maximum=286.981, Mean=280.129, StdDev=3.570
+  Checksum=13000
+  NoData Value=3.27e+04
+Band 287 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130928T230000
+  Minimum=264.805, Maximum=286.927, Mean=280.029, StdDev=3.603
+  Checksum=12456
+  NoData Value=3.27e+04
+Band 288 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T000000
+  Minimum=263.982, Maximum=286.827, Mean=279.947, StdDev=3.627
+  Checksum=12201
+  NoData Value=3.27e+04
+Band 289 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T010000
+  Minimum=263.523, Maximum=286.591, Mean=279.847, StdDev=3.637
+  Checksum=11503
+  NoData Value=3.27e+04
+Band 290 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T020000
+  Minimum=263.261, Maximum=286.573, Mean=279.773, StdDev=3.636
+  Checksum=10893
+  NoData Value=3.27e+04
+Band 291 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T030000
+  Minimum=263.195, Maximum=286.542, Mean=279.733, StdDev=3.621
+  Checksum=10273
+  NoData Value=3.27e+04
+Band 292 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T040000
+  Minimum=263.035, Maximum=286.529, Mean=279.736, StdDev=3.590
+  Checksum=10178
+  NoData Value=3.27e+04
+Band 293 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T050000
+  Minimum=262.996, Maximum=286.605, Mean=279.786, StdDev=3.540
+  Checksum=10355
+  NoData Value=3.27e+04
+Band 294 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T060000
+  Minimum=263.189, Maximum=286.687, Mean=279.894, StdDev=3.465
+  Checksum=11045
+  NoData Value=3.27e+04
+Band 295 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T070000
+  Minimum=264.170, Maximum=286.742, Mean=280.273, StdDev=3.248
+  Checksum=13396
+  NoData Value=3.27e+04
+Band 296 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T080000
+  Minimum=265.342, Maximum=286.797, Mean=280.687, StdDev=3.045
+  Checksum=15840
+  NoData Value=3.27e+04
+Band 297 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T090000
+  Minimum=266.640, Maximum=286.861, Mean=281.108, StdDev=2.880
+  Checksum=18307
+  NoData Value=3.27e+04
+Band 298 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T100000
+  Minimum=267.999, Maximum=287.042, Mean=281.508, StdDev=2.770
+  Checksum=19974
+  NoData Value=3.27e+04
+Band 299 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T110000
+  Minimum=269.351, Maximum=287.559, Mean=281.857, StdDev=2.715
+  Checksum=19735
+  NoData Value=3.27e+04
+Band 300 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T120000
+  Minimum=270.542, Maximum=288.179, Mean=282.128, StdDev=2.702
+  Checksum=19646
+  NoData Value=3.27e+04
+Band 301 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T130000
+  Minimum=271.111, Maximum=288.253, Mean=282.126, StdDev=2.704
+  Checksum=19052
+  NoData Value=3.27e+04
+Band 302 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T140000
+  Minimum=271.445, Maximum=288.353, Mean=282.017, StdDev=2.715
+  Checksum=18392
+  NoData Value=3.27e+04
+Band 303 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T150000
+  Minimum=271.371, Maximum=288.143, Mean=281.802, StdDev=2.747
+  Checksum=17532
+  NoData Value=3.27e+04
+Band 304 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T160000
+  Minimum=271.114, Maximum=287.623, Mean=281.479, StdDev=2.825
+  Checksum=16161
+  NoData Value=3.27e+04
+Band 305 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T170000
+  Minimum=270.387, Maximum=287.387, Mean=281.049, StdDev=2.981
+  Checksum=13477
+  NoData Value=3.27e+04
+Band 306 Block=135x1 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130929T180000
+  Minimum=269.295, Maximum=287.450, Mean=280.513, StdDev=3.244
+  Checksum=10183
+  NoData Value=3.27e+04

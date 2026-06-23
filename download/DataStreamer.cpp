@@ -2342,7 +2342,8 @@ static AreaClassId getProjectionType(const ReqParams &itsReqParams, const char *
       {
         if (((itsReqParams.outputFormat == Grib1) && p->grib1) ||
             ((itsReqParams.outputFormat == Grib2) && p->grib2) ||
-            ((itsReqParams.outputFormat == NetCdf) && p->netcdf))
+            (((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff)) &&
+             p->netcdf))
           return p->areaClassId;
 
         break;
@@ -2545,7 +2546,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     const sz_t yN = ys - 1;
     sz_t x, y;
 
-    if (itsReqParams.outputFormat == NetCdf)
+    if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
     {
       itsTargetLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
       itsTargetWorldXYs = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
@@ -2595,17 +2596,17 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
               itsBoundingBox.topRight = NFmiPoint(txc, tyc);
           }
 
-          if (itsReqParams.outputFormat == NetCdf)
+          if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
           {
-            // Output cs world xy coordinates for netcdf output
+            // Output cs world xy coordinates for netcdf/geotiff output
             //
             itsTargetWorldXYs.set(x, y, xc, yc);
           }
         }
 
-        if (itsReqParams.outputFormat == NetCdf)
+        if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
         {
-          // Output cs grid (projected coordinates to) latlons for netcdf output
+          // Output cs grid (projected coordinates to) latlons for netcdf/geotiff output
           //
           txc = xc;
           tyc = yc;

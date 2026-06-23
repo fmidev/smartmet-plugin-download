@@ -1,0 +1,61 @@
+Driver: GTiff/GeoTIFF
+Size is 135, 150
+Coordinate System is:
+PROJCRS["FMI_Polar_Stereographic",
+    BASEGEOGCRS["FMI_Sphere",
+        DATUM["FMI_2007",
+            ELLIPSOID["FMI_Sphere",6371220,0,
+                LENGTHUNIT["metre",1,
+                    ID["EPSG",9001]]]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433,
+                ID["EPSG",9122]]]],
+    CONVERSION["Polar Stereographic (variant B)",
+        METHOD["Polar Stereographic (variant B)",
+            ID["EPSG",9829]],
+        PARAMETER["Latitude of standard parallel",60,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8832]],
+        PARAMETER["Longitude of origin",20,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8833]],
+        PARAMETER["False easting",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",south,
+            MERIDIAN[90,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",south,
+            MERIDIAN[180,
+                ANGLEUNIT["degree",0.0174532925199433,
+                    ID["EPSG",9122]]],
+            ORDER[2],
+            LENGTHUNIT["metre",1]]]
+Data axis to CRS axis mapping: 1,2
+Origin = (-1017563.176102370838635,-1807277.355508235748857)
+Pixel Size = (15044.706725234960686,-15008.529220262373201)
+Corner Coordinates:
+Upper Left  (-1017563.176,-1807277.356) (  9d22'51.96"W, 70d12'29.88"N)
+Lower Left  (-1017563.176,-4058556.739) (  5d55'29.68"E, 51d13'18.83"N)
+Upper Right ( 1013472.232,-1807277.356) ( 49d16'57.10"E, 70d13'37.36"N)
+Lower Right ( 1013472.232,-4058556.739) ( 34d 1'14.65"E, 51d13'49.49"N)
+Center      (   -2045.472,-2932917.047) ( 19d57'36.15"E, 62d17' 3.39"N)
+Band 1 Block=135x3 Type=Float32, ColorInterp=Gray
+  Description = 4 20130917T120000
+  NoData Value=3.27e+04
+Band 2 Block=135x3 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T130000
+  NoData Value=3.27e+04
+Band 3 Block=135x3 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T140000
+  NoData Value=3.27e+04
+Band 4 Block=135x3 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T150000
+  NoData Value=3.27e+04

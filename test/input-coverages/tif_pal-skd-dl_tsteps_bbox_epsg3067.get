@@ -1,0 +1,1 @@
+GET	/coverages/collections/pal_skandinavia_dl/coverage?properties=4&f=geotiff&starttime=20130917T1000&timesteps=2&bbox=19,59,32,70&crs=http://www.opengis.net/def/crs/EPSG/0/3067 HTTP/1.0

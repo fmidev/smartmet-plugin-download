@@ -5,6 +5,7 @@
 // ======================================================================
 
 #include "StreamerFactory.h"
+#include "GeoTiffStreamer.h"
 #include "GribStreamer.h"
 #include "NetCdfStreamer.h"
 #include "QueryDataStreamer.h"
@@ -47,7 +48,7 @@ static bool getScaleFactorAndOffset(signed long id,
       {
         if (paramName == ptable[i].itsRadonName)
         {
-          if (outputFormat == NetCdf)
+          if ((outputFormat == NetCdf) || (outputFormat == GeoTiff))
             break;
 
           if (((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
@@ -233,6 +234,8 @@ std::string getDownloadFileName(const std::string &producer,
       extn = ".grb2";
     else if (outputFormat == NetCdf)
       extn = ".nc";
+    else if (outputFormat == GeoTiff)
+      extn = ".tif";
     else
       extn = ".sqd";
 
@@ -282,10 +285,15 @@ std::shared_ptr<DataStreamer> createStreamer(const Spine::HTTP::Request &req,
                      knownParams,
                      scaling);
     }
-    else if (reqParams.outputFormat == NetCdf)
+    else if ((reqParams.outputFormat == NetCdf) || (reqParams.outputFormat == GeoTiff))
     {
-      ds = std::shared_ptr<DataStreamer>(
-          new NetCdfStreamer(req, config, query, producer, reqParams));
+      if (reqParams.outputFormat == NetCdf)
+        ds = std::shared_ptr<DataStreamer>(
+            new NetCdfStreamer(req, config, query, producer, reqParams));
+      else
+        ds = std::shared_ptr<DataStreamer>(
+            new GeoTiffStreamer(req, config, query, producer, reqParams));
+
       getParamConfig(config.getParamChangeTable(false),
                      query,
                      reqParams.dataSource,

@@ -102,7 +102,8 @@ typedef enum
   Grib1,
   Grib2,
   NetCdf,
-  QD
+  QD,
+  GeoTiff
 } OutputFormat;
 
 typedef std::optional<std::vector<std::pair<double, double>>> BBox;

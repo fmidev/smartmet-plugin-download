@@ -1,0 +1,61 @@
+Driver: GTiff/GeoTIFF
+Size is 34, 84
+Coordinate System is:
+PROJCRS["EUREF-FIN / TM35FIN(E,N)",
+    BASEGEOGCRS["EUREF-FIN",
+        DATUM["EUREF-FIN",
+            ELLIPSOID["GRS 1980",6378137,298.257222101,
+                LENGTHUNIT["metre",1]],
+            ANCHOREPOCH[1997]],
+        PRIMEM["Greenwich",0,
+            ANGLEUNIT["degree",0.0174532925199433]],
+        ID["EPSG",10690]],
+    CONVERSION["TM35FIN",
+        METHOD["Transverse Mercator",
+            ID["EPSG",9807]],
+        PARAMETER["Latitude of natural origin",0,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8801]],
+        PARAMETER["Longitude of natural origin",27,
+            ANGLEUNIT["degree",0.0174532925199433],
+            ID["EPSG",8802]],
+        PARAMETER["Scale factor at natural origin",0.9996,
+            SCALEUNIT["unity",1],
+            ID["EPSG",8805]],
+        PARAMETER["False easting",500000,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8806]],
+        PARAMETER["False northing",0,
+            LENGTHUNIT["metre",1],
+            ID["EPSG",8807]]],
+    CS[Cartesian,2],
+        AXIS["(E)",east,
+            ORDER[1],
+            LENGTHUNIT["metre",1]],
+        AXIS["(N)",north,
+            ORDER[2],
+            LENGTHUNIT["metre",1]],
+    USAGE[
+        SCOPE["Engineering survey, topographic mapping."],
+        AREA["Finland - onshore and offshore."],
+        BBOX[58.84,19.08,70.09,31.59]],
+    USAGE[
+        SCOPE["Pan-European conformal mapping at scales larger than 1:500,000."],
+        AREA["Finland - between 24°E and 30°E, onshore and offshore."],
+        BBOX[59.64,23.99,70.09,30]],
+    ID["EPSG",3067]]
+Data axis to CRS axis mapping: 1,2
+Origin = (29782.670792810564308,7793336.879904765635729)
+Pixel Size = (22606.194393521400343,-14880.682012344710529)
+Corner Coordinates:
+Upper Left  (   29782.671, 7793336.880) ( 14d42'53.06"E, 69d49'11.81"N)
+Lower Left  (   29782.671, 6543359.591) ( 18d51'22.93"E, 58d46'20.67"N)
+Upper Right (  798393.280, 7793336.880) ( 34d51'49.53"E, 70d 4'23.92"N)
+Lower Right (  798393.280, 6543359.591) ( 32d11' 9.28"E, 58d55'32.60"N)
+Center      (  414087.975, 7168348.235) ( 25d12'10.23"E, 64d37'45.12"N)
+Band 1 Block=34x30 Type=Float32, ColorInterp=Gray
+  Description = 4 20130917T100000
+  NoData Value=3.27e+04
+Band 2 Block=34x30 Type=Float32, ColorInterp=Undefined
+  Description = 4 20130917T110000
+  NoData Value=3.27e+04

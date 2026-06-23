@@ -1,0 +1,1 @@
+GET	/download?param=4&producer=pal_skandinavia_dl&format=geotiff&starttime=20130917T1000&timesteps=2&bbox=19,59,32,70&projection=epsg:3067 HTTP/1.0

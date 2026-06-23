@@ -372,6 +372,9 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
       reqParams.outputFormat = Grib2;
     else if (reqParams.format == "NETCDF")
       reqParams.outputFormat = NetCdf;
+    else if ((reqParams.format == "GEOTIFF") || (reqParams.format == "GTIFF") ||
+             (reqParams.format == "TIFF"))
+      reqParams.outputFormat = GeoTiff;
     else if (reqParams.format == "QD")
     {
       if (reqParams.dataSource != QueryData)
