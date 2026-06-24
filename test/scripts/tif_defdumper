@@ -1,9 +1,23 @@
 #/bin/bash
 #
-# Default GeoTIFF metadata dumper: dumps geotransform, projection and per-band
-# descriptions/metadata as deterministic text for comparison. The temporary
-# input file name and any .aux.xml sidecar lines are filtered out as they vary
-# between runs.
+# Default GeoTIFF metadata dumper: dumps the geotransform and per-band
+# descriptions/metadata as deterministic, environment-independent text.
+#
+# Two parts of gdalinfo's output are deliberately normalized away because they
+# depend on the host's GDAL build and proj-data, not on the binary the plugin
+# writes:
+#
+#   * The CRS WKT block is omitted. Its textual rendering depends on the
+#     installed proj.db EPSG dataset version (e.g. ETRS89 / EPSG:4258 vs
+#     EUREF-FIN / EPSG:10690, and the SCOPE/AREA/BBOX/ANCHOREPOCH lines).
+#     The georeferencing is still fully exercised by the projected and
+#     geographic Corner Coordinates, which are stable across GDAL/PROJ versions.
+#
+#   * The NoData value is reformatted to a canonical number, since newer GDAL
+#     prints it as "3.27e+04" where older GDAL prints "32700".
+#
+# The temporary input file name and any .aux.xml sidecar lines are filtered out
+# as they vary between runs.
 
 if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
   echo $0: args: file expected
@@ -12,4 +26,12 @@ fi
 
 GDALINFO=$(command -v gdalinfo || echo /usr/gdal312/bin/gdalinfo)
 
-$GDALINFO -norat -nomd $1 2>/dev/null | grep -vE "(^Files:|tmp/|\.aux\.xml)"
+$GDALINFO -norat -nomd $1 2>/dev/null \
+  | grep -vE "(^Files:|tmp/|\.aux\.xml)" \
+  | awk '
+      /^Coordinate System is:/        { print "Coordinate System is: (WKT omitted: proj.db/GDAL version dependent)"; skip=1; next }
+      /^Data axis to CRS axis mapping:/ { skip=0 }
+      skip                            { next }
+      /^  NoData Value=/              { v=$0; sub(/^  NoData Value=/,"",v); printf "  NoData Value=%g\n", v+0; next }
+                                       { print }
+    '

@@ -1,8 +1,15 @@
 #/bin/bash
 #
-# Default GeoTIFF value dumper: in addition to the geometry/projection metadata,
-# dumps per-band statistics (min/max/mean/stddev) and a CRC checksum, giving a
+# Default GeoTIFF value dumper: in addition to the geometry metadata, dumps
+# per-band statistics (min/max/mean/stddev) and a CRC checksum, giving a
 # deterministic, compact summary of the actual raster values for comparison.
+#
+# As in tif_defdumper, the CRS WKT block is omitted (its rendering depends on
+# the installed proj.db EPSG dataset version) and the NoData value is
+# reformatted to a canonical number (newer GDAL prints "3.27e+04" where older
+# GDAL prints "32700"). The georeferencing is still verified by the projected
+# and geographic Corner Coordinates, which are stable across GDAL/PROJ versions.
+#
 # The temporary input file name and any .aux.xml sidecar lines are filtered out.
 
 if [ \( $# -eq 0 \) -o \( ! -s $1 \) ]; then
@@ -12,4 +19,12 @@ fi
 
 GDALINFO=$(command -v gdalinfo || echo /usr/gdal312/bin/gdalinfo)
 
-$GDALINFO -stats -checksum -norat -nomd $1 2>/dev/null | grep -vE "(^Files:|tmp/|\.aux\.xml)"
+$GDALINFO -stats -checksum -norat -nomd $1 2>/dev/null \
+  | grep -vE "(^Files:|tmp/|\.aux\.xml)" \
+  | awk '
+      /^Coordinate System is:/        { print "Coordinate System is: (WKT omitted: proj.db/GDAL version dependent)"; skip=1; next }
+      /^Data axis to CRS axis mapping:/ { skip=0 }
+      skip                            { next }
+      /^  NoData Value=/              { v=$0; sub(/^  NoData Value=/,"",v); printf "  NoData Value=%g\n", v+0; next }
+                                       { print }
+    '
