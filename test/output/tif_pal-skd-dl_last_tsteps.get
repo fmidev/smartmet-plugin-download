@@ -49,13 +49,13 @@ Lower Right ( 1013472.232,-4058556.739) ( 34d 1'14.65"E, 51d13'49.49"N)
 Center      (   -2045.472,-2932917.047) ( 19d57'36.15"E, 62d17' 3.39"N)
 Band 1 Block=135x3 Type=Float32, ColorInterp=Gray
   Description = 4 20130917T120000
-  NoData Value=3.27e+04
+  NoData Value=32700
 Band 2 Block=135x3 Type=Float32, ColorInterp=Undefined
   Description = 4 20130917T130000
-  NoData Value=3.27e+04
+  NoData Value=32700
 Band 3 Block=135x3 Type=Float32, ColorInterp=Undefined
   Description = 4 20130917T140000
-  NoData Value=3.27e+04
+  NoData Value=32700
 Band 4 Block=135x3 Type=Float32, ColorInterp=Undefined
   Description = 4 20130917T150000
-  NoData Value=3.27e+04
+  NoData Value=32700
