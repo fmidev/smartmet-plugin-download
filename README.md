@@ -170,6 +170,7 @@ Supported level types are
 - 7: Mean sea level (grib output only)
 - 8: Entire atmosphere (grib output only)
 - 10: Depth below some surface
+- 15: Isothermal level (temperature in 1/100 K)
 
 ### Grid data forecast types
 

@@ -39,6 +39,7 @@ namespace {
   const string MeanSeaLevel("meanSea");
   const string MostUnstableParcelLevel("mostUnstableParcel");
   const string HeightLayerLevel("heightAboveGroundLayer");
+  const string IsothermalLevel("isothermal");
   const string MaxWindLevel("maxWind");
 }
 
@@ -1039,6 +1040,11 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   else if (isHeightLayerLevel(levelType, gridContent))
   {
     return HeightAboveGroundLevel;
+  }
+  else if (isIsothermalLevel(levelType, gridContent))
+  {
+    // Level value is the temperature in 1/100 K; passed through as the scaled value
+    return IsothermalLevel;
   }
   else if (isMaxWindLevel(levelType, gridContent))
   {

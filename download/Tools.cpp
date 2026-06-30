@@ -110,6 +110,14 @@ bool isHeightLayerLevel(FmiLevelType levelType, bool gridContent)
   return false;
 }
 
+bool isIsothermalLevel(FmiLevelType levelType, bool gridContent)
+{
+  if (gridContent)
+    return (levelType == GridFmiLevelTypeIsothermal);
+
+  return false;
+}
+
 bool isMaxWindLevel(FmiLevelType levelType, bool gridContent)
 {
   if (gridContent)
@@ -133,14 +141,17 @@ bool isSupportedGridLevelType(bool gribOutput, FmiLevelType levelType)
             isMostUnstableParcelLevel(levelType, true) ||
             isMaxThetaELevel(levelType, true) ||
             isHeightLayerLevel(levelType, true) ||
+            isIsothermalLevel(levelType, true) ||
             isMaxWindLevel(levelType, true)
            );
 
-  // Ground and entire atmosphere data is stored without a level dimension on netcdf output
+  // Ground, entire atmosphere and isothermal data is stored without a level dimension on netcdf
+  // output
 
   return (
           isGroundLevel(levelType) ||
           isEntireAtmosphereLevel(levelType) ||
+          isIsothermalLevel(levelType, true) ||
           isPressureLevel(levelType, true) || isHybridLevel(levelType, true) ||
           isHeightLevel(levelType, 0, true) || isDepthLevel(levelType, 0, true)
          );

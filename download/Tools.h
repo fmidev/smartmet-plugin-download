@@ -64,6 +64,7 @@ static const T::ParamLevelId GridFmiLevelTypeEntireAtmosphere = 8;
 static const T::ParamLevelId GridFmiLevelTypeDepth = 10;
 static const T::ParamLevelId GridFmiLevelTypeMaxThetaE = 12;
 static const T::ParamLevelId GridFmiLevelTypeHeightLayer = 13;
+static const T::ParamLevelId GridFmiLevelTypeIsothermal = 15;
 static const T::ParamLevelId GridFmiLevelTypeMaxWind = 16;
 static const T::ParamLevelId GridFmiLevelTypeMostUnstableParcel = 21;
 
@@ -81,6 +82,7 @@ bool isMeanSeaLevel(FmiLevelType levelType, bool gridContent = false);
 bool isMostUnstableParcelLevel(FmiLevelType levelType, bool gridContent = false);
 bool isMaxThetaELevel(FmiLevelType levelType, bool gridContent = false);
 bool isHeightLayerLevel(FmiLevelType levelType, bool gridContent = false);
+bool isIsothermalLevel(FmiLevelType levelType, bool gridContent = false);
 bool isMaxWindLevel(FmiLevelType levelType, bool gridContent = false);
 
 FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
