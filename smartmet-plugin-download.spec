@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.30
-Release: 6%{?dist}.fmi
+Release: 7%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-7.fmi
+- For grid reprojection to a projected output CRS, send the target extent to the
+  query server as grid.bbox in projected (metre) coordinates instead of grid.llbox
+  in latlon degrees, which the server interpreted as metres (degenerate grid). A
+  user supplied latlon bbox is transformed to the target CRS. Debug logging from
+  26.6.30-6 retained to verify the bbox values and returned coordinates
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-6.fmi
 - Reverted the 26.6.30-5 change that sent grid.bbox in projected coordinates for
   projected reprojection; it did not fix the wrong output coordinates and produced
