@@ -121,6 +121,7 @@ class NetCdfStreamer : public DataStreamer
   void setStereographicGeometry(const netCDF::NcVar &crsVar,
                                 const NFmiArea *area = nullptr);
   void setMercatorGeometry(const netCDF::NcVar &crsVar);
+  void setTransverseMercatorGeometry(const netCDF::NcVar &crsVar);
   void setYKJGeometry(const netCDF::NcVar &crsVar);
   void setLambertConformalGeometry(const netCDF::NcVar &crsVar,
                                    const NFmiArea *area = nullptr);

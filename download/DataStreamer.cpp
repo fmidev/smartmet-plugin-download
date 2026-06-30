@@ -4223,9 +4223,9 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     queryParam.mTimeInterpolationMethod = -1;
     queryParam.mLevelInterpolationMethod = -1;
 
-    if (itsReqParams.outputFormat == NetCdf)
+    if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
     {
-      // Get grid coordinates for netcdf output
+      // Get grid coordinates for netcdf and geotiff output
 
       queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates);  // |
       //                         QueryServer::QueryParameter::Flags::NoReturnValues);
@@ -4418,6 +4418,8 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
         gridProjection = T::GridProjectionValue::Mercator;
       else if (EQUAL(projection, SRS_PT_LAMBERT_AZIMUTHAL_EQUAL_AREA))
         gridProjection = T::GridProjectionValue::LambertAzimuthalEqualArea;
+      else if (EQUAL(projection, SRS_PT_TRANSVERSE_MERCATOR))
+        gridProjection = T::GridProjectionValue::TransverseMercator;
       else
         throw Fmi::Exception(BCP, "Unsupported projection in input data: " + crsAttr->mValue);
     }

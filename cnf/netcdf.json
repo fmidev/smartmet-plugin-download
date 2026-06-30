@@ -611,5 +611,13 @@
     "name" : "surface_temperature",
     "longname" : "surface_temperature",
     "unit" : "K"
+    },
+    // Height of the -20 C isotherm (ISOTHERMAL level type 15); value is in metres.
+    // No conversion (divisor/offset default to 1/0); no clean CF standard name.
+    {
+    "radonname" : "HM20C-LAST-M",
+    "name" : "height_of_minus20C_isotherm",
+    "longname" : "Height of -20 C level",
+    "unit" : "m"
     }
 ]

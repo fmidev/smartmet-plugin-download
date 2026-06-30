@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.30
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-3.fmi
+- Added support for reprojecting grid source data to transverse mercator output
+  CRSs (e.g. EPSG:3067 / TM35FIN). Previously projected transverse mercator
+  targets were rejected with "Unsupported projection in input data". NetCDF writes
+  a CF transverse_mercator grid_mapping; GeoTIFF georeferences from the target SRS
+- Fixed GeoTIFF grid source output requesting grid coordinates; previously only
+  NetCDF requested them, so GeoTIFF failed with a coordinate/grid size mismatch
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-2.fmi
 - Added support for the isothermal grid level type (leveltypeid 15, temperature
   in 1/100 K) for grid source downloads. Previously such parameters were rejected

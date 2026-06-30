@@ -1171,6 +1171,45 @@ void NetCdfStreamer::setMercatorGeometry(const NcVar &crsVar)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set transverse mercator projection metadata (e.g. EPSG:3067 / TM35FIN)
+ *
+ *        Parameters are read from the geometry srs, unlike setYKJGeometry()
+ *        which hardcodes the YKJ (EPSG:2393) parameters.
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setTransverseMercatorGeometry(const NcVar &crsVar)
+{
+  try
+  {
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+
+    if (!geometrySRS)
+      throw Fmi::Exception(BCP, "SRS is not set");
+
+    double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
+    double lat_0 = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
+    double k_0 = getProjParam(*geometrySRS, SRS_PP_SCALE_FACTOR, true, 1.0);
+    double false_easting = getProjParam(*geometrySRS, SRS_PP_FALSE_EASTING, true, 0.0);
+    double false_northing = getProjParam(*geometrySRS, SRS_PP_FALSE_NORTHING, true, 0.0);
+
+    crsVar.putAtt("grid_mapping_name", "transverse_mercator");
+    crsVar.putAtt("longitude_of_central_meridian", NcType::nc_DOUBLE, lon_0);
+    crsVar.putAtt("latitude_of_projection_origin", NcType::nc_DOUBLE, lat_0);
+    crsVar.putAtt("scale_factor_at_central_meridian", NcType::nc_DOUBLE, k_0);
+    crsVar.putAtt("false_easting", NcType::nc_DOUBLE, false_easting);
+    crsVar.putAtt("false_northing", NcType::nc_DOUBLE, false_northing);
+
+    setSpheroidAndWKT(crsVar, geometrySRS);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set YKJ (transverse mercator) projection metadata
  *
  */
@@ -1487,6 +1526,9 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
         break;
       case T::GridProjectionValue::LambertConformal:
         setLambertConformalGeometry(crsVar);
+        break;
+      case T::GridProjectionValue::TransverseMercator:
+        setTransverseMercatorGeometry(crsVar);
         break;
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");
