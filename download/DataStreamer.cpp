@@ -4044,7 +4044,26 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   if ((!itsReqParams.projection.empty()) && nativeArea)
     getGridBBox();
 
-  if (itsReqParams.bboxRect)
+  // A projected target CRS needs the target extent in projected (metre)
+  // coordinates; sending the latlon bbox (grid.llbox) yields a degenerate grid.
+  // getGridBBox() sets targetBBox for the native-area case; for a user supplied
+  // latlon bbox, transform it to the target CRS here.
+
+  bool projectedTarget =
+      ((!itsReqParams.projection.empty()) && (itsReqParams.projection != "latlon"));
+
+  if (projectedTarget && itsReqParams.bboxRect && (!itsGridMetaData.targetBBox))
+    getGridBBoxFromUserBBox();
+
+  if (projectedTarget && itsGridMetaData.targetBBox)
+  {
+    const auto &tb = *itsGridMetaData.targetBBox;
+    string bbox = Fmi::to_string(tb.bottomLeft.X()) + "," + Fmi::to_string(tb.bottomLeft.Y()) + "," +
+                  Fmi::to_string(tb.topRight.X()) + "," + Fmi::to_string(tb.topRight.Y());
+
+    gridQuery.mAttributeList.addAttribute("grid.bbox", bbox);
+  }
+  else if (itsReqParams.bboxRect)
   {
     string bbox = Fmi::to_string((*itsReqParams.bboxRect)[0].first) + "," +
                   Fmi::to_string((*itsReqParams.bboxRect)[0].second) + "," +
@@ -4651,6 +4670,68 @@ void DataStreamer::getGridBBox()
     itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
 
     itsRegBoundingBox = BBoxCorners(NFmiPoint(lon[0], lat[0]), NFmiPoint(lon[1], lat[1]));
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get target projection bbox (in projected metres) for a user supplied
+ *        latlon bbox.
+ *
+ *        getGridBBox() computes the target bbox from the native grid extent
+ *        when no bbox is given. When the request carries a latlon bbox, this
+ *        transforms it to the projected target CRS so the grid query can be
+ *        issued with grid.bbox in target coordinates (a projected target needs
+ *        projected bbox coordinates; latlon yields a degenerate grid).
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getGridBBoxFromUserBBox()
+{
+  try
+  {
+    if (itsGridMetaData.targetBBox || (!itsReqParams.bboxRect))
+      return;
+
+    double xMin = (*itsReqParams.bboxRect)[0].first;
+    double yMin = (*itsReqParams.bboxRect)[0].second;
+    double xMax = (*itsReqParams.bboxRect)[1].first;
+    double yMax = (*itsReqParams.bboxRect)[1].second;
+
+    OGRSpatialReference llSRS;
+    llSRS.SetWellKnownGeogCS("WGS84");
+    llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+    OGRLinearRing ring;
+    ring.assignSpatialReference(&llSRS);
+    ring.addPoint(xMin, yMin);
+    ring.addPoint(xMax, yMin);
+    ring.addPoint(xMax, yMax);
+    ring.addPoint(xMin, yMax);
+    ring.addPoint(xMin, yMin);
+
+    // Densify the edges so the projected envelope captures edge curvature
+    ring.segmentize(0.5);
+
+    OGRSpatialReference toSRS;
+    if (toSRS.SetFromUserInput(itsReqParams.projection.c_str()) != OGRERR_NONE)
+      throw Fmi::Exception(BCP, "Could not initialize target crs: " + itsReqParams.projection);
+
+    toSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+    if (ring.transformTo(&toSRS) != OGRERR_NONE)
+      throw Fmi::Exception(BCP,
+                           "Failed to transform bbox to target crs: " + itsReqParams.projection);
+
+    OGREnvelope env;
+    ring.getEnvelope(&env);
+
+    itsGridMetaData.targetBBox =
+        BBoxCorners(NFmiPoint(env.MinX, env.MinY), NFmiPoint(env.MaxX, env.MaxY));
   }
   catch (...)
   {

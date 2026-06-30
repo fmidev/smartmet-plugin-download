@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.30
-Release: 4%{?dist}.fmi
+Release: 5%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-5.fmi
+- Fixed the georeferencing of grid source data reprojected to a projected output
+  CRS (e.g. EPSG:3067): the target extent is now sent to the query server as
+  grid.bbox in projected (metre) coordinates instead of grid.llbox in degrees,
+  which produced a degenerate grid with collapsed coordinates. A user supplied
+  latlon bbox is transformed to the target CRS
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-4.fmi
 - Fixed reprojecting grid source data to a projected output CRS (e.g. EPSG:3067)
   when no grid size or resolution is given. A projected target has no native pixel
