@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.30
-Release: 8%{?dist}.fmi
+Release: 9%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-9.fmi
+- Removed the temporary grid reprojection debug logging. Grid source reprojection
+  to a projected output CRS (e.g. EPSG:3067 / TM35FIN) now produces correctly
+  georeferenced GeoTIFF and NetCDF output, verified against EPSG:3067
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-8.fmi
 - Fixed grid reprojection to a projected output CRS (e.g. EPSG:3067) georeferencing.
   Two remaining issues after the grid.bbox fix: (1) the default native grid size was

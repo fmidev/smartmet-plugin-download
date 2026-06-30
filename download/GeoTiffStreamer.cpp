@@ -14,7 +14,6 @@
 #include <cpl_conv.h>
 #include <gdal_priv.h>
 #include <unistd.h>
-#include <iostream>
 
 namespace
 {
@@ -263,24 +262,6 @@ void GeoTiffStreamer::captureGridGeometry(const QueryServer::Query& gridQuery)
                            "Number of coordinates (" + Fmi::to_string(coords.size()) +
                                ") and grid size (" + Fmi::to_string(xN) + "/" + Fmi::to_string(yN) +
                                ") mismatch");
-
-    // ---- DEBUG (BRAINSTORM): grid reprojection coordinate diagnostics ----
-    std::cerr << "DLDEBUG geotiff captureGridGeometry: projType="
-              << (int)itsGridMetaData.projType << " projected=" << projected
-              << " crs=" << itsGridMetaData.crs << "\nDLDEBUG   xN=" << xN << " yN=" << yN
-              << " itsNX=" << itsNX << " itsNY=" << itsNY << " itsWidth=" << itsWidth
-              << " itsHeight=" << itsHeight << " coords.size=" << coords.size() << std::endl;
-    if (!coords.empty())
-    {
-      auto smp = [&](size_t i) {
-        i = std::min(i, coords.size() - 1);
-        return "[" + Fmi::to_string(i) + "]=(" + Fmi::to_string(coords[i].x()) + "," +
-               Fmi::to_string(coords[i].y()) + ")";
-      };
-      std::cerr << "DLDEBUG   coords " << smp(0) << " " << smp(1) << " row1" << smp(xN) << " mid"
-                << smp(coords.size() / 2) << " last" << smp(coords.size() - 1) << std::endl;
-    }
-    // ---- end DEBUG ----
 
     // Corner cell-center coordinates in the target spatial reference. The grid query coordinates
     // are geographic (lon/lat); for projected output they are transformed to the target CRS.

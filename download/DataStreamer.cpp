@@ -4226,25 +4226,6 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
 
-  // ---- DEBUG (BRAINSTORM): outgoing grid query for reprojection ----
-  {
-    auto dbg = [&](const char *n) {
-      auto a = gridQuery.mAttributeList.getAttribute(n);
-      return string(n) + "=" + (a ? a->mValue : string("-"));
-    };
-    std::cerr << "DLDEBUG buildGridQuery: projection='" << itsReqParams.projection
-              << "' geometryId='" << itsReqParams.geometryId
-              << "' metaGeometryId=" << itsGridMetaData.geometryId
-              << " bboxRect=" << (itsReqParams.bboxRect ? "set" : "none")
-              << " gridSizeXY=" << (itsReqParams.gridSizeXY ? "set" : "none")
-              << " gridResolutionXY=" << (itsReqParams.gridResolutionXY ? "set" : "none") << "\n"
-              << "DLDEBUG   attrs: " << dbg("grid.crs") << " " << dbg("grid.llbox") << " "
-              << dbg("grid.bbox") << " " << dbg("grid.width") << " " << dbg("grid.height") << " "
-              << dbg("grid.cell.width") << " " << dbg("grid.cell.height") << " " << dbg("grid.size")
-              << std::endl;
-  }
-  // ---- end DEBUG ----
-
   for (auto paramIter = itsParamIterator; (paramIter != itsDataParams.end()); paramIter++)
   {
     QueryServer::QueryParameter queryParam;
@@ -4514,12 +4495,6 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
 
     itsResources.cloneCS(srs, true);
 
-    std::cerr << "DLDEBUG getGridProjection: crs='" << crsAttr->mValue << "' projection='"
-              << (itsGridMetaData.projection.empty() ? "-" : itsGridMetaData.projection)
-              << "' -> projType=" << (int)gridProjection
-              << " IsProjected=" << srs.IsProjected() << " IsGeographic=" << srs.IsGeographic()
-              << std::endl;
-
     itsGridMetaData.projType = gridProjection;
     itsGridMetaData.crs = crsAttr->mValue;
   }
@@ -4757,11 +4732,6 @@ void DataStreamer::getGridBBoxFromUserBBox()
 
     itsGridMetaData.targetBBox =
         BBoxCorners(NFmiPoint(env.MinX, env.MinY), NFmiPoint(env.MaxX, env.MaxY));
-
-    std::cerr << "DLDEBUG getGridBBoxFromUserBBox: llbbox=(" << xMin << "," << yMin << ")-(" << xMax
-              << "," << yMax << ") -> crs=" << itsReqParams.projection
-              << " transformRc=" << (int)terr << " targetBBox=(" << env.MinX << "," << env.MinY
-              << ")-(" << env.MaxX << "," << env.MaxY << ")" << std::endl;
 
     if (terr != OGRERR_NONE)
       throw Fmi::Exception(BCP,
@@ -5064,29 +5034,6 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     auto gridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
     auto gridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
-
-    // ---- DEBUG (BRAINSTORM): grid query result geometry ----
-    {
-      std::cerr << "DLDEBUG getGridQueryInfo: response " << attr << "=" << bboxStr
-                << " width=" << gridSizeX << " height=" << gridSizeY << " crop=" << itsCropping.crop
-                << " projType=" << (int)itsGridMetaData.projType;
-      if (!gridQuery.mQueryParameterList.empty())
-      {
-        const auto &c = gridQuery.mQueryParameterList.front().mCoordinates;
-        std::cerr << " nCoords=" << c.size();
-        if (!c.empty())
-        {
-          auto s = [&](size_t i) {
-            i = std::min(i, c.size() - 1);
-            return "(" + Fmi::to_string(c[i].x()) + "," + Fmi::to_string(c[i].y()) + ")";
-          };
-          std::cerr << " coords[0]=" << s(0) << " [1]=" << s(1) << " row1=" << s(gridSizeX)
-                    << " [last]=" << s(c.size() - 1);
-        }
-      }
-      std::cerr << std::endl;
-    }
-    // ---- end DEBUG ----
 
     if (vVec->size() != (gridSizeX * gridSizeY))
       throw Fmi::Exception(BCP,
