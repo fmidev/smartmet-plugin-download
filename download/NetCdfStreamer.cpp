@@ -1578,6 +1578,11 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       OGRSpatialReference llSRS;
       llSRS.CopyGeogCSFrom(geometrySRS);
 
+      // Coordinates are geographic (lon,lat); force traditional GIS axis order so
+      // the transform returns (easting,northing) instead of swapping the axes.
+      llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+      geometrySRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
       OGRCoordinateTransformation *ct =
           itsResources.getCoordinateTransformation(&llSRS, geometrySRS);
 

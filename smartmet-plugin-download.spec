@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.30
-Release: 7%{?dist}.fmi
+Release: 8%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-8.fmi
+- Fixed grid reprojection to a projected output CRS (e.g. EPSG:3067) georeferencing.
+  Two remaining issues after the grid.bbox fix: (1) the default native grid size was
+  not persisted as an explicit size, so per-message queries omitted grid.width/height
+  and the server returned a differently sized grid (width/height mismatch); now the
+  size is persisted. (2) GeoTIFF and NetCDF transformed the geographic grid
+  coordinates to the projected CRS without forcing traditional GIS axis order, so
+  authority (lat,lon) axis order swapped the coordinates; now forced to (lon,lat)
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-7.fmi
 - For grid reprojection to a projected output CRS, send the target extent to the
   query server as grid.bbox in projected (metre) coordinates instead of grid.llbox

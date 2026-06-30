@@ -292,6 +292,13 @@ void GeoTiffStreamer::captureGridGeometry(const QueryServer::Query& gridQuery)
       OGRSpatialReference llSRS;
       llSRS.CopyGeogCSFrom(geometrySRS);
 
+      // The grid query coordinates are geographic in (lon,lat) order. Force
+      // traditional GIS axis order on both sides so the transform interprets the
+      // input as (lon,lat) and returns (easting,northing); otherwise authority
+      // axis order (lat,lon) on the geographic CRS swaps the coordinates.
+      llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+      geometrySRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
       OGRCoordinateTransformation* ct =
           itsResources.getCoordinateTransformation(&llSRS, geometrySRS);
 

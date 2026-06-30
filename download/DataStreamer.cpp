@@ -4131,6 +4131,15 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
       itsReqGridSizeX = gridDef->getGridColumnCount();
       itsReqGridSizeY = gridDef->getGridRowCount();
 
+      // Persist as an explicit grid size so that subsequent (per message) queries
+      // also send grid.width/height; otherwise they omit it and the server returns
+      // a differently sized grid (bbox at native resolution), tripping the
+      // width/height consistency check.
+
+      itsReqParams.gridSize =
+          Fmi::to_string(itsReqGridSizeX) + "," + Fmi::to_string(itsReqGridSizeY);
+      itsReqParams.gridSizeXY = nPairsOfValues<unsigned int>(itsReqParams.gridSize, "gridsize", 1);
+
       gridQuery.mAttributeList.addAttribute("grid.width", Fmi::to_string(itsReqGridSizeX));
       gridQuery.mAttributeList.addAttribute("grid.height", Fmi::to_string(itsReqGridSizeY));
     }
