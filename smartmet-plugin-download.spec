@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.6.30
-Release: 3%{?dist}.fmi
+Release: 4%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-4.fmi
+- Fixed reprojecting grid source data to a projected output CRS (e.g. EPSG:3067)
+  when no grid size or resolution is given. A projected target has no native pixel
+  grid to inherit (unlike latlon), so the query returned an empty grid ("No data
+  available"); the output grid size now defaults to the native grid size
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-3.fmi
 - Added support for reprojecting grid source data to transverse mercator output
   CRSs (e.g. EPSG:3067 / TM35FIN). Previously projected transverse mercator

@@ -4095,6 +4095,26 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     gridQuery.mAttributeList.addAttribute("grid.cell.width", gridCellWidth);
     gridQuery.mAttributeList.addAttribute("grid.cell.height", gridCellHeight);
   }
+  else if ((!itsReqParams.projection.empty()) && (itsReqParams.projection != "latlon"))
+  {
+    // Reprojecting to a projected CRS (e.g. epsg:3067) without an explicit grid
+    // size or resolution. Unlike latlon, a projected target has no native pixel
+    // grid for the query server to inherit, so it would return an empty grid
+    // ("No data available"). Default the output dimensions to the native grid
+    // size; the user can override with gridsize/gridresolution.
+
+    auto gridDef =
+        Identification::gridDef.getGrib2DefinitionByGeometryId(itsGridMetaData.geometryId);
+
+    if (gridDef)
+    {
+      itsReqGridSizeX = gridDef->getGridColumnCount();
+      itsReqGridSizeY = gridDef->getGridRowCount();
+
+      gridQuery.mAttributeList.addAttribute("grid.width", Fmi::to_string(itsReqGridSizeX));
+      gridQuery.mAttributeList.addAttribute("grid.height", Fmi::to_string(itsReqGridSizeY));
+    }
+  }
 
   if (itsGridMetaData.gridOriginTime.is_not_a_date_time())
   {
