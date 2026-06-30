@@ -362,7 +362,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   std::string getGridLLBBoxStr();
   void setGridSize(size_t gridSizeX, size_t gridSizeY);
   void getGridBBox();
-  void getGridBBoxFromUserBBox();
   void getGridProjection(const QueryServer::Query &gridQuery);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
   void getGridOrigo(const QueryServer::Query &gridQuery);

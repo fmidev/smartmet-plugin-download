@@ -4044,26 +4044,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   if ((!itsReqParams.projection.empty()) && nativeArea)
     getGridBBox();
 
-  // A projected target CRS needs the target extent in projected (metre)
-  // coordinates; sending the latlon bbox (grid.llbox) yields a degenerate grid.
-  // getGridBBox() sets targetBBox for the native-area case; for a user supplied
-  // latlon bbox, transform it to the target CRS here.
-
-  bool projectedTarget =
-      ((!itsReqParams.projection.empty()) && (itsReqParams.projection != "latlon"));
-
-  if (projectedTarget && itsReqParams.bboxRect && (!itsGridMetaData.targetBBox))
-    getGridBBoxFromUserBBox();
-
-  if (projectedTarget && itsGridMetaData.targetBBox)
-  {
-    const auto &tb = *itsGridMetaData.targetBBox;
-    string bbox = Fmi::to_string(tb.bottomLeft.X()) + "," + Fmi::to_string(tb.bottomLeft.Y()) + "," +
-                  Fmi::to_string(tb.topRight.X()) + "," + Fmi::to_string(tb.topRight.Y());
-
-    gridQuery.mAttributeList.addAttribute("grid.bbox", bbox);
-  }
-  else if (itsReqParams.bboxRect)
+  if (itsReqParams.bboxRect)
   {
     string bbox = Fmi::to_string((*itsReqParams.bboxRect)[0].first) + "," +
                   Fmi::to_string((*itsReqParams.bboxRect)[0].second) + "," +
@@ -4215,6 +4196,25 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   }
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
+
+  // ---- DEBUG (BRAINSTORM): outgoing grid query for reprojection ----
+  {
+    auto dbg = [&](const char *n) {
+      auto a = gridQuery.mAttributeList.getAttribute(n);
+      return string(n) + "=" + (a ? a->mValue : string("-"));
+    };
+    std::cerr << "DLDEBUG buildGridQuery: projection='" << itsReqParams.projection
+              << "' geometryId='" << itsReqParams.geometryId
+              << "' metaGeometryId=" << itsGridMetaData.geometryId
+              << " bboxRect=" << (itsReqParams.bboxRect ? "set" : "none")
+              << " gridSizeXY=" << (itsReqParams.gridSizeXY ? "set" : "none")
+              << " gridResolutionXY=" << (itsReqParams.gridResolutionXY ? "set" : "none") << "\n"
+              << "DLDEBUG   attrs: " << dbg("grid.crs") << " " << dbg("grid.llbox") << " "
+              << dbg("grid.bbox") << " " << dbg("grid.width") << " " << dbg("grid.height") << " "
+              << dbg("grid.cell.width") << " " << dbg("grid.cell.height") << " " << dbg("grid.size")
+              << std::endl;
+  }
+  // ---- end DEBUG ----
 
   for (auto paramIter = itsParamIterator; (paramIter != itsDataParams.end()); paramIter++)
   {
@@ -4485,6 +4485,12 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
 
     itsResources.cloneCS(srs, true);
 
+    std::cerr << "DLDEBUG getGridProjection: crs='" << crsAttr->mValue << "' projection='"
+              << (itsGridMetaData.projection.empty() ? "-" : itsGridMetaData.projection)
+              << "' -> projType=" << (int)gridProjection
+              << " IsProjected=" << srs.IsProjected() << " IsGeographic=" << srs.IsGeographic()
+              << std::endl;
+
     itsGridMetaData.projType = gridProjection;
     itsGridMetaData.crs = crsAttr->mValue;
   }
@@ -4670,68 +4676,6 @@ void DataStreamer::getGridBBox()
     itsReqParams.bboxRect = nPairsOfValues<double>(bboxStr, "bboxstr", 2);
 
     itsRegBoundingBox = BBoxCorners(NFmiPoint(lon[0], lat[0]), NFmiPoint(lon[1], lat[1]));
-  }
-  catch (...)
-  {
-    throw Fmi::Exception::Trace(BCP, "Operation failed!");
-  }
-}
-
-// ----------------------------------------------------------------------
-/*!
- * \brief Get target projection bbox (in projected metres) for a user supplied
- *        latlon bbox.
- *
- *        getGridBBox() computes the target bbox from the native grid extent
- *        when no bbox is given. When the request carries a latlon bbox, this
- *        transforms it to the projected target CRS so the grid query can be
- *        issued with grid.bbox in target coordinates (a projected target needs
- *        projected bbox coordinates; latlon yields a degenerate grid).
- */
-// ----------------------------------------------------------------------
-
-void DataStreamer::getGridBBoxFromUserBBox()
-{
-  try
-  {
-    if (itsGridMetaData.targetBBox || (!itsReqParams.bboxRect))
-      return;
-
-    double xMin = (*itsReqParams.bboxRect)[0].first;
-    double yMin = (*itsReqParams.bboxRect)[0].second;
-    double xMax = (*itsReqParams.bboxRect)[1].first;
-    double yMax = (*itsReqParams.bboxRect)[1].second;
-
-    OGRSpatialReference llSRS;
-    llSRS.SetWellKnownGeogCS("WGS84");
-    llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
-    OGRLinearRing ring;
-    ring.assignSpatialReference(&llSRS);
-    ring.addPoint(xMin, yMin);
-    ring.addPoint(xMax, yMin);
-    ring.addPoint(xMax, yMax);
-    ring.addPoint(xMin, yMax);
-    ring.addPoint(xMin, yMin);
-
-    // Densify the edges so the projected envelope captures edge curvature
-    ring.segmentize(0.5);
-
-    OGRSpatialReference toSRS;
-    if (toSRS.SetFromUserInput(itsReqParams.projection.c_str()) != OGRERR_NONE)
-      throw Fmi::Exception(BCP, "Could not initialize target crs: " + itsReqParams.projection);
-
-    toSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
-    if (ring.transformTo(&toSRS) != OGRERR_NONE)
-      throw Fmi::Exception(BCP,
-                           "Failed to transform bbox to target crs: " + itsReqParams.projection);
-
-    OGREnvelope env;
-    ring.getEnvelope(&env);
-
-    itsGridMetaData.targetBBox =
-        BBoxCorners(NFmiPoint(env.MinX, env.MinY), NFmiPoint(env.MaxX, env.MaxY));
   }
   catch (...)
   {
@@ -5030,6 +4974,29 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query &gridQuery)
 
     auto gridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
     auto gridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
+
+    // ---- DEBUG (BRAINSTORM): grid query result geometry ----
+    {
+      std::cerr << "DLDEBUG getGridQueryInfo: response " << attr << "=" << bboxStr
+                << " width=" << gridSizeX << " height=" << gridSizeY << " crop=" << itsCropping.crop
+                << " projType=" << (int)itsGridMetaData.projType;
+      if (!gridQuery.mQueryParameterList.empty())
+      {
+        const auto &c = gridQuery.mQueryParameterList.front().mCoordinates;
+        std::cerr << " nCoords=" << c.size();
+        if (!c.empty())
+        {
+          auto s = [&](size_t i) {
+            i = std::min(i, c.size() - 1);
+            return "(" + Fmi::to_string(c[i].x()) + "," + Fmi::to_string(c[i].y()) + ")";
+          };
+          std::cerr << " coords[0]=" << s(0) << " [1]=" << s(1) << " row1=" << s(gridSizeX)
+                    << " [last]=" << s(c.size() - 1);
+        }
+      }
+      std::cerr << std::endl;
+    }
+    // ---- end DEBUG ----
 
     if (vVec->size() != (gridSizeX * gridSizeY))
       throw Fmi::Exception(BCP,
