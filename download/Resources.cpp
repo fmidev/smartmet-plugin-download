@@ -212,6 +212,8 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
 
     if (ct)
     {
+      transformations.push_back(ct);
+
       // Store the target srs if output geometry will be set from it (instead of using qd's area)
       //
       if (isGeometrySRS)
@@ -226,8 +228,6 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
 
         geometrySRS = srs;
       }
-
-      transformations.push_back(ct);
     }
 
     return ct;
