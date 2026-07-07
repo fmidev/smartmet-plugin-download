@@ -78,6 +78,14 @@ GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
   }
   catch (...)
   {
+    // The destructor does not run if the constructor throws
+
+    if (itsGribHandle)
+    {
+      grib_handle_delete(itsGribHandle);
+      itsGribHandle = nullptr;
+    }
+
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }

@@ -48,7 +48,7 @@ class GribStreamer : public DataStreamer
  private:
   GribStreamer();
 
-  grib_handle* itsGribHandle;
+  grib_handle* itsGribHandle = nullptr;
   std::vector<double> itsValueArray;
   Fmi::DateTime itsGribOriginTime;
   bool itsGrib1Flag;
