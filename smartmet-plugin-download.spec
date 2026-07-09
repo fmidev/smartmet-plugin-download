@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.6.30
-Release: 9%{?dist}.fmi
+Version: 26.7.9
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -25,7 +25,7 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.6.30
+BuildRequires: smartmet-library-spine-devel >= 26.7.7
 BuildRequires: smartmet-library-macgyver-devel >= 26.6.26
 BuildRequires: smartmet-library-timeseries-devel >= 26.5.5
 BuildRequires: smartmet-library-newbase-devel >= 26.6.26
@@ -45,7 +45,7 @@ Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 26.6.26
 Requires: smartmet-library-timeseries >= 26.5.5
-Requires: smartmet-library-spine >= 26.6.30
+Requires: smartmet-library-spine >= 26.7.7
 Requires: smartmet-library-newbase >= 26.6.26
 Requires: smartmet-engine-querydata >= 26.6.26
 Requires: smartmet-library-grid-content >= 26.6.26
@@ -69,9 +69,9 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-grid >= 26.6.26
 #TestRequires: smartmet-engine-querydata >= 26.6.26
 #TestRequires: smartmet-utils-devel >= 26.6.24
-#TestRequires: smartmet-library-spine-plugin-test >= 26.6.30
+#TestRequires: smartmet-library-spine-plugin-test >= 26.7.7
 #TestRequires: smartmet-library-newbase-devel >= 26.6.26
-#TestRequires: smartmet-qdtools >= 26.6.26
+#TestRequires: smartmet-qdtools >= 26.7.6
 #TestRequires: smartmet-test-data >= 26.6.16
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-engine-grid-test >= 26.6.26
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Jul  9 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.7.9-1.fmi
+- Repackaged to satisfy CircleCI dependencies
+
 * Tue Jun 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.6.30-9.fmi
 - Removed the temporary grid reprojection debug logging. Grid source reprojection
   to a projected output CRS (e.g. EPSG:3067 / TM35FIN) now produces correctly
