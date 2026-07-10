@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.7.9
+Version: 26.7.10
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Jul 10 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.7.10-1.fmi
+- Bugs fixed by Anthropic Fable 5
+  Fix grib handle leak when GribStreamer constructor throws
+  Fix coordinate transformation leak on SRS cloning failure
+
 * Thu Jul  9 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.7.9-1.fmi
 - Repackaged to satisfy CircleCI dependencies
 
