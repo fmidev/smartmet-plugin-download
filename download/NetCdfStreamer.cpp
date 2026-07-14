@@ -7,6 +7,7 @@
 #include "NetCdfStreamer.h"
 #include <macgyver/DateTime.h>
 #include <boost/format.hpp>
+#include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -1256,13 +1257,9 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
 
     if (!geometrySRS)
     {
-      OGRErr err;
-
-      if ((err = areaSRS.importFromWkt(area->WKT().c_str())) != OGRERR_NONE)
-        throw Fmi::Exception(BCP,
-                               "srs.importFromWKT(" + area->WKT() + ") error " +
-                                   boost::lexical_cast<string>(err));
-       geometrySRS = &areaSRS;
+      // Copy from the cached factory instead of re-parsing the WKT (proj.db lookup).
+      areaSRS = *Fmi::OGRSpatialReferenceFactory::Create(area->WKT());
+      geometrySRS = &areaSRS;
     }
 
     auto projection = geometrySRS->GetAttrValue("PROJECTION");

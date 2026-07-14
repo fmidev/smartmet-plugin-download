@@ -8,6 +8,7 @@
 #include "Datum.h"
 #include "Plugin.h"
 #include <boost/algorithm/string/split.hpp>
+#include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
 #include <gis/SpatialReference.h>
 #include <grid-files/identification/GridDef.h>
@@ -1961,15 +1962,12 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q,
 {
   try
   {
-    OGRSpatialReference targetSRS;
-    OGRErr err;
-
     auto targetArea = itsResources.createArea(targetProjection);
 
-    if ((err = targetSRS.importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
-      throw Fmi::Exception(
-          BCP,
-          "srs.importFromWKT(" + targetArea->WKT() + ") error " + boost::lexical_cast<string>(err));
+    // Copy the parsed CRS from the cached factory instead of re-parsing the WKT
+    // (which for a named datum queries proj.db). The copy is in-memory; the axis
+    // strategy is set to traditional GIS order below via getRegLLBBox() as before.
+    OGRSpatialReference targetSRS = *Fmi::OGRSpatialReferenceFactory::Create(targetArea->WKT());
 
     getRegLLBBox(q, sourceArea, targetSRS);
 
@@ -2381,10 +2379,9 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     OGRErr err;
 
     // qd projected (or latlon/geographic) cs
+    // Copy from the cached factory instead of re-parsing the WKT (proj.db lookup).
 
-    if ((err = qdProjectedSrs.importFromWkt(area->WKT().c_str())) != OGRERR_NONE)
-      throw Fmi::Exception(BCP,
-                           "transform: srs.Import(WKT) error " + boost::lexical_cast<string>(err));
+    qdProjectedSrs = *Fmi::OGRSpatialReferenceFactory::Create(area->WKT());
 
     qdProjectedSrs.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
@@ -2480,10 +2477,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       {
         auto targetArea = itsResources.createArea(itsReqParams.projection);
 
-        if ((err = wgs84PrSrsPtr->importFromWkt(targetArea->WKT().c_str())) != OGRERR_NONE)
-          throw Fmi::Exception(BCP,
-                               "srs.importFromWKT(" + targetArea->WKT() + ") error " +
-                                   boost::lexical_cast<string>(err));
+        *wgs84PrSrsPtr = *Fmi::OGRSpatialReferenceFactory::Create(targetArea->WKT());
 
         wgs84ProjLL = (targetArea->SpatialReference().isGeographic() ||
                        (targetArea->AreaStr().find("rotlatlon") != string::npos));
@@ -2743,13 +2737,7 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
     auto &srs = (geometrySRS ? *geometrySRS : areaSRS);
 
     if (!geometrySRS)
-    {
-      OGRErr err;
-
-      if ((err = areaSRS.importFromWkt(areaWKT.c_str())) != OGRERR_NONE)
-        throw Fmi::Exception(
-            BCP, "srs.importFromWKT(" + areaWKT + ") error " + boost::lexical_cast<string>(err));
-    }
+      areaSRS = *Fmi::OGRSpatialReferenceFactory::Create(areaWKT);
 
     const char *ellipsoidAttr = "SPHEROID";
     auto ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);

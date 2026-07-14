@@ -10,6 +10,7 @@
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <fmt/format.h>
+#include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -644,13 +645,9 @@ void GribStreamer::setLambertConformalGeometryToGrib(const NFmiArea *area) const
 
     if (!geometrySRS)
     {
-      OGRErr err;
-
-      if ((err = areaSRS.importFromWkt(area->WKT().c_str())) != OGRERR_NONE)
-        throw Fmi::Exception(BCP,
-                               "srs.importFromWKT(" + area->WKT() + ") error " +
-                                   boost::lexical_cast<string>(err));
-       geometrySRS = &areaSRS;
+      // Copy from the cached factory instead of re-parsing the WKT (proj.db lookup).
+      areaSRS = *Fmi::OGRSpatialReferenceFactory::Create(area->WKT());
+      geometrySRS = &areaSRS;
     }
 
     gset(itsGribHandle, "typeOfGrid", "lambert");

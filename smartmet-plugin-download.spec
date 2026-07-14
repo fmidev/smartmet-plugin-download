@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.7.10
+Version: 26.7.14
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Tue Jul 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.7.14-1.fmi
+- Build target spatial references by copying from the cached OGRSpatialReferenceFactory instead of re-parsing area WKT on every request. Re-parsing named-datum WKT triggers a proj.db lookup per request; with the factory cache enabled (gis 26.7.14) the parse happens once. Copy is in-memory and axis order is unchanged (traditional GIS order as before).
+
 * Fri Jul 10 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.7.10-1.fmi
 - Bugs fixed by Anthropic Fable 5
   Fix grib handle leak when GribStreamer constructor throws
