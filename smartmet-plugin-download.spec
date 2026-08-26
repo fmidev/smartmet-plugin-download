@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.7.14
+Version: 26.8.26
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,15 +25,15 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.7.10
-BuildRequires: smartmet-library-macgyver-devel >= 26.7.9
+BuildRequires: smartmet-library-spine-devel >= 26.8.24
+BuildRequires: smartmet-library-macgyver-devel >= 26.8.19
 BuildRequires: smartmet-library-timeseries-devel >= 26.5.5
-BuildRequires: smartmet-library-newbase-devel >= 26.7.14
+BuildRequires: smartmet-library-newbase-devel >= 26.7.18
 BuildRequires: smartmet-library-grid-content-devel >= 26.7.12
 BuildRequires: smartmet-library-grid-files-devel >= 26.7.14
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 26.6.26
-BuildRequires: smartmet-engine-geonames-devel >= 26.6.26
+BuildRequires: smartmet-engine-querydata-devel >= 26.8.24
+BuildRequires: smartmet-engine-geonames-devel >= 26.7.31
 BuildRequires: smartmet-engine-grid-devel >= 26.7.10
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
@@ -43,15 +43,15 @@ Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 26.7.9
+Requires: smartmet-library-macgyver >= 26.8.19
 Requires: smartmet-library-timeseries >= 26.5.5
-Requires: smartmet-library-spine >= 26.7.10
-Requires: smartmet-library-newbase >= 26.7.14
-Requires: smartmet-engine-querydata >= 26.6.26
+Requires: smartmet-library-spine >= 26.8.24
+Requires: smartmet-library-newbase >= 26.7.18
+Requires: smartmet-engine-querydata >= 26.8.24
 Requires: smartmet-library-grid-content >= 26.7.12
 Requires: smartmet-library-grid-files >= 26.7.14
 Requires: smartmet-engine-grid >= 26.7.10
-Requires: smartmet-server >= 26.7.9
+Requires: smartmet-server >= 26.8.21
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
@@ -65,14 +65,14 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 26.6.26
+#TestRequires: smartmet-engine-geonames >= 26.7.31
 #TestRequires: smartmet-engine-grid >= 26.7.10
-#TestRequires: smartmet-engine-querydata >= 26.6.26
-#TestRequires: smartmet-utils-devel >= 26.6.24
-#TestRequires: smartmet-library-spine-plugin-test >= 26.7.10
-#TestRequires: smartmet-library-newbase-devel >= 26.7.14
+#TestRequires: smartmet-engine-querydata >= 26.8.24
+#TestRequires: smartmet-utils-devel >= 26.7.14
+#TestRequires: smartmet-library-spine-plugin-test >= 26.8.24
+#TestRequires: smartmet-library-newbase-devel >= 26.7.18
 #TestRequires: smartmet-qdtools >= 26.7.9
-#TestRequires: smartmet-test-data >= 26.6.16
+#TestRequires: smartmet-test-data >= 26.7.27
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-engine-grid-test >= 26.7.10
 #TestRequires: wgrib
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Aug 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.26-1.fmi
+- QEngine ABI changed
+
 * Tue Jul 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.7.14-1.fmi
 - Build target spatial references by copying from the cached OGRSpatialReferenceFactory instead of re-parsing area WKT on every request. Re-parsing named-datum WKT triggers a proj.db lookup per request; with the factory cache enabled (gis 26.7.14) the parse happens once. Copy is in-memory and axis order is unchanged (traditional GIS order as before).
 
