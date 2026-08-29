@@ -17,6 +17,7 @@
 #include <boost/lexical_cast.hpp>
 #include <cpl_conv.h>
 #include <gis/ProjInfo.h>
+#include <json/writer.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -66,6 +67,42 @@ static void setJsonResponse(Spine::HTTP::Response &theResponse,
   theResponse.setStatus(Spine::HTTP::Status::ok);
   theResponse.setHeader("Content-Type", "application/json");
   theResponse.setHeader("Access-Control-Allow-Origin", "*");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief JSON-escape a string for safe embedding inside a JSON string literal
+ *
+ *        The metadata responses are built by string concatenation, so any
+ *        request-controlled value (e.g. the collection id taken from the URL
+ *        path) must be escaped to prevent JSON injection / breaking out of the
+ *        surrounding string. Json::valueToQuotedString returns the value
+ *        wrapped in double quotes with all special characters escaped; strip
+ *        the surrounding quotes so the result can be dropped into the existing
+ *        hand-built JSON, which supplies its own quotes and structure.
+ */
+// ----------------------------------------------------------------------
+
+// Redact absolute filesystem paths from a message so internal server paths are not
+// leaked to clients through the X-Download-Error response header.
+static string redactPaths(const string &msg)
+{
+  vector<string> tokens;
+  boost::algorithm::split(tokens, msg, boost::algorithm::is_space());
+  for (auto &tok : tokens)
+  {
+    if (tok.size() > 1 && tok[0] == '/' && tok.find('/', 1) != string::npos)
+      tok = "<path>";
+  }
+  return boost::algorithm::join(tokens, " ");
+}
+
+static string jsonEscape(const string &value)
+{
+  string quoted = Json::valueToQuotedString(value.c_str());
+  if (quoted.size() >= 2)
+    return quoted.substr(1, quoted.size() - 2);
+  return quoted;
 }
 
 // ----------------------------------------------------------------------
@@ -881,6 +918,7 @@ void CoveragesHandler::requestHandler(Spine::Reactor & /* theReactor */,
 
       std::string msg = exception.what();
       boost::algorithm::replace_all(msg, "\n", " ");
+      msg = redactPaths(msg);
       msg = msg.substr(0, 300);
       theResponse.setHeader("X-Download-Error", msg.c_str());
     }
@@ -1032,13 +1070,15 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theReque
     // know the producer even without explicit download.conf configuration),
     // but return minimal metadata
 
+    const string escapedId = jsonEscape(collectionId);
+
     string json =
         "{\n"
-        "  \"id\": \"" + collectionId + "\",\n"
-        "  \"title\": \"" + collectionId + "\",\n"
+        "  \"id\": \"" + escapedId + "\",\n"
+        "  \"title\": \"" + escapedId + "\",\n"
         "  \"links\": [\n"
         "    {\n"
-        "      \"href\": \"/coverages/collections/" + collectionId + "/coverage\",\n"
+        "      \"href\": \"/coverages/collections/" + escapedId + "/coverage\",\n"
         "      \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
         "      \"type\": \"application/netcdf\"\n"
         "    }\n"
@@ -1057,24 +1097,26 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theReque
   if (!producer.disabledReqParam("format"))
     formats += ", \"application/x-fmi-querydata\"";
 
+  const string escapedId = jsonEscape(collectionId);
+
   string json =
       "{\n"
-      "  \"id\": \"" + collectionId + "\",\n"
-      "  \"title\": \"" + collectionId + "\",\n"
-      "  \"description\": \"Coverage collection for producer " + collectionId + "\",\n"
+      "  \"id\": \"" + escapedId + "\",\n"
+      "  \"title\": \"" + escapedId + "\",\n"
+      "  \"description\": \"Coverage collection for producer " + escapedId + "\",\n"
       "  \"links\": [\n"
       "    {\n"
-      "      \"href\": \"/coverages/collections/" + collectionId + "\",\n"
+      "      \"href\": \"/coverages/collections/" + escapedId + "\",\n"
       "      \"rel\": \"self\",\n"
       "      \"type\": \"application/json\"\n"
       "    },\n"
       "    {\n"
-      "      \"href\": \"/coverages/collections/" + collectionId + "/coverage\",\n"
+      "      \"href\": \"/coverages/collections/" + escapedId + "/coverage\",\n"
       "      \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
       "      \"type\": \"application/netcdf\"\n"
       "    },\n"
       "    {\n"
-      "      \"href\": \"/coverages/collections/" + collectionId + "/schema\",\n"
+      "      \"href\": \"/coverages/collections/" + escapedId + "/schema\",\n"
       "      \"rel\": \"describedby\",\n"
       "      \"type\": \"application/json\"\n"
       "    }\n"

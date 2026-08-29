@@ -34,6 +34,21 @@ namespace Download
  */
 // ----------------------------------------------------------------------
 
+// Redact absolute filesystem paths from a message so internal server paths are not
+// leaked to clients through the X-Download-Error response header. Detailed messages
+// (with paths) still reach the server log and the debug stack trace.
+static std::string redactPaths(const std::string &msg)
+{
+  std::vector<std::string> tokens;
+  boost::algorithm::split(tokens, msg, boost::algorithm::is_space());
+  for (auto &tok : tokens)
+  {
+    if (tok.size() > 1 && tok[0] == '/' && tok.find('/', 1) != std::string::npos)
+      tok = "<path>";
+  }
+  return boost::algorithm::join(tokens, " ");
+}
+
 static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
 {
   try
@@ -606,6 +621,7 @@ void DownloadHandler::requestHandler(Spine::Reactor & /* theReactor */,
 
       std::string msg = exception.what();
       boost::algorithm::replace_all(msg, "\n", " ");
+      msg = redactPaths(msg);
       msg = msg.substr(0, 300);
       theResponse.setHeader("X-Download-Error", msg.c_str());
     }

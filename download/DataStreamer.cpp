@@ -4133,6 +4133,26 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
     }
   }
 
+  // Bound the requested grid cell count. The querydata source enforces
+  // maxrequestdatavalues, but the grid source path did not, so a request such as
+  // gridsize=100000,100000 (or a tiny gridresolution resolved to a huge grid) would
+  // generate an effectively unbounded grid. Reject an explicit grid size whose cell
+  // count exceeds the configured maximum (overflow-safe multiply).
+  if (itsReqGridSizeX > 0 && itsReqGridSizeY > 0)
+  {
+    const unsigned long maxValues = itsCfg.getMaxRequestDataValues();
+    if (maxValues > 0 &&
+        (itsReqGridSizeX > maxValues / itsReqGridSizeY ||
+         static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY > maxValues))
+    {
+      throw Fmi::Exception(BCP,
+                           "Requested grid size (" + Fmi::to_string(itsReqGridSizeX) + "x" +
+                               Fmi::to_string(itsReqGridSizeY) +
+                               ") exceeds the maximum number of data values (" +
+                               Fmi::to_string(maxValues) + "); adjust gridsize/gridresolution");
+    }
+  }
+
   if (itsGridMetaData.gridOriginTime.is_not_a_date_time())
   {
     // Function parameter

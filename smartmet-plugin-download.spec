@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.8.26
+Version: 26.8.30
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,6 +106,11 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Sat Aug 30 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.30-1.fmi
+- Security: apply the maxrequestdatavalues cell-count cap to the grid data source
+  (H-10; gridsize=100000,100000 previously bypassed it), redact absolute filesystem
+  paths from the X-Download-Error response header, and JSON-escape the request
+  collection id in the coverages metadata responses.
 * Wed Aug 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.26-1.fmi
 - QEngine ABI changed
 
