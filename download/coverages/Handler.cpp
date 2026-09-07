@@ -266,9 +266,9 @@ static void parseDatetime(const string &datetime,
 
   if (slashPos == string::npos)
   {
-    // Single instant
+    // Single instant: exactly one timestep starting at the given time. The time option
+    // parser rejects 'timesteps' together with 'endtime', so only starttime is set.
     dlReq.setParameter("starttime", datetime);
-    dlReq.setParameter("endtime", datetime);
     dlReq.setParameter("timesteps", "1");
   }
   else

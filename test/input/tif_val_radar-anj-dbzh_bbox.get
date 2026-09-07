@@ -1,0 +1,1 @@
+GET	/download?param=126&producer=radar_anjalankoski_dbzh&format=geotiff&starttime=20260718T1815&timesteps=1&bbox=25,60,28,62 HTTP/1.0

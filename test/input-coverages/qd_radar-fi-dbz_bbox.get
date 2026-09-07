@@ -1,0 +1,1 @@
+GET	/coverages/collections/radar_finland_dbz/coverage?properties=126&f=qd&datetime=2026-07-18T18:20:00Z&bbox=21,60,30,66 HTTP/1.0

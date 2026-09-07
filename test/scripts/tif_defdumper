@@ -26,7 +26,7 @@ fi
 
 GDALINFO=$(command -v gdalinfo || echo /usr/gdal312/bin/gdalinfo)
 
-$GDALINFO -norat -nomd $1 2>/dev/null \
+$GDALINFO --config GDAL_PAM_ENABLED NO -norat -nomd $1 2>/dev/null \
   | grep -vE "(^Files:|tmp/|\.aux\.xml)" \
   | awk '
       /^Coordinate System is:/        { print "Coordinate System is: (WKT omitted: proj.db/GDAL version dependent)"; skip=1; next }

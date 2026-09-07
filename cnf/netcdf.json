@@ -597,6 +597,31 @@
 	"divisor" : 1,
 	"unit" : "1"
     },
+    // Radar products (querydata engine GeoTIFF/ODIM producers)
+    //
+    // Corrected radar reflectivity (dBZ); CF equivalent_reflectivity_factor
+    {
+	"newbaseid" : 126,
+	"name" : "corrected_reflectivity",
+	"standardname" : "equivalent_reflectivity_factor",
+	"longname" : "Corrected radar reflectivity",
+	"unit" : "dBZ"
+    },
+    // Radar echo top height (km); no CF standard name
+    {
+	"newbaseid" : 127,
+	"name" : "echo_top_height",
+	"longname" : "Radar echo top height",
+	"unit" : "km"
+    },
+    // Precipitation rate (mm/h) as produced by radar composites; the CF
+    // standard name rainfall_rate is defined in m s-1 and is therefore omitted
+    {
+	"newbaseid" : 49,
+	"name" : "precipitation_rate",
+	"longname" : "Precipitation rate",
+	"unit" : "mm h-1"
+    },
     // For grid data tests
     {
     "radonname" : "T-K",

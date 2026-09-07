@@ -1,0 +1,15 @@
+Driver: GTiff/GeoTIFF
+Size is 621, 915
+Coordinate System is: (WKT omitted: proj.db/GDAL version dependent)
+Data axis to CRS axis mapping: 1,2
+Origin = (-197468.018380164605333,8084557.012250971049070)
+Pixel Size = (2000.032150988667809,-2000.111871446920759)
+Corner Coordinates:
+Upper Left  ( -197468.018, 8084557.012) (  6d39'28.92"E, 71d47'22.14"N)
+Lower Left  ( -197468.018, 6254454.650) ( 15d48'41.74"E, 55d55'30.70"N)
+Upper Right ( 1044551.947, 8084557.012) ( 43d 7'54.54"E, 72d11'51.92"N)
+Lower Right ( 1044551.947, 6254454.650) ( 35d46'19.69"E, 56d 7'21.70"N)
+Center      (  423541.965, 7169505.831) ( 25d23'59.62"E, 64d38'30.68"N)
+Band 1 Block=621x3 Type=Float32, ColorInterp=Gray
+  Description = 126 20260718T182000
+  NoData Value=32700

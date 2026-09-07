@@ -1,0 +1,1 @@
+GET	/coverages/collections/radar_anjalankoski_dbzh/coverage?properties=126&f=geotiff&datetime=2026-07-18T18:15:00Z&crs=http://www.opengis.net/def/crs/EPSG/0/4326&scale-size=Lon(200),Lat(200) HTTP/1.0

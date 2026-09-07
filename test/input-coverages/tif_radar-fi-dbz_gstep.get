@@ -1,0 +1,1 @@
+GET	/coverages/collections/radar_finland_dbz/coverage?properties=126&f=geotiff&datetime=2026-07-18T18:20:00Z&scale-factor=8 HTTP/1.0

@@ -1,0 +1,1 @@
+GET	/download?param=49&producer=radar_accrate&format=geotiff&starttime=20260718T1815&timesteps=1&gridstep=4,4 HTTP/1.0

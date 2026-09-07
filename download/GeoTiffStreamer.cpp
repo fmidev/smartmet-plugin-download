@@ -203,8 +203,11 @@ void GeoTiffStreamer::captureGeometry(Engine::Querydata::Q q,
     itsGeoTransform[5] = -pixelH;  // pixel height (negative, north-up)
 
     // Projection WKT. When reprojecting via an EPSG code or datum shift the resource manager
-    // holds the actual target spatial reference (e.g. EPSG:3067), so prefer it. Only genuine
+    // holds the actual target spatial reference (e.g. EPSG:3067), so prefer it. Genuine
     // newbase YKJ output (projection=ykj, no target SRS) falls back to the hardcoded EPSG:2393.
+    // Latlon output is georeferenced in degrees, but the newbase latlon area describes itself
+    // as a projected equirectangular CRS in metres; label the file as geographic WGS84
+    // (EPSG:4326) instead so that the degree coordinates are interpreted correctly.
 
     OGRSpatialReference* geometrySRS = itsResources.getGeometrySRS();
 
@@ -212,6 +215,8 @@ void GeoTiffStreamer::captureGeometry(Engine::Querydata::Q q,
       itsProjectionWKT = getWKT(geometrySRS);
     else if (classId == kNFmiYKJArea)
       itsProjectionWKT = getWKT(Fmi::SpatialReference(2393).get());
+    else if (!projected)
+      itsProjectionWKT = getWKT(Fmi::SpatialReference(4326).get());
     else
       itsProjectionWKT = area->WKT();
 
