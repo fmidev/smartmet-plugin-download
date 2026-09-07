@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.8.26
+Version: 26.9.7
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -28,7 +28,7 @@ BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 26.8.24
 BuildRequires: smartmet-library-macgyver-devel >= 26.8.19
 BuildRequires: smartmet-library-timeseries-devel >= 26.5.5
-BuildRequires: smartmet-library-newbase-devel >= 26.7.18
+BuildRequires: smartmet-library-newbase-devel >= 26.9.7
 BuildRequires: smartmet-library-grid-content-devel >= 26.7.12
 BuildRequires: smartmet-library-grid-files-devel >= 26.7.14
 BuildRequires: netcdf-devel
@@ -46,7 +46,7 @@ Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 26.8.19
 Requires: smartmet-library-timeseries >= 26.5.5
 Requires: smartmet-library-spine >= 26.8.24
-Requires: smartmet-library-newbase >= 26.7.18
+Requires: smartmet-library-newbase >= 26.9.7
 Requires: smartmet-engine-querydata >= 26.8.24
 Requires: smartmet-library-grid-content >= 26.7.12
 Requires: smartmet-library-grid-files >= 26.7.14
@@ -70,7 +70,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-querydata >= 26.8.24
 #TestRequires: smartmet-utils-devel >= 26.7.14
 #TestRequires: smartmet-library-spine-plugin-test >= 26.8.24
-#TestRequires: smartmet-library-newbase-devel >= 26.7.18
+#TestRequires: smartmet-library-newbase-devel >= 26.9.7
 #TestRequires: smartmet-qdtools >= 26.7.9
 #TestRequires: smartmet-test-data >= 26.7.27
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -106,6 +106,14 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Mon Sep  7 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.7-1.fmi
+- Added regression tests for radar GeoTIFF (EPSG:3067) and ODIM HDF5 querydata producers served by the querydata engine's radar reader (smartmet-test-data >= 26.7.27), for both the legacy /download and the OGC API Coverages interfaces: native and cropped GeoTIFF, values with ODIM gain/offset/nodata scaling, reprojection to EPSG:4326, an explicit EPSG:3067 target, and native transverse mercator QueryData output. The tests require a querydata engine with radar producer support.
+- Added netcdf.json parameter entries for radar products: CorrectedReflectivity (126, dBZ), EchoTop (127, km) and PrecipitationRate (49, mm/h); without an entry GeoTIFF and NetCDF output of these parameters was rejected with "No known parameters available".
+- Fixed the CRS of latlon GeoTIFF output from querydata (projection=latlon or a geographic EPSG code): the file was labelled with the newbase latlon area's projected equirectangular WKT in metres although the geotransform is in degrees, so GDAL read the corners as metres. Latlon output is now labelled EPSG:4326.
+- Fixed OGC API Coverages single instant datetime requests (datetime=2026-07-18T18:20:00Z), which were rejected with "Cannot specify 'timesteps' and 'endtime' simultaneously"; an instant now maps to starttime with one timestep.
+- Test GeoTIFF dumpers run gdalinfo with GDAL_PAM_ENABLED=NO so that a statistics sidecar from a previous run cannot change the output.
+- Require newbase >= 26.9.7 for cropping native transverse mercator (EPSG:3067) querydata by a bounding box.
+
 * Wed Aug 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.8.26-1.fmi
 - QEngine ABI changed
 

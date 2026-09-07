@@ -1,0 +1,1 @@
+GET	/download?param=126&producer=radar_finland_dbz&format=geotiff&starttime=20260718T1820&timesteps=1&gridstep=8,8 HTTP/1.0

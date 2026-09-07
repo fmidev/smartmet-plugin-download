@@ -1,0 +1,1 @@
+GET	/coverages/collections/radar_finland_rr1h/coverage?properties=50&f=geotiff&datetime=2026-07-18T18:00:00Z&crs=EPSG:3067&bbox=21,60,30,66 HTTP/1.0

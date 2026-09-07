@@ -1,0 +1,1 @@
+GET	/download?param=126&producer=radar_finland_dbz&format=qd&starttime=20260718T1820&timesteps=1&bbox=21,60,30,66 HTTP/1.0

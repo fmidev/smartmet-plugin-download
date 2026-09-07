@@ -1,0 +1,1 @@
+GET	/download?param=127&producer=radar_anjalankoski_etop&format=geotiff&starttime=20260718T1820&timesteps=1&gridstep=4,4 HTTP/1.0
