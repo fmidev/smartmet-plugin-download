@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.dec{fill:#fff8e1;stroke:#b7791f;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.grid{stroke:#8899aa;stroke-width:0.7}.note{fill:#a35a00;font-size:12px;font-style:italic}</style></defs>
+<rect width="1000" height="520" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">getAreaAndGrid(): crop the native grid or build a new one</text>
+
+<rect class="dec" x="20" y="60" width="300" height="60" rx="6"/><text class="t h" x="30" y="85">projection given and ≠ native?</text><text class="s" x="30" y="105">ReqParams.projection / crs</text>
+<rect class="dec" x="20" y="160" width="300" height="60" rx="6"/><text class="t h" x="30" y="185">gridsize / gridresolution / gridstep?</text><text class="s" x="30" y="205">setRequestedGridSize(), setSteppedGridSize()</text>
+<rect class="dec" x="20" y="260" width="300" height="60" rx="6"/><text class="t h" x="30" y="285">only bbox or gridcenter given?</text><text class="s" x="30" y="305">bboxRect / gridCenterLL</text>
+<path class="arrow" d="M170 120 V160"/><text class="s" x="178" y="145">no</text>
+<path class="arrow" d="M170 220 V260"/><text class="s" x="178" y="245">no</text>
+
+<rect class="box" x="380" y="60" width="280" height="130" rx="6"/>
+<text class="t h" x="390" y="85">Resample (new NFmiArea)</text>
+<text class="s" x="390" y="105">Resources::createArea(proj|bbox), target grid</text>
+<text class="s" x="390" y="121">from gridsize/resolution; values by</text>
+<text class="s" x="390" y="137">cachedProjGridValues() (newbase latlon cache)</text>
+<text class="s" x="390" y="153">or q-&gt;values(itsSrcLatLons) through GDAL when</text>
+<text class="s" x="390" y="169">an EPSG code or datum shift is involved.</text>
+
+<rect class="box" x="380" y="230" width="280" height="130" rx="6"/>
+<text class="t h" x="390" y="255">Crop (native projection)</text>
+<text class="s" x="390" y="275">setCropping(): bbox snapped outwards to</text>
+<text class="s" x="390" y="291">whole source cells, then q-&gt;croppedValues()</text>
+<text class="s" x="390" y="307">copies a rectangle. No interpolation.</text>
+<text class="s" x="390" y="323">bbox in ReqParams is rewritten to the snapped</text>
+<text class="s" x="390" y="339">corners so metadata matches the data.</text>
+
+<path class="arrow" d="M320 90 H380"/><text class="s" x="326" y="82">yes: reproject</text>
+<path class="arrow" d="M320 190 C350 190 350 140 380 140"/><text class="s" x="326" y="182">yes: resize</text>
+<path class="arrow" d="M320 290 H380"/><text class="s" x="326" y="282">yes: crop</text>
+
+<g transform="translate(720,60)">
+<text class="s" x="0" y="-8">source grid, crop rectangle (orange)</text>
+<g class="grid"><path d="M0 0H240M0 24H240M0 48H240M0 72H240M0 96H240M0 120H240M0 0V120M24 0V120M48 0V120M72 0V120M96 0V120M120 0V120M144 0V120M168 0V120M192 0V120M216 0V120M240 0V120"/></g>
+<rect x="55" y="30" width="110" height="60" fill="none" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="4 2"/>
+<rect x="48" y="24" width="120" height="72" fill="#e08a00" fill-opacity="0.25" stroke="#e08a00"/>
+<text class="s" x="0" y="140">red: requested bbox   orange: snapped to cells</text>
+</g>
+<g transform="translate(720,240)">
+<text class="s" x="0" y="-8">target grid in a new projection (resampled)</text>
+<g class="grid"><path d="M0 0H240M0 30H240M0 60H240M0 90H240M0 120H240M0 0V120M30 0V120M60 0V120M90 0V120M120 0V120M150 0V120M180 0V120M210 0V120M240 0V120"/></g>
+<path d="M20 110 L60 10 L220 20 L200 118 Z" fill="none" stroke="#1a5276" stroke-width="1.5"/>
+<text class="s" x="0" y="140">blue: source grid outline after projection;</text>
+<text class="s" x="0" y="156">each target cell is interpolated from the source</text>
+</g>
+
+<rect class="box" x="20" y="400" width="640" height="95" rx="6"/>
+<text class="t h" x="30" y="425">Then the size guard</text>
+<text class="s" x="30" y="445">values = parameters × levels × times × cells; above maxrequestdatavalues (default 2^30)</text>
+<text class="s" x="30" y="461">the request is refused with "Too much data requested" before any byte is sent.</text>
+<text class="note" x="30" y="483">querydata path only; the grid-engine path has no equivalent check</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="640" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.shared{fill:#eef7ee;stroke:#2e7d32;stroke-width:1.5}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.note{fill:#a35a00;font-size:12px;font-style:italic}</style></defs>
+<rect width="1000" height="640" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">Two API surfaces, one streaming engine</text>
+
+<rect class="box" x="20" y="60" width="300" height="80" rx="6"/><text class="t h" x="30" y="85">GET /download?…</text><text class="s" x="30" y="105">producer, param, format, bbox, gridsize,</text><text class="s" x="30" y="122">starttime, endtime, timestep, levels, projection</text>
+<rect class="box" x="680" y="60" width="300" height="80" rx="6"/><text class="t h" x="690" y="85">GET /coverages/collections/{id}/coverage?…</text><text class="s" x="690" y="105">properties, f, bbox, datetime, subset,</text><text class="s" x="690" y="122">scale-size, scale-factor, scale-axes, crs</text>
+
+<rect class="box" x="20" y="180" width="300" height="70" rx="6"/><text class="t h" x="30" y="205">DownloadHandler</text><text class="s" x="30" y="224">download/download/Handler.cpp</text><text class="s" x="30" y="240">getRequestParams() → ReqParams</text>
+<rect class="box" x="680" y="180" width="300" height="70" rx="6"/><text class="t h" x="690" y="205">CoveragesHandler</text><text class="s" x="690" y="224">download/coverages/Handler.cpp</text><text class="s" x="690" y="240">translateRequest() → fillReqParams()</text>
+<path class="arrow" d="M170 140 V180"/><path class="arrow" d="M830 140 V180"/>
+<text class="note" x="700" y="270">rewrites the request into /download vocabulary</text>
+
+<rect class="shared" x="350" y="300" width="300" height="70" rx="6"/><text class="t h" x="360" y="325">ReqParams + Query</text><text class="s" x="360" y="344">Query.cpp: times (TimeSeries::parseTimes),</text><text class="s" x="360" y="360">parameters, levels, radon names</text>
+<path class="arrow" d="M170 250 C170 300 300 300 350 320"/><path class="arrow" d="M830 250 C830 300 700 300 650 320"/>
+
+<rect class="shared" x="350" y="400" width="300" height="70" rx="6"/><text class="t h" x="360" y="425">createStreamer()</text><text class="s" x="360" y="444">StreamerFactory.cpp: pick streamer by format,</text><text class="s" x="360" y="460">look up parameter table, load first grid</text>
+<path class="arrow" d="M500 370 V400"/>
+
+<rect class="shared" x="60" y="520" width="200" height="70" rx="6"/><text class="t h" x="70" y="545">GribStreamer</text><text class="s" x="70" y="564">eccodes, one message</text><text class="s" x="70" y="580">per param/level/time</text>
+<rect class="shared" x="290" y="520" width="200" height="70" rx="6"/><text class="t h" x="300" y="545">NetCdfStreamer</text><text class="s" x="300" y="564">CF-1.6 classic file in</text><text class="s" x="300" y="580">tempdirectory, then streamed</text>
+<rect class="shared" x="520" y="520" width="200" height="70" rx="6"/><text class="t h" x="530" y="545">GeoTiffStreamer</text><text class="s" x="530" y="564">GDAL GTiff, one band per</text><text class="s" x="530" y="580">slice, DEFLATE</text>
+<rect class="shared" x="750" y="520" width="200" height="70" rx="6"/><text class="t h" x="760" y="545">QDStreamer</text><text class="s" x="760" y="564">newbase binary written</text><text class="s" x="760" y="580">by hand, querydata only</text>
+<path class="arrow" d="M500 470 C500 500 200 490 160 520"/><path class="arrow" d="M500 470 C500 500 400 495 390 520"/><path class="arrow" d="M500 470 C500 500 600 495 620 520"/><path class="arrow" d="M500 470 C500 500 800 490 850 520"/>
+
+<text class="s" x="20" y="620">All four derive from DataStreamer : Spine::HTTP::ContentStreamer and share extractData().</text>
+<text class="note" x="600" y="620">green = shared code; equivalent requests give byte-identical bodies</text>
+</svg>

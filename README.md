@@ -9,6 +9,8 @@ The plugin offers two API surfaces backed by the same streaming and encoding inf
 * **`/download`** — the legacy SmartMet query-string interface documented below
 * **`/coverages`** — an [OGC API Coverages](docs/ogc-api-coverages.md) interface (OGC 19-087): collections, subsetting, field selection, scaling, CRS
 
+The [programmer's tutorial](docs/tutorial.md) explains the shared streaming engine behind both: request parsing, the extraction loop, geometry handling, the GRIB/NetCDF/GeoTIFF/QueryData encoders, parameter tables and the OGC translation layer.
+
 ## Interface
 The interface derives from the timeseries module. See it's documentation for the options below.
 level/levels and model(producer) options are not used when fetching grid data; see [Data sources](#data-sources).

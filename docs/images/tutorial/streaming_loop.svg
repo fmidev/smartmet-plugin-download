@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="560" font-family="DejaVu Sans, Arial, sans-serif" font-size="14">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5 0 10z" fill="#444"/></marker>
+<style>.box{fill:#f4f6fa;stroke:#334;stroke-width:1.5}.slice{fill:#fff3e0;stroke:#e08a00;stroke-width:1}.t{fill:#222}.s{fill:#555;font-size:12px}.h{font-weight:bold}.arrow{stroke:#444;stroke-width:1.5;fill:none;marker-end:url(#a)}.note{fill:#a35a00;font-size:12px;font-style:italic}.mono{font-family:DejaVu Sans Mono, monospace;font-size:12px}</style></defs>
+<rect width="1000" height="560" fill="#fff"/>
+<text class="t h" x="20" y="30" font-size="16">extractData(): one slice per call, loop state kept in member iterators</text>
+
+<rect class="box" x="20" y="60" width="330" height="180" rx="6"/>
+<text class="mono" x="30" y="85" xml:space="preserve">for param in itsDataParams:</text>
+<text class="mono" x="46" y="105" xml:space="preserve">for level in itsSortedDataLevels:</text>
+<text class="mono" x="62" y="125" xml:space="preserve">for time in itsDataTimes:</text>
+<text class="mono" x="78" y="145" xml:space="preserve">values = q-&gt;values() | croppedValues()</text>
+<text class="mono" x="78" y="165" xml:space="preserve">  | cachedProjGridValues() | pressureValues()</text>
+<text class="mono" x="78" y="185" xml:space="preserve">getDataChunk(q, area, grid, level, mt,</text>
+<text class="mono" x="78" y="205" xml:space="preserve">             values, chunk)</text>
+<text class="mono" x="78" y="225" xml:space="preserve">return   // resume here on the next call</text>
+
+<g>
+<rect class="slice" x="400" y="70" width="60" height="30"/><text class="s" x="430" y="90" text-anchor="middle">p1 l1 t1</text>
+<rect class="slice" x="465" y="70" width="60" height="30"/><text class="s" x="495" y="90" text-anchor="middle">p1 l1 t2</text>
+<rect class="slice" x="530" y="70" width="60" height="30"/><text class="s" x="560" y="90" text-anchor="middle">p1 l1 t3</text>
+<rect class="slice" x="595" y="70" width="60" height="30"/><text class="s" x="625" y="90" text-anchor="middle">p1 l2 t1</text>
+<rect class="slice" x="660" y="70" width="60" height="30"/><text class="s" x="690" y="90" text-anchor="middle">p1 l2 t2</text>
+<rect class="slice" x="725" y="70" width="60" height="30"/><text class="s" x="755" y="90" text-anchor="middle">p1 l2 t3</text>
+<rect class="slice" x="790" y="70" width="60" height="30"/><text class="s" x="820" y="90" text-anchor="middle">p2 l1 t1</text>
+<text class="s" x="860" y="90">…</text>
+<text class="s" x="400" y="120">slice order follows the querydata file layout, so reads stay sequential</text>
+</g>
+<path class="arrow" d="M350 150 H395"/>
+
+<text class="t h" x="20" y="290">Two delivery patterns behind the same getChunk() contract</text>
+
+<rect class="box" x="20" y="310" width="460" height="220" rx="6"/>
+<text class="t h" x="30" y="335">Incremental: GRIB, QueryData</text>
+<text class="s" x="30" y="356">getChunk() calls extractData() until ≥ chunk length (64 KiB…4 MiB)</text>
+<text class="s" x="30" y="372">or 30 messages are collected, then returns them as one HTTP chunk.</text>
+<g>
+<rect class="slice" x="30" y="395" width="40" height="22"/><rect class="slice" x="72" y="395" width="40" height="22"/><rect class="slice" x="114" y="395" width="40" height="22"/>
+<path class="arrow" d="M160 406 H200"/><rect class="box" x="205" y="392" width="110" height="28"/><text class="s" x="260" y="411" text-anchor="middle">HTTP chunk 1</text>
+<rect class="slice" x="30" y="430" width="40" height="22"/><rect class="slice" x="72" y="430" width="40" height="22"/><rect class="slice" x="114" y="430" width="40" height="22"/>
+<path class="arrow" d="M160 441 H200"/><rect class="box" x="205" y="427" width="110" height="28"/><text class="s" x="260" y="446" text-anchor="middle">HTTP chunk 2</text>
+<text class="s" x="30" y="480">first bytes leave the server after the first few slices;</text>
+<text class="s" x="30" y="496">memory bounded by chunk length × 30 messages</text>
+<text class="note" x="30" y="520">an error mid-stream ends the body early with status 200 already sent</text>
+</g>
+
+<rect class="box" x="520" y="310" width="460" height="220" rx="6"/>
+<text class="t h" x="530" y="335">Two-phase: NetCDF, GeoTIFF</text>
+<text class="s" x="530" y="356">first getChunk() drives extractData() to exhaustion, storing every</text>
+<text class="s" x="530" y="372">slice (NetCDF: temp file; GeoTIFF: in-memory bands), writes the file,</text>
+<text class="s" x="530" y="388">then later calls stream the finished file in chunk-length pieces.</text>
+<g>
+<rect class="slice" x="530" y="405" width="30" height="20"/><rect class="slice" x="562" y="405" width="30" height="20"/><rect class="slice" x="594" y="405" width="30" height="20"/><rect class="slice" x="626" y="405" width="30" height="20"/><rect class="slice" x="658" y="405" width="30" height="20"/><text class="s" x="695" y="420">… all slices</text>
+<path class="arrow" d="M600 430 V450"/>
+<rect class="box" x="530" y="455" width="230" height="28"/><text class="s" x="645" y="474" text-anchor="middle">complete file (dls_&lt;pid&gt;_&lt;thread&gt;)</text>
+<path class="arrow" d="M760 469 H800"/><rect class="box" x="805" y="455" width="160" height="28"/><text class="s" x="885" y="474" text-anchor="middle">HTTP chunks</text>
+<text class="note" x="530" y="520">first byte only after the whole dataset is extracted; needs a fast tempdirectory</text>
+</g>
+</svg>
