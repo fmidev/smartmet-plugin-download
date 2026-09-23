@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.9.16
+Version: 26.9.13
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,16 +25,16 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.9.16
-BuildRequires: smartmet-library-macgyver-devel >= 26.9.19
+BuildRequires: smartmet-library-spine-devel >= 26.9.23
+BuildRequires: smartmet-library-macgyver-devel >= 26.9.23
 BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
-BuildRequires: smartmet-library-newbase-devel >= 26.9.16
-BuildRequires: smartmet-library-grid-content-devel >= 26.9.16
-BuildRequires: smartmet-library-grid-files-devel >= 26.9.16
+BuildRequires: smartmet-library-newbase-devel >= 26.9.23
+BuildRequires: smartmet-library-grid-content-devel >= 26.9.23
+BuildRequires: smartmet-library-grid-files-devel >= 26.9.23
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 26.9.16
-BuildRequires: smartmet-engine-geonames-devel >= 26.9.16
-BuildRequires: smartmet-engine-grid-devel >= 26.9.16
+BuildRequires: smartmet-engine-geonames-devel >= 26.9.23
+BuildRequires: smartmet-engine-grid-devel >= 26.9.23
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
@@ -43,14 +43,14 @@ Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 26.9.19
+Requires: smartmet-library-macgyver >= 26.9.23
 Requires: smartmet-library-timeseries >= 26.9.16
-Requires: smartmet-library-spine >= 26.9.16
-Requires: smartmet-library-newbase >= 26.9.16
+Requires: smartmet-library-spine >= 26.9.23
+Requires: smartmet-library-newbase >= 26.9.23
 Requires: smartmet-engine-querydata >= 26.9.16
-Requires: smartmet-library-grid-content >= 26.9.16
-Requires: smartmet-library-grid-files >= 26.9.16
-Requires: smartmet-engine-grid >= 26.9.16
+Requires: smartmet-library-grid-content >= 26.9.23
+Requires: smartmet-library-grid-files >= 26.9.23
+Requires: smartmet-engine-grid >= 26.9.23
 Requires: smartmet-server >= 26.9.2
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
@@ -65,16 +65,16 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 26.9.16
-#TestRequires: smartmet-engine-grid >= 26.9.16
+#TestRequires: smartmet-engine-geonames >= 26.9.23
+#TestRequires: smartmet-engine-grid >= 26.9.23
 #TestRequires: smartmet-engine-querydata >= 26.9.16
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.9.16
-#TestRequires: smartmet-library-newbase-devel >= 26.9.16
+#TestRequires: smartmet-library-spine-plugin-test >= 26.9.23
+#TestRequires: smartmet-library-newbase-devel >= 26.9.23
 #TestRequires: smartmet-qdtools >= 26.7.9
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-engine-grid-test >= 26.9.16
+#TestRequires: smartmet-engine-grid-test >= 26.9.23
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -106,6 +106,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Sep 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.13-1.fmi
+- Repackaged due to base library ABI changes
 * Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.16-1.fmi
 - Added regression tests for radar GeoTIFF (EPSG:3067) and ODIM HDF5 querydata producers served by the querydata engine's radar reader (smartmet-test-data >= 26.8.26), for both the legacy /download and the OGC API Coverages interfaces: native and cropped GeoTIFF, values with ODIM gain/offset/nodata scaling, reprojection to EPSG:4326, an explicit EPSG:3067 target, and native transverse mercator QueryData output. The tests require the querydata engine radar reader (>= 26.9.16-2).
 - Added netcdf.json parameter entries for radar products: CorrectedReflectivity (126, dBZ), EchoTop (127, km) and PrecipitationRate (49, mm/h); without an entry GeoTIFF and NetCDF output of these parameters was rejected with "No known parameters available".
