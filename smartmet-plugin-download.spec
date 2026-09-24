@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.9.24
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,8 +106,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
+- Security: apply the maxrequestdatavalues cell-count cap to the grid data source
+  (H-10; gridsize=100000,100000 previously bypassed it), redact absolute filesystem
+  paths from the X-Download-Error response header, and JSON-escape the request
+  collection id in the coverages metadata responses.
+
 * Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-1.fmi
 - Repackaged due to base library ABI changes
+
 * Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.16-1.fmi
 - Added regression tests for radar GeoTIFF (EPSG:3067) and ODIM HDF5 querydata producers served by the querydata engine's radar reader (smartmet-test-data >= 26.8.26), for both the legacy /download and the OGC API Coverages interfaces: native and cropped GeoTIFF, values with ODIM gain/offset/nodata scaling, reprojection to EPSG:4326, an explicit EPSG:3067 target, and native transverse mercator QueryData output. The tests require the querydata engine radar reader (>= 26.9.16-2).
 - Added netcdf.json parameter entries for radar products: CorrectedReflectivity (126, dBZ), EchoTop (127, km) and PrecipitationRate (49, mm/h); without an entry GeoTIFF and NetCDF output of these parameters was rejected with "No known parameters available".
