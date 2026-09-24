@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.9.13
+Version: 26.9.24
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -32,7 +32,7 @@ BuildRequires: smartmet-library-newbase-devel >= 26.9.23
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.23
 BuildRequires: smartmet-library-grid-files-devel >= 26.9.23
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 26.9.16
+BuildRequires: smartmet-engine-querydata-devel >= 26.9.23
 BuildRequires: smartmet-engine-geonames-devel >= 26.9.23
 BuildRequires: smartmet-engine-grid-devel >= 26.9.23
 BuildRequires: netcdf-cxx4-devel
@@ -47,7 +47,7 @@ Requires: smartmet-library-macgyver >= 26.9.23
 Requires: smartmet-library-timeseries >= 26.9.16
 Requires: smartmet-library-spine >= 26.9.23
 Requires: smartmet-library-newbase >= 26.9.23
-Requires: smartmet-engine-querydata >= 26.9.16
+Requires: smartmet-engine-querydata >= 26.9.23
 Requires: smartmet-library-grid-content >= 26.9.23
 Requires: smartmet-library-grid-files >= 26.9.23
 Requires: smartmet-engine-grid >= 26.9.23
@@ -67,7 +67,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: libconfig17-devel
 #TestRequires: smartmet-engine-geonames >= 26.9.23
 #TestRequires: smartmet-engine-grid >= 26.9.23
-#TestRequires: smartmet-engine-querydata >= 26.9.16
+#TestRequires: smartmet-engine-querydata >= 26.9.23
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.23
 #TestRequires: smartmet-library-newbase-devel >= 26.9.23
@@ -106,7 +106,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Wed Sep 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.13-1.fmi
+* Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-1.fmi
 - Repackaged due to base library ABI changes
 * Wed Sep 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.16-1.fmi
 - Added regression tests for radar GeoTIFF (EPSG:3067) and ODIM HDF5 querydata producers served by the querydata engine's radar reader (smartmet-test-data >= 26.8.26), for both the legacy /download and the OGC API Coverages interfaces: native and cropped GeoTIFF, values with ODIM gain/offset/nodata scaling, reprojection to EPSG:4326, an explicit EPSG:3067 target, and native transverse mercator QueryData output. The tests require the querydata engine radar reader (>= 26.9.16-2).
