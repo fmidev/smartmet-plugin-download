@@ -671,8 +671,9 @@ bool DataStreamer::GridMetaData::getDataTimeRange(const std::string &originTimeS
 
       if (++t != ott->second.end())
       {
+        auto firstOtTime = Fmi::DateTime::from_iso_string(*(ott->second.begin()));
         auto secondTime = Fmi::DateTime::from_iso_string(*t);
-        timeStep = (secondTime - firstTime).minutes();
+        timeStep = (secondTime - firstOtTime).total_minutes();
       }
       else
         timeStep = 60;
