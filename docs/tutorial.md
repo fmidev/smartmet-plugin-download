@@ -594,7 +594,5 @@ The three seams, in increasing order of effort:
 - Table-driven scaling is not applied to grid content.
 - The two parameter parsers, `getRequestParams` and `fillReqParams`, must be kept in
   sync by hand; only the first honours per-producer disabled options.
-- `/download` sends `application/octet-stream` for every format and misspells the
-  `Content-Disposition` value as `attachement`; `/coverages` sends proper MIME types.
 - eccodes ordering quirks: set `bitsPerValue` and `packingType` after `values`, and
   expect the first message to be encoded twice when packing is requested.
