@@ -393,9 +393,49 @@ reads back the actual CRS and bounding box for the encoders.
 
 `gridparamblocksize` and `gridtimeblocksize` let one query fetch several parameters or
 time steps at once; the result buffer is then sliced locally (`bufferIndex`). The
-encoders receive slices through `getGridDataChunk` instead of `getDataChunk`. The size
-guard from section 6 does not run on this path, and the table-driven unit conversion is
-not applied to grid content, which is assumed to be in the target units already.
+encoders receive slices through `getGridDataChunk` instead of `getDataChunk`. The full
+size guard from section 6 does not run on this path: `buildGridQuery` only rejects a
+requested grid (`gridsize`, or a size derived from `gridresolution`) whose cell count
+exceeds `maxrequestdatavalues`; the number of parameters, levels and times is not
+limited. The table-driven unit conversion is not applied to grid content, which is
+assumed to be in the target units already.
+
+### 10.1 The three grid source modes
+
+`download/Handler.cpp` maps `source` to `ReqParams::dataSource`:
+
+| `source` | `dataSource` | Parameter names | Producer |
+|---|---|---|---|
+| `querydata` (default) | `QueryData` | newbase names or numbers | `producer` / `model` |
+| `gridmapping` | `GridMapping` | newbase names, resolved through the grid engine's parameter mappings | `producer` / `model` |
+| `grid`, `gridcontent` | `GridContent` | Radon-style names `param:producer:geometryId:levelTypeId:level:forecastType[:forecastNumber]` (`Query::parseRadonParameterName`) | taken from the parameter names; `producer`, `model`, `level` and `levels` are rejected |
+
+For `GridContent`, `Query::parseParameters` loads the generations of every named
+producer from the content server (`getGenerationInfoListByProducerName`), picks the
+latest origin time common to all parameters (unless `origintime` is given), and expands
+level and forecast-number ranges (`1;5-8;11`) by looking at the content records that
+actually exist (`getContentListByParameterAndGenerationId`). A request for which no
+common generation exists fails with `No data available`.
+
+The grid engine must be loaded and enabled for both grid modes, otherwise the request
+fails with `Grid data is not available` or `Grid data is disabled`.
+
+### 10.2 Geometry of the output
+
+`getGridQueryInfo` and the related `getGrid*` helpers read back what the Data Server
+produced: the actual CRS (`grid.crs`), `grid.bbox` / `grid.llbox` / `grid.crop.llbox`,
+the size and cell size, and the original grid's properties (`grid.original.crs`,
+`grid.original.reverseXDirection` / `reverseYDirection`, `grid.original.relativeUV`). The GRIB and NetCDF encoders
+build the output grid definition from these values, so the encoder trusts grid-files to
+report the latitudes in the same order as the returned rows. grid-files has a regression
+test for exactly this (`FastPathOrientationTest`): a mismatch produces vertically flipped
+fields. When changing the orientation handling on either side, test a north-to-south
+stored input (for example ECMWF) with and without reprojection.
+
+For a projected output CRS, `buildGridQuery` sends the extent as projected `grid.bbox`
+(metres), transforming a user-given lat/lon `bbox` first (`getGridBBoxFromUserBBox`);
+sending `grid.llbox` for a projected target would make the server read degrees as
+metres.
 
 ---
 
@@ -474,7 +514,8 @@ headers, and that is the whole caching story; a reverse proxy in front of the se
 the place to cache popular downloads.
 
 Protection against expensive requests is the size guard of section 6 on the querydata
-path, plus `logrequestdatavalues` for observability. Memory behaviour follows the
+path, the grid-size check of section 10 on the grid path, plus `logrequestdatavalues`
+for observability. Memory behaviour follows the
 delivery pattern: GRIB and QueryData are bounded, NetCDF is bounded by disk in
 `tempdirectory`, GeoTIFF holds everything in RAM.
 
