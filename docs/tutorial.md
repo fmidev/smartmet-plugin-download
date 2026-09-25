@@ -393,11 +393,9 @@ reads back the actual CRS and bounding box for the encoders.
 
 `gridparamblocksize` and `gridtimeblocksize` let one query fetch several parameters or
 time steps at once; the result buffer is then sliced locally (`bufferIndex`). The
-encoders receive slices through `getGridDataChunk` instead of `getDataChunk`. The full
-size guard from section 6 does not run on this path: `buildGridQuery` only rejects a
-requested grid (`gridsize`, or a size derived from `gridresolution`) whose cell count
-exceeds `maxrequestdatavalues`; the number of parameters, levels and times is not
-limited. The table-driven unit conversion is not applied to grid content, which is
+encoders receive slices through `getGridDataChunk` instead of `getDataChunk`. `buildGridQuery` checks the
+requested grid size (`gridsize`, or a size derived from `gridresolution`) against
+`maxrequestdatavalues`. The table-driven unit conversion is not applied to grid content, which is
 assumed to be in the target units already.
 
 ### 10.1 The three grid source modes
