@@ -26,6 +26,7 @@
 #include <string>
 #include <unistd.h>
 #include <unordered_set>
+#include <utility>
 
 static const uint minChunkLengthInBytes = 256 * 256;    // Min length of data chunk to return
 static const uint maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return
@@ -1686,7 +1687,7 @@ void DataStreamer::getBBox(const std::string &bbox)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
+void DataStreamer::getRegLLBBox(const Engine::Querydata::Q& q)
 {
   try
   {
@@ -1742,7 +1743,7 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getBBox(Engine::Querydata::Q q,
+void DataStreamer::getBBox(const Engine::Querydata::Q& q,
                            const NFmiArea &sourceArea,
                            OGRSpatialReference &targetSRS)
 {
@@ -1823,7 +1824,7 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
   {
     if (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty())
     {
-      getBBox(q, sourceArea, targetSRS);
+      getBBox(std::move(q), sourceArea, targetSRS);
       return;
     }
 
@@ -1919,7 +1920,7 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q,
   {
     targetSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
-    getBBox(q, sourceArea, targetSRS);
+    getBBox(std::move(q), sourceArea, targetSRS);
 
     if (targetSRS.IsProjected())
     {
@@ -1970,7 +1971,7 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q,
     // strategy is set to traditional GIS order below via getRegLLBBox() as before.
     OGRSpatialReference targetSRS = *Fmi::OGRSpatialReferenceFactory::Create(targetArea->WKT());
 
-    getRegLLBBox(q, sourceArea, targetSRS);
+    getRegLLBBox(std::move(q), sourceArea, targetSRS);
 
     ostringstream os;
     os << fixed << setprecision(8) << itsBoundingBox.bottomLeft.X() << ","
@@ -1997,7 +1998,7 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q)
   try
   {
     if (!itsRegBoundingBox)
-      getRegLLBBox(q);
+      getRegLLBBox(std::move(q));
 
     ostringstream os;
     os << fixed << setprecision(8) << (*itsRegBoundingBox).bottomLeft.X() << ","
@@ -2024,7 +2025,7 @@ void DataStreamer::getLLBBox(Engine::Querydata::Q q)
   try
   {
     if (!itsRegBoundingBox)
-      getRegLLBBox(q);
+      getRegLLBBox(std::move(q));
 
     itsBoundingBox.bottomLeft = (*itsRegBoundingBox).bottomLeft;
     itsBoundingBox.topRight = (*itsRegBoundingBox).topRight;
@@ -2417,7 +2418,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     auto sourceArea = area;
     const auto areaStr = sourceArea->AreaStr();
-    size_t bboxPos = areaStr.find(":");
+    size_t bboxPos = areaStr.find(':');
 
     if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (areaStr.length() - 1)))
       throw Fmi::Exception(
@@ -2511,7 +2512,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 
     // Get native area or requested bbox/gridcenter bounding
 
-    getBBox(q, *sourceArea, *wgs84PrSrsPtr, !wgs84ProjLL ? wgs84LLSrsPtr : nullptr);
+    getBBox(std::move(q), *sourceArea, *wgs84PrSrsPtr, !wgs84ProjLL ? wgs84LLSrsPtr : nullptr);
 
     // Transform output cs grid cell projected (or latlon) coordinates to qd latlons.
     //
@@ -2673,7 +2674,7 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea *area)
       {
         // Transform the coordinates to 'itsSrcLatLons' -member
         //
-        setTransformedCoordinates(q, area);
+        setTransformedCoordinates(std::move(q), area);
       }
 
       if (itsReqParams.gridStepXY)
@@ -2772,7 +2773,7 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference *geometrySRS,
  */
 // ----------------------------------------------------------------------
 
-NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
+NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(const Engine::Querydata::Q& q,
                                                         bool requestLevels,
                                                         bool nativeLevels) const
 {
@@ -2898,7 +2899,7 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(Engine::Querydata::Q q,
 // ----------------------------------------------------------------------
 
 NFmiParamDescriptor DataStreamer::makeParamDescriptor(
-    Engine::Querydata::Q q, const std::list<FmiParameterName> &currentParams) const
+    const Engine::Querydata::Q& q, const std::list<FmiParameterName> &currentParams) const
 {
   try
   {
@@ -2954,7 +2955,7 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(
  */
 // ----------------------------------------------------------------------
 
-NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(Engine::Querydata::Q q,
+NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(const Engine::Querydata::Q& q,
                                                     bool requestTimes,
                                                     bool nativeTimes) const
 {
@@ -3057,7 +3058,7 @@ static void valBufDeleter(float *ptr)
   }
 }
 
-void DataStreamer::cachedProjGridValues(Engine::Querydata::Q q,
+void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
                                         NFmiGrid &wantedGrid,
                                         const NFmiMetTime *mt)
 {
@@ -3261,7 +3262,7 @@ bool DataStreamer::isGridLevelRequested(const Producer &producer,
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::isLevelAvailable(Engine::Querydata::Q q,
+bool DataStreamer::isLevelAvailable(const Engine::Querydata::Q& q,
                                     int &requestedLevel,
                                     bool &exactLevel) const
 {
@@ -3342,7 +3343,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
   // to check them separately.
 
   auto id = area.ClassId();
-  auto sr = area.SpatialReference();
+  const auto& sr = area.SpatialReference();
 
   switch (id)
   {
@@ -3368,7 +3369,7 @@ bool projectionMatches(const std::string &projection, const NFmiArea &area)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::createArea(Engine::Querydata::Q q,
+void DataStreamer::createArea(const Engine::Querydata::Q& q,
                               const NFmiArea &nativeArea,
                               unsigned long nativeClassId,
                               size_t nativeGridSizeX,
@@ -3415,7 +3416,7 @@ void DataStreamer::createArea(Engine::Querydata::Q q,
         itsReqParams.gridCenter.empty())
       return;
 
-    size_t bboxPos = projection.find("|");
+    size_t bboxPos = projection.find('|');
 
     if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (projection.length() - 1)))
       throw Fmi::Exception(BCP,
@@ -3568,7 +3569,7 @@ void DataStreamer::createGrid(const NFmiArea &area,
  */
 // ----------------------------------------------------------------------
 
-bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
+bool DataStreamer::getAreaAndGrid(const Engine::Querydata::Q& q,
                                   bool interpolation,
                                   const NFmiArea **area,
                                   NFmiGrid **grid)
@@ -3679,7 +3680,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::nextParam(Engine::Querydata::Q q)
+void DataStreamer::nextParam(const Engine::Querydata::Q& q)
 {
   try
   {

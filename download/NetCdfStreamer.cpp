@@ -199,7 +199,7 @@ netCDF::NcDim NetCdfStreamer::addDimension(const string &dimName, long dimSize)
 // ----------------------------------------------------------------------
 
 netCDF::NcVar NetCdfStreamer::addVariable(const string &varName,
-                                          netCDF::NcType dataType,
+                                          const netCDF::NcType& dataType,
                                           const netCDF::NcDim& dim1,
                                           const netCDF::NcDim& dim2,
                                           const netCDF::NcDim& dim3,
@@ -233,10 +233,10 @@ netCDF::NcVar NetCdfStreamer::addVariable(const string &varName,
 
 netCDF::NcVar NetCdfStreamer::addCoordVariable(const string &dimName,
                                                long dimSize,
-                                               netCDF::NcType dataType,
-                                               string stdName,
-                                               string unit,
-                                               string axisType,
+                                               const netCDF::NcType& dataType,
+                                               const string& stdName,
+                                               const string& unit,
+                                               const string& axisType,
                                                netCDF::NcDim &dim)
 {
   try
@@ -327,7 +327,7 @@ void NetCdfStreamer::addAttribute(T1 resource, const std::string& attrName, int 
  */
 // ----------------------------------------------------------------------
 
-int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime t2, long timeStep)
+int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime& t2, long timeStep)
 {
   try
   {
@@ -1316,7 +1316,9 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid)
+void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
+                                 const NFmiArea* area,
+                                 const NFmiGrid* grid)
 {
   try
   {

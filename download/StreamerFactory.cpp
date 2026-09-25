@@ -128,7 +128,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
 
     auto const &params = query.pOptions.parameters();
 
-    for (Spine::Parameter param : params)
+    for (const Spine::Parameter& param : params)
     {
       // We allow special params too if they have a number (WindUMS and WindVMS)
 
@@ -175,7 +175,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
     std::list<unsigned int>::const_iterator itm = missingParams.begin();
     i = 0;
 
-    for (Spine::Parameter param : params)
+    for (const Spine::Parameter& param : params)
     {
       if ((itm != missingParams.end()) && (i == *itm))
         itm++;
@@ -305,7 +305,7 @@ std::shared_ptr<DataStreamer> createStreamer(const Spine::HTTP::Request &req,
     {
       ds = std::shared_ptr<DataStreamer>(new QDStreamer(req, config, query, producer, reqParams));
 
-      for (Spine::Parameter param : query.pOptions.parameters())
+      for (const Spine::Parameter& param : query.pOptions.parameters())
       {
         knownParams.push_back(param);
       }

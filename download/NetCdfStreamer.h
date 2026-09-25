@@ -75,7 +75,7 @@ class NetCdfStreamer : public DataStreamer
 
   netCDF::NcDim addDimension(const std::string &dimName, long dimSize);
   netCDF::NcVar addVariable(const std::string &varName,
-                            netCDF::NcType dataType,
+                            const netCDF::NcType& dataType,
                             const netCDF::NcDim& dim1 = netCDF::NcDim(),
                             const netCDF::NcDim& dim2 = netCDF::NcDim(),
                             const netCDF::NcDim& dim3 = netCDF::NcDim(),
@@ -83,10 +83,10 @@ class NetCdfStreamer : public DataStreamer
                             const netCDF::NcDim& dim5 = netCDF::NcDim());
   netCDF::NcVar addCoordVariable(const std::string &dimName,
                                  long dimSize,
-                                 netCDF::NcType dataType,
-                                 std::string stdName,
-                                 std::string unit,
-                                 std::string axisType,
+                                 const netCDF::NcType& dataType,
+                                 const std::string& stdName,
+                                 const std::string& unit,
+                                 const std::string& axisType,
                                  netCDF::NcDim &dim);
 
   std::string getEnsembleDimensionName(
@@ -125,7 +125,7 @@ class NetCdfStreamer : public DataStreamer
   void setYKJGeometry(const netCDF::NcVar &crsVar);
   void setLambertConformalGeometry(const netCDF::NcVar &crsVar,
                                    const NFmiArea *area = nullptr);
-  void setGeometry(Engine::Querydata::Q q, const NFmiArea *area, const NFmiGrid *grid);
+  void setGeometry(const Engine::Querydata::Q& q, const NFmiArea *area, const NFmiGrid *grid);
 
   netCDF::NcDim addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
 

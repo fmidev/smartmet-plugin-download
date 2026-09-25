@@ -171,8 +171,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void checkDataTimeStep(long timeStep = -1);
 
   void getBBox(const std::string &bbox);
-  void getRegLLBBox(Engine::Querydata::Q q);
-  void getBBox(Engine::Querydata::Q q, const NFmiArea &sourceArea, OGRSpatialReference &targetSRS);
+  void getRegLLBBox(const Engine::Querydata::Q& q);
+  void getBBox(const Engine::Querydata::Q& q,
+               const NFmiArea &sourceArea,
+               OGRSpatialReference &targetSRS);
   void getBBox(Engine::Querydata::Q q,
                const NFmiArea &sourceArea,
                OGRSpatialReference &targetSRS,
@@ -200,11 +202,13 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   std::string getGridCenterBBoxStr() const;
 
-  void cachedProjGridValues(Engine::Querydata::Q q, NFmiGrid &wantedGrid, const NFmiMetTime *mt);
+  void cachedProjGridValues(const Engine::Querydata::Q& q,
+                            NFmiGrid &wantedGrid,
+                            const NFmiMetTime *mt);
 
-  bool isLevelAvailable(Engine::Querydata::Q q, int &requestedLevel, bool &exactLevel) const;
+  bool isLevelAvailable(const Engine::Querydata::Q& q, int &requestedLevel, bool &exactLevel) const;
 
-  void createArea(Engine::Querydata::Q q,
+  void createArea(const Engine::Querydata::Q& q,
                   const NFmiArea &nativeArea,
                   unsigned long nativeClassId,
                   std::size_t nativeGridSizeX,
@@ -213,24 +217,24 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                   std::size_t nativeGridSizeX,
                   std::size_t nativeGridSizeY,
                   bool interpolation);
-  bool getAreaAndGrid(Engine::Querydata::Q q,
+  bool getAreaAndGrid(const Engine::Querydata::Q& q,
                       bool interpolation,
                       const NFmiArea **area,
                       NFmiGrid **grid);
 
-  NFmiVPlaceDescriptor makeVPlaceDescriptor(Engine::Querydata::Q q,
+  NFmiVPlaceDescriptor makeVPlaceDescriptor(const Engine::Querydata::Q& q,
                                             bool requestLevels = false,
                                             bool nativeLevels = false) const;
   NFmiParamDescriptor makeParamDescriptor(
-      Engine::Querydata::Q q,
+      const Engine::Querydata::Q& q,
       const std::list<FmiParameterName> &currentParams = std::list<FmiParameterName>()) const;
-  NFmiTimeDescriptor makeTimeDescriptor(Engine::Querydata::Q q,
+  NFmiTimeDescriptor makeTimeDescriptor(const Engine::Querydata::Q& q,
                                         bool requestTimes = false,
                                         bool nativeTimes = false) const;
 
   Engine::Querydata::Q getCurrentParamQ(const std::list<FmiParameterName> &currentParams) const;
 
-  void nextParam(Engine::Querydata::Q q);
+  void nextParam(const Engine::Querydata::Q& q);
 
   // data members
 

@@ -106,13 +106,13 @@ std::string QDStreamer::getChunk()
         // "Backward compatibility when other than floats were supported"
 
         const int kFloat = 6;
-        os << kFloat << endl;
+        os << kFloat << '\n';
 
         //			if (FmiInfoVersion >= 6)
         //				os << itsSaveAsBinaryFlag << endl;
-        os << true << endl;
+        os << true << '\n';
 
-        os << itsQueryData->Info()->Size() * valueSize << endl;
+        os << itsQueryData->Info()->Size() * valueSize << '\n';
 
         chunkLen = os.tellp();
       }
@@ -144,7 +144,7 @@ std::string QDStreamer::getChunk()
         {
           // "Backward compatibility - not sure if needed"
           //
-          os << endl;
+          os << '\n';
 
           setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
         }

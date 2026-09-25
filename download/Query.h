@@ -304,15 +304,15 @@ class Query
       std::vector<std::string> &paramParts,
       std::list<std::pair<int, int>> &levelRanges,
       std::list<std::pair<int, int>> &forecastNumberRanges);
-  bool loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
+  bool loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS,
                                  const std::vector<std::string> &params,
                                  std::string &originTime);
-  bool getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
+  bool getOriginTimeGeneration(const Engine::Grid::ContentServer_sptr& cS,
                                const std::string &producer,
                                const std::string &originTime,
                                T::GenerationId &generationId);
   void expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
-                                      Fmi::DateTime originTime,
+                                      const Fmi::DateTime& originTime,
                                       bool gribOutput,
                                       bool blockQuery,
                                       const std::string &paramDef,

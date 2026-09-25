@@ -172,7 +172,7 @@ static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
 static string getRequestParam(const Spine::HTTP::Request &req,
                               const Producer &producer,
                               const char *urlParam,
-                              string defaultValue)
+                              const string& defaultValue)
 {
   try
   {

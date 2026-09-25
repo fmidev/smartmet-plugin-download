@@ -63,7 +63,7 @@ class GeoTiffStreamer : public DataStreamer
     bool hasLevel = false;
   };
 
-  void captureGeometry(Engine::Querydata::Q q, const NFmiArea* area, const NFmiGrid* grid);
+  void captureGeometry(const Engine::Querydata::Q& q, const NFmiArea* area, const NFmiGrid* grid);
   void captureGridGeometry(const QueryServer::Query& gridQuery);
   void storeBand();
   void writeFile();

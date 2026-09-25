@@ -161,7 +161,7 @@ bool Query::parseRadonParameterName(
 
   if (pdParts.size() == 1)
   {
-    auto aPos = pdParts[0].find("}");
+    auto aPos = pdParts[0].find('}');
 
     if (
         (aPos != string::npos) && (aPos > 0) &&
@@ -263,10 +263,10 @@ list<pair<int, int>> Query::parseIntValues(const string &paramName, const string
   for (auto const &part : parts)
   {
     string s = boost::trim_copy(part);
-    auto pos = s.find("-");
+    auto pos = s.find('-');
 
     if (pos == 0)
-       pos = s.find("-", 1);
+       pos = s.find('-', 1);
 
     if (pos == string::npos)
     {
@@ -362,7 +362,7 @@ void Query::parseParameterLevelAndForecastNumberRanges(
  */
 // ----------------------------------------------------------------------
 
-bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
+bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS,
                                       const vector<string> &params,
                                       string &originTime)
 {
@@ -479,7 +479,7 @@ bool Query::loadOriginTimeGenerations(Engine::Grid::ContentServer_sptr cS,
  */
 // ----------------------------------------------------------------------
 
-bool Query::getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
+bool Query::getOriginTimeGeneration(const Engine::Grid::ContentServer_sptr& cS,
                                     const string &producer,
                                     const string &originTime,
                                     T::GenerationId &generationId)
@@ -524,7 +524,7 @@ bool Query::getOriginTimeGeneration(Engine::Grid::ContentServer_sptr cS,
 // ----------------------------------------------------------------------
 
 void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngine,
-                                           Fmi::DateTime originTime,
+                                           const Fmi::DateTime& originTime,
                                            bool gribOutput,
                                            bool blockQuery,
                                            const string &paramDef,
@@ -590,14 +590,14 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     string endTimeStr(eTime.is_not_a_date_time() ? "" : to_iso_string(eTime));
     string fcNumber;
 
-    auto pos = originTimeStr.find(",");
+    auto pos = originTimeStr.find(',');
     if (pos != string::npos) originTimeStr = originTimeStr.substr(0, pos);
 
     if (startTimeStr.empty())
       startTimeStr = "19000101T000000";
     else
     {
-      pos = startTimeStr.find(",");
+      pos = startTimeStr.find(',');
       if (pos != string::npos) startTimeStr = startTimeStr.substr(0, pos);
     }
 
@@ -605,7 +605,7 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
       endTimeStr = "99991231T235959";
     else
     {
-      pos = endTimeStr.find(",");
+      pos = endTimeStr.find(',');
       if (pos != string::npos) endTimeStr = endTimeStr.substr(0, pos);
     }
 
@@ -753,7 +753,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
       originTime = Fmi::TimeParser::parse(originTimeStr);
       originTimeStr = to_iso_string(originTime);
 
-      auto pos = originTimeStr.find(",");
+      auto pos = originTimeStr.find(',');
       if (pos != string::npos)
         originTimeStr = originTimeStr.substr(0, pos);
     }
