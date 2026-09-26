@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.9.24
-Release: 2%{?dist}.fmi
+Version: 26.9.26
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -30,7 +30,7 @@ BuildRequires: smartmet-library-macgyver-devel >= 26.9.23
 BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
 BuildRequires: smartmet-library-newbase-devel >= 26.9.23
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.23
-BuildRequires: smartmet-library-grid-files-devel >= 26.9.23
+BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 26.9.23
 BuildRequires: smartmet-engine-geonames-devel >= 26.9.23
@@ -49,7 +49,7 @@ Requires: smartmet-library-spine >= 26.9.23
 Requires: smartmet-library-newbase >= 26.9.23
 Requires: smartmet-engine-querydata >= 26.9.23
 Requires: smartmet-library-grid-content >= 26.9.23
-Requires: smartmet-library-grid-files >= 26.9.23
+Requires: smartmet-library-grid-files >= 26.9.26
 Requires: smartmet-engine-grid >= 26.9.23
 Requires: smartmet-server >= 26.9.2
 Requires: %{smartmet_boost}-iostreams
@@ -106,6 +106,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Sat Sep 26 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.26-1.fmi
+- Repackaged due to grid-files ABI changes
+
 * Thu Sep 24 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.9.24-2.fmi
 - Security: apply the maxrequestdatavalues cell-count cap to the grid data source
   (H-10; gridsize=100000,100000 previously bypassed it), redact absolute filesystem
