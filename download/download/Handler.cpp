@@ -49,6 +49,31 @@ static std::string redactPaths(const std::string &msg)
   return boost::algorithm::join(tokens, " ");
 }
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get the MIME type for a download format
+ */
+// ----------------------------------------------------------------------
+
+static string getMimeType(OutputFormat fmt)
+{
+  switch (fmt)
+  {
+    case Grib1:
+      return "application/x-grib";
+    case Grib2:
+      return "application/x-grib2";
+    case NetCdf:
+      return "application/netcdf";
+    case GeoTiff:
+      return "image/tiff";
+    case QD:
+      return "application/x-fmi-querydata";
+    default:
+      return "application/octet-stream";
+  }
+}
+
 static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
 {
   try
@@ -571,10 +596,9 @@ void DownloadHandler::requestHandler(Spine::Reactor & /* theReactor */,
 
       theResponse.setStatus(Spine::HTTP::Status::ok);
 
-      string mime = "application/octet-stream";
-      theResponse.setHeader("Content-type", mime.c_str());
+      theResponse.setHeader("Content-Type", getMimeType(reqParams.outputFormat));
       theResponse.setHeader("Content-Disposition",
-                            (string("attachement; filename=") + filename).c_str());
+                            (string("attachment; filename=") + filename).c_str());
 
       // Defining the response header information
 
