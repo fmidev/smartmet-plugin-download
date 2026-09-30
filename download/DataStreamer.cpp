@@ -4151,6 +4151,29 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
                                ") exceeds the maximum number of data values (" +
                                Fmi::to_string(maxValues) + "); adjust gridsize/gridresolution");
     }
+
+    // Bound the total number of values like the querydata source does: the grid
+    // is repeated for every parameter, level and time
+    if (maxValues > 0)
+    {
+      const unsigned long cells = static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY;
+      const unsigned long params = std::max<unsigned long>(1, itsDataParams.size());
+      const unsigned long levels = std::max<unsigned long>(1, itsDataLevels.size());
+      const unsigned long times = std::max<unsigned long>(1, itsDataTimes.size());
+
+      // Overflow-safe check of params * levels * times * cells > maxValues
+      if (params > maxValues / levels || params * levels > maxValues / times ||
+          params * levels * times > maxValues / cells)
+      {
+        throw Fmi::Exception(BCP,
+                             "Too much data requested (" + Fmi::to_string(params) + " parameters, " +
+                                 Fmi::to_string(levels) + " levels, " + Fmi::to_string(times) +
+                                 " times, " + Fmi::to_string(cells) + " grid cells, max " +
+                                 Fmi::to_string(maxValues) +
+                                 " values); adjust area/grid and/or number of parameters, "
+                                 "levels and times");
+      }
+    }
   }
 
   if (itsGridMetaData.gridOriginTime.is_not_a_date_time())
