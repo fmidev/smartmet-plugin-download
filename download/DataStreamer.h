@@ -56,6 +56,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void setMultiFile(bool multiFile) { itsMultiFile = multiFile; }
   void sortLevels();
   void setLevels();
+  void insertLevelsInRange(const Query::Levels &theDataLevels);
   void setParams(const TimeSeries::OptionParsers::ParameterList &params, const Scaling &scaling);
 
   void setEngines(const Engine::Querydata::Engine *theQEngine,
