@@ -88,7 +88,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void extractData(std::string &chunk);
   virtual void paramChanged(size_t nextParamOffset = 1) {}
 
-  const Spine::HTTP::Request &itsRequest;
+  // A copy, not a Request reference: /coverages passes a translated temporary request
+  const std::string itsURI;
 
   const Config &itsCfg;
   Query itsQuery;

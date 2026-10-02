@@ -52,7 +52,7 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
                            const Producer &producer,
                            const ReqParams &reqParams)
     : Spine::HTTP::ContentStreamer(),
-      itsRequest(req),
+      itsURI(req.getURI()),
       itsCfg(config),
       itsQuery(query),
       itsReqParams(reqParams),
@@ -3653,7 +3653,7 @@ bool DataStreamer::getAreaAndGrid(Engine::Querydata::Q q,
                   itsDataLevels.size(),
                   itsDataTimes.size(),
                   gs,
-                  itsRequest.getURI().c_str());
+                  itsURI.c_str());
       }
 
       itsProjectionChecked = true;
