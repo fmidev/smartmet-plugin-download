@@ -1867,7 +1867,7 @@ std::string GribStreamer::getChunk()
     catch (...)
     {
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
-      exception.addParameter("URI", itsRequest.getURI());
+      exception.addParameter("URI", itsURI);
 
       std::cerr << exception.getStackTrace();
     }
