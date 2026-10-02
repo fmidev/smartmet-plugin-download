@@ -1,0 +1,70 @@
+netcdf nc_pal-skd-dl_tsteps_bbox_epsg3067 {
+dimensions:
+	time = 2 ;
+	y = 84 ;
+	x = 34 ;
+variables:
+	int time(time) ;
+		time:long_name = "time" ;
+		time:calendar = "gregorian" ;
+		time:units = "hours since 2013-09-17 10:00:00" ;
+	short crs ;
+		crs:grid_mapping_name = "transverse_mercator" ;
+		crs:longitude_of_central_meridian = 27. ;
+		crs:latitude_of_projection_origin = 0. ;
+		crs:false_easting = 3500000. ;
+		crs:semi_major = 6378388. ;
+		crs:inverse_flattening = 297. ;
+		crs:crs_wkt = "PROJCRS[\"KKJ / Finland Uniform Coordinate System\",BASEGEOGCRS[\"KKJ\",DATUM[\"Kartastokoordinaattijarjestelma (1966)\",ELLIPSOID[\"International 1924\",6378388,297,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4123]],CONVERSION[\"Finland Uniform Coordinate System\",METHOD[\"Transverse Mercator\",ID[\"EPSG\",9807]],PARAMETER[\"Latitude of natural origin\",0,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8801]],PARAMETER[\"Longitude of natural origin\",27,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8802]],PARAMETER[\"Scale factor at natural origin\",1,SCALEUNIT[\"unity\",1],ID[\"EPSG\",8805]],PARAMETER[\"False easting\",3500000,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8806]],PARAMETER[\"False northing\",0,LENGTHUNIT[\"metre\",1],ID[\"EPSG\",8807]]],CS[Cartesian,2],AXIS[\"northing (X)\",north,ORDER[1],LENGTHUNIT[\"metre\",1]],AXIS[\"easting (Y)\",east,ORDER[2],LENGTHUNIT[\"metre\",1]],USAGE[SCOPE[\"Engineering survey, topographic mapping (large scale).\"],AREA[\"Finland - onshore between 25°30\'E and 28°30\'E.\"],BBOX[60.18,25.5,70.09,28.51]],USAGE[SCOPE[\"Topographic mapping (small scale).\"],AREA[\"Finland - onshore.\"],BBOX[59.75,19.24,70.09,31.59]],ID[\"EPSG\",2393]]" ;
+	float y(y) ;
+		y:standard_name = "projection_y_coordinate" ;
+		y:units = "m" ;
+		y:axis = "Y" ;
+	float x(x) ;
+		x:standard_name = "projection_x_coordinate" ;
+		x:units = "m" ;
+		x:axis = "X" ;
+	float lat(y, x) ;
+		lat:standard_name = "latitude" ;
+		lat:long_name = "latitude" ;
+		lat:units = "degrees_north" ;
+	float lon(y, x) ;
+		lon:standard_name = "longitude" ;
+		lon:long_name = "longitude" ;
+		lon:units = "degrees_east" ;
+	float air_temperature_4(time, y, x) ;
+		air_temperature_4:units = "K" ;
+		air_temperature_4:_FillValue = 32700.f ;
+		air_temperature_4:missing_value = 32700.f ;
+		air_temperature_4:grid_mapping = "crs" ;
+		air_temperature_4:standard_name = "air_temperature" ;
+		air_temperature_4:long_name = "Air temperature" ;
+		air_temperature_4:coordinates = "lat lon" ;
+
+// global attributes:
+		:Conventions = "CF-1.6" ;
+		:title = "<title>" ;
+		:institution = "fmi.fi" ;
+		:source = "<producer>" ;
+data:
+
+ time = 0, 1 ;
+
+ y = 6550800, 6565680, 6580562, 6595442, 6610322, 6625204, 6640084, 6654964, 
+    6669846, 6684726, 6699607, 6714488, 6729368, 6744249, 6759130, 6774010, 
+    6788891, 6803772, 6818652, 6833533, 6848414, 6863294, 6878175, 6893056, 
+    6907936, 6922817, 6937698, 6952578, 6967459, 6982340, 6997220, 7012101, 
+    7026982, 7041862, 7056743, 7071624, 7086504, 7101385, 7116266, 7131146, 
+    7146027, 7160908, 7175788, 7190670, 7205550, 7220430, 7235312, 7250192, 
+    7265072, 7279954, 7294834, 7309714, 7324596, 7339476, 7354357, 7369238, 
+    7384118, 7398999, 7413880, 7428760, 7443641, 7458522, 7473402, 7488283, 
+    7503164, 7518044, 7532925, 7547806, 7562686, 7577567, 7592448, 7607328, 
+    7622209, 7637090, 7651970, 7666851, 7681732, 7696612, 7711493, 7726374, 
+    7741254, 7756135, 7771016, 7785896 ;
+
+ x = 41085.77, 63691.96, 86298.16, 108904.4, 131510.5, 154116.7, 176722.9, 
+    199329.1, 221935.3, 244541.5, 267147.7, 289753.9, 312360.1, 334966.3, 
+    357572.5, 380178.7, 402784.9, 425391.1, 447997.3, 470603.5, 493209.7, 
+    515815.8, 538422.1, 561028.2, 583634.4, 606240.6, 628846.8, 651453, 
+    674059.2, 696665.4, 719271.6, 741877.8, 764484, 787090.2 ;
+}

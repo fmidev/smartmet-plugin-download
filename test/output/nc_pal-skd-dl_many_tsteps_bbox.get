@@ -1,0 +1,78 @@
+netcdf nc_pal-skd-dl_many_tsteps_bbox {
+dimensions:
+	time = 4 ;
+	y = 102 ;
+	x = 63 ;
+variables:
+	int time(time) ;
+		time:long_name = "time" ;
+		time:calendar = "gregorian" ;
+		time:units = "hours since 2013-09-17 10:00:00" ;
+	short crs ;
+		crs:grid_mapping_name = "polar_stereographic" ;
+		crs:straight_vertical_longitude_from_pole = 20. ;
+		crs:latitude_of_projection_origin = 90. ;
+		crs:standard_parallel = 60. ;
+		crs:earth_radius = 6371220. ;
+		crs:crs_wkt = "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],UNIT[\"Metre\",1.0]]" ;
+	float y(y) ;
+		y:standard_name = "projection_y_coordinate" ;
+		y:units = "m" ;
+		y:axis = "Y" ;
+	float x(x) ;
+		x:standard_name = "projection_x_coordinate" ;
+		x:units = "m" ;
+		x:axis = "X" ;
+	float lat(y, x) ;
+		lat:standard_name = "latitude" ;
+		lat:long_name = "latitude" ;
+		lat:units = "degrees_north" ;
+	float lon(y, x) ;
+		lon:standard_name = "longitude" ;
+		lon:long_name = "longitude" ;
+		lon:units = "degrees_east" ;
+	float air_temperature_4(time, y, x) ;
+		air_temperature_4:units = "K" ;
+		air_temperature_4:_FillValue = 32700.f ;
+		air_temperature_4:missing_value = 32700.f ;
+		air_temperature_4:grid_mapping = "crs" ;
+		air_temperature_4:standard_name = "air_temperature" ;
+		air_temperature_4:long_name = "Air temperature" ;
+		air_temperature_4:coordinates = "lat lon" ;
+
+// global attributes:
+		:Conventions = "CF-1.6" ;
+		:title = "<title>" ;
+		:institution = "fmi.fi" ;
+		:source = "<producer>" ;
+data:
+
+ time = 0, 1, 2, 3 ;
+
+ y = -3405686, -3390677, -3375669, -3360660, -3345652, -3330643, -3315634, 
+    -3300626, -3285618, -3270609, -3255600, -3240592, -3225583, -3210575, 
+    -3195566, -3180558, -3165549, -3150541, -3135532, -3120524, -3105515, 
+    -3090506, -3075498, -3060490, -3045481, -3030472, -3015464, -3000456, 
+    -2985447, -2970438, -2955430, -2940421, -2925413, -2910404, -2895396, 
+    -2880387, -2865379, -2850370, -2835362, -2820353, -2805344, -2790336, 
+    -2775328, -2760319, -2745310, -2730302, -2715293, -2700285, -2685276, 
+    -2670268, -2655259, -2640251, -2625242, -2610234, -2595225, -2580216, 
+    -2565208, -2550200, -2535191, -2520182, -2505174, -2490166, -2475157, 
+    -2460148, -2445140, -2430131, -2415123, -2400114, -2385106, -2370097, 
+    -2355089, -2340080, -2325072, -2310063, -2295054, -2280046, -2265038, 
+    -2250029, -2235020, -2220012, -2205004, -2189995, -2174986, -2159978, 
+    -2144969, -2129961, -2114952, -2099944, -2084935, -2069927, -2054918, 
+    -2039910, -2024901, -2009892, -1994884, -1979876, -1964867, -1949858, 
+    -1934850, -1919841, -1904833, -1889824 ;
+
+ x = -302939.6, -287894.9, -272850.2, -257805.5, -242760.8, -227716.1, 
+    -212671.4, -197626.7, -182582, -167537.2, -152492.5, -137447.8, 
+    -122403.1, -107358.4, -92313.71, -77269.01, -62224.3, -47179.59, 
+    -32134.88, -17090.18, -2045.472, 12999.23, 28043.94, 43088.65, 58133.36, 
+    73178.06, 88222.77, 103267.5, 118312.2, 133356.9, 148401.6, 163446.3, 
+    178491, 193535.7, 208580.4, 223625.1, 238669.8, 253714.5, 268759.2, 
+    283804, 298848.7, 313893.4, 328938.1, 343982.8, 359027.5, 374072.2, 
+    389116.9, 404161.6, 419206.3, 434251, 449295.7, 464340.4, 479385.2, 
+    494429.8, 509474.6, 524519.2, 539564, 554608.7, 569653.4, 584698.1, 
+    599742.8, 614787.5, 629832.2 ;
+}
