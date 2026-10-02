@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.10.2
-Release: 1%{?dist}.fmi
+Release: 2%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -106,6 +106,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Oct  2 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.2-2.fmi
+- Fixed minlevel/maxlevel and /coverages subset=pressure(lo:hi) to select the data levels in the range
+- Fixed /coverages subset=time(t1:t2) for ISO times, which contain colons
+
 * Fri Oct  2 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.2-1.fmi
 - Fixed a crash in /coverages: streamers kept a reference to a destroyed temporary request
 

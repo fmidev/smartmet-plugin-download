@@ -13,6 +13,7 @@
 #include "ParamConfig.h"
 #include "Query.h"
 #include "StreamerFactory.h"
+#include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cpl_conv.h>
@@ -135,6 +136,68 @@ static string mapOutputFormat(const string &f)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Split an OGC subset axis value into a low:high range or a single value
+ *
+ *        Quoted values are split at the colon between the quoted parts. Unquoted
+ *        values may also contain colons (ISO times), hence a symmetric range
+ *        has an odd number of colons and is split at the middle one, while
+ *        a single value has none or an even number of them. The quotes are
+ *        removed from the returned values.
+ */
+// ----------------------------------------------------------------------
+
+static vector<string> splitSubsetRange(const string &value)
+{
+  vector<string> parts;
+
+  if (!value.empty() && (value[0] == '"' || value[0] == '\''))
+  {
+    const char quote = value[0];
+    auto end = value.find(quote, 1);
+    if (end == string::npos)
+      throw Fmi::Exception(BCP, "Invalid subset value: " + value);
+    parts.push_back(value.substr(1, end - 1));
+
+    string rest = value.substr(end + 1);
+    boost::trim(rest);
+    if (!rest.empty())
+    {
+      if (rest[0] != ':')
+        throw Fmi::Exception(BCP, "Invalid subset value: " + value);
+      rest = rest.substr(1);
+      boost::trim(rest);
+      parts.push_back(rest);
+    }
+  }
+  else
+  {
+    const auto colons = std::count(value.begin(), value.end(), ':');
+    if (colons % 2 == 0)
+      parts.push_back(value);
+    else
+    {
+      auto pos = value.find(':');
+      for (long i = 0; i < colons / 2; i++)
+        pos = value.find(':', pos + 1);
+
+      parts.push_back(value.substr(0, pos));
+      parts.push_back(value.substr(pos + 1));
+    }
+  }
+
+  for (auto &part : parts)
+  {
+    boost::trim(part);
+    if (part.size() >= 2 && (part.front() == '"' || part.front() == '\'') &&
+        part.back() == part.front())
+      part = part.substr(1, part.size() - 2);
+  }
+
+  return parts;
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Parse OGC subset parameter
  *
  *        OGC subset syntax: subset=axisName(low:high)
@@ -171,52 +234,39 @@ static void parseSubset(const string &subset,
     string value = axisDef.substr(parenOpen + 1, parenClose - parenOpen - 1);
     boost::trim(value);
 
-    // Remove optional quotes from values
-    boost::replace_all(value, "\"", "");
-    boost::replace_all(value, "'", "");
+    // Split the range before removing the optional quotes, since time values contain colons
+    const auto range = splitSubsetRange(value);
 
     if (axisName == "pressure" || axisName == "height" || axisName == "level")
     {
       // Range: low:high or single value
-      auto colonPos = value.find(':');
-      if (colonPos != string::npos)
+      if (range.size() == 2)
       {
-        string low = value.substr(0, colonPos);
-        string high = value.substr(colonPos + 1);
-        boost::trim(low);
-        boost::trim(high);
-
-        if (!low.empty())
-          dlReq.setParameter("minlevel", low);
-        if (!high.empty())
-          dlReq.setParameter("maxlevel", high);
+        if (!range[0].empty())
+          dlReq.setParameter("minlevel", range[0]);
+        if (!range[1].empty())
+          dlReq.setParameter("maxlevel", range[1]);
       }
       else
       {
         // Single level
-        dlReq.setParameter("level", value);
+        dlReq.setParameter("level", range[0]);
       }
     }
     else if (axisName == "time")
     {
       // Range: t1:t2 or single value
-      auto colonPos = value.find(':');
-      if (colonPos != string::npos)
+      if (range.size() == 2)
       {
-        string t1 = value.substr(0, colonPos);
-        string t2 = value.substr(colonPos + 1);
-        boost::trim(t1);
-        boost::trim(t2);
-
-        if (!t1.empty())
-          dlReq.setParameter("starttime", t1);
-        if (!t2.empty())
-          dlReq.setParameter("endtime", t2);
+        if (!range[0].empty())
+          dlReq.setParameter("starttime", range[0]);
+        if (!range[1].empty())
+          dlReq.setParameter("endtime", range[1]);
       }
       else
       {
-        dlReq.setParameter("starttime", value);
-        dlReq.setParameter("endtime", value);
+        dlReq.setParameter("starttime", range[0]);
+        dlReq.setParameter("endtime", range[0]);
       }
     }
     else

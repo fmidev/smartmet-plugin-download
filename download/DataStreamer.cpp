@@ -917,6 +917,31 @@ void DataStreamer::sortLevels()
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Insert the data levels within the requested level range
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::insertLevelsInRange(const Query::Levels &theDataLevels)
+{
+  try
+  {
+    // Select the data levels within the requested range instead of every integer in
+    // it, since for example pressure levels are not consecutive integers. A negative
+    // minimum or nonpositive maximum means the range is open at that end.
+
+    for (int level : theDataLevels)
+      if (((itsReqParams.minLevel < 0) || (level >= itsReqParams.minLevel)) &&
+          ((itsReqParams.maxLevel <= 0) || (level <= itsReqParams.maxLevel)))
+        itsDataLevels.insert(level);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set levels from request parameter(s) or from data if none was given.
  *
  */
@@ -967,7 +992,9 @@ void DataStreamer::setGridLevels(const Producer &producer, const Query &query)
 
       if (queryLevels.begin() == queryLevels.end())
       {
-        if (itsLevelRng || itsHeightRng)
+        if (itsLevelRng)
+          insertLevelsInRange(allLevels);
+        else if (itsHeightRng)
           for (int l = itsReqParams.minLevel; (l <= itsReqParams.maxLevel); l++)
             itsDataLevels.insert(l);
       }
@@ -1035,7 +1062,9 @@ void DataStreamer::setLevels()
 
       if (itsQuery.levels.begin() == itsQuery.levels.end())
       {
-        if (itsLevelRng || itsHeightRng)
+        if (itsLevelRng)
+          insertLevelsInRange(allLevels);
+        else if (itsHeightRng)
           for (int l = itsReqParams.minLevel; (l <= itsReqParams.maxLevel); l++)
             itsDataLevels.insert(l);
       }
