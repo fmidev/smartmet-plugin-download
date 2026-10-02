@@ -1,0 +1,1 @@
+GET	/coverages/collections/pal_skandinavia_dl/coverage?properties=Temperature,Pressure,WindSpeedMS&f=netcdf&starttime=20130917T1000&timesteps=2 HTTP/1.0
