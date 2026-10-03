@@ -110,9 +110,8 @@ through unchanged.
 
 The rewritten request then goes through `fillReqParams`, a simplified sibling of
 `getRequestParams`, and from there the path is common. Two differences remain at the
-HTTP level: `/coverages` sets a real `Content-Type` per format while `/download` always
-sends `application/octet-stream`, and `fillReqParams` does not consult the per-producer
-disabled-parameter lists.
+HTTP level: both set a `Content-Type` per format, and `fillReqParams` does not consult the
+per-producer disabled-parameter lists.
 
 ---
 
