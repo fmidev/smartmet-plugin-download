@@ -140,7 +140,7 @@ std::string GeoTiffStreamer::getChunk()
  */
 // ----------------------------------------------------------------------
 
-void GeoTiffStreamer::captureGeometry(Engine::Querydata::Q q,
+void GeoTiffStreamer::captureGeometry(const Engine::Querydata::Q& q,
                                       const NFmiArea* area,
                                       const NFmiGrid* grid)
 {

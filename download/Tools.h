@@ -85,12 +85,12 @@ bool isHeightLayerLevel(FmiLevelType levelType, bool gridContent = false);
 bool isIsothermalLevel(FmiLevelType levelType, bool gridContent = false);
 bool isMaxWindLevel(FmiLevelType levelType, bool gridContent = false);
 
-FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
+FmiLevelType getLevelTypeFromData(const Engine::Querydata::Q& q,
                                   const std::string &producer,
                                   FmiLevelType &nativeLevelType,
                                   bool &positiveLevels);
 
-bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q);
+bool areLevelValuesInIncreasingOrder(const Engine::Querydata::Q& q);
 
 double getProjParam(const OGRSpatialReference &srs,
                     const char *param,

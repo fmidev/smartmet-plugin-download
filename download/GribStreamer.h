@@ -76,13 +76,13 @@ class GribStreamer : public DataStreamer
                      std::size_t paramIdx,
                      bool setOriginTime,
                      const Fmi::DateTime& validTime);
-  void addValuesToGrib(Engine::Querydata::Q q,
+  void addValuesToGrib(const Engine::Querydata::Q& q,
                        const NFmiMetTime& vTime,
                        int level,
                        const NFmiDataMatrix<float>& dataValues,
                        float scale,
                        float offset);
-  std::string getGribMessage(Engine::Querydata::Q q,
+  std::string getGribMessage(const Engine::Querydata::Q& q,
                              int level,
                              const NFmiMetTime& mt,
                              const NFmiDataMatrix<float>& values,

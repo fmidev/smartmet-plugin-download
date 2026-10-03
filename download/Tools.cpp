@@ -196,7 +196,7 @@ double getProjParam(const OGRSpatialReference &srs,
  */
 // ----------------------------------------------------------------------
 
-FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
+FmiLevelType getLevelTypeFromData(const Engine::Querydata::Q& q,
                                   const string &producer,
                                   FmiLevelType &nativeLevelType,
                                   bool &positiveLevels)
@@ -248,7 +248,7 @@ FmiLevelType getLevelTypeFromData(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-bool areLevelValuesInIncreasingOrder(Engine::Querydata::Q q)
+bool areLevelValuesInIncreasingOrder(const Engine::Querydata::Q& q)
 {
   try
   {

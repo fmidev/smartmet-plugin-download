@@ -365,7 +365,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
         throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
 
       auto srs = geometrySRS ? Fmi::SpatialReference(*geometrySRS) : area->SpatialReference();
-      auto projInfo = srs.projInfo();
+      const auto& projInfo = srs.projInfo();
 
       auto opt_plat = projInfo.getDouble("o_lat_p");
       auto opt_plon = projInfo.getDouble("o_lon_p");
@@ -1515,7 +1515,7 @@ Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::addValuesToGrib(Engine::Querydata::Q q,
+void GribStreamer::addValuesToGrib(const Engine::Querydata::Q& q,
                                    const NFmiMetTime &vTime,
                                    int level,
                                    const NFmiDataMatrix<float> &dataValues,
@@ -1738,7 +1738,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
  */
 // ----------------------------------------------------------------------
 
-string GribStreamer::getGribMessage(Engine::Querydata::Q q,
+string GribStreamer::getGribMessage(const Engine::Querydata::Q& q,
                                     int level,
                                     const NFmiMetTime &mt,
                                     const NFmiDataMatrix<float> &values,
