@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.10.2
-Release: 2%{?dist}.fmi
+Version: 26.10.3
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -25,15 +25,15 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.9.26
-BuildRequires: smartmet-library-macgyver-devel >= 26.9.26-2
-BuildRequires: smartmet-library-timeseries-devel >= 26.9.16
-BuildRequires: smartmet-library-newbase-devel >= 26.9.23
+BuildRequires: smartmet-library-spine-devel >= 26.10.3
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.3
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.3
+BuildRequires: smartmet-library-newbase-devel >= 26.10.3
 BuildRequires: smartmet-library-grid-content-devel >= 26.9.26
 BuildRequires: smartmet-library-grid-files-devel >= 26.9.26
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 26.9.23
-BuildRequires: smartmet-engine-geonames-devel >= 26.9.26
+BuildRequires: smartmet-engine-querydata-devel >= 26.10.3
+BuildRequires: smartmet-engine-geonames-devel >= 26.10.3
 BuildRequires: smartmet-engine-grid-devel >= 26.9.26
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
@@ -43,11 +43,11 @@ Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 26.9.26-2
-Requires: smartmet-library-timeseries >= 26.9.16
-Requires: smartmet-library-spine >= 26.9.26
-Requires: smartmet-library-newbase >= 26.9.23
-Requires: smartmet-engine-querydata >= 26.9.23
+Requires: smartmet-library-macgyver >= 26.10.3
+Requires: smartmet-library-timeseries >= 26.10.3
+Requires: smartmet-library-spine >= 26.10.3
+Requires: smartmet-library-newbase >= 26.10.3
+Requires: smartmet-engine-querydata >= 26.10.3
 Requires: smartmet-library-grid-content >= 26.9.26
 Requires: smartmet-library-grid-files >= 26.9.26
 Requires: smartmet-engine-grid >= 26.9.26
@@ -65,12 +65,12 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 26.9.26
+#TestRequires: smartmet-engine-geonames >= 26.10.3
 #TestRequires: smartmet-engine-grid >= 26.9.26
-#TestRequires: smartmet-engine-querydata >= 26.9.23
+#TestRequires: smartmet-engine-querydata >= 26.10.3
 #TestRequires: smartmet-utils-devel >= 26.9.3
 #TestRequires: smartmet-library-spine-plugin-test >= 26.9.26
-#TestRequires: smartmet-library-newbase-devel >= 26.9.23
+#TestRequires: smartmet-library-newbase-devel >= 26.10.3
 #TestRequires: smartmet-qdtools >= 26.9.26
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-test-db >= 26.5.8
@@ -106,6 +106,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Sat Oct 03 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.3-1.fmi
+- Remove unnecessary copies found by clang-tidy performance checks
+- Fix grid data timestep deduced from the valid times
+- Limit the total data volume of grid downloads
+- Send the format's MIME type and a valid Content-Disposition
+
 * Fri Oct  2 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.2-2.fmi
 - Fixed minlevel/maxlevel and /coverages subset=pressure(lo:hi) to select the data levels in the range
 - Fixed /coverages subset=time(t1:t2) for ISO times, which contain colons
