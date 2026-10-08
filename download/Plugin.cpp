@@ -9,6 +9,7 @@
 // ======================================================================
 
 #include "Plugin.h"
+#include "NetCdfStreamer.h"
 #include <boost/bind/bind.hpp>
 #include <macgyver/Exception.h>
 #include <spine/SmartMet.h>
@@ -103,6 +104,9 @@ void Plugin::init()
     itsGeoEngine = itsReactor->getEngine<Engine::Geonames::Engine>("Geonames", nullptr);
 
     itsConfig.init(itsQEngine.get(), itsGridEngine.get());
+
+    // Clean up after crashed servers
+    NetCdfStreamer::removeStaleTemporaryFiles(itsConfig.getTempDirectory());
 
     /* Initialize handlers */
 

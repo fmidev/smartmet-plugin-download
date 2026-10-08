@@ -13,7 +13,15 @@
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
+#include <spine/Convenience.h>
 #include <spine/Thread.h>
+#include <fmt/format.h>
+#include <atomic>
+#include <cerrno>
+#include <csignal>
+#include <cstdio>
+#include <filesystem>
+#include <iostream>
 
 namespace
 {
@@ -33,6 +41,18 @@ namespace Plugin
 {
 namespace Download
 {
+namespace
+{
+// The file name must be unique also when the same thread creates several streamers,
+// since a streamer may still be streaming when the thread handles the next request
+
+std::string temporaryFileName(const std::string &theDirectory)
+{
+  static std::atomic<unsigned long> counter{0};
+  return fmt::format("{}/dls_{}_{}", theDirectory, getpid(), ++counter);
+}
+}  // namespace
+
 
 NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Config &config,
@@ -40,10 +60,45 @@ NetCdfStreamer::NetCdfStreamer(const Spine::HTTP::Request &req,
                                const Producer &producer,
                                const ReqParams &reqParams)
     : DataStreamer(req, config, query, producer, reqParams),
-      itsFilename(config.getTempDirectory() + "/dls_" + boost::lexical_cast<string>((int)getpid()) +
-                  "_" + boost::lexical_cast<string>(boost::this_thread::get_id())),
+      itsFilename(temporaryFileName(config.getTempDirectory())),
       itsLoadedFlag(false)
 {
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Remove temporary files of server processes which no longer run
+ *
+ * The files are removed when the streamer is destroyed, but a crash or a
+ * kill leaves them behind (BRAINSTORM-2489). Several servers may share the
+ * directory, so only files of processes which do not exist are removed.
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::removeStaleTemporaryFiles(const std::string &theDirectory)
+{
+  try
+  {
+    std::error_code ec;
+    for (const auto &entry : std::filesystem::directory_iterator(theDirectory, ec))
+    {
+      const auto name = entry.path().filename().string();
+      int pid = 0;
+      if (std::sscanf(name.c_str(), "dls_%d_", &pid) != 1 || pid <= 0)
+        continue;
+
+      if (pid == getpid() || kill(pid, 0) == 0 || errno != ESRCH)
+        continue;
+
+      if (std::filesystem::remove(entry.path(), ec))
+        std::cout << Spine::log_time_str() << " Download: removed stale temporary file "
+                  << entry.path().string() << std::endl;
+    }
+  }
+  catch (...)
+  {
+    Fmi::Exception::Trace(BCP, "Failed to remove stale temporary files").printError();
+  }
 }
 
 NetCdfStreamer::~NetCdfStreamer()

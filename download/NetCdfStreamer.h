@@ -30,6 +30,9 @@ class NetCdfStreamer : public DataStreamer
                  const ReqParams &reqParams);
   virtual ~NetCdfStreamer();
 
+  // Remove temporary files left behind by server processes which no longer run
+  static void removeStaleTemporaryFiles(const std::string &theDirectory);
+
   virtual std::string getChunk();
 
   virtual void getDataChunk(Engine::Querydata::Q q,
