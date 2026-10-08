@@ -4046,6 +4046,173 @@ void DataStreamer::extractData(string &chunk)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Convert requested grid resolution (km) into grid size for grid data
+ *
+ * Like setRequestedGridSize() for querydata, the size is the metric extent
+ * of the output area divided by the resolution.
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getGridSizeByResolution(size_t &gridSizeX, size_t &gridSizeY) const
+{
+  try
+  {
+    const double kmPerDegree = 2 * M_PI * 6371.0 / 360;
+
+    auto gridDef =
+        Identification::gridDef.getGrib2DefinitionByGeometryId(itsGridMetaData.geometryId);
+
+    // Native cell size in km; latlon grids report their cell size in degrees
+
+    double cellWidth = 0;
+    double cellHeight = 0;
+    bool degrees = false;
+    double cosLat = 1;
+
+    if (gridDef)
+    {
+      degrees = !gridDef->getGridMetricCellSize(cellWidth, cellHeight);
+
+      if (degrees)
+      {
+        double lat = 0;
+        double lon = 0;
+
+        if (gridDef->getGridProjection() == T::GridProjectionValue::LatLon &&
+            gridDef->getGridLatLonCoordinatesByGridPoint(C_UINT(gridDef->getGridColumnCount() / 2),
+                                                         C_UINT(gridDef->getGridRowCount() / 2),
+                                                         lat,
+                                                         lon))
+          cosLat = cos(lat * M_PI / 180);
+
+        cellWidth = fabs(cellWidth) * kmPerDegree * cosLat;
+        cellHeight = fabs(cellHeight) * kmPerDegree;
+      }
+    }
+
+    // Metric extent of the output area in km
+
+    double width = 0;
+    double height = 0;
+
+    bool projectedTarget =
+        ((!itsReqParams.projection.empty()) && (itsReqParams.projection != "latlon"));
+
+    if (itsReqParams.gridCenterLL)
+    {
+      width = (*itsReqParams.gridCenterLL)[1].first;
+      height = (*itsReqParams.gridCenterLL)[1].second;
+    }
+    else if (projectedTarget && itsGridMetaData.targetBBox)
+    {
+      // Target bbox is in degrees for a geographic target crs (e.g. EPSG:4326)
+
+      const auto &tb = *itsGridMetaData.targetBBox;
+      double x1 = tb.bottomLeft.X();
+      double y1 = tb.bottomLeft.Y();
+      double x2 = tb.topRight.X();
+      double y2 = tb.topRight.Y();
+
+      if ((fabs(x1) <= 360) && (fabs(y1) <= 180) && (fabs(x2) <= 360) && (fabs(y2) <= 180))
+      {
+        double midLat = (y1 + y2) / 2;
+        width = fabs(x2 - x1) * kmPerDegree * cos(midLat * M_PI / 180);
+        height = fabs(y2 - y1) * kmPerDegree;
+      }
+      else
+      {
+        width = fabs(x2 - x1) / 1000;
+        height = fabs(y2 - y1) / 1000;
+      }
+    }
+    else if (itsReqParams.bboxRect)
+    {
+      double x1 = (*itsReqParams.bboxRect)[0].first;
+      double y1 = (*itsReqParams.bboxRect)[0].second;
+      double x2 = (*itsReqParams.bboxRect)[1].first;
+      double y2 = (*itsReqParams.bboxRect)[1].second;
+
+      bool latlonBBox = ((fabs(x1) <= 360) && (fabs(y1) <= 180) && (fabs(x2) <= 360) &&
+                         (fabs(y2) <= 180));
+
+      if (!latlonBBox)
+      {
+        // Native projection metric bbox
+
+        width = fabs(x2 - x1) / 1000;
+        height = fabs(y2 - y1) / 1000;
+      }
+      else if (gridDef && !degrees && itsReqParams.projection.empty())
+      {
+        // Span of the latlon bbox in native grid cells
+
+        double minI = 0, maxI = 0, minJ = 0, maxJ = 0;
+        bool first = true;
+
+        for (const auto &corner : {std::make_pair(x1, y1),
+                                   std::make_pair(x1, y2),
+                                   std::make_pair(x2, y1),
+                                   std::make_pair(x2, y2)})
+        {
+          double i = 0;
+          double j = 0;
+
+          if (!gridDef->getGridPointByLatLonCoordinatesNoCache(corner.second, corner.first, i, j))
+            continue;
+
+          minI = (first ? i : std::min(minI, i));
+          maxI = (first ? i : std::max(maxI, i));
+          minJ = (first ? j : std::min(minJ, j));
+          maxJ = (first ? j : std::max(maxJ, j));
+          first = false;
+        }
+
+        if (!first)
+        {
+          width = (maxI - minI) * cellWidth;
+          height = (maxJ - minJ) * cellHeight;
+        }
+      }
+      else
+      {
+        double midLat = (y1 + y2) / 2;
+        width = fabs(x2 - x1) * kmPerDegree * cos(midLat * M_PI / 180);
+        height = fabs(y2 - y1) * kmPerDegree;
+      }
+    }
+    else if (gridDef)
+    {
+      // Native area
+
+      width = (gridDef->getGridColumnCount() - 1) * cellWidth;
+      height = (gridDef->getGridRowCount() - 1) * cellHeight;
+    }
+
+    double resolutionX = (*itsReqParams.gridResolutionXY)[0].first;
+    double resolutionY = (*itsReqParams.gridResolutionXY)[0].second;
+
+    double sizeX = ((resolutionX > 0) ? ceil(fabs(width) / resolutionX) : 0);
+    double sizeY = ((resolutionY > 0) ? ceil(fabs(height) / resolutionY) : 0);
+
+    if ((sizeX <= 1) || (sizeY <= 1) || (sizeX > UINT_MAX) || (sizeY > UINT_MAX))
+      throw Fmi::Exception(BCP, "Invalid gridresolution for the requested area")
+          .addParameter("width", Fmi::to_string(width))
+          .addParameter("height", Fmi::to_string(height))
+          .addParameter("xsize", Fmi::to_string(sizeX))
+          .addParameter("ysize", Fmi::to_string(sizeY))
+          .disableLogging();
+
+    gridSizeX = static_cast<size_t>(sizeX);
+    gridSizeY = static_cast<size_t>(sizeY);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Build grid query object for querying data for
  *        current parameter, level and validtime
  *
@@ -4128,11 +4295,19 @@ void DataStreamer::buildGridQuery(QueryServer::Query &gridQuery,
   }
   else if (itsReqParams.gridResolutionXY)
   {
-    string gridCellWidth = Fmi::to_string((*itsReqParams.gridResolutionXY)[0].first);
-    string gridCellHeight = Fmi::to_string((*itsReqParams.gridResolutionXY)[0].second);
+    // The query server does not resample to a given cell size (grid.cell.width/height
+    // are only reported back), so convert the resolution into a grid size like the
+    // querydata source does. Persist it as an explicit grid size so that subsequent
+    // (per message) queries request the same grid.
 
-    gridQuery.mAttributeList.addAttribute("grid.cell.width", gridCellWidth);
-    gridQuery.mAttributeList.addAttribute("grid.cell.height", gridCellHeight);
+    getGridSizeByResolution(itsReqGridSizeX, itsReqGridSizeY);
+
+    itsReqParams.gridSize =
+        Fmi::to_string(itsReqGridSizeX) + "," + Fmi::to_string(itsReqGridSizeY);
+    itsReqParams.gridSizeXY = nPairsOfValues<unsigned int>(itsReqParams.gridSize, "gridsize", 1);
+
+    gridQuery.mAttributeList.addAttribute("grid.width", Fmi::to_string(itsReqGridSizeX));
+    gridQuery.mAttributeList.addAttribute("grid.height", Fmi::to_string(itsReqGridSizeY));
   }
   else if ((!itsReqParams.projection.empty()) && (itsReqParams.projection != "latlon"))
   {
@@ -4373,6 +4548,11 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
       {
         auto geometryId = atoi(itsReqParams.geometryId.c_str());
         auto def = Identification::gridDef.getGrib2DefinitionByGeometryId(geometryId);
+
+        if (!def)
+          throw Fmi::Exception(BCP, "Unknown grid geometry")
+              .addParameter("geometryid", itsReqParams.geometryId)
+              .disableLogging();
 
         crsPtr.reset(new SmartMet::T::Attribute(attr, def->getWKT()));
         crsAttr = crsPtr.get();
