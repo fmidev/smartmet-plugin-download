@@ -16,9 +16,11 @@ REDIS_PORT = $(shell awk -F= '/^REDIS_CONTENT_SERVER_PORT/{gsub(/[ \t]/,"",$$2);
 
 all:
 
+# Stop the Redis server afterwards, otherwise the next run would silently use the
+# old server (and its old data) since the new one cannot bind to the same port
+
 test test-grid:	start-redis-db
-	if $(MAKE) test-impl; then ok=true; else ok=false; fi; $$ok
-#if $(MAKE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
+	if $(MAKE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
 
 clean:
 	rm -rf failures
@@ -49,9 +51,26 @@ start-redis-db:
 	$(MAKE) register-qdtools-data
 	$(MAKE) register-ecgmta-data
 
+# Newer smartmet-qdtools-test-data packages ship the grib xz compressed. The grid
+# engine cannot read compressed files, so serve the test data from a local directory
+# which links to the installed data and holds an uncompressed copy of the grib.
+
+LOCAL_DATA_DIR := $(CURDIR)/tmp/data
+
 register-qdtools-data:
-	@test -s $(QDTOOLS_GRIB) || { \
+	@test -s $(QDTOOLS_GRIB) || test -s $(QDTOOLS_GRIB).xz || { \
 	    echo "$(QDTOOLS_GRIB) not found; install smartmet-qdtools-test-data"; false; }
+	rm -rf $(LOCAL_DATA_DIR)
+	mkdir -p $(LOCAL_DATA_DIR)/qdtools/input/grib
+	for f in $(datadir)/smartmet/test/data/*; do \
+	    test "$$(basename $$f)" = qdtools || ln -s $$f $(LOCAL_DATA_DIR)/; \
+	done
+	if test -s $(QDTOOLS_GRIB); then \
+	    ln -s $(QDTOOLS_GRIB) $(LOCAL_DATA_DIR)/qdtools/input/grib/; \
+	else \
+	    xz -dc $(QDTOOLS_GRIB).xz > $(LOCAL_DATA_DIR)/qdtools/input/grib/$(notdir $(QDTOOLS_GRIB)); \
+	fi
+	sed -i 's|directory = "$(datadir)/smartmet/test/data"|directory = "$(LOCAL_DATA_DIR)"|' cnf/grid/engine/grid-engine.conf
 	@echo "*** Registering qdtools test data into the Redis database."
 	cat extra/fmi_geometries_qdtools.csv >> cnf/grid/library/test/fmi_geometries.csv
 	echo "qdtools_ll:5204" >> cnf/grid/engine/producers_test.csv
