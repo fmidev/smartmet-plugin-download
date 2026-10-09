@@ -1,0 +1,203 @@
+Status: 200
+Content-Type: application/json
+
+{
+  "collections" : 
+  [
+    {
+      "id" : "ecmwf_eurooppa_pinta",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ecmwf_eurooppa_pinta",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_eurooppa_pinta/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "ecmwf_eurooppa_pinta"
+    },
+    {
+      "id" : "ecmwf_maailma_piste",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ecmwf_maailma_piste",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_maailma_piste/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "ecmwf_maailma_piste"
+    },
+    {
+      "id" : "ecmwf_skandinavia_painepinta",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ecmwf_skandinavia_painepinta",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_skandinavia_painepinta/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "ecmwf_skandinavia_painepinta"
+    },
+    {
+      "id" : "metcoop",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/metcoop",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/metcoop/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "metcoop"
+    },
+    {
+      "id" : "pal_skandinavia",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/pal_skandinavia",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/pal_skandinavia/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "pal_skandinavia"
+    },
+    {
+      "id" : "pal_skandinavia_dl",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/pal_skandinavia_dl",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/pal_skandinavia_dl/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "pal_skandinavia_dl"
+    },
+    {
+      "id" : "radar_accrate",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_accrate",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_accrate/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "radar_accrate"
+    },
+    {
+      "id" : "radar_anjalankoski_dbzh",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_dbzh",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_dbzh/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "radar_anjalankoski_dbzh"
+    },
+    {
+      "id" : "radar_anjalankoski_etop",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_etop",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_etop/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "radar_anjalankoski_etop"
+    },
+    {
+      "id" : "radar_finland_dbz",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_finland_dbz",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_finland_dbz/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "radar_finland_dbz"
+    },
+    {
+      "id" : "radar_finland_rr1h",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_finland_rr1h",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_finland_rr1h/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        }
+      ],
+      "title" : "radar_finland_rr1h"
+    }
+  ],
+  "links" : 
+  [
+    {
+      "href" : "/coverages/collections",
+      "rel" : "self",
+      "type" : "application/json"
+    }
+  ]
+}

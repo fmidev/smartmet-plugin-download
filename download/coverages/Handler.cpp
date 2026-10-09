@@ -10,6 +10,7 @@
 // ======================================================================
 
 #include "coverages/Handler.h"
+#include "coverages/ApiDefinition.h"
 #include "ParamConfig.h"
 #include "Query.h"
 #include "StreamerFactory.h"
@@ -26,6 +27,7 @@
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
+#include <set>
 #include <vector>
 
 using namespace std;
@@ -55,16 +57,21 @@ static vector<string> splitPath(const string &resource)
   return parts;
 }
 
+// The root of the OGC API - Coverages resources
+static const string COVERAGES_ROOT = "/coverages";
+
 // ----------------------------------------------------------------------
 /*!
- * \brief Set JSON response headers
+ * \brief Set a JSON response
  */
 // ----------------------------------------------------------------------
 
-static void setJsonResponse(Spine::HTTP::Response &theResponse,
-                            const string &content)
+static void setJsonResponse(Spine::HTTP::Response &theResponse, const Json::Value &doc)
 {
-  theResponse.setContent(content);
+  Json::StreamWriterBuilder builder;
+  builder["indentation"] = "  ";
+  builder["emitUTF8"] = true;
+  theResponse.setContent(Json::writeString(builder, doc) + "\n");
   theResponse.setStatus(Spine::HTTP::Status::ok);
   theResponse.setHeader("Content-Type", "application/json");
   theResponse.setHeader("Access-Control-Allow-Origin", "*");
@@ -72,17 +79,31 @@ static void setJsonResponse(Spine::HTTP::Response &theResponse,
 
 // ----------------------------------------------------------------------
 /*!
- * \brief JSON-escape a string for safe embedding inside a JSON string literal
- *
- *        The metadata responses are built by string concatenation, so any
- *        request-controlled value (e.g. the collection id taken from the URL
- *        path) must be escaped to prevent JSON injection / breaking out of the
- *        surrounding string. Json::valueToQuotedString returns the value
- *        wrapped in double quotes with all special characters escaped; strip
- *        the surrounding quotes so the result can be dropped into the existing
- *        hand-built JSON, which supplies its own quotes and structure.
+ * \brief Set an RFC 7807 problem details response
  */
 // ----------------------------------------------------------------------
+
+static void setProblemResponse(Spine::HTTP::Response &theResponse,
+                               Spine::HTTP::Status status,
+                               const string &title,
+                               const string &detail)
+{
+  Json::Value doc;
+  doc["title"] = title;
+  doc["status"] = static_cast<int>(status);
+  doc["detail"] = detail;
+  setJsonResponse(theResponse, doc);
+  theResponse.setStatus(status);
+  theResponse.setHeader("Content-Type", "application/problem+json");
+}
+
+static Json::Value makeLink(const string &href,
+                            const string &rel,
+                            const string &type,
+                            const string &title = "")
+{
+  return Spine::OpenAPI::link(href, rel, type, title);
+}
 
 // Redact absolute filesystem paths from a message so internal server paths are not
 // leaked to clients through the X-Download-Error response header.
@@ -96,14 +117,6 @@ static string redactPaths(const string &msg)
       tok = "<path>";
   }
   return boost::algorithm::join(tokens, " ");
-}
-
-static string jsonEscape(const string &value)
-{
-  string quoted = Json::valueToQuotedString(value.c_str());
-  if (quoted.size() >= 2)
-    return quoted.substr(1, quoted.size() - 2);
-  return quoted;
 }
 
 // ----------------------------------------------------------------------
@@ -877,6 +890,14 @@ void CoveragesHandler::init(Config &config,
   itsQEngine = qEngine;
   itsGridEngine = gridEngine;
   itsGeoEngine = geoEngine;
+
+  // The OpenAPI definition lists the configured producers, it is generated once
+  auto settings = Spine::OpenAPI::Settings::parse(config.config());
+  if (settings.enabled)
+  {
+    itsApi = std::make_unique<Spine::OpenAPI::Publisher>(std::move(settings));
+    itsApi->publish(Coverages::apiDefinition(config, itsApi->settings()));
+  }
 }
 
 // ----------------------------------------------------------------------
@@ -891,6 +912,20 @@ void CoveragesHandler::init(Config &config,
  *   /coverages/collections/{id}/coverage    → coverage data
  */
 // ----------------------------------------------------------------------
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief 404 Not Found as RFC 7807 problem details
+ */
+// ----------------------------------------------------------------------
+
+static void notFound(const Spine::HTTP::Request &theRequest, Spine::HTTP::Response &theResponse)
+{
+  setProblemResponse(theResponse,
+                     Spine::HTTP::Status::not_found,
+                     "Not Found",
+                     "Unknown resource: " + theRequest.getResource());
+}
 
 void CoveragesHandler::requestHandler(Spine::Reactor & /* theReactor */,
                                       const Spine::HTTP::Request &theRequest,
@@ -933,22 +968,22 @@ void CoveragesHandler::requestHandler(Spine::Reactor & /* theReactor */,
           else if (parts[3] == "coverage")
             handleCoverage(theRequest, theResponse, parts[2]);
           else
-          {
-            theResponse.setStatus(Spine::HTTP::Status::not_found);
-            theResponse.setContent("Unknown resource: " + theRequest.getResource());
-          }
+            notFound(theRequest, theResponse);
         }
         else
-        {
-          theResponse.setStatus(Spine::HTTP::Status::not_found);
-          theResponse.setContent("Unknown resource: " + theRequest.getResource());
-        }
+          notFound(theRequest, theResponse);
+      }
+      else if (parts[1] == "api" && itsApi &&
+               Spine::OpenAPI::Publisher::isApiResource(theRequest.getResource(), COVERAGES_ROOT))
+      {
+        // The OpenAPI definition and its documentation
+        itsApi->handle(theRequest,
+                       theResponse,
+                       COVERAGES_ROOT,
+                       Spine::OpenAPI::serverUrl(theRequest, COVERAGES_ROOT));
       }
       else
-      {
-        theResponse.setStatus(Spine::HTTP::Status::not_found);
-        theResponse.setContent("Unknown resource: " + theRequest.getResource());
-      }
+        notFound(theRequest, theResponse);
     }
     catch (...)
     {
@@ -964,12 +999,14 @@ void CoveragesHandler::requestHandler(Spine::Reactor & /* theReactor */,
 
       exception.printError();
 
-      theResponse.setStatus(Spine::HTTP::Status::bad_request);
-
       std::string msg = exception.what();
       boost::algorithm::replace_all(msg, "\n", " ");
       msg = redactPaths(msg);
       msg = msg.substr(0, 300);
+
+      // OGC API - Common: an RFC 7807 problem details body. The X-Download-Error header is
+      // kept for the clients which read the error from it.
+      setProblemResponse(theResponse, Spine::HTTP::Status::bad_request, "Bad Request", msg);
       theResponse.setHeader("X-Download-Error", msg.c_str());
     }
   }
@@ -985,38 +1022,29 @@ void CoveragesHandler::requestHandler(Spine::Reactor & /* theReactor */,
  */
 // ----------------------------------------------------------------------
 
-void CoveragesHandler::handleLandingPage(const Spine::HTTP::Request & /* theRequest */,
+void CoveragesHandler::handleLandingPage(const Spine::HTTP::Request &theRequest,
                                          Spine::HTTP::Response &theResponse)
 {
-  // TODO: Generate from configuration; include proper links with server URL
+  const auto base = Spine::OpenAPI::serverUrl(theRequest, COVERAGES_ROOT);
 
-  string json =
-      "{\n"
-      "  \"title\": \"SmartMet Server - OGC API Coverages\",\n"
-      "  \"description\": \"OGC API Coverages interface to SmartMet meteorological data\",\n"
-      "  \"links\": [\n"
-      "    {\n"
-      "      \"href\": \"/coverages\",\n"
-      "      \"rel\": \"self\",\n"
-      "      \"type\": \"application/json\",\n"
-      "      \"title\": \"This document\"\n"
-      "    },\n"
-      "    {\n"
-      "      \"href\": \"/coverages/conformance\",\n"
-      "      \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/conformance\",\n"
-      "      \"type\": \"application/json\",\n"
-      "      \"title\": \"Conformance declaration\"\n"
-      "    },\n"
-      "    {\n"
-      "      \"href\": \"/coverages/collections\",\n"
-      "      \"rel\": \"data\",\n"
-      "      \"type\": \"application/json\",\n"
-      "      \"title\": \"Collections\"\n"
-      "    }\n"
-      "  ]\n"
-      "}\n";
+  Json::Value doc;
+  doc["title"] = "SmartMet Server - OGC API Coverages";
+  doc["description"] = "OGC API Coverages interface to SmartMet meteorological data";
+  auto &links = doc["links"];
+  links.append(makeLink(base, "self", "application/json", "This document"));
+  if (itsApi)
+  {
+    links.append(Spine::OpenAPI::serviceDescLink(base));
+    if (itsApi->settings().ui)
+      links.append(Spine::OpenAPI::serviceDocLink(base));
+  }
+  links.append(makeLink(base + "/conformance",
+                        Spine::OpenAPI::REL_CONFORMANCE,
+                        "application/json",
+                        "Conformance declaration"));
+  links.append(makeLink(base + "/collections", "data", "application/json", "Collections"));
 
-  setJsonResponse(theResponse, json);
+  setJsonResponse(theResponse, doc);
 }
 
 // ----------------------------------------------------------------------
@@ -1028,20 +1056,51 @@ void CoveragesHandler::handleLandingPage(const Spine::HTTP::Request & /* theRequ
 void CoveragesHandler::handleConformance(const Spine::HTTP::Request & /* theRequest */,
                                          Spine::HTTP::Response &theResponse)
 {
-  string json =
-      "{\n"
-      "  \"conformsTo\": [\n"
-      "    \"http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core\",\n"
-      "    \"http://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections\",\n"
-      "    \"http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/core\",\n"
-      "    \"http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/subsetting\",\n"
-      "    \"http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/fieldselection\",\n"
-      "    \"http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/scaling\",\n"
-      "    \"http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/crs\"\n"
-      "  ]\n"
-      "}\n";
+  Json::Value doc;
+  auto &classes = doc["conformsTo"];
+  classes = Json::Value(Json::arrayValue);
+  for (const auto &uri : Coverages::conformanceClasses(itsApi != nullptr))
+    classes.append(uri);
+  setJsonResponse(theResponse, doc);
+}
 
-  setJsonResponse(theResponse, json);
+// ----------------------------------------------------------------------
+/*!
+ * \brief The description of a collection
+ */
+// ----------------------------------------------------------------------
+
+static Json::Value collectionDescription(const string &base,
+                                         const string &id,
+                                         const Producer *producer)
+{
+  const auto href = base + "/collections/" + id;
+
+  Json::Value doc;
+  doc["id"] = id;
+  doc["title"] = id;
+  auto &links = doc["links"];
+  links.append(makeLink(href, "self", "application/json"));
+  links.append(
+      makeLink(href + "/coverage", "http://www.opengis.net/def/rel/ogc/1.0/coverage", "application/netcdf"));
+
+  if (producer == nullptr)
+    return doc;
+
+  doc["description"] = "Coverage collection for producer " + id;
+  links.append(makeLink(href + "/schema", "describedby", "application/json"));
+  doc["extent"] = Json::Value(Json::objectValue);
+
+  // Output formats the producer allows
+  auto &formats = doc["outputFormats"];
+  std::set<string> media_types;
+  for (const auto &format : Coverages::outputFormats())
+    if (format.second != "application/x-fmi-querydata" || !producer->disabledReqParam("format"))
+      if (media_types.insert(format.second).second)
+        formats.append(format.second);
+
+  doc["crs"].append("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
+  return doc;
 }
 
 // ----------------------------------------------------------------------
@@ -1050,55 +1109,19 @@ void CoveragesHandler::handleConformance(const Spine::HTTP::Request & /* theRequ
  */
 // ----------------------------------------------------------------------
 
-void CoveragesHandler::handleCollections(const Spine::HTTP::Request & /* theRequest */,
+void CoveragesHandler::handleCollections(const Spine::HTTP::Request &theRequest,
                                          Spine::HTTP::Response &theResponse)
 {
-  const auto &producers = itsConfig->getProducers();
+  const auto base = Spine::OpenAPI::serverUrl(theRequest, COVERAGES_ROOT);
 
-  string json =
-      "{\n"
-      "  \"links\": [\n"
-      "    {\n"
-      "      \"href\": \"/coverages/collections\",\n"
-      "      \"rel\": \"self\",\n"
-      "      \"type\": \"application/json\"\n"
-      "    }\n"
-      "  ],\n"
-      "  \"collections\": [\n";
+  Json::Value doc;
+  doc["links"].append(makeLink(base + "/collections", "self", "application/json"));
+  auto &collections = doc["collections"];
+  collections = Json::Value(Json::arrayValue);
+  for (const auto &entry : itsConfig->getProducers())
+    collections.append(collectionDescription(base, entry.first, nullptr));
 
-  bool first = true;
-  for (const auto &entry : producers)
-  {
-    const string &id = entry.first;
-
-    if (!first)
-      json += ",\n";
-    first = false;
-
-    json +=
-        "    {\n"
-        "      \"id\": \"" + id + "\",\n"
-        "      \"title\": \"" + id + "\",\n"
-        "      \"links\": [\n"
-        "        {\n"
-        "          \"href\": \"/coverages/collections/" + id + "\",\n"
-        "          \"rel\": \"self\",\n"
-        "          \"type\": \"application/json\"\n"
-        "        },\n"
-        "        {\n"
-        "          \"href\": \"/coverages/collections/" + id + "/coverage\",\n"
-        "          \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
-        "          \"type\": \"application/netcdf\"\n"
-        "        }\n"
-        "      ]\n"
-        "    }";
-  }
-
-  json +=
-      "\n  ]\n"
-      "}\n";
-
-  setJsonResponse(theResponse, json);
+  setJsonResponse(theResponse, doc);
 }
 
 // ----------------------------------------------------------------------
@@ -1107,78 +1130,19 @@ void CoveragesHandler::handleCollections(const Spine::HTTP::Request & /* theRequ
  */
 // ----------------------------------------------------------------------
 
-void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theRequest */,
+void CoveragesHandler::handleCollection(const Spine::HTTP::Request &theRequest,
                                         Spine::HTTP::Response &theResponse,
                                         const std::string &collectionId)
 {
+  const auto base = Spine::OpenAPI::serverUrl(theRequest, COVERAGES_ROOT);
   const auto &producers = itsConfig->getProducers();
   auto it = producers.find(collectionId);
 
-  if (it == producers.end())
-  {
-    // Collection not in config — still allow it (the querydata engine may
-    // know the producer even without explicit download.conf configuration),
-    // but return minimal metadata
+  // A collection not in the configuration is still allowed (the querydata engine may know
+  // the producer even without explicit download.conf configuration), with minimal metadata
+  const Producer *producer = (it == producers.end() ? nullptr : &it->second);
 
-    const string escapedId = jsonEscape(collectionId);
-
-    string json =
-        "{\n"
-        "  \"id\": \"" + escapedId + "\",\n"
-        "  \"title\": \"" + escapedId + "\",\n"
-        "  \"links\": [\n"
-        "    {\n"
-        "      \"href\": \"/coverages/collections/" + escapedId + "/coverage\",\n"
-        "      \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
-        "      \"type\": \"application/netcdf\"\n"
-        "    }\n"
-        "  ]\n"
-        "}\n";
-
-    setJsonResponse(theResponse, json);
-    return;
-  }
-
-  const auto &producer = it->second;
-
-  // Build output format list based on what's not disabled
-  string formats =
-      "\"application/x-grib2\", \"application/x-grib\", \"application/netcdf\", \"image/tiff\"";
-  if (!producer.disabledReqParam("format"))
-    formats += ", \"application/x-fmi-querydata\"";
-
-  const string escapedId = jsonEscape(collectionId);
-
-  string json =
-      "{\n"
-      "  \"id\": \"" + escapedId + "\",\n"
-      "  \"title\": \"" + escapedId + "\",\n"
-      "  \"description\": \"Coverage collection for producer " + escapedId + "\",\n"
-      "  \"links\": [\n"
-      "    {\n"
-      "      \"href\": \"/coverages/collections/" + escapedId + "\",\n"
-      "      \"rel\": \"self\",\n"
-      "      \"type\": \"application/json\"\n"
-      "    },\n"
-      "    {\n"
-      "      \"href\": \"/coverages/collections/" + escapedId + "/coverage\",\n"
-      "      \"rel\": \"http://www.opengis.net/def/rel/ogc/1.0/coverage\",\n"
-      "      \"type\": \"application/netcdf\"\n"
-      "    },\n"
-      "    {\n"
-      "      \"href\": \"/coverages/collections/" + escapedId + "/schema\",\n"
-      "      \"rel\": \"describedby\",\n"
-      "      \"type\": \"application/json\"\n"
-      "    }\n"
-      "  ],\n"
-      "  \"extent\": {},\n"
-      "  \"outputFormats\": [" + formats + "],\n"
-      "  \"crs\": [\n"
-      "    \"http://www.opengis.net/def/crs/OGC/1.3/CRS84\"\n"
-      "  ]\n"
-      "}\n";
-
-  setJsonResponse(theResponse, json);
+  setJsonResponse(theResponse, collectionDescription(base, collectionId, producer));
 }
 
 // ----------------------------------------------------------------------
@@ -1218,47 +1182,31 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request & /* theRequest *
       params[id] = &item;
   }
 
-  string json =
-      "{\n"
-      "  \"$schema\": \"https://json-schema.org/draft/2020-12/schema\",\n"
-      "  \"type\": \"object\",\n"
-      "  \"properties\": {\n";
+  Json::Value doc;
+  doc["$schema"] = "https://json-schema.org/draft/2020-12/schema";
+  doc["type"] = "object";
+  auto &properties = doc["properties"];
+  properties = Json::Value(Json::objectValue);
 
-  bool first = true;
   for (const auto &entry : params)
   {
     const auto &item = *entry.second;
     string name = item.itsWantedParam.GetName().CharPtr();
-    long id = entry.first;
-
     if (name.empty())
       continue;
 
-    if (!first)
-      json += ",\n";
-    first = false;
-
-    json += "    \"" + name + "\": {\n";
-    json += "      \"type\": \"number\",\n";
-    json += "      \"x-fmi-id\": " + Fmi::to_string(id);
-
+    auto &property = properties[name];
+    property["type"] = "number";
+    property["x-fmi-id"] = static_cast<Json::Int64>(entry.first);
     if (!item.itsLongName.empty())
-      json += ",\n      \"title\": \"" + item.itsLongName + "\"";
-
+      property["title"] = item.itsLongName;
     if (!item.itsStdName.empty())
-      json += ",\n      \"x-ogc-propertyName\": \"" + item.itsStdName + "\"";
-
+      property["x-ogc-propertyName"] = item.itsStdName;
     if (!item.itsUnit.empty())
-      json += ",\n      \"x-ogc-unit\": \"" + item.itsUnit + "\"";
-
-    json += "\n    }";
+      property["x-ogc-unit"] = item.itsUnit;
   }
 
-  json +=
-      "\n  }\n"
-      "}\n";
-
-  setJsonResponse(theResponse, json);
+  setJsonResponse(theResponse, doc);
 }
 
 // ----------------------------------------------------------------------

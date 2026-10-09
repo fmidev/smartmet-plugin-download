@@ -60,7 +60,10 @@ download/
 ├── download/
 │   └── Handler.cpp/h         — /download: HTTP query string → ReqParams → createStreamer()
 └── coverages/
-    └── Handler.cpp/h         — /coverages: OGC REST routing, metadata endpoints, OGC → ReqParams translation
+    ├── Handler.cpp/h         — /coverages: OGC REST routing, metadata endpoints, OGC → ReqParams translation
+    └── ApiDefinition.cpp/h   — generated OpenAPI definition (/coverages/api); test/validate-openapi.py
+                                checks every successful coverages test request against it, so new
+                                request parameters must be added there
 ```
 
 ### Class hierarchy

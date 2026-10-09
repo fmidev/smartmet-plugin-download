@@ -3,7 +3,7 @@
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
 Version: 26.10.9
-Release: 2%{?dist}.fmi
+Release: 3%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -25,7 +25,7 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.10.3
+BuildRequires: smartmet-library-spine-devel >= 26.10.9-2
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.3
 BuildRequires: smartmet-library-timeseries-devel >= 26.10.3
 BuildRequires: smartmet-library-newbase-devel >= 26.10.3
@@ -45,7 +45,8 @@ Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 26.10.3
 Requires: smartmet-library-timeseries >= 26.10.3
-Requires: smartmet-library-spine >= 26.10.3
+Requires: smartmet-library-spine >= 26.10.9-2
+Requires: smartmet-swagger-ui
 Requires: smartmet-library-newbase >= 26.10.3
 Requires: smartmet-engine-querydata >= 26.10.3
 Requires: smartmet-library-grid-content >= 26.9.26
@@ -69,7 +70,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-grid >= 26.9.26
 #TestRequires: smartmet-engine-querydata >= 26.10.3
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.9.26
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.9-2
 #TestRequires: smartmet-library-newbase-devel >= 26.10.3
 #TestRequires: smartmet-qdtools >= 26.9.26
 #TestRequires: smartmet-test-data >= 26.8.26
@@ -107,6 +108,16 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Oct  9 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-3.fmi
+- Generated OpenAPI 3.0 definition of OGC API - Coverages (/coverages/api) with a Swagger UI
+  documentation page at /coverages/api/docs served from smartmet-swagger-ui
+- The landing page links the definition and the documentation, /coverages/conformance
+  declares oas30, and the links are absolute
+- Errors are returned as RFC 7807 problem details (application/problem+json) as OGC API -
+  Common specifies; the X-Download-Error header is still set
+- The metadata documents are built with jsoncpp, collection ids and parameter names are
+  now always escaped
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Fixed gridresolution to resample grid data, it was ignored (BRAINSTORM-3518)
 - Fixed crash when geometryid refers to an unknown grid geometry (BRAINSTORM-3518)
