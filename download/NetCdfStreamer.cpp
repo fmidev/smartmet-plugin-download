@@ -18,6 +18,7 @@
 #include <fmt/format.h>
 #include <atomic>
 #include <cerrno>
+#include <cstring>
 #include <csignal>
 #include <cstdio>
 #include <filesystem>
@@ -29,7 +30,8 @@ namespace
 SmartMet::Spine::MutexType myFileOpenMutex;
 }  // namespace
 
-#define CHECK(x, message) try { x; } catch (...) { throw Fmi::Exception(BCP, message); }
+// Keep the NetCDF error message as the cause
+#define CHECK(x, message) try { x; } catch (...) { throw Fmi::Exception::Trace(BCP, message); }
 
 
 using namespace std;
@@ -179,7 +181,12 @@ std::string NetCdfStreamer::getChunk()
           itsStream.open(itsFilename, ifstream::in | ifstream::binary);
 
           if (!itsStream)
-            throw Fmi::Exception(BCP, "Unable to open file stream");
+          {
+            const auto error = errno;
+            throw Fmi::Exception(BCP, "Unable to open file stream")
+                .addParameter("File", itsFilename)
+                .addParameter("Error", std::strerror(error));
+          }
         }
 
         if (!itsStream.eof())
@@ -513,9 +520,9 @@ void NetCdfStreamer::addTimeDimension()
     {
       itsTimeVar.putVar(times);
     }
-    catch(const std::exception& e)
+    catch (...)
     {
-      throw Fmi::Exception(BCP, "Failed to store validtimes");
+      throw Fmi::Exception::Trace(BCP, "Failed to store validtimes");
     }
   }
   catch (...)
