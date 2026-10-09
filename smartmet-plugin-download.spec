@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.10.8
+Version: 26.10.9
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -106,7 +106,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Thu Oct 08 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.8-1.fmi
+* Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-1.fmi
 - Unique NetCDF temporary file names; concurrent downloads from one thread overwrote each other's file (BRAINSTORM-2391, BRAINSTORM-2652)
 - Remove temporary files left behind by crashed servers at startup (BRAINSTORM-2489)
 - NetCDF errors keep the original NetCDF message, and a failure to reopen the file reports the file and the error
