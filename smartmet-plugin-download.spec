@@ -49,7 +49,7 @@ Requires: smartmet-library-spine >= 26.10.3
 Requires: smartmet-library-newbase >= 26.10.3
 Requires: smartmet-engine-querydata >= 26.10.3
 Requires: smartmet-library-grid-content >= 26.9.26
-Requires: smartmet-library-grid-files >= 26.9.26
+Requires: smartmet-library-grid-files >= 26.10.8
 Requires: smartmet-engine-grid >= 26.9.26
 Requires: smartmet-server >= 26.9.2
 Requires: %{smartmet_boost}-iostreams
@@ -75,6 +75,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-library-grid-files-test >= 26.10.6
+#TestRequires: smartmet-library-grid-files >= 26.10.8
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -109,6 +110,7 @@ rm -rf $RPM_BUILD_ROOT
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Fixed gridresolution to resample grid data, it was ignored (BRAINSTORM-3518)
 - Fixed crash when geometryid refers to an unknown grid geometry (BRAINSTORM-3518)
+- Requires smartmet-library-grid-files >= 26.10.8, whose LAEA grids report their cell size in km
 
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-1.fmi
 - Unique NetCDF temporary file names; concurrent downloads from one thread overwrote each other's file (BRAINSTORM-2391, BRAINSTORM-2652)
