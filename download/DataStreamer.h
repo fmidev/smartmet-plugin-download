@@ -364,6 +364,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                             FmiLevelType mappingLevelType,
                             int level) const;
   void buildGridQuery(SmartMet::QueryServer::Query &, T::ParamLevelId gridLevelType, int level);
+  void getGridSizeByResolution(size_t &gridSizeX, size_t &gridSizeY) const;
   void getGridLLBBox();
   std::string getGridLLBBoxStr();
   void setGridSize(size_t gridSizeX, size_t gridSizeY);
