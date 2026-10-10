@@ -283,13 +283,9 @@ bool areLevelValuesInIncreasingOrder(const Engine::Querydata::Q& q)
 
 bool isValidGeneration(const T::GenerationInfo *generationInfo)
 {
-  return (
-          (
-           (generationInfo->mDeletionTime == 0) ||
-           (generationInfo->mDeletionTime >= (time(NULL) + GridGenerationDeletionTimeOffset))
-          ) &&
-          (generationInfo->mStatus == T::GenerationInfo::Status::Ready)
-         );
+  return (((generationInfo->mDeletionTime == 0) ||
+           (generationInfo->mDeletionTime >= (time(nullptr) + GridGenerationDeletionTimeOffset))) &&
+          (generationInfo->mStatus == T::GenerationInfo::Status::Ready));
 }
 
 // ----------------------------------------------------------------------

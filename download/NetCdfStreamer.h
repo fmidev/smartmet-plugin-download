@@ -28,28 +28,28 @@ class NetCdfStreamer : public DataStreamer
                  const Query &query,
                  const Producer &producer,
                  const ReqParams &reqParams);
-  virtual ~NetCdfStreamer();
+  ~NetCdfStreamer() override;
 
   // Remove temporary files left behind by server processes which no longer run
   static void removeStaleTemporaryFiles(const std::string &theDirectory);
 
-  virtual std::string getChunk();
+  std::string getChunk() override;
 
-  virtual void getDataChunk(Engine::Querydata::Q q,
-                            const NFmiArea *area,
-                            NFmiGrid *grid,
-                            int level,
-                            const NFmiMetTime &mt,
-                            NFmiDataMatrix<float> &values,
-                            std::string &chunk);
+  void getDataChunk(Engine::Querydata::Q q,
+                    const NFmiArea* area,
+                    NFmiGrid* grid,
+                    int level,
+                    const NFmiMetTime& mt,
+                    NFmiDataMatrix<float>& values,
+                    std::string& chunk) override;
 
   // Grid support
   //
 
-  virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
-                                int,
-                                const NFmiMetTime &,
-                                std::string &chunk);
+  void getGridDataChunk(const QueryServer::Query& gridQuery,
+                        int,
+                        const NFmiMetTime&,
+                        std::string& chunk) override;
 
  private:
   NetCdfStreamer();
@@ -141,7 +141,7 @@ class NetCdfStreamer : public DataStreamer
 
   void storeParamValues();
 
-  void paramChanged(size_t nextParamOffset = 1);
+  void paramChanged(size_t nextParamOffset = 1) override;
 
   // Grid support
   //

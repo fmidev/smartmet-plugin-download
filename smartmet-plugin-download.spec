@@ -110,6 +110,7 @@ rm -rf $RPM_BUILD_ROOT
 * Sat Oct 10 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.10-1.fmi
 - Initialized values static analysis could not prove to be set
 - Use auto and return {} where clang-tidy suggests it, no functional changes
+- Mark overriding methods override and use nullptr, no functional changes
 
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Fixed gridresolution to resample grid data, it was ignored (BRAINSTORM-3518)

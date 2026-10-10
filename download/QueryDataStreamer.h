@@ -19,17 +19,17 @@ class QDStreamer : public DataStreamer
  public:
   QDStreamer(const Spine::HTTP::Request& req, const Config& config, const Query& query,
              const Producer& producer, const ReqParams &reqParams);
-  virtual ~QDStreamer();
+  ~QDStreamer() override;
 
-  virtual std::string getChunk();
+  std::string getChunk() override;
 
-  virtual void getDataChunk(Engine::Querydata::Q q,
-                            const NFmiArea* area,
-                            NFmiGrid* grid,
-                            int level,
-                            const NFmiMetTime& mt,
-                            NFmiDataMatrix<float>& values,
-                            std::string& chunk);
+  void getDataChunk(Engine::Querydata::Q q,
+                    const NFmiArea* area,
+                    NFmiGrid* grid,
+                    int level,
+                    const NFmiMetTime& mt,
+                    NFmiDataMatrix<float>& values,
+                    std::string& chunk) override;
 
  private:
   QDStreamer();

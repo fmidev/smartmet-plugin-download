@@ -46,7 +46,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                const Query &query,
                const Producer &producer,
                const ReqParams &regParams);
-  virtual ~DataStreamer();
+  ~DataStreamer() override;
 
   void generateValidTimeList(const Engine::Querydata::Q &q,
                              Fmi::DateTime &oTime,
@@ -69,7 +69,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                         Fmi::DateTime &sTime,
                         Fmi::DateTime &eTime);
 
-  virtual std::string getChunk() = 0;
+  std::string getChunk() override = 0;
 
   virtual void getDataChunk(Engine::Querydata::Q q,
                             const NFmiArea *area,
@@ -332,8 +332,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     bool queryOrderParam;
 
     Fmi::DateTime selectGridLatestValidOriginTime();
-    const std::string &getLatestOriginTime(Fmi::DateTime *originTime = NULL,
-                                           const Fmi::DateTime *validTime = NULL) const;
+    const std::string& getLatestOriginTime(Fmi::DateTime* originTime = nullptr,
+                                           const Fmi::DateTime* validTime = nullptr) const;
     bool getDataTimeRange(const std::string &originTimeStr,
                           Fmi::DateTime &firstTime,
                           Fmi::DateTime &lastTime,

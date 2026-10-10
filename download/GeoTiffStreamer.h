@@ -30,24 +30,24 @@ class GeoTiffStreamer : public DataStreamer
                   const Query& query,
                   const Producer& producer,
                   const ReqParams& reqParams);
-  virtual ~GeoTiffStreamer();
+  ~GeoTiffStreamer() override;
 
-  virtual std::string getChunk();
+  std::string getChunk() override;
 
-  virtual void getDataChunk(Engine::Querydata::Q q,
-                            const NFmiArea* area,
-                            NFmiGrid* grid,
-                            int level,
-                            const NFmiMetTime& mt,
-                            NFmiDataMatrix<float>& values,
-                            std::string& chunk);
+  void getDataChunk(Engine::Querydata::Q q,
+                    const NFmiArea* area,
+                    NFmiGrid* grid,
+                    int level,
+                    const NFmiMetTime& mt,
+                    NFmiDataMatrix<float>& values,
+                    std::string& chunk) override;
 
   // Grid support
   //
-  virtual void getGridDataChunk(const QueryServer::Query& gridQuery,
-                                int level,
-                                const NFmiMetTime& mt,
-                                std::string& chunk);
+  void getGridDataChunk(const QueryServer::Query& gridQuery,
+                        int level,
+                        const NFmiMetTime& mt,
+                        std::string& chunk) override;
 
  private:
   GeoTiffStreamer();
