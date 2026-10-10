@@ -137,7 +137,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
       if (ok)
       {
         int id = param.number();
-        unsigned long lid = boost::numeric_cast<unsigned long>(id);
+        auto lid = boost::numeric_cast<unsigned long>(id);
 
         if (gridContent)
         {
@@ -172,7 +172,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
       i++;
     }
 
-    std::list<unsigned int>::const_iterator itm = missingParams.begin();
+    auto itm = missingParams.begin();
     i = 0;
 
     for (const Spine::Parameter& param : params)

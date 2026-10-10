@@ -1314,7 +1314,7 @@ bool DataStreamer::hasRequestedGridData(const Producer &producer,
         {
           auto const &pm = paramMapping.mMapping;
 
-          FmiLevelType mappingLevelType = FmiLevelType(pm.mParameterLevelId);
+          auto mappingLevelType = FmiLevelType(pm.mParameterLevelId);
           int level;
 
           if ((!gridContent) && (pm.mParameterLevelId == GridFmiLevelTypePressure))
@@ -3000,7 +3000,7 @@ NFmiTimeDescriptor DataStreamer::makeTimeDescriptor(const Engine::Querydata::Q& 
     }
 
     NFmiMetTime ot = q->originTime();
-    TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
+    auto timeIter = itsDataTimes.begin();
     NFmiTimeList dataTimes;
 
     for (; (timeIter != itsDataTimes.end()); timeIter++)

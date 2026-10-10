@@ -516,7 +516,7 @@ const Producer& Config::getProducer(const string& name) const
 {
   try
   {
-    Producers::const_iterator p = itsProducers.find(name);
+    auto p = itsProducers.find(name);
     if (p != itsProducers.end())
       return p->second;
 
@@ -538,7 +538,7 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
 {
   try
   {
-    Producers::iterator p = (name.empty() ? itsProducers.end() : itsProducers.find(name));
+    auto p = (name.empty() ? itsProducers.end() : itsProducers.find(name));
     if ((p == itsProducers.end()) && (defaultProducerName() == ""))
       // Unnamed producer "mathces" at this point; the producer will be searched against
       // querydata's configuration

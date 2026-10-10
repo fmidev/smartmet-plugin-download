@@ -477,7 +477,7 @@ void NetCdfStreamer::addTimeDimension()
                            "Invalid data timestep " + boost::lexical_cast<string>(timeStep) +
                                " for producer '" + itsReqParams.producer + "'");
 
-    TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
+    auto timeIter = itsDataTimes.begin();
     Fmi::DateTime startTime = itsDataTimes.front().utc_time();
     size_t timeSize = 0;
     itsTimeValues.reserve(itsDataTimes.size());
@@ -602,7 +602,7 @@ NcDim NetCdfStreamer::getEnsembleDimension(
   {
     ensembleDimensionName = getEnsembleDimensionName(forecastType, forecastNumber);
     if (ensembleDimensionName.empty())
-      return NcDim();
+      return {};
 
     return itsFile->getDim(ensembleDimensionName);
   }
@@ -856,7 +856,7 @@ NcDim NetCdfStreamer::getLevelDimension(
     auto levelDim = itsLevelDimensions.find(paramNameWithoutLevel(itsQuery, paramName));
 
     if (levelDim == itsLevelDimensions.end())
-      return NcDim();
+      return {};
 
     levelDimName = levelDim->second.c_str();
 
@@ -945,7 +945,7 @@ void NetCdfStreamer::addLevelDimensions()
     for (auto it = itsDataParams.begin(); (it != itsDataParams.end()); it++)
     {
       itsQuery.parseRadonParameterName(it->name(), paramParts);
-      FmiLevelType levelType = (FmiLevelType) getParamLevelId(it->name(), paramParts);
+      auto levelType = (FmiLevelType)getParamLevelId(it->name(), paramParts);
 
       if (!(
             isPressureLevel(levelType, true) || isHybridLevel(levelType, true) ||
@@ -1840,7 +1840,7 @@ NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
 
     // Determine and store time bounds
 
-    TimeSeries::TimeSeriesGenerator::LocalTimeList::const_iterator timeIter = itsDataTimes.begin();
+    auto timeIter = itsDataTimes.begin();
     Fmi::DateTime startTime = itsDataTimes.front().utc_time(), vt;
     int bounds[2 * itsTimeDim.getSize()];
     size_t i = 0;
