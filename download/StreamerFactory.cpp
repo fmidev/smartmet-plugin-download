@@ -167,7 +167,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
       if (!ok)
         missingParams.push_back(i);
       else
-        scaling.push_back(Scaling::value_type(scale, offset));
+        scaling.emplace_back(scale, offset);
 
       i++;
     }

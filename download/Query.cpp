@@ -95,7 +95,7 @@ void Query::parseRadonParameterName(
   // it might be missing in parameter name
 
   if (parts.size() == 6)
-    parts.push_back("");
+    parts.emplace_back("");
 
   size_t n = 0;
   for (auto const &part : parts)
@@ -168,7 +168,7 @@ bool Query::parseRadonParameterName(
         (boost::to_upper_copy(pdParts[0].substr(aPos + 1, 2)) == "AS")
        )
     {
-      pdParts.push_back("AS");
+      pdParts.emplace_back("AS");
       pdParts.push_back(pdParts[0].substr(aPos + 3));
       pdParts[0].erase(aPos + 1);
     }
@@ -271,7 +271,7 @@ list<pair<int, int>> Query::parseIntValues(const string &paramName, const string
     if (pos == string::npos)
     {
       int value = parseIntValue(paramName, fieldName, s, negativeValueValid, maxValue);
-      intValues.push_back(make_pair(value, value));
+      intValues.emplace_back(value, value);
     }
     else
     {

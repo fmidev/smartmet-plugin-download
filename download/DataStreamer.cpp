@@ -754,7 +754,7 @@ void DataStreamer::generateGridValidTimeList(Query &query,
       itsGridMetaData.originTime = oTime;
 
       checkDataTimeStep(itsReqParams.timeStep);
-      itsDataTimes.push_back(Fmi::LocalDateTime(Fmi::LocalDateTime::NOT_A_DATE_TIME));
+      itsDataTimes.emplace_back(Fmi::LocalDateTime::NOT_A_DATE_TIME);
 
       return;
     }
@@ -5165,7 +5165,7 @@ bool DataStreamer::setDataTimes(const QueryServer::Query &gridQuery)
     for (const auto &forecastTime : itsGridQuery.mForecastTimeList)
     {
       auto t = Fmi::date_time::from_time_t(forecastTime);
-      itsDataTimes.push_back(Fmi::LocalDateTime(t, UTC));
+      itsDataTimes.emplace_back(t, UTC);
     }
 
     itsReqParams.gridTimeBlockSize = itsDataTimes.size();
