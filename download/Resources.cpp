@@ -1,7 +1,8 @@
 #include "Resources.h"
 #include <boost/stacktrace.hpp>
-#include <newbase/NFmiAreaFactory.h>
 #include <macgyver/Exception.h>
+#include <newbase/NFmiAreaFactory.h>
+#include <memory>
 
 namespace SmartMet
 {
@@ -80,7 +81,7 @@ void Resources::createGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY
 {
   try
   {
-    grid.reset(new NFmiGrid(&a, gridSizeX, gridSizeY));
+    grid = std::make_shared<NFmiGrid>(&a, gridSizeX, gridSizeY);
 
     if (!grid.get())
       throw Fmi::Exception(BCP, "Internal: could not create grid");

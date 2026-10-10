@@ -1143,7 +1143,7 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request & /* theReque
 
   // Build output format list based on what's not disabled
   string formats =
-      "\"application/x-grib2\", \"application/x-grib\", \"application/netcdf\", \"image/tiff\"";
+      R"("application/x-grib2", "application/x-grib", "application/netcdf", "image/tiff")";
   if (!producer.disabledReqParam("format"))
     formats += ", \"application/x-fmi-querydata\"";
 
