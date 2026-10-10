@@ -15,7 +15,7 @@ Content-Type: text/html; charset=UTF-8
 <body>
 <div id="swagger-ui"></div>
 <script src="docs/swagger-ui-bundle.js"></script>
-<script src="docs/smartmet-snippets.js"></script>
+<script src="docs/smartmet-swagger-ui.js"></script>
 <script>
 window.onload = function () {
   window.ui = SwaggerUIBundle({
@@ -26,9 +26,9 @@ window.onload = function () {
     queryConfigEnabled: false,
     tryItOutEnabled: true,
     requestSnippetsEnabled: true,
-    requestSnippets: SmartMetSnippets.snippetConfig,
+    requestSnippets: SmartMetSwaggerUI.snippetConfig,
     presets: [SwaggerUIBundle.presets.apis],
-    plugins: [SmartMetSnippets.plugin],
+    plugins: [SmartMetSwaggerUI.plugin],
     layout: "BaseLayout"
   });
 };

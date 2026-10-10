@@ -58,7 +58,8 @@ or `starttime` and `endtime`), the bash, Python, R and JavaScript
 "loop" snippets are scripts which repeat the request for consecutive days, weeks, months or
 years and save each response to a file; each period ends one second before the next one
 starts. The scripts use only curl and GNU date, the Python standard library, base R (4.0 or
-newer) and Node.js (18 or newer). The
+newer) and Node.js (18 or newer). JSON and XML responses are shown as a collapsible tree (nodes are
+built when opened and long arrays in pages of 200), with the original text view available. The
 documentation is rendered by Swagger UI, whose files are served by the plugin
 from a local directory (package `smartmet-swagger-ui`):
 
