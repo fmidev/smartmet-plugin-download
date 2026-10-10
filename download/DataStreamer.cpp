@@ -615,7 +615,7 @@ const string &DataStreamer::GridMetaData::getLatestOriginTime(Fmi::DateTime *ori
     if (validTime)
     {
       Fmi::DateTime firstTime, lastTime;
-      long timeStep;
+      long timeStep = 0;
 
       for (; ott != originTimeTimes.rend(); ott++)
       {
@@ -762,7 +762,7 @@ void DataStreamer::generateGridValidTimeList(Query &query,
     // Use data times if not given in request
 
     string originTimeStr;
-    long timeStep;
+    long timeStep = 0;
 
     if (oTime.is_not_a_date_time())
     {

@@ -1439,9 +1439,9 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
       if (pTable[paramIdx].itsStepType.empty())
       {
         if (itsGrib1Flag)
-          gset(itsGribHandle, "indicatorOfTimeRange", *indicatorOfTimeRange);
+          gset(itsGribHandle, "indicatorOfTimeRange", indicatorOfTimeRange.value());
         else
-          gset(itsGribHandle, "typeOfStatisticalProcessing", *typeOfStatisticalProcessing);
+          gset(itsGribHandle, "typeOfStatisticalProcessing", typeOfStatisticalProcessing.value());
       }
       else
         gset(itsGribHandle, "stepType", pTable[paramIdx].itsStepType);
