@@ -109,10 +109,9 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Fri Oct  9 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-3.fmi
-- Generated OpenAPI 3.0 definition of OGC API - Coverages (/coverages/api) with a Swagger UI
+- Generated OpenAPI 3.1 definition of OGC API - Coverages (/coverages/api) with a Swagger UI
   documentation page at /coverages/api/docs served from smartmet-swagger-ui
-- The landing page links the definition and the documentation, /coverages/conformance
-  declares oas30, and the links are absolute
+- The landing page links the definition and the documentation, the links are absolute
 - Errors are returned as RFC 7807 problem details (application/problem+json) as OGC API -
   Common specifies; the X-Download-Error header is still set
 - The metadata documents are built with jsoncpp, collection ids and parameter names are

@@ -89,7 +89,7 @@ test-coverages: $(TEST_PREPARE_TARGETS)
 	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM_COV) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); \
 	$(MAKE) validate-openapi && $$ok
 
-# The generated OpenAPI definition is validated against the OpenAPI 3.0 schema in schemas/,
+# The generated OpenAPI definition is validated against the OpenAPI 3.1 schema in schemas/,
 # and every successful /coverages test request must be described by it: an operation matches
 # the path, the values are in the enums and all the parameters are declared.
 validate-openapi:

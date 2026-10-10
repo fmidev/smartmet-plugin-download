@@ -24,7 +24,7 @@ namespace Coverages
 const std::vector<std::pair<std::string, std::string>>& outputFormats();
 
 // Conformance classes of /coverages/conformance
-std::vector<std::string> conformanceClasses(bool openapi);
+std::vector<std::string> conformanceClasses();
 
 // The definition of /coverages. Paths are relative to the coverages root URL.
 Spine::OpenAPI::Document apiDefinition(const Config& config,

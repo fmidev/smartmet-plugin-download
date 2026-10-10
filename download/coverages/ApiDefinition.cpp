@@ -303,7 +303,7 @@ const std::vector<std::pair<std::string, std::string>>& outputFormats()
   return formats;
 }
 
-std::vector<std::string> conformanceClasses(bool openapi)
+std::vector<std::string> conformanceClasses()
 {
   std::vector<std::string> ret{
       "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
@@ -313,11 +313,6 @@ std::vector<std::string> conformanceClasses(bool openapi)
       "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/fieldselection",
       "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/scaling",
       "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/crs"};
-  if (openapi)
-  {
-    ret.emplace_back(OA::CONF_COMMON_OAS30);
-    ret.emplace_back("http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/oas30");
-  }
   return ret;
 }
 

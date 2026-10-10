@@ -1059,7 +1059,7 @@ void CoveragesHandler::handleConformance(const Spine::HTTP::Request & /* theRequ
   Json::Value doc;
   auto &classes = doc["conformsTo"];
   classes = Json::Value(Json::arrayValue);
-  for (const auto &uri : Coverages::conformanceClasses(itsApi != nullptr))
+  for (const auto &uri : Coverages::conformanceClasses())
     classes.append(uri);
   setJsonResponse(theResponse, doc);
 }

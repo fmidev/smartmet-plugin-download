@@ -23,7 +23,7 @@ All endpoints are accessed with HTTP GET. Metadata endpoints return JSON
 | `/coverages/collections/{collectionId}` | Metadata for a single collection |
 | `/coverages/collections/{collectionId}/schema` | Field (parameter) schema |
 | `/coverages/collections/{collectionId}/coverage` | Coverage data retrieval |
-| `/coverages/api` | OpenAPI 3.0 definition of the interface (`f=html` for the documentation) |
+| `/coverages/api` | OpenAPI 3.1 definition of the interface (`f=html` for the documentation) |
 | `/coverages/api/docs` | Documentation page rendered by Swagger UI |
 
 A *collection* corresponds to a producer in download plugin terms: the
@@ -43,11 +43,10 @@ The conformance declaration lists the implemented conformance classes:
 - OGC API Coverages 1 — Field Selection
 - OGC API Coverages 1 — Scaling
 - OGC API Coverages 1 — CRS
-- OGC API Common 1 and OGC API Coverages 1 — OpenAPI 3.0
 
 ## API definition
 
-`/coverages/api` returns an OpenAPI 3.0 definition generated from the plugin
+`/coverages/api` returns an OpenAPI 3.1 definition generated from the plugin
 configuration: the collections, the output formats each producer allows, the
 OGC parameters and the download plugin options accepted as extensions (marked
 `x-fmi-extension`). The landing page links it with `rel=service-desc`, and the

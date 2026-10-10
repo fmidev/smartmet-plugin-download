@@ -10,8 +10,6 @@ Content-Type: application/json
     "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/subsetting",
     "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/fieldselection",
     "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/scaling",
-    "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/crs",
-    "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/oas30",
-    "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/oas30"
+    "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/crs"
   ]
 }

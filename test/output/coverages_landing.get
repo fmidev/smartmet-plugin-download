@@ -14,8 +14,8 @@ Content-Type: application/json
     {
       "href" : "/coverages/api",
       "rel" : "service-desc",
-      "title" : "The API definition (OpenAPI 3.0)",
-      "type" : "application/vnd.oai.openapi+json;version=3.0"
+      "title" : "The API definition (OpenAPI 3.1)",
+      "type" : "application/vnd.oai.openapi+json;version=3.1"
     },
     {
       "href" : "/coverages/api/docs",
