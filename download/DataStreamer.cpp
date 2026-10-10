@@ -2952,9 +2952,9 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(
     auto old_idx = q->paramIndex();
     bool wasSubParamUsed = q->isSubParamUsed();
 
-    for (auto it = itsDataParams.begin(); it != itsDataParams.end(); ++it)
+    for (const auto& itsDataParam : itsDataParams)
     {
-      if (q->param(it->number()))
+      if (q->param(itsDataParam.number()))
       {
         pbag.Add(q->param());
 

@@ -114,6 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 - Use = default and using declarations where clang-tidy suggests it, no functional changes
 - Use emplace and C++ standard library headers where clang-tidy suggests it, no functional changes
 - Use raw string literals and std::make_shared where clang-tidy suggests it, no functional changes
+- Use range-based for loops where clang-tidy suggests it, no functional changes
 
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Fixed gridresolution to resample grid data, it was ignored (BRAINSTORM-3518)
