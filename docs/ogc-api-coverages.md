@@ -50,7 +50,15 @@ The conformance declaration lists the implemented conformance classes:
 configuration: the collections, the output formats each producer allows, the
 OGC parameters and the download plugin options accepted as extensions (marked
 `x-fmi-extension`). The landing page links it with `rel=service-desc`, and the
-documentation page `/coverages/api/docs` with `rel=service-doc`. The
+documentation page `/coverages/api/docs` with `rel=service-doc`.
+
+The documentation page shows the executed request with its full URL, and as bash (curl),
+Python, R and JavaScript snippets. When the request has a time window (`datetime=start/end`,
+or `starttime` and `endtime`), the bash, Python, R and JavaScript
+"loop" snippets are scripts which repeat the request for consecutive days, weeks, months or
+years and save each response to a file; each period ends one second before the next one
+starts. The scripts use only curl and GNU date, the Python standard library, base R (4.0 or
+newer) and Node.js (18 or newer). The
 documentation is rendered by Swagger UI, whose files are served by the plugin
 from a local directory (package `smartmet-swagger-ui`):
 
