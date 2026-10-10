@@ -934,10 +934,10 @@ void NetCdfStreamer::addLevelDimensions()
     // First collect all parameters and levels using leveltype as the top level map key, storing
     // it's parameters and their levels into a map
 
-    typedef map<string, set<int>> ParamLevels;
-    typedef pair<string, string> DirectionAndUnit;
-    typedef map<string, DirectionAndUnit> DimensionAttributes;
-    typedef map<FmiLevelType, ParamLevels> LevelTypeLevels;
+    using ParamLevels = map<string, set<int>>;
+    using DirectionAndUnit = pair<string, string>;
+    using DimensionAttributes = map<string, DirectionAndUnit>;
+    using LevelTypeLevels = map<FmiLevelType, ParamLevels>;
     LevelTypeLevels levelTypeLevels;
     DimensionAttributes dimensionAttributes;
     vector<string> paramParts;

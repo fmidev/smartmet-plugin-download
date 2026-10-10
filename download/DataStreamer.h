@@ -309,11 +309,11 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     std::unique_ptr<double> rotLongitudes;  // rotated coords for rotlat grid
     std::unique_ptr<double> rotLatitudes;   //
 
-    typedef std::map<std::string, std::set<std::string>> StringMapSet;
-    typedef StringMapSet OriginTimeTimes;
-    typedef std::map<T::ParamLevel, OriginTimeTimes> LevelOriginTimes;
-    typedef std::map<T::GeometryId, LevelOriginTimes> GeometryLevels;
-    typedef std::map<std::string, GeometryLevels> ParamGeometries;
+    using StringMapSet = std::map<std::string, std::set<std::string>>;
+    using OriginTimeTimes = StringMapSet;
+    using LevelOriginTimes = std::map<T::ParamLevel, OriginTimeTimes>;
+    using GeometryLevels = std::map<T::GeometryId, LevelOriginTimes>;
+    using ParamGeometries = std::map<std::string, GeometryLevels>;
 
     ParamGeometries paramGeometries;
 

@@ -36,7 +36,7 @@ typedef struct
   std::optional<long> itsTypeOfStatisticalProcessing;
 } GribParamIdentification;
 
-typedef std::optional<GribParamIdentification> GribParamId;
+using GribParamId = std::optional<GribParamIdentification>;
 
 struct ParamChangeItem
 {
@@ -71,7 +71,7 @@ struct ParamChangeItem
   GribParamId itsGrib2Param;     // Grib2 discipline etc
 };
 
-typedef std::vector<ParamChangeItem> ParamChangeTable;
+using ParamChangeTable = std::vector<ParamChangeItem>;
 ParamChangeTable readParamConfig(const std::filesystem::path &configFilePath, bool grib = true);
 
 }  // namespace Download

@@ -32,7 +32,7 @@
 // format (grib (for both 1 and 2), grib1, grib2 and netcdf) and value type (to be converted to) are
 // not stored/used.
 //
-typedef std::map<std::string, long> NamedSettings;
+using NamedSettings = std::map<std::string, long>;
 
 namespace SmartMet
 {
@@ -82,7 +82,7 @@ struct Producer
 #endif
 };
 
-typedef std::map<std::string, Producer> Producers;
+using Producers = std::map<std::string, Producer>;
 
 // ----------------------------------------------------------------------
 /*!
@@ -106,11 +106,11 @@ typedef enum
   GeoTiff
 } OutputFormat;
 
-typedef std::optional<std::vector<std::pair<double, double>>> BBox;
-typedef std::optional<std::vector<std::pair<unsigned int, unsigned int>>> GridSize;
-typedef std::optional<std::vector<std::pair<unsigned int, unsigned int>>> GridStep;
-typedef std::optional<std::vector<std::pair<double, double>>> GridResolution;
-typedef std::optional<std::vector<std::pair<double, double>>> GridCenter;
+using BBox = std::optional<std::vector<std::pair<double, double>>>;
+using GridSize = std::optional<std::vector<std::pair<unsigned int, unsigned int>>>;
+using GridStep = std::optional<std::vector<std::pair<unsigned int, unsigned int>>>;
+using GridResolution = std::optional<std::vector<std::pair<double, double>>>;
+using GridCenter = std::optional<std::vector<std::pair<double, double>>>;
 
 typedef enum
 {
@@ -133,7 +133,7 @@ typedef enum
   A_TransverseMercator = kNFmiYKJArea,
   A_LambertConformalConic = kNFmiLambertConformalConicArea
 } AreaClassId;
-typedef unsigned long EpsgCode;
+using EpsgCode = unsigned long;
 
 struct ReqParams
 {
@@ -241,7 +241,7 @@ struct ReqParams
   //
   unsigned int test;
 
-  ReqParams() {}
+  ReqParams() = default;
 };
 
 class Query
@@ -252,7 +252,7 @@ class Query
         std::string &originTime,
         uint queryTestValue = 0);
 
-  typedef std::set<int> Levels;
+  using Levels = std::set<int>;
   Levels levels;
 
   std::string timeZone;
@@ -270,8 +270,8 @@ class Query
   bool isFunctionParameter(
       const std::string &param, T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level) const;
 
-  typedef std::map<T::GenerationId, T::GenerationInfo> GenerationInfos;
-  typedef std::map<std::string, T::ContentInfoList> ParameterContents;
+  using GenerationInfos = std::map<T::GenerationId, T::GenerationInfo>;
+  using ParameterContents = std::map<std::string, T::ContentInfoList>;
 
   const GenerationInfos &getGenerationInfos() { return generationInfos; }
   const ParameterContents &getParameterContents() { return parameterContents; }
@@ -283,8 +283,8 @@ class Query
   std::map<std::string, std::string> functionParameters;
   GenerationInfos generationInfos;
   ParameterContents parameterContents;
-  typedef std::map<std::string, T::GenerationId> OriginTimeGenerations;
-  typedef std::map<std::string, OriginTimeGenerations> ProducerGenerations;
+  using OriginTimeGenerations = std::map<std::string, T::GenerationId>;
+  using ProducerGenerations = std::map<std::string, OriginTimeGenerations>;
   ProducerGenerations producerGenerations;
 
   int parseIntValue(const std::string &paramName, const std::string &fieldName,

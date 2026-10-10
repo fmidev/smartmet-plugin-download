@@ -30,7 +30,7 @@ QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
 {
 }
 
-QDStreamer::~QDStreamer() {}
+QDStreamer::~QDStreamer() = default;
 
 // ----------------------------------------------------------------------
 /*!

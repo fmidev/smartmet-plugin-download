@@ -97,7 +97,7 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request &req,
   }
 }
 
-DataStreamer::~DataStreamer() {}
+DataStreamer::~DataStreamer() = default;
 
 // ----------------------------------------------------------------------
 /*!
@@ -1157,9 +1157,9 @@ void DataStreamer::getParameterDetailsFromContentData(
     const string &param = paramParts[0];
     const string &producer = paramParts[1];
 
-    typedef map<T::GeometryId, SmartMet::Engine::Grid::ParameterDetails_vec> GeomDetails;
-    typedef map<T::ParamLevel, GeomDetails> LevelDetails;
-    typedef map<T::ParamLevelId, LevelDetails> LevelTypeDetails;
+    using GeomDetails = map<T::GeometryId, SmartMet::Engine::Grid::ParameterDetails_vec>;
+    using LevelDetails = map<T::ParamLevel, GeomDetails>;
+    using LevelTypeDetails = map<T::ParamLevelId, LevelDetails>;
     LevelTypeDetails levelGeomParamDetails;
 
     for (size_t idx = 0; (idx < contentLength); idx++)
@@ -2558,7 +2558,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
         (!(wgs84Pr2LLct = itsResources.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
-    typedef NFmiDataMatrix<float>::size_type sz_t;
+    using sz_t = NFmiDataMatrix<float>::size_type;
     double xc, yc;
 
     NFmiPoint bl = itsBoundingBox.bottomLeft;
@@ -3145,7 +3145,7 @@ void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
 
       // Get V values
 
-      typedef std::unique_ptr<float, void (*)(float *)> valBuf;
+      using valBuf = std::unique_ptr<float, void (*)(float*)>;
 
       valBuf vValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
       float *vPtr0 = vValues.get();

@@ -93,8 +93,8 @@ class GribStreamer : public DataStreamer
   //
 
   std::string itsPreviousParam;
-  typedef std::map<std::string, int> ParamConfigProducerIndexes;
-  typedef std::map<std::string, ParamConfigProducerIndexes> ParamConfigParamIndexes;
+  using ParamConfigProducerIndexes = std::map<std::string, int>;
+  using ParamConfigParamIndexes = std::map<std::string, ParamConfigProducerIndexes>;
   ParamConfigParamIndexes paramConfigIndexes;
 
   void setGridGeometryToGrib(const QueryServer::Query& gridQuery);

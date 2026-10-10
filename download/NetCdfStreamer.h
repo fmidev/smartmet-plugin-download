@@ -71,9 +71,9 @@ class NetCdfStreamer : public DataStreamer
   std::list<netCDF::NcVar>::iterator itsVarIterator;
   std::list<netCDF::NcVar> itsDataVars;
 
-  typedef std::map<std::string, std::set<int>> DimensionLevels;
+  using DimensionLevels = std::map<std::string, std::set<int>>;
   DimensionLevels itsDimensionLevels;
-  typedef std::map<std::string, std::string> LevelDimensions;
+  using LevelDimensions = std::map<std::string, std::string>;
   LevelDimensions itsLevelDimensions;
 
   netCDF::NcDim addDimension(const std::string &dimName, long dimSize);
