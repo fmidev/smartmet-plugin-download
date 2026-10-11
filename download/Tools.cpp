@@ -1,4 +1,5 @@
 #include "Tools.h"
+#include <macgyver/StringConversion.h>
 
 using namespace std;
 
@@ -319,7 +320,7 @@ T::GeometryId getGeometryId(const string &param, const vector<string> &paramPart
         BCP, "Geometry id missing in radon parameter name '" + param + "'");
   }
 
-  return atoi(paramParts[2].c_str());
+  return Fmi::stoi(paramParts[2]);
 }
 
 // ----------------------------------------------------------------------
@@ -341,7 +342,7 @@ T::ParamLevelId getParamLevelId(const string &param, const vector<string> &param
         BCP, "Level type missing in radon parameter name '" + param + "'");
   }
 
-  return atoi(paramParts[3].c_str());
+  return Fmi::stoi(paramParts[3]);
 }
 
 // ----------------------------------------------------------------------
@@ -363,7 +364,7 @@ T::ParamLevel getParamLevel(const string &param, const vector<string> &paramPart
         BCP, "Level number missing in radon parameter name '" + param + "'");
   }
 
-  return atoi(paramParts[4].c_str());
+  return Fmi::stoi(paramParts[4]);
 }
 
 // ----------------------------------------------------------------------
@@ -385,7 +386,7 @@ T::ForecastType getForecastType(const string &param, const vector<string> &param
         BCP, "Forecast type missing in radon parameter name '" + param + "'");
   }
 
-  return atoi(paramParts[5].c_str());
+  return Fmi::stoi(paramParts[5]);
 }
 
 // ----------------------------------------------------------------------
@@ -407,7 +408,7 @@ T::ForecastType getForecastNumber(const string &param, const vector<string> &par
         BCP, "Forecast number missing in radon parameter name '" + param + "'");
   }
 
-  return atoi(paramParts[6].c_str());
+  return Fmi::stoi(paramParts[6]);
 }
 
 }  // namespace Download

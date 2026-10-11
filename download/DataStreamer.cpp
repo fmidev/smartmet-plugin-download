@@ -4546,7 +4546,7 @@ void DataStreamer::getGridProjection(const QueryServer::Query &gridQuery)
     {
       if (! itsReqParams.geometryId.empty())
       {
-        auto geometryId = atoi(itsReqParams.geometryId.c_str());
+        auto geometryId = Fmi::stoi(itsReqParams.geometryId);
         auto def = Identification::gridDef.getGrib2DefinitionByGeometryId(geometryId);
 
         if (!def)

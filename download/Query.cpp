@@ -209,7 +209,7 @@ int Query::parseIntValue(const string &paramName, const string &fieldName, const
   if (strspn(cp, "1234567890") != length)
     throw Fmi::Exception::Trace(BCP, paramName + ": Invalid " + fieldName + " value " + fieldValue);
 
-  auto v = atoi(fieldValue.c_str());
+  auto v = Fmi::stoi(fieldValue);
 
   if ((maxValue > 0) && (v > maxValue))
     throw Fmi::Exception::Trace(

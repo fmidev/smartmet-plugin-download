@@ -85,9 +85,16 @@ void NetCdfStreamer::removeStaleTemporaryFiles(const std::string &theDirectory)
     for (const auto &entry : std::filesystem::directory_iterator(theDirectory, ec))
     {
       const auto name = entry.path().filename().string();
-      int pid = 0;
-      if (std::sscanf(name.c_str(), "dls_%d_", &pid) != 1 || pid <= 0)
+      // Temporary files are named dls_<pid>_...
+      if (name.compare(0, 4, "dls_") != 0)
         continue;
+      const auto underscore = name.find('_', 4);
+      if (underscore == std::string::npos)
+        continue;
+      const auto parsed = Fmi::stoi_opt(name.substr(4, underscore - 4));
+      if (!parsed || *parsed <= 0)
+        continue;
+      const int pid = *parsed;
 
       if (pid == getpid() || kill(pid, 0) == 0 || errno != ESRCH)
         continue;
