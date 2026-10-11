@@ -90,21 +90,21 @@ using Producers = std::map<std::string, Producer>;
  */
 // ----------------------------------------------------------------------
 
-typedef enum
+enum DataSource
 {
   QueryData,
   GridMapping,  // Using newbase names and grid engine mappings
   GridContent   // Using radon names and content server data
-} DataSource;
+};
 
-typedef enum
+enum OutputFormat
 {
   Grib1,
   Grib2,
   NetCdf,
   QD,
   GeoTiff
-} OutputFormat;
+};
 
 using BBox = std::optional<std::vector<std::pair<double, double>>>;
 using GridSize = std::optional<std::vector<std::pair<unsigned int, unsigned int>>>;
@@ -112,7 +112,7 @@ using GridStep = std::optional<std::vector<std::pair<unsigned int, unsigned int>
 using GridResolution = std::optional<std::vector<std::pair<double, double>>>;
 using GridCenter = std::optional<std::vector<std::pair<double, double>>>;
 
-typedef enum
+enum ProjType
 {
   P_Native,
   P_LatLon,
@@ -122,8 +122,8 @@ typedef enum
   P_TransverseMercator,
   P_LambertConformalConic,
   P_Epsg
-} ProjType;
-typedef enum
+};
+enum AreaClassId
 {
   A_Native = -9999999,
   A_LatLon = kNFmiLatLonArea,
@@ -132,7 +132,7 @@ typedef enum
   A_Mercator = kNFmiMercatorArea,
   A_TransverseMercator = kNFmiYKJArea,
   A_LambertConformalConic = kNFmiLambertConformalConicArea
-} AreaClassId;
+};
 using EpsgCode = unsigned long;
 
 struct ReqParams
