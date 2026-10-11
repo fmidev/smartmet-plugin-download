@@ -86,7 +86,18 @@ test-coverages: $(TEST_PREPARE_TARGETS)
 	@echo "*** (requests: test/input-coverages, failures: test/failures)   ***"
 	@echo "*******************************************************************"
 	@echo ""
-	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM_COV) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); $$ok
+	ok=true; $(TEST_RUNNER) smartmet-plugin-test $(TESTER_PARAM_COV) || ok=false; $(MAKE) $(TEST_FINISH_TARGETS); \
+	$(MAKE) validate-openapi && $$ok
+
+# The generated OpenAPI definition is validated against the OpenAPI 3.1 schema in schemas/,
+# and every successful /coverages test request must be described by it: an operation matches
+# the path, the values are in the enums and all the parameters are declared.
+validate-openapi:
+	@if command -v python3 >/dev/null; then \
+	   python3 validate-openapi.py output/coverages_api.get:input-coverages::output; \
+	 else \
+	   echo "python3 not available, skipping OpenAPI validation"; \
+	 fi
 
 test-grid: $(TEST_PREPARE_TARGETS)
 	ok=true
@@ -128,4 +139,4 @@ stop-redis-db:
 .dummy:
 	true
 
-.PHONY: geonames.conf
+.PHONY: geonames.conf validate-openapi

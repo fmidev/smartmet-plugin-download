@@ -5,7 +5,8 @@
  *        Handles /coverages requests following the OGC API - Coverages
  *        standard (OGC 19-087).  Provides REST endpoints for collection
  *        metadata, schema, conformance and coverage data retrieval with
- *        subsetting, field selection, scaling and CRS reprojection.
+ *        subsetting, field selection, scaling and CRS reprojection, and the
+ *        generated OpenAPI definition (/coverages/api, /coverages/api/docs).
  */
 // ======================================================================
 
@@ -16,7 +17,9 @@
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
 #include <spine/HTTP.h>
+#include <spine/OpenApi.h>
 #include <spine/Reactor.h>
+#include <memory>
 
 namespace SmartMet
 {
@@ -62,6 +65,9 @@ class CoveragesHandler
   Engine::Querydata::Engine *itsQEngine = nullptr;
   Engine::Grid::Engine *itsGridEngine = nullptr;
   Engine::Geonames::Engine *itsGeoEngine = nullptr;
+
+  // The generated OpenAPI definition (/coverages/api), null if disabled
+  std::unique_ptr<Spine::OpenAPI::Publisher> itsApi;
 };
 
 }  // namespace Download

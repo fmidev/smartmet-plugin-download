@@ -23,6 +23,8 @@ All endpoints are accessed with HTTP GET. Metadata endpoints return JSON
 | `/coverages/collections/{collectionId}` | Metadata for a single collection |
 | `/coverages/collections/{collectionId}/schema` | Field (parameter) schema |
 | `/coverages/collections/{collectionId}/coverage` | Coverage data retrieval |
+| `/coverages/api` | OpenAPI 3.1 definition of the interface (`f=html` for the documentation) |
+| `/coverages/api/docs` | Documentation page rendered by Swagger UI |
 
 A *collection* corresponds to a producer in download plugin terms: the
 collection list is generated from the producers in the plugin configuration,
@@ -41,6 +43,36 @@ The conformance declaration lists the implemented conformance classes:
 - OGC API Coverages 1 — Field Selection
 - OGC API Coverages 1 — Scaling
 - OGC API Coverages 1 — CRS
+
+## API definition
+
+`/coverages/api` returns an OpenAPI 3.1 definition generated from the plugin
+configuration: the collections, the output formats each producer allows, the
+OGC parameters and the download plugin options accepted as extensions (marked
+`x-fmi-extension`). The landing page links it with `rel=service-desc`, and the
+documentation page `/coverages/api/docs` with `rel=service-doc`.
+
+The documentation page shows the executed request with its full URL, and as bash (curl),
+Python, R and JavaScript snippets. When the request has a time window (`datetime=start/end`,
+or `starttime` and `endtime`), the bash, Python, R and JavaScript
+"loop" snippets are scripts which repeat the request for consecutive days, weeks, months or
+years and save each response to a file; each period ends one second before the next one
+starts. The scripts use only curl and GNU date, the Python standard library, base R (4.0 or
+newer) and Node.js (18 or newer). JSON and XML responses are shown as a collapsible tree (nodes are
+built when opened and long arrays in pages of 200), with the original text view available. The
+documentation is rendered by Swagger UI, whose files are served by the plugin
+from a local directory (package `smartmet-swagger-ui`):
+
+```
+openapi:
+{
+	enabled            = true;   # default true
+	ui                 = true;   # serve /coverages/api/docs, default true
+	swagger_ui_dir     = "/usr/share/smartmet/swagger-ui";
+	expand_collections = true;   # describe each collection with its output formats
+	max_enum           = 1000;   # longer value lists are not listed
+};
+```
 
 ## Coverage retrieval parameters
 
@@ -206,9 +238,14 @@ Responses use chunked HTTP streaming, so large downloads start immediately.
 
 ## Error handling
 
+Errors are returned as RFC 7807 problem details
+(`Content-Type: application/problem+json`, members `title`, `status` and
+`detail`), as OGC API – Common specifies:
+
 - Unknown resource paths return `404 Not Found`.
-- Request processing errors return `400 Bad Request` with the error message
-  (truncated to 300 characters) in the `X-Download-Error` response header.
+- Request processing errors return `400 Bad Request`. The error message
+  (truncated to 300 characters) is also in the `X-Download-Error` response
+  header.
 
 ## Examples
 
