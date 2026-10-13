@@ -35,7 +35,7 @@ class DownloadHandler
             Engine::Grid::Engine *gridEngine,
             Engine::Geonames::Engine *geoEngine);
 
-  void requestHandler(Spine::Reactor &theReactor,
+  void requestHandler(const Spine::Reactor& theReactor,
                       const Spine::HTTP::Request &theRequest,
                       Spine::HTTP::Response &theResponse);
 

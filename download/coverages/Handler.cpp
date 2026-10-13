@@ -927,7 +927,7 @@ static void notFound(const Spine::HTTP::Request &theRequest, Spine::HTTP::Respon
                      "Unknown resource: " + theRequest.getResource());
 }
 
-void CoveragesHandler::requestHandler(Spine::Reactor & /* theReactor */,
+void CoveragesHandler::requestHandler(const Spine::Reactor& /* theReactor */,
                                       const Spine::HTTP::Request &theRequest,
                                       Spine::HTTP::Response &theResponse)
 {

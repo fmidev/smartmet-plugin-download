@@ -546,7 +546,7 @@ void DownloadHandler::init(Config &config,
  */
 // ----------------------------------------------------------------------
 
-void DownloadHandler::requestHandler(Spine::Reactor & /* theReactor */,
+void DownloadHandler::requestHandler(const Spine::Reactor& /* theReactor */,
                                      const Spine::HTTP::Request &theRequest,
                                      Spine::HTTP::Response &theResponse)
 {

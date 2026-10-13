@@ -52,7 +52,7 @@ class Config
 
   const std::string& getTempDirectory() const { return itsTempDirectory; }
   const libconfig::Config& config() const { return itsConfig; }
-  unsigned int getGrib2TablesVersionDefault() { return itsGrib2TablesVersionDefault; }
+  unsigned int getGrib2TablesVersionDefault() const { return itsGrib2TablesVersionDefault; }
   std::pair<unsigned int, unsigned int> getGrib2TablesVersionRange() const
   {
     return std::make_pair(itsGrib2TablesVersionMin, itsGrib2TablesVersionMax);

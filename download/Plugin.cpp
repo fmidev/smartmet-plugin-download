@@ -49,7 +49,7 @@ void Plugin::requestHandler(Spine::Reactor &theReactor,
  */
 // ----------------------------------------------------------------------
 
-void Plugin::coveragesRequestHandler(Spine::Reactor &theReactor,
+void Plugin::coveragesRequestHandler(const Spine::Reactor& theReactor,
                                      const Spine::HTTP::Request &theRequest,
                                      Spine::HTTP::Response &theResponse)
 {
