@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.10.9
-Release: 2%{?dist}.fmi
+Version: 26.10.14
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -107,6 +107,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Wed Oct 14 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.14-1.fmi
+- Temporary kludge to timestep calculations to get around a bug in radon database
+
 * Fri Oct 09 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.9-2.fmi
 - Fixed gridresolution to resample grid data, it was ignored (BRAINSTORM-3518)
 - Fixed crash when geometryid refers to an unknown grid geometry (BRAINSTORM-3518)
