@@ -255,7 +255,7 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
     {
       if (!gridEngine)
         throw Fmi::Exception(BCP, "Grid data is not available");
-      else if (!(gridEngine->isEnabled()))
+      if (!(gridEngine->isEnabled()))
         throw Fmi::Exception(BCP, "Grid data is disabled");
     }
 
@@ -484,7 +484,8 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
       // Check against valid range. The default range is [0-0] letting all values thru
       //
       auto range = config.getGrib2TablesVersionRange();
-      auto grib2TablesVersionMin = range.first, grib2TablesVersionMax = range.second;
+      auto grib2TablesVersionMin = range.first;
+      auto grib2TablesVersionMax = range.second;
 
       if ((grib2TablesVersionMax > 0) && ((reqParams.grib2TablesVersion < grib2TablesVersionMin) ||
                                           (reqParams.grib2TablesVersion > grib2TablesVersionMax)))
@@ -574,7 +575,8 @@ void DownloadHandler::requestHandler(const Spine::Reactor& /* theReactor */,
 
       auto now = getRequestParam(theRequest, producer, "now", "");
 
-      Fmi::DateTime startTime, endTime;
+      Fmi::DateTime startTime;
+      Fmi::DateTime endTime;
 
       if ((!reqParams.startTime.empty()) || (!now.empty()))
         startTime = query.tOptions.startTime;

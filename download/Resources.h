@@ -50,10 +50,10 @@ class Resources
 
   NFmiGrid *getGrid(const NFmiArea &a, std::size_t gsX, std::size_t gsY);
   NFmiGrid *getGrid() const { return grid.get(); }
-  OGRSpatialReference *cloneGeogCS(const OGRSpatialReference &, bool isGeometrySRS = false);
-  OGRSpatialReference *cloneCS(const OGRSpatialReference &, bool isGeometrySRS = false);
-  OGRCoordinateTransformation *getCoordinateTransformation(OGRSpatialReference *,
-                                                           OGRSpatialReference *,
+  OGRSpatialReference* cloneGeogCS(const OGRSpatialReference& /*SRS*/, bool isGeometrySRS = false);
+  OGRSpatialReference* cloneCS(const OGRSpatialReference& /*SRS*/, bool isGeometrySRS = false);
+  OGRCoordinateTransformation* getCoordinateTransformation(OGRSpatialReference* /*fromSRS*/,
+                                                           OGRSpatialReference* /*toSRS*/,
                                                            bool isGeometrySRS = false);
   OGRSpatialReference *getGeometrySRS() const { return geometrySRS; }
 

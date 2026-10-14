@@ -74,7 +74,7 @@ std::string GeoTiffStreamer::getChunk()
           // Collect all slices into raster bands. 'chunk' serves only as 'end of data' indicator;
           // the actual values are read from 'itsGridValues' (querydata) or the grid query result.
 
-          do
+          for (bool more = true; more; more = !itsLoadedFlag)
           {
             extractData(chunk);
 
@@ -82,7 +82,7 @@ std::string GeoTiffStreamer::getChunk()
               itsLoadedFlag = true;
             else
               storeBand();
-          } while (!itsLoadedFlag);
+          }
 
           if (itsBands.empty())
             throw Fmi::Exception(BCP, "No data to write to GeoTIFF");
@@ -161,12 +161,12 @@ void GeoTiffStreamer::captureGeometry(const Engine::Querydata::Q& q,
     bool projected = (classId != kNFmiLatLonArea);
     bool datumShift = (itsReqParams.datumShift != Datum::DatumShift::None);
 
-    size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0),
-           y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
-           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0);
+    size_t y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     // Corner cell-center coordinates in the target spatial reference. For latlon output the
     // "world" coordinates are lon/lat degrees, otherwise projected metres.
@@ -252,9 +252,10 @@ void GeoTiffStreamer::captureGridGeometry(const QueryServer::Query& gridQuery)
     if (itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon)
       throw Fmi::Exception(BCP, "GeoTIFF output is not supported for rotated latlon geometry");
 
-    size_t xN = itsReqGridSizeX, yN = itsReqGridSizeY;
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t xN = itsReqGridSizeX;
+    size_t yN = itsReqGridSizeY;
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     OGRSpatialReference* geometrySRS = itsResources.getGeometrySRS();
 
@@ -272,7 +273,8 @@ void GeoTiffStreamer::captureGridGeometry(const QueryServer::Query& gridQuery)
     // Corner cell-center coordinates in the target spatial reference. The grid query coordinates
     // are geographic (lon/lat); for projected output they are transformed to the target CRS.
 
-    NFmiPoint p0, pN;
+    NFmiPoint p0;
+    NFmiPoint pN;
 
     if (projected)
     {
@@ -343,10 +345,11 @@ void GeoTiffStreamer::storeBand()
   try
   {
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
+    size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
     size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     Band band;
     band.values.resize(itsWidth * itsHeight);

@@ -231,7 +231,8 @@ pair<int, int> Query::parseIntRange(const string &paramName, const string &field
                                     const string &fieldValue, size_t delimPos,
                                     bool negativeValueValid, int maxValue)
 {
-  int lo = 0, hi = 0;
+  int lo = 0;
+  int hi = 0;
 
   if ((delimPos > 0) && (delimPos < (fieldValue.length() - 1)))
   {
@@ -372,7 +373,9 @@ bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS
   try
   {
     vector<string> paramParts;
-    string commonOriginTime = originTime, param, funcParamDef;
+    string commonOriginTime = originTime;
+    string param;
+    string funcParamDef;
     bool hasFuncParam = false;
 
     for (const string &paramDef : params)
@@ -536,8 +539,10 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
   try
   {
     vector<string> paramParts;
-    string paramName, funcParamDef;
-    list<pair<int, int>> levelRanges, forecastNumberRanges;
+    string paramName;
+    string funcParamDef;
+    list<pair<int, int>> levelRanges;
+    list<pair<int, int>> forecastNumberRanges;
 
     parseParameterLevelAndForecastNumberRanges(
         paramDef, gribOutput, paramName, funcParamDef, paramParts, levelRanges,
@@ -582,7 +587,8 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     T::ContentInfoList contentInfoList;
     map<T::ParamLevel, ParameterContents::iterator> levels;
 
-    Fmi::DateTime sTime, eTime;
+    Fmi::DateTime sTime;
+    Fmi::DateTime eTime;
     if (!tOptions.startTimeData)
       sTime = tOptions.startTime;
     if (!tOptions.endTimeData)

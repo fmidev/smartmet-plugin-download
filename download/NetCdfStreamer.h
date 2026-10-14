@@ -47,8 +47,8 @@ class NetCdfStreamer : public DataStreamer
   //
 
   void getGridDataChunk(const QueryServer::Query& gridQuery,
-                        int,
-                        const NFmiMetTime&,
+                        int /*level*/,
+                        const NFmiMetTime& /*mt*/,
                         std::string& chunk) override;
 
  private:

@@ -205,9 +205,14 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
 
     NFmiDataMatrix<float> croppedValues(itsCropping.gridSizeX, itsCropping.gridSizeY);
 
-    std::size_t x0 = itsCropping.bottomLeftX, y0 = itsCropping.bottomLeftY;
-    std::size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx = 0, cy = 0,
-                x = 0, y = 0;
+    std::size_t x0 = itsCropping.bottomLeftX;
+    std::size_t y0 = itsCropping.bottomLeftY;
+    std::size_t xN = x0 + itsCropping.gridSizeX;
+    std::size_t yN = y0 + itsCropping.gridSizeY;
+    std::size_t cx = 0;
+    std::size_t cy = 0;
+    std::size_t x = 0;
+    std::size_t y = 0;
 
     for (y = y0, cy = 0; (y < yN); y++, cy++)
       for (x = x0, cx = 0; (x < xN); x++, cx++)

@@ -182,8 +182,7 @@ double getProjParam(const OGRSpatialReference &srs,
     {
       if (ignoreErr)
         return defaultValue;
-      else
-        throw Fmi::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
+      throw Fmi::Exception(BCP, string("Getting projection parameter '") + param + "' failed");
     }
 
     return v;

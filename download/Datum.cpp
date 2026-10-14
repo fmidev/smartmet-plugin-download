@@ -155,11 +155,11 @@ void getHelmertTransformationParameters(DatumShift datumShift,
         (datumShift == DatumShift::HPPreserveSNScale))
     {
       enum Fmi::HelmertTransformation::FmiSphereConvScalingType scalingType =
-          ((datumShift == DatumShift::HPNoScale)
-               ? Fmi::HelmertTransformation::FMI_SPHERE_NO_SCALING
-               : ((datumShift == DatumShift::HPPreserveEWScale)
-                      ? Fmi::HelmertTransformation::FMI_SPHERE_PRESERVE_EAST_WEST_SCALE
-                      : Fmi::HelmertTransformation::FMI_SPHERE_PRESERVE_SOUTH_NORTH_SCALE));
+          Fmi::HelmertTransformation::FMI_SPHERE_PRESERVE_SOUTH_NORTH_SCALE;
+      if (datumShift == DatumShift::HPNoScale)
+        scalingType = Fmi::HelmertTransformation::FMI_SPHERE_NO_SCALING;
+      else if (datumShift == DatumShift::HPPreserveEWScale)
+        scalingType = Fmi::HelmertTransformation::FMI_SPHERE_PRESERVE_EAST_WEST_SCALE;
       towgs84 = Fmi::get_fmi_sphere_towgs84_proj4_string(R0, GR * lat0, GR * lon0, scalingType);
     }
     else

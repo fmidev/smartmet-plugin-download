@@ -194,7 +194,8 @@ void Config::setEnvSettings()
 
         for (; i < settings.getLength(); ++i)
         {
-          string var(settings[i].getName()), val = settings[i];
+          string var(settings[i].getName());
+          string val = settings[i];
 
           boost::trim(val);
           setenv(var.c_str(), val.c_str(), 1);
@@ -258,7 +259,8 @@ void Config::parseConfigProducers(
       // Get all querydata producers
       //
       const Engine::Querydata::ProducerList& prodList = querydata.producers();
-      auto prBeg = prodList.begin(), prEnd = prodList.end();
+      auto prBeg = prodList.begin();
+      auto prEnd = prodList.end();
       auto& enabled = itsConfig.lookup("producers").add("enabled", libconfig::Setting::TypeArray);
 
       int i = 0;
@@ -394,8 +396,8 @@ Config::Config(const string& configfile)
     if (itsConfig.exists("grib2.tablesversion.default"))
       itsConfig.lookupValue("grib2.tablesversion.default", itsGrib2TablesVersionDefault);
 
-    bool hasMin = itsConfig.exists("grib2.tablesversion.min"),
-         hasMax = itsConfig.exists("grib2.tablesversion.max");
+    bool hasMin = itsConfig.exists("grib2.tablesversion.min");
+    bool hasMax = itsConfig.exists("grib2.tablesversion.max");
 
     if (hasMin != hasMax)
       throw Fmi::Exception(BCP,

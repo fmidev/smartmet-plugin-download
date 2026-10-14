@@ -405,7 +405,8 @@ ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bo
     if (!in)
       throw Fmi::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
 
-    std::string content, errors;
+    std::string content;
+    std::string errors;
     content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
 
     if (!reader->parse(content.c_str(), content.c_str() + content.size(), &theJson, &errors))
@@ -425,7 +426,9 @@ ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bo
         throw Fmi::Exception(BCP, "JSON object expected at array index " + Fmi::to_string(i));
 
       ParamChangeItem p;
-      std::string paramName, radonName, pathName;
+      std::string paramName;
+      std::string radonName;
+      std::string pathName;
       uint paramId = 0;
 
       const auto members = paramJson.getMemberNames();

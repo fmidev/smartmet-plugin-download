@@ -417,14 +417,15 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId& geometryId
     {
       bool interpolatable =
           (isPressureLevel(ds->itsLevelType) && ds->itsProducer.verticalInterpolation);
-      bool exactLevel = isSurfaceLevel(ds->itsLevelType), first = true;
+      bool exactLevel = isSurfaceLevel(ds->itsLevelType);
+      bool first = true;
 
       for (; ((!exactLevel) && (levelTimes != geomLevels->second.end()));
            first = false, levelTimes++)
       {
         if ((exactLevel = (levelTimes->first == *(ds->itsLevelIterator))))
           break;
-        else if (*ds->itsLevelIterator < levelTimes->first)
+        if (*ds->itsLevelIterator < levelTimes->first)
         {
           // Interpolatable if between data levels, data is interpolatable and interpolation is
           // allowed
@@ -610,7 +611,8 @@ const string& DataStreamer::GridMetaData::getLatestOriginTime(Fmi::DateTime* ori
 
     if (validTime)
     {
-      Fmi::DateTime firstTime, lastTime;
+      Fmi::DateTime firstTime;
+      Fmi::DateTime lastTime;
       long timeStep = 0;
 
       for (; ott != originTimeTimes.rend(); ott++)
@@ -1259,9 +1261,11 @@ bool DataStreamer::hasRequestedGridData(const Producer& producer,
 
     Engine::Grid::Times validTimes;
     string originTimeStr(oTime.is_not_a_date_time() ? "" : to_iso_string(oTime));
-    string forecastType, forecastNumber;
+    string forecastType;
+    string forecastNumber;
     size_t nMissingParam = 0;
-    bool gridContent = (itsReqParams.dataSource == GridContent), hasFuncParam = false;
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+    bool hasFuncParam = false;
 
     if (gridContent)
       itsReqParams.producer.clear();
@@ -1378,7 +1382,7 @@ bool DataStreamer::hasRequestedGridData(const Producer& producer,
               // Level type must not change, except allow ground and height (e.g. 2m) above ground
               //
               // clang-format off
-              else if (
+              if (
                        (
                         (paramLevelId != GridFmiLevelTypeNone) &&
                         (pm.mParameterLevelId != paramLevelId)
@@ -1419,7 +1423,7 @@ bool DataStreamer::hasRequestedGridData(const Producer& producer,
           {
             if ((!originTimeStr.empty()) && (originTimeStr != dataTimes.first))
               continue;
-            else if (dataTimes.second.empty())
+            if (dataTimes.second.empty())
               throw Fmi::Exception(BCP,
                                    "GridMetaData: Mapping with no validtimes: " + param.name());
 
@@ -1638,8 +1642,7 @@ bool DataStreamer::hasRequestedData(const Producer& producer,
           {
             if (itsRisingLevels)
               continue;
-            else
-              break;
+            break;
           }
         }
 
@@ -1722,7 +1725,10 @@ void DataStreamer::getRegLLBBox(const Engine::Querydata::Q& q)
     // bounding box. Alternatively anyone using this method should switch to using WGS84
     // bboxes.
 
-    double blLon = 0.0, blLat = 0.0, trLon = 0.0, trLat = 0.0;
+    double blLon = 0.0;
+    double blLat = 0.0;
+    double trLon = 0.0;
+    double trLat = 0.0;
     std::size_t gridSizeX = q->grid().XNumber();
     std::size_t gridSizeY = q->grid().YNumber();
 
@@ -1733,7 +1739,8 @@ void DataStreamer::getRegLLBBox(const Engine::Querydata::Q& q)
       {
         const NFmiPoint& p = q->latLon(n);
 
-        auto px = p.X(), py = p.Y();
+        auto px = p.X();
+        auto py = p.Y();
 
         if (n == 0)
         {
@@ -1793,17 +1800,25 @@ void DataStreamer::getBBox(const Engine::Querydata::Q& q,
 
     const auto worldRect = sourceArea.WorldRect();
     const auto& grid = q->grid();
-    size_t gridSizeX = grid.XNumber(), x = 0;
-    size_t gridSizeY = grid.YNumber(), y = 0;
+    size_t gridSizeX = grid.XNumber();
+    size_t x = 0;
+    size_t gridSizeY = grid.YNumber();
+    size_t y = 0;
     auto dX = (worldRect.Right() - worldRect.Left()) / (gridSizeX - 1);
     auto dY = (worldRect.Top() - worldRect.Bottom()) / (gridSizeY - 1);
-    double blX = 0.0, blY = 0.0, trX = 0.0, trY = 0.0, xc = NAN, yc = NAN;
+    double blX = 0.0;
+    double blY = 0.0;
+    double trX = 0.0;
+    double trY = 0.0;
+    double xc = NAN;
+    double yc = NAN;
     bool first = true;
 
     for (y = 1, yc = worldRect.Bottom(); (y <= gridSizeY); y++, yc += dY)
       for (x = 1, xc = worldRect.Left(); (x <= gridSizeX);)
       {
-        double txc = xc, tyc = yc;
+        double txc = xc;
+        double tyc = yc;
 
         if (!(ct->Transform(1, &txc, &tyc)))
           throw Fmi::Exception(BCP, "Transform failed");
@@ -1863,7 +1878,10 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
         throw Fmi::Exception(BCP, "OGRCreateCoordinateTransformation failed");
     }
 
-    double blX = NAN, blY = NAN, trX = NAN, trY = NAN;
+    double blX = NAN;
+    double blY = NAN;
+    double trX = NAN;
+    double trY = NAN;
 
     if (itsReqParams.bbox.empty())
     {
@@ -1896,7 +1914,8 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
       if (targetLLSRS)
       {
         double c[] = {blX, blY, blX, trY, trX, trY, trX, blY};
-        double *x = c, *y = c + 1;
+        double* x = c;
+        double* y = c + 1;
 
         for (int i = 0; (i < 4); i++, x += 2, y += 2)
         {
@@ -2076,10 +2095,10 @@ void DataStreamer::setSteppedGridSize()
 {
   try
   {
-    size_t xCnt = (itsCropping.cropped ? itsCropping.gridSizeX : itsReqGridSizeX),
-           yCnt = (itsCropping.cropped ? itsCropping.gridSizeY : itsReqGridSizeY);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t xCnt = (itsCropping.cropped ? itsCropping.gridSizeX : itsReqGridSizeX);
+    size_t yCnt = (itsCropping.cropped ? itsCropping.gridSizeY : itsReqGridSizeY);
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     itsNX = xCnt / xStep;
     itsNY = yCnt / yStep;
@@ -2130,7 +2149,8 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea& area,
 {
   try
   {
-    size_t gridSizeX = 0, gridSizeY = 0;
+    size_t gridSizeX = 0;
+    size_t gridSizeY = 0;
 
     if (itsReqParams.gridSizeXY)
     {
@@ -2405,7 +2425,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 {
   try
   {
-    OGRSpatialReference qdProjectedSrs, *qdLLSrsPtr = nullptr;
+    OGRSpatialReference qdProjectedSrs;
+    OGRSpatialReference* qdLLSrsPtr = nullptr;
     OGRErr err = 0;
 
     // qd projected (or latlon/geographic) cs
@@ -2435,8 +2456,9 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     //  else
     //    qdLLSrsPtr->SetTOWGS84(0, 0, 0, 0, 0, 0, 0);
 
-    OGRSpatialReference wgs84ProjectedSrs, *wgs84PrSrsPtr = &wgs84ProjectedSrs,
-                                           *wgs84LLSrsPtr = &wgs84ProjectedSrs;
+    OGRSpatialReference wgs84ProjectedSrs;
+    OGRSpatialReference* wgs84PrSrsPtr = &wgs84ProjectedSrs;
+    OGRSpatialReference* wgs84LLSrsPtr = &wgs84ProjectedSrs;
     bool wgs84ProjLL = false;
     bool qdProjLL = (area->SpatialReference().isGeographic() ||
                      (area->AreaStr().find("rotlatlon") != string::npos));
@@ -2558,7 +2580,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
     using sz_t = NFmiDataMatrix<float>::size_type;
-    double xc = NAN, yc = NAN;
+    double xc = NAN;
+    double yc = NAN;
 
     NFmiPoint bl = itsBoundingBox.bottomLeft;
     NFmiPoint tr = itsBoundingBox.topRight;
@@ -2568,7 +2591,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     const sz_t ys = itsSrcLatLons.height();
     const sz_t xN = xs - 1;
     const sz_t yN = ys - 1;
-    sz_t x = 0, y = 0;
+    sz_t x = 0;
+    sz_t y = 0;
 
     if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
     {
@@ -2667,7 +2691,8 @@ void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea* area)
     {
       // Set geometry
       //
-      NFmiPoint bl, tr;
+      NFmiPoint bl;
+      NFmiPoint tr;
 
       // TODO: Why itsCropping.cropped tested with DatumShift::None ?
       //
@@ -2867,9 +2892,10 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(const Engine::Querydata:
     {
       bool hasReqLevel = (reqLevel != itsSortedDataLevels.end());
       bool isNativeLevel = ((!hasReqLevel) || (q->levelValue() == *reqLevel));
-      bool isInterpolatedLevel = (isNativeLevel || (!levelInterpolation)) ? (!hasReqLevel)
-                                 : itsRisingLevels ? (q->levelValue() > *reqLevel)
-                                                   : (q->levelValue() < *reqLevel);
+      bool isInterpolatedLevel = (!hasReqLevel);
+      if (!isNativeLevel && levelInterpolation)
+        isInterpolatedLevel =
+            itsRisingLevels ? (q->levelValue() > *reqLevel) : (q->levelValue() < *reqLevel);
 
       if (isInterpolatedLevel && prevNativeLevel)
         lbag.AddLevel(*prevNativeLevel);
@@ -2892,18 +2918,20 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(const Engine::Querydata:
       else
         prevNativeLevel = q->level();
 
-      float level1 = 0, level2 = 0;
+      float level1 = 0;
+      float level2 = 0;
 
       // Skip requested levels preceeding current native level
 
-      do
+      for (bool more = true; more;
+           more = (!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2))
       {
         if ((++reqLevel != itsSortedDataLevels.end()) && (!isNativeLevel))
         {
           level1 = (itsRisingLevels ? q->levelValue() : *reqLevel);
           level2 = (itsRisingLevels ? *reqLevel : q->levelValue());
         }
-      } while ((!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2));
+      }
     }
 
     if (lbag.GetSize() == 0)
@@ -3121,13 +3149,15 @@ void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
     FmiParameterName id = q->parameterName();
 
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
-           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
+    size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
-           y = 0;
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t x = 0;
+    size_t y = 0;
 
     if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
     {
@@ -3185,7 +3215,8 @@ void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
       for (y = y0; (y < yN); y += yStep)
         for (x = x0; (x < xN); x += xStep)
         {
-          float *vPtr = vPtr0 + ((y * xs) + x), *uPtr = uPtr0 + ((y * xs) + x);
+          float* vPtr = vPtr0 + ((y * xs) + x);
+          float* uPtr = uPtr0 + ((y * xs) + x);
           double value = kFloatMissing;
 
           if ((*uPtr != kFloatMissing) && (*vPtr != kFloatMissing))
@@ -4151,7 +4182,10 @@ void DataStreamer::getGridSizeByResolution(size_t& gridSizeX, size_t& gridSizeY)
       {
         // Span of the latlon bbox in native grid cells
 
-        double minI = 0, maxI = 0, minJ = 0, maxJ = 0;
+        double minI = 0;
+        double maxI = 0;
+        double minJ = 0;
+        double maxJ = 0;
         bool first = true;
 
         for (const auto& corner : {std::make_pair(x1, y1),
@@ -5286,8 +5320,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
                            "Grid size " + Fmi::to_string(vVec->size()) + " and width/height " +
                                Fmi::to_string(gridSizeX) + "/" + Fmi::to_string(gridSizeY) +
                                " mismatch");
-    else if (itsReqParams.gridSizeXY &&
-             ((gridSizeX != itsReqGridSizeX) || (gridSizeY != itsReqGridSizeY)))
+    if (itsReqParams.gridSizeXY &&
+        ((gridSizeX != itsReqGridSizeX) || (gridSizeY != itsReqGridSizeY)))
       throw Fmi::Exception(BCP,
                            "Invalid grid width/height " + Fmi::to_string(gridSizeX) + "/" +
                                Fmi::to_string(gridSizeY) + ", expecting " +
@@ -5326,8 +5360,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
     //
     // TODO: bbox should also be adjusted if axis dimension is not multipe of step
 
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
     if ((itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
         (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon) && (itsDX < 100) &&

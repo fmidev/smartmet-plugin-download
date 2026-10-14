@@ -161,7 +161,7 @@ std::string NetCdfStreamer::getChunk()
           // Note: the data is loaded from 'itsGridValues'; 'chunk' serves only as 'end of data'
           // indicator.
           //
-          do
+          for (bool more = true; more; more = !itsLoadedFlag)
           {
             extractData(chunk);
 
@@ -169,7 +169,7 @@ std::string NetCdfStreamer::getChunk()
               itsLoadedFlag = true;
             else
               storeParamValues();
-          } while (!itsLoadedFlag);
+          }
 
           // Then outputting the file/data in chunks
           //
@@ -412,7 +412,7 @@ int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime& t2, long timeSte
 
       return ((td.hours() * 60) + td.minutes()) / 60;
     }
-    else if (timeStep == DataStreamer::minutesInDay)
+    if (timeStep == DataStreamer::minutesInDay)
     {
       auto dd = t1.date() - t2.date();
       return dd;
@@ -557,7 +557,7 @@ string getPeriodName(long periodLengthInMinutes)
   {
     if (periodLengthInMinutes < 60)
       return boost::lexical_cast<string>(periodLengthInMinutes) + "min";
-    else if (periodLengthInMinutes == 60)
+    if (periodLengthInMinutes == 60)
       return "h";
     else if ((periodLengthInMinutes < DataStreamer::minutesInDay) &&
              ((DataStreamer::minutesInDay % periodLengthInMinutes) == 0))
@@ -982,7 +982,10 @@ void NetCdfStreamer::addLevelDimensions()
 
     // Clear duplicate level sets to use the same dimension variable for the parameters
 
-    string levelTypeName, levelDirectionPositive, varName, unit;
+    string levelTypeName;
+    string levelDirectionPositive;
+    string varName;
+    string unit;
     size_t nDims = 0;
 
     for (auto itlt = levelTypeLevels.begin(); (itlt != levelTypeLevels.end()); itlt++)
@@ -1059,7 +1062,9 @@ void NetCdfStreamer::addLevelDimension()
     if (isSurfaceLevel(itsLevelType))
       return;
 
-    string name, positive, unit;
+    string name;
+    string positive;
+    string unit;
     getLevelTypeAttributes(itsLevelType, name, positive, unit);
 
     auto levelVar =
@@ -1097,9 +1102,11 @@ void NetCdfStreamer::setSpheroidAndWKT(const NcVar &crsVar,
 {
   try
   {
-    string srsWKT = (geometrySRS ? getWKT(geometrySRS) : ""), ellipsoid;
+    string srsWKT = (geometrySRS ? getWKT(geometrySRS) : "");
+    string ellipsoid;
     const string &WKT = (geometrySRS ? srsWKT : areaWKT);
-    double radiusOrSemiMajor = NAN, invFlattening = NAN;
+    double radiusOrSemiMajor = NAN;
+    double invFlattening = NAN;
 
     extractSpheroidFromGeom(geometrySRS, areaWKT, ellipsoid, radiusOrSemiMajor, invFlattening);
 
@@ -1174,7 +1181,9 @@ void NetCdfStreamer::setStereographicGeometry(const NcVar &crsVar,
   try
   {
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
-    double lon_0 = NAN, lat_0 = NAN, lat_ts = NAN;
+    double lon_0 = NAN;
+    double lat_0 = NAN;
+    double lat_ts = NAN;
 
     if ((!geometrySRS) && (!area))
       throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
@@ -1359,7 +1368,8 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
       // (N or S) is provided first
 
       double latin2 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_2);
-      double sp1 = latin1, sp2 = latin2;
+      double sp1 = latin1;
+      double sp2 = latin2;
 
       if (((latin1 >= 0) && (latin2 >= 0) && (latin1 < latin2)) ||
           ((latin1 <= 0) && (latin2 <= 0) && (latin1 > latin2)))
@@ -1444,19 +1454,24 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
 
     bool projected = (classId != kNFmiLatLonArea);
 
-    size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0),
-           y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
-           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
-           y = 0, n = 0;
-    size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
-           nLon = (projected ? (itsNY * itsNX) : itsNX);
-    std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
-    double *lat = latPtr.get(), *lon = lonPtr.get();
+    size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0);
+    size_t y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t x = 0;
+    size_t y = 0;
+    size_t n = 0;
+    size_t nLat = (projected ? (itsNY * itsNX) : itsNY);
+    size_t nLon = (projected ? (itsNY * itsNX) : itsNX);
+    std::unique_ptr<double[]> latPtr(new double[nLat]);
+    std::unique_ptr<double[]> lonPtr(new double[nLon]);
+    double* lat = latPtr.get();
+    double* lon = lonPtr.get();
 
-    NcVar latVar, lonVar;
+    NcVar latVar;
+    NcVar lonVar;
 
     if (!grid)
       grid = &q->grid();
@@ -1489,8 +1504,10 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
                           ? grid->GridToWorldXY(xN - 1, yN - 1)
                           : itsTargetWorldXYs(xN - 1, yN - 1));
 
-      double worldY[itsNY], worldX[itsNX];
-      double wY = p0.Y(), wX = p0.X();
+      double worldY[itsNY];
+      double worldX[itsNX];
+      double wY = p0.Y();
+      double wX = p0.X();
       double stepY = yStep * ((itsNY > 1) ? ((pN.Y() - p0.Y()) / (yN - y0 - 1)) : 0.0);
       double stepX = xStep * ((itsNX > 1) ? ((pN.X() - p0.X()) / (xN - x0 - 1)) : 0.0);
 
@@ -1615,17 +1632,24 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     bool projected = ((itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
                       (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon));
 
-    size_t x0 = 0, y0 = 0;
-    size_t xN = itsReqGridSizeX, yN = itsReqGridSizeY;
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
-           y = 0, n = 0;
-    size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
-           nLon = (projected ? (itsNY * itsNX) : itsNX);
-    std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
-    double *lat = latPtr.get(), *lon = lonPtr.get();
+    size_t x0 = 0;
+    size_t y0 = 0;
+    size_t xN = itsReqGridSizeX;
+    size_t yN = itsReqGridSizeY;
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t x = 0;
+    size_t y = 0;
+    size_t n = 0;
+    size_t nLat = (projected ? (itsNY * itsNX) : itsNY);
+    size_t nLon = (projected ? (itsNY * itsNX) : itsNX);
+    std::unique_ptr<double[]> latPtr(new double[nLat]);
+    std::unique_ptr<double[]> lonPtr(new double[nLon]);
+    double* lat = latPtr.get();
+    double* lon = lonPtr.get();
 
-    NcVar latVar, lonVar;
+    NcVar latVar;
+    NcVar lonVar;
 
     auto coords = gridQuery.mQueryParameterList.front().mCoordinates;
 
@@ -1680,8 +1704,10 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       NFmiPoint p0(xc[0], yc[0]);
       NFmiPoint pN(xc[1], yc[1]);
 
-      double worldY[itsNY], worldX[itsNX];
-      double wY = p0.Y(), wX = p0.X();
+      double worldY[itsNY];
+      double worldX[itsNX];
+      double wY = p0.Y();
+      double wX = p0.X();
       double stepY = yStep * ((itsNY > 1) ? ((pN.Y() - p0.Y()) / (yN - y0 - 1)) : 0.0);
       double stepX = xStep * ((itsNX > 1) ? ((pN.X() - p0.X()) / (xN - x0 - 1)) : 0.0);
 
@@ -1861,7 +1887,8 @@ NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
     // Determine and store time bounds
 
     auto timeIter = itsDataTimes.begin();
-    Fmi::DateTime startTime = itsDataTimes.front().utc_time(), vt;
+    Fmi::DateTime startTime = itsDataTimes.front().utc_time();
+    Fmi::DateTime vt;
     int bounds[2 * itsTimeDim.getSize()];
     size_t i = 0;
 
@@ -1970,8 +1997,14 @@ void NetCdfStreamer::addVariables(bool relative_uv)
       auto levelDim = itsLevelDim;
 
       NFmiParam theParam(it->number());
-      string paramName, radonParam, stdName, longName, unit, timeDimName = "time";
-      size_t i = 0, j = 0;
+      string paramName;
+      string radonParam;
+      string stdName;
+      string longName;
+      string unit;
+      string timeDimName = "time";
+      size_t i = 0;
+      size_t j = 0;
 
       signed long usedParId = theParam.GetIdent();
 
@@ -2024,7 +2057,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
           {
             if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
               break;
-            else if (j == 0)
+            if (j == 0)
               j = i + 1;
             else
               throw Fmi::Exception(BCP,
@@ -2140,12 +2173,14 @@ void NetCdfStreamer::storeParamValues()
     // Note: Using heap because buffer size might exceed stack size
 
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
-           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
-           y = 0;
+    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
+    size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    size_t x = 0;
+    size_t y = 0;
 
     std::shared_ptr<float[]> values(new float[itsNY * itsNX]);
 
@@ -2246,9 +2281,11 @@ void NetCdfStreamer::storeParamValues()
     }
 
     const bool hasLevelDim = !levelDim.isNull();
-    std::size_t nX = (long)itsNX, nY = (long)itsNY;
+    std::size_t nX = (long)itsNX;
+    std::size_t nY = (long)itsNY;
 
-    std::vector<std::size_t> offsets, edges;
+    std::vector<std::size_t> offsets;
+    std::vector<std::size_t> edges;
 
     // Ensemble dimension is always first, if it exists
     if (!ensembleDim.isNull())
@@ -2366,10 +2403,10 @@ void NetCdfStreamer::getDataChunk(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-void NetCdfStreamer::getGridDataChunk(const QueryServer::Query &gridQuery,
-                                      int,
-                                      const NFmiMetTime &,
-                                      string &chunk)
+void NetCdfStreamer::getGridDataChunk(const QueryServer::Query& gridQuery,
+                                      int /*level*/,
+                                      const NFmiMetTime& /*mt*/,
+                                      string& chunk)
 {
   try
   {

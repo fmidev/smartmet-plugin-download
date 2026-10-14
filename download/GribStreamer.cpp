@@ -185,7 +185,8 @@ void GribStreamer::setShapeOfTheEarth(const NFmiArea *area)
   try
   {
     string ellipsoid;
-    double radiusOrSemiMajor = NAN, invFlattening = NAN;
+    double radiusOrSemiMajor = NAN;
+    double invFlattening = NAN;
 
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
@@ -273,11 +274,14 @@ void GribStreamer::setLatlonGeometryToGrib() const
     //          grid.original.reverseYDirection is 1; forcing jPositive to 1.
     //          Also swapping corner latitudes, see comment below
 
-    auto blLon = itsBoundingBox.bottomLeft.X(), trLon = itsBoundingBox.topRight.X();
-    auto blLat = itsBoundingBox.bottomLeft.Y(), trLat = itsBoundingBox.topRight.Y();
+    auto blLon = itsBoundingBox.bottomLeft.X();
+    auto trLon = itsBoundingBox.topRight.X();
+    auto blLat = itsBoundingBox.bottomLeft.Y();
+    auto trLat = itsBoundingBox.topRight.Y();
     auto trLon2 = trLon;
     bool gridContent = (itsReqParams.dataSource == GridContent);
-    long iNegative = 0, jPositive = 0;
+    long iNegative = 0;
+    long jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -356,7 +360,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
   try
   {
     BBoxCorners rotLLBBox;
-    double slon = 0.0, slat = 0.0;
+    double slon = 0.0;
+    double slat = 0.0;
 
     if (itsReqParams.dataSource == QueryData)
     {
@@ -433,7 +438,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
     double gridCellWidthInDegrees =
         fabs((rotLLBBox.topRight.X() - rotLLBBox.bottomLeft.X()) / (itsNX - 1));
 
-    long iNegative = 0, jPositive = 0;
+    long iNegative = 0;
+    long jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -489,7 +495,10 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     // Note: grib2 longitude 0-360
 
-    double lon = itsBoundingBox.bottomLeft.X(), lon_0 = NAN, lat_0 = NAN, lat_ts = NAN;
+    double lon = itsBoundingBox.bottomLeft.X();
+    double lon_0 = NAN;
+    double lat_0 = NAN;
+    double lat_ts = NAN;
 
     if ((!itsGrib1Flag) && (lon < 0))
       lon += 360;
@@ -526,7 +535,8 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     gset(itsGribHandle, "orientationOfTheGridInDegrees", lon_0);
 
-    long iNegative = 0, jPositive = 0;
+    long iNegative = 0;
+    long jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -592,14 +602,16 @@ void GribStreamer::setMercatorGeometryToGrib() const
     gset(itsGribHandle, "DiInMetres", fabs(itsDX));
     gset(itsGribHandle, "DjInMetres", fabs(itsDY));
 
-    long iNegative = 0, jPositive = 0;
+    long iNegative = 0;
+    long jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
     gset(itsGribHandle, "jScansPositively", jPositive);
     gset(itsGribHandle, "iScansNegatively", iNegative);
 
-    double lon_0 = 0, lat_ts = 0;
+    double lon_0 = 0;
+    double lat_ts = 0;
 
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
@@ -669,7 +681,8 @@ void GribStreamer::setLambertConformalGeometryToGrib(const NFmiArea *area) const
     gset(itsGribHandle, "DxInMetres", fabs(itsDX));
     gset(itsGribHandle, "DyInMetres", fabs(itsDY));
 
-    long iNegative = 0, jPositive = 0;
+    long iNegative = 0;
+    long jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -756,7 +769,8 @@ void GribStreamer::setLambertAzimuthalEqualAreaGeometryToGrib() const
     gset(itsGribHandle, "DxInMetres", fabs(itsDX));
     gset(itsGribHandle, "DyInMetres", fabs(itsDY));
 
-    long iNegative = 0, jPositive = 0;
+    long iNegative = 0;
+    long jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -987,7 +1001,7 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   {
     if (isGroundLevel(levelType))
       return GroundLevel;
-    else if (isEntireAtmosphereLevel(levelType))
+    if (isEntireAtmosphereLevel(levelType))
       return EntireAtmosphere;
   }
   else
@@ -1016,7 +1030,7 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
 
     return PressureLevel;
   }
-  else if (isHybridLevel(levelType, gridContent))
+  if (isHybridLevel(levelType, gridContent))
     return HybridLevel;
   else if (isHeightLevel(levelType, level, gridContent))
     return HeightLevel;
@@ -1074,15 +1088,20 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
   try
   {
-    string centre, levelTypeStr, radonProducer, radonParam;
+    string centre;
+    string levelTypeStr;
+    string radonProducer;
+    string radonParam;
     signed long usedParId = theParam.GetIdent();
     NFmiLevel *cfgLevel = nullptr;
     FmiLevelType levelType;
     T::ForecastType forecastType = 0;
     T::ForecastNumber forecastNumber = 0;
     std::optional<long> templateNumber;
-    bool gridContent = (itsReqParams.dataSource == GridContent), foundParam = false;
-    std::size_t i = 0, j = pTable.size();
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+    bool foundParam = false;
+    std::size_t i = 0;
+    std::size_t j = pTable.size();
     auto paramIndexIter = paramConfigIndexes.end();
 
     paramIdx = pTable.size();
@@ -1272,10 +1291,12 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
   {
     // stepUnits always 'minute' to keep it simple
 
-    string stepUnits = "m", stepType;
+    string stepUnits = "m";
+    string stepType;
     Fmi::TimeDuration fromOriginTime(validTime - itsGribOriginTime);
     long step = (fromOriginTime.hours() * 60) + fromOriginTime.minutes();
-    long startStep = step, endStep = step;
+    long startStep = step;
+    long endStep = step;
 
     // Set step type and calculate start and end step for aggregates.
     //
@@ -1292,7 +1313,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     const bool bDataIsEndTimeStamped = true;
     bool hasParamConfig = (paramIdx < pTable.size());
     bool hasStepType = (hasParamConfig && (!pTable[paramIdx].itsStepType.empty()));
-    std::optional<long> indicatorOfTimeRange, typeOfStatisticalProcessing;
+    std::optional<long> indicatorOfTimeRange;
+    std::optional<long> typeOfStatisticalProcessing;
 
     if (hasParamConfig && (!hasStepType))
     {
@@ -1497,11 +1519,11 @@ Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
                                      (pt.time_of_day().hours() % (timeStepInMinutes / 60)),
                                  0,
                                  0));
-    else if (timeStepInMinutes == DataStreamer::minutesInDay)
+    if (timeStepInMinutes == DataStreamer::minutesInDay)
       return Fmi::DateTime(pt.date(), Fmi::TimeDuration(0, 0, 0));
     else if (timeStepInMinutes == DataStreamer::minutesInMonth)
       return Fmi::DateTime(Fmi::Date(pt.date().year(), pt.date().month(), 1),
-                   Fmi::TimeDuration(0, 0, 0));
+                           Fmi::TimeDuration(0, 0, 0));
 
     return pt;
   }
@@ -1569,13 +1591,15 @@ void GribStreamer::addValuesToGrib(const Engine::Querydata::Q& q,
     // Load the data, cropping the grid/values it if manual cropping is set
 
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    std::size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    std::size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
+    std::size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
     std::size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
     std::size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
-    std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-                yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1),
-                x = 0, y = 0;
+    std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    std::size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    std::size_t x = 0;
+    std::size_t y = 0;
     int i = 0;
 
     for (y = y0; (y < yN); y += yStep)
@@ -1642,7 +1666,8 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     // parameter or all parameters have the same producer, and the input data originates from
     // single generation
 
-    Fmi::DateTime oTime = itsGridMetaData.gridOriginTime, validTime = vTime;
+    Fmi::DateTime oTime = itsGridMetaData.gridOriginTime;
+    Fmi::DateTime validTime = vTime;
 
     if (oTime.is_not_a_date_time())
       // Query has function parameter(s) only, use each validtime as origintime too
@@ -1677,13 +1702,15 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
     // Load the data, cropping the grid/values it if manual cropping is set
 
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    std::size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0), y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    std::size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
-           yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+    std::size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
+    std::size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+    std::size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+    std::size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
-    std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-                yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1),
-                x = 0, y = 0;
+    std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+    std::size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+    std::size_t x = 0;
+    std::size_t y = 0;
     int i = 0;
 
     auto* const vVec = &(getValueListItem(gridQuery)->mValueVector);
@@ -1834,7 +1861,8 @@ std::string GribStreamer::getChunk()
     {
       ostringstream chunkBuf;
       string chunk;
-      std::size_t chunkBufLength = 0, nChunks = 0;
+      std::size_t chunkBufLength = 0;
+      std::size_t nChunks = 0;
 
       while (!itsDoneFlag)
       {

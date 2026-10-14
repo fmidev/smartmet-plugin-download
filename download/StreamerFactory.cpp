@@ -42,7 +42,8 @@ bool getScaleFactorAndOffset(signed long id,
   try
   {
     bool radonParam = (!paramName.empty());
-    size_t i = 0, j = ptable.size();
+    size_t i = 0;
+    size_t j = ptable.size();
 
     for (; i < ptable.size(); ++i)
     {
@@ -60,7 +61,7 @@ bool getScaleFactorAndOffset(signed long id,
 
             if (producerName == confProducer)
               break;
-            else if ((j == ptable.size()) && confProducer.empty())
+            if ((j == ptable.size()) && confProducer.empty())
               j = i;
           }
         }
@@ -121,11 +122,13 @@ bool getParamConfig(const ParamChangeTable &pTable,
       return false;
 
     std::list<unsigned int> missingParams;
-    float scale = 1.0, offset = 0.0;
+    float scale = 1.0;
+    float offset = 0.0;
     unsigned int i = 0;
 
     vector<string> paramParts;
-    string producerName, paramName;
+    string producerName;
+    string paramName;
     bool gridContent = (dataSource == GridContent);
     int geometry = -1;
 
@@ -212,7 +215,9 @@ std::string getDownloadFileName(const std::string &producer,
 {
   try
   {
-    string sTime, eTime, oTime;
+    string sTime;
+    string eTime;
+    string oTime;
 
     if (startTime.is_not_a_date_time())
       sTime = "start";
@@ -392,8 +397,7 @@ std::shared_ptr<DataStreamer> createStreamer(const Spine::HTTP::Request &req,
       if (reqParams.dataSource != GridContent)
         throw Fmi::Exception(
             BCP, "createStreamer: No data available for producer '" + reqParams.producer + "'");
-      else
-        throw Fmi::Exception(BCP, "createStreamer: No data available");
+      throw Fmi::Exception(BCP, "createStreamer: No data available");
     }
 
     // Download file name

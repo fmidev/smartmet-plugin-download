@@ -667,7 +667,7 @@ const Producer &fillReqParams(const Spine::HTTP::Request &req,
     {
       if (!gridEngine)
         throw Fmi::Exception(BCP, "Grid data is not available");
-      else if (!(gridEngine->isEnabled()))
+      if (!(gridEngine->isEnabled()))
         throw Fmi::Exception(BCP, "Grid data is disabled");
     }
 
@@ -1258,7 +1258,8 @@ void CoveragesHandler::handleCoverage(const Spine::HTTP::Request &theRequest,
     auto query = Query(dlReq, itsGridEngine, reqParams.originTime, reqParams.test);
 
     // Determine start/end times
-    Fmi::DateTime startTime, endTime;
+    Fmi::DateTime startTime;
+    Fmi::DateTime endTime;
 
     if (!reqParams.startTime.empty())
       startTime = query.tOptions.startTime;
