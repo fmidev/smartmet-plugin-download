@@ -62,8 +62,8 @@ void Plugin::coveragesRequestHandler(const Spine::Reactor& theReactor,
  */
 // ----------------------------------------------------------------------
 
-Plugin::Plugin(Spine::Reactor *theReactor, const char *theConfig)
-    : SmartMetPlugin(), itsModuleName("Download"), itsConfig(theConfig), itsReactor(theReactor)
+Plugin::Plugin(Spine::Reactor* theReactor, const char* theConfig)
+    : itsModuleName("Download"), itsConfig(theConfig), itsReactor(theReactor)
 {
   try
   {

@@ -22,6 +22,8 @@
 #include <newbase/NFmiQueryDataUtil.h>
 #include <newbase/NFmiTimeList.h>
 #include <sys/types.h>
+#include <algorithm>
+#include <cmath>
 #include <ogr_geometry.h>
 #include <string>
 #include <unistd.h>
@@ -52,19 +54,13 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request& req,
                            const Query& query,
                            const Producer& producer,
                            const ReqParams& reqParams)
-    : Spine::HTTP::ContentStreamer(),
-      itsURI(req.getURI()),
+    : itsURI(req.getURI()),
       itsCfg(config),
       itsQuery(query),
       itsReqParams(reqParams),
       itsProducer(producer),
-      itsDoneFlag(false),
       itsChunkLength(min(itsReqParams.chunkSize, maxChunkLengthInBytes)),
       itsMaxMsgChunks(maxMsgChunks),
-      itsMetaFlag(true),
-      itsReqGridSizeX(0),
-      itsReqGridSizeY(0),
-      itsProjectionChecked(false),
       itsGridMetaData(this, itsReqParams.producer, (itsReqParams.gridParamBlockSize > 0))
 {
   try
@@ -76,10 +72,10 @@ DataStreamer::DataStreamer(const Spine::HTTP::Request& req,
       // By default use small chunk size for grid content data to avoid copying data
       // to chunk buffer
 
-      if (itsReqParams.gridParamBlockSize > maxGridQueryBlockSize)
-        itsReqParams.gridParamBlockSize = maxGridQueryBlockSize;
-      if (itsReqParams.gridTimeBlockSize > maxGridQueryBlockSize)
-        itsReqParams.gridTimeBlockSize = maxGridQueryBlockSize;
+      itsReqParams.gridParamBlockSize =
+          std::min(itsReqParams.gridParamBlockSize, maxGridQueryBlockSize);
+      itsReqParams.gridTimeBlockSize =
+          std::min(itsReqParams.gridTimeBlockSize, maxGridQueryBlockSize);
 
       if (itsChunkLength == 0)
         itsChunkLength = minChunkLengthInBytes;
@@ -174,7 +170,7 @@ DataStreamer::GridMetaData::GridIterator& DataStreamer::GridMetaData::GridIterat
 {
   try
   {
-    auto ds = gridMetaData->dataStreamer;
+    auto* ds = gridMetaData->dataStreamer;
     auto timesEnd = ds->itsDataTimes.end();
 
     if (ds->itsTimeIterator == timesEnd)
@@ -252,7 +248,7 @@ DataStreamer::GridMetaData::GridIterator& DataStreamer::GridMetaData::GridIterat
     if (gridMetaData->queryOrderParam)
       return nextParam();
 
-    auto ds = gridMetaData->dataStreamer;
+    auto* ds = gridMetaData->dataStreamer;
     auto paramsEnd = ds->itsDataParams.end();
 
     if (ds->itsParamIterator == paramsEnd)
@@ -355,7 +351,7 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
 {
   try
   {
-    auto ds = gridMetaData->dataStreamer;
+    auto* ds = gridMetaData->dataStreamer;
 
     if (gridMetaData->queryOrderParam)
       return (ds->itsTimeIterator == ds->itsDataTimes.end());
@@ -381,7 +377,7 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId& geometryId
 {
   try
   {
-    auto ds = gridMetaData->dataStreamer;
+    auto* ds = gridMetaData->dataStreamer;
 
     gridMetaData->gridOriginTime = gridMetaData->originTime;
 
@@ -605,7 +601,7 @@ const string& DataStreamer::GridMetaData::getLatestOriginTime(Fmi::DateTime* ori
 {
   try
   {
-    static const string empty("");
+    static const string empty;
 
     if (originTimeTimes.empty())
       throw Fmi::Exception(BCP, "No data available for producer " + producer);
@@ -1139,7 +1135,7 @@ void DataStreamer::getParameterDetailsFromContentData(
 
     auto const& generationInfos = itsQuery.getGenerationInfos();
     auto const& contentInfoList = paramContent->second;
-    auto contentInfo = contentInfoList.getContentInfoByIndex(0);
+    auto* contentInfo = contentInfoList.getContentInfoByIndex(0);
     auto const contentLength = contentInfoList.getLength();
 
     // Ignore too old content
@@ -1317,7 +1313,7 @@ bool DataStreamer::hasRequestedGridData(const Producer& producer,
           auto const& pm = paramMapping.mMapping;
 
           auto mappingLevelType = FmiLevelType(pm.mParameterLevelId);
-          int level;
+          int level = 0;
 
           if ((!gridContent) && (pm.mParameterLevelId == GridFmiLevelTypePressure))
             level = pm.mParameterLevel * 0.01;  // e.g. levels=850
@@ -1624,7 +1620,7 @@ bool DataStreamer::hasRequestedData(const Producer& producer,
       //
       // Note: Height level data can have negative levels.
 
-      int level;
+      int level = 0;
       bool first = true;
 
       for (q->resetLevel(); q->nextLevel(); first = false)
@@ -1781,7 +1777,7 @@ void DataStreamer::getBBox(const Engine::Querydata::Q& q,
   try
   {
     OGRSpatialReference sourceSRS;
-    OGRErr err;
+    OGRErr err = 0;
 
     if ((err = sourceSRS.SetFromUserInput(sourceArea.ProjStr().c_str())) != OGRERR_NONE)
       throw Fmi::Exception(BCP, "srs.Set(ProjStr) error " + boost::lexical_cast<string>(err));
@@ -1797,11 +1793,11 @@ void DataStreamer::getBBox(const Engine::Querydata::Q& q,
 
     const auto worldRect = sourceArea.WorldRect();
     const auto& grid = q->grid();
-    size_t gridSizeX = grid.XNumber(), x;
-    size_t gridSizeY = grid.YNumber(), y;
+    size_t gridSizeX = grid.XNumber(), x = 0;
+    size_t gridSizeY = grid.YNumber(), y = 0;
     auto dX = (worldRect.Right() - worldRect.Left()) / (gridSizeX - 1);
     auto dY = (worldRect.Top() - worldRect.Bottom()) / (gridSizeY - 1);
-    double blX = 0.0, blY = 0.0, trX = 0.0, trY = 0.0, xc, yc;
+    double blX = 0.0, blY = 0.0, trX = 0.0, trY = 0.0, xc = NAN, yc = NAN;
     bool first = true;
 
     for (y = 1, yc = worldRect.Bottom(); (y <= gridSizeY); y++, yc += dY)
@@ -1867,7 +1863,7 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
         throw Fmi::Exception(BCP, "OGRCreateCoordinateTransformation failed");
     }
 
-    double blX, blY, trX, trY;
+    double blX = NAN, blY = NAN, trX = NAN, trY = NAN;
 
     if (itsReqParams.bbox.empty())
     {
@@ -1995,7 +1991,7 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q,
 {
   try
   {
-    auto targetArea = itsResources.createArea(targetProjection);
+    const auto* targetArea = itsResources.createArea(targetProjection);
 
     // Copy the parsed CRS from the cached factory instead of re-parsing the WKT
     // (which for a named datum queries proj.db). The copy is in-memory; the axis
@@ -2134,7 +2130,7 @@ bool DataStreamer::setRequestedGridSize(const NFmiArea& area,
 {
   try
   {
-    size_t gridSizeX, gridSizeY;
+    size_t gridSizeX = 0, gridSizeY = 0;
 
     if (itsReqParams.gridSizeXY)
     {
@@ -2293,10 +2289,8 @@ void DataStreamer::setCropping(const NFmiGrid& grid)
     itsCropping.topRightX = boost::numeric_cast<int>(ceil(xy2.X()));
     itsCropping.topRightY = boost::numeric_cast<int>(ceil(xy2.Y()));
 
-    if (itsCropping.bottomLeftX < 0)
-      itsCropping.bottomLeftX = 0;
-    if (itsCropping.bottomLeftY < 0)
-      itsCropping.bottomLeftY = 0;
+    itsCropping.bottomLeftX = std::max(itsCropping.bottomLeftX, 0);
+    itsCropping.bottomLeftY = std::max(itsCropping.bottomLeftY, 0);
     if (itsCropping.topRightX >= (int)grid.XNumber())
       itsCropping.topRightX = grid.XNumber() - 1;
     if (itsCropping.topRightY >= (int)grid.YNumber())
@@ -2336,7 +2330,9 @@ void DataStreamer::setCropping(const NFmiGrid& grid)
  */
 // ----------------------------------------------------------------------
 
-static AreaClassId getProjectionType(const ReqParams& itsReqParams, const char* projection)
+namespace
+{
+AreaClassId getProjectionType(const ReqParams& itsReqParams, const char* projection)
 {
   try
   {
@@ -2387,6 +2383,7 @@ static AreaClassId getProjectionType(const ReqParams& itsReqParams, const char* 
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -2408,8 +2405,8 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
 {
   try
   {
-    OGRSpatialReference qdProjectedSrs, *qdLLSrsPtr;
-    OGRErr err;
+    OGRSpatialReference qdProjectedSrs, *qdLLSrsPtr = nullptr;
+    OGRErr err = 0;
 
     // qd projected (or latlon/geographic) cs
     // Copy from the cached factory instead of re-parsing the WKT (proj.db lookup).
@@ -2447,7 +2444,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     bool useNativeBBox = (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty());
     bool useNativeResolution = ((!itsReqParams.gridSizeXY) && (!itsReqParams.gridResolutionXY));
 
-    auto sourceArea = area;
+    const auto* sourceArea = area;
     const auto areaStr = sourceArea->AreaStr();
     size_t bboxPos = areaStr.find(':');
 
@@ -2508,7 +2505,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       }
       else
       {
-        auto targetArea = itsResources.createArea(itsReqParams.projection);
+        const auto* targetArea = itsResources.createArea(itsReqParams.projection);
 
         *wgs84PrSrsPtr = *Fmi::OGRSpatialReferenceFactory::Create(targetArea->WKT());
 
@@ -2561,7 +2558,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
     using sz_t = NFmiDataMatrix<float>::size_type;
-    double xc, yc;
+    double xc = NAN, yc = NAN;
 
     NFmiPoint bl = itsBoundingBox.bottomLeft;
     NFmiPoint tr = itsBoundingBox.topRight;
@@ -2571,7 +2568,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
     const sz_t ys = itsSrcLatLons.height();
     const sz_t xN = xs - 1;
     const sz_t yN = ys - 1;
-    sz_t x, y;
+    sz_t x = 0, y = 0;
 
     if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
     {
@@ -2732,9 +2729,9 @@ string DataStreamer::getWKT(OGRSpatialReference* geometrySRS) const
 {
   try
   {
-    OGRErr err;
+    OGRErr err = 0;
     const char* const papszOptions[] = {"FORMAT=WKT2", nullptr};
-    char* ppszResult;
+    char* ppszResult = nullptr;
 
     if ((err = geometrySRS->exportToWkt(&ppszResult, papszOptions)) != OGRERR_NONE)
       throw Fmi::Exception(BCP, "exportToWkt error " + boost::lexical_cast<string>(err));
@@ -2773,7 +2770,7 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference* geometrySRS,
       areaSRS = *Fmi::OGRSpatialReferenceFactory::Create(areaWKT);
 
     const char* ellipsoidAttr = "SPHEROID";
-    auto ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
+    const auto* ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
 
     if (!ellipsoidPtr)
     {
@@ -2781,8 +2778,8 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference* geometrySRS,
       ellipsoidPtr = srs.GetAttrValue(ellipsoidAttr);
     }
 
-    auto radiusOrSemiMajorPtr = srs.GetAttrValue(ellipsoidAttr, 1);
-    auto invFlatteningPtr = srs.GetAttrValue(ellipsoidAttr, 2);
+    const auto* radiusOrSemiMajorPtr = srs.GetAttrValue(ellipsoidAttr, 1);
+    const auto* invFlatteningPtr = srs.GetAttrValue(ellipsoidAttr, 2);
 
     if (!(ellipsoidPtr && radiusOrSemiMajorPtr && invFlatteningPtr))
       throw Fmi::Exception(BCP, string(crsName) + ": geometry " + ellipsoidAttr + " not set");
@@ -2936,7 +2933,7 @@ NFmiParamDescriptor DataStreamer::makeParamDescriptor(
   {
     NFmiParamBag pbag;
 
-    if (currentParams.size() > 0)
+    if (!currentParams.empty())
     {
       for (auto const& param : currentParams)
       {
@@ -3056,6 +3053,8 @@ void DataStreamer::createQD(const NFmiGrid& g)
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 const NFmiArea& getGridArea(const NFmiGrid& grid)
 {
   try
@@ -3076,18 +3075,18 @@ const NFmiArea& getGridArea(const NFmiGrid& grid)
  */
 // ----------------------------------------------------------------------
 
-static void valBufDeleter(float* ptr)
+void valBufDeleter(float* ptr)
 {
   try
   {
-    if (ptr)
-      delete[] ptr;
+    delete[] ptr;
   }
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
                                         NFmiGrid& wantedGrid,
@@ -3127,7 +3126,8 @@ void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
            yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
+           y = 0;
 
     if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
     {
@@ -3362,6 +3362,8 @@ bool DataStreamer::isLevelAvailable(const Engine::Querydata::Q& q,
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 bool projectionMatches(const std::string& projection, const NFmiArea& area)
 {
   if (projection.empty())
@@ -3390,6 +3392,7 @@ bool projectionMatches(const std::string& projection, const NFmiArea& area)
       // clang-format on
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -3906,7 +3909,7 @@ void DataStreamer::extractData(string& chunk)
         // interpolatable).
 
         int level = *itsLevelIterator;
-        bool exactLevel;
+        bool exactLevel = false;
 
         if (!isLevelAvailable(q, level, exactLevel))
         {
@@ -3920,8 +3923,8 @@ void DataStreamer::extractData(string& chunk)
         //
         // Note: Grid size is set to 'itsReqGridSizeX' and 'itsReqGridSizeY' members.
 
-        const NFmiArea* area;
-        NFmiGrid* grid;
+        const NFmiArea* area = nullptr;
+        NFmiGrid* grid = nullptr;
 
         bool nonNativeGrid = getAreaAndGrid(q, !exactLevel, &area, &grid);
 
@@ -4452,7 +4455,7 @@ void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
   {
     if (itsReqParams.geometryId.empty())
     {
-      auto crs = (((!nativeArea) && nativeResolution) ? "crop" : "data");
+      const auto* crs = (((!nativeArea) && nativeResolution) ? "crop" : "data");
       gridQuery.mAttributeList.addAttribute("grid.crs", crs);
 
       if (nativeArea && nativeResolution)
@@ -4539,8 +4542,8 @@ void DataStreamer::getGridProjection(const QueryServer::Query& gridQuery)
   {
     std::unique_ptr<SmartMet::T::Attribute> crsPtr;
 
-    auto attr = "grid.crs";
-    auto crsAttr = gridQuery.mAttributeList.getAttribute(attr);
+    const auto* attr = "grid.crs";
+    auto* crsAttr = gridQuery.mAttributeList.getAttribute(attr);
     auto gridProjection = T::GridProjectionValue::Unknown;
 
     if ((!crsAttr) || crsAttr->mValue.empty())
@@ -4572,7 +4575,7 @@ void DataStreamer::getGridProjection(const QueryServer::Query& gridQuery)
       return;
 
     Fmi::SpatialReference fsrs(crsAttr->mValue);
-    auto& srs = *fsrs;
+    const auto& srs = *fsrs;
 
     if (srs.IsProjected())
     {
@@ -4648,20 +4651,20 @@ void DataStreamer::getGridProjection(const QueryServer::Query& gridQuery)
       // Check PROJ4 EXTENSION for rotlat projection;
       // search for +proj=ob_tran, +o_proj=lonlat, nonzero +o_lat_p and +o_lon_p
 
-      auto projection = srs.GetAttrValue("PROJECTION");
+      const auto* projection = srs.GetAttrValue("PROJECTION");
       if (!projection)
         throw Fmi::Exception(BCP, string(attr) + ": PROJECTION not set");
 
       itsGridMetaData.projection = projection;
 
-      auto p4Extension = srs.GetExtension("PROJCS", "PROJ4", "");
+      const auto* p4Extension = srs.GetExtension("PROJCS", "PROJ4", "");
 
       if (strstr(p4Extension, "+proj=ob_tran") &&
           (strstr(p4Extension, "+o_proj=latlon") || strstr(p4Extension, "+o_proj=lonlat") ||
            strstr(p4Extension, "+o_proj=longlat")))
       {
-        auto o_lat_p = strstr(p4Extension, "+o_lat_p=");
-        auto o_lon_p = strstr(p4Extension, "+o_lon_p=");
+        const auto* o_lat_p = strstr(p4Extension, "+o_lat_p=");
+        const auto* o_lon_p = strstr(p4Extension, "+o_lon_p=");
 
         if (o_lat_p)
           o_lat_p += strlen("+o_lat_p=");
@@ -5006,11 +5009,11 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query& gridQuery)
     itsGridMetaData.rotLatitudes.reset(new double[coords.size()]);
     std::unique_ptr<int[]> pS(new int[coords.size()]);
 
-    auto rotLons = itsGridMetaData.rotLongitudes.get();
-    auto rotLon = rotLons;
-    auto rotLats = itsGridMetaData.rotLatitudes.get();
-    auto rotLat = rotLats;
-    auto pabSuccess = pS.get();
+    auto* rotLons = itsGridMetaData.rotLongitudes.get();
+    auto* rotLon = rotLons;
+    auto* rotLats = itsGridMetaData.rotLatitudes.get();
+    auto* rotLat = rotLats;
+    auto* pabSuccess = pS.get();
 
     for (auto const& coord : coords)
     {
@@ -5020,7 +5023,7 @@ void DataStreamer::regLLToGridRotatedCoords(const QueryServer::Query& gridQuery)
       rotLat++;
     }
 
-    auto rotLLSRS = itsResources.getGeometrySRS();
+    auto* rotLLSRS = itsResources.getGeometrySRS();
     rotLLSRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
 
     OGRSpatialReference regLLSRS;
@@ -5060,7 +5063,7 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
 {
   try
   {
-    if (gridQuery.mQueryParameterList.size() == 0)
+    if (gridQuery.mQueryParameterList.empty())
       return nullptr;
 
     if (itsGridIndex > 0)
@@ -5073,7 +5076,7 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
         auto itp = gridQuery.mQueryParameterList.begin();
         advance(itp, itsGridIndex);
 
-        if (itp->mValueList.size() == 0)
+        if (itp->mValueList.empty())
           return nullptr;
 
         return itp->mValueList.front();
@@ -5088,7 +5091,7 @@ QueryServer::ParameterValues_sptr DataStreamer::getValueListItem(
       return *itt;
     }
 
-    if (gridQuery.mQueryParameterList.front().mValueList.size() == 0)
+    if (gridQuery.mQueryParameterList.front().mValueList.empty())
       return nullptr;
 
     return gridQuery.mQueryParameterList.front().mValueList.front();
@@ -5110,13 +5113,13 @@ void DataStreamer::getGridOrigo(const QueryServer::Query& gridQuery)
 {
   try
   {
-    auto rXAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseXDirection");
+    auto* rXAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseXDirection");
 
     if ((!rXAttr) || ((rXAttr->mValue != "0") && (rXAttr->mValue != "1")))
       throw Fmi::Exception::Trace(BCP,
                                   "grid.original.reverseXDirection is missing or has unkown value");
 
-    auto rYAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseYDirection");
+    auto* rYAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseYDirection");
 
     if ((!rYAttr) || ((rYAttr->mValue != "0") && (rYAttr->mValue != "1")))
       throw Fmi::Exception::Trace(
@@ -5207,7 +5210,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
     if (!valueListItem)
       return false;
 
-    const auto vVec = &(valueListItem->mValueVector);
+    auto* const vVec = &(valueListItem->mValueVector);
     if (vVec->empty())
       return false;
 
@@ -5231,7 +5234,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
 
     string bboxStr;
 
-    const char* attr;
+    const char* attr = nullptr;
 
     if (itsReqParams.projection.empty() && (itsCropping.crop || (!itsReqParams.gridSizeXY)) &&
         (!itsReqParams.gridResolutionXY) &&
@@ -5243,7 +5246,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
     else
       attr = "grid.llbox";
 
-    auto bboxAttr = gridQuery.mAttributeList.getAttribute(attr);
+    auto* bboxAttr = gridQuery.mAttributeList.getAttribute(attr);
 
     if (bboxAttr)
       bboxStr = bboxAttr->mValue;
@@ -5269,8 +5272,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
 
     // Grid size
 
-    auto widthAttr = gridQuery.mAttributeList.getAttribute("grid.width");
-    auto heightAttr = gridQuery.mAttributeList.getAttribute("grid.height");
+    auto* widthAttr = gridQuery.mAttributeList.getAttribute("grid.width");
+    auto* heightAttr = gridQuery.mAttributeList.getAttribute("grid.height");
 
     if ((!widthAttr) || (!heightAttr))
       throw Fmi::Exception(BCP, "Grid width/height not set in query result");
@@ -5304,8 +5307,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
 
     // Grid resolution
 
-    auto xResolAttr = gridQuery.mAttributeList.getAttribute("grid.cell.width");
-    auto yResolAttr = gridQuery.mAttributeList.getAttribute("grid.cell.height");
+    auto* xResolAttr = gridQuery.mAttributeList.getAttribute("grid.cell.width");
+    auto* yResolAttr = gridQuery.mAttributeList.getAttribute("grid.cell.height");
 
     if ((!xResolAttr) || (!yResolAttr))
     {
@@ -5342,7 +5345,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
 
     // Wind component direction
 
-    auto uvAttr = gridQuery.mAttributeList.getAttribute("grid.original.relativeUV");
+    auto* uvAttr = gridQuery.mAttributeList.getAttribute("grid.original.relativeUV");
 
     if (uvAttr && (uvAttr->mValue != "0") && (uvAttr->mValue != "1"))
       throw Fmi::Exception::Trace(BCP, "grid.original.relativeUV has unknown value");
@@ -5381,7 +5384,7 @@ size_t DataStreamer::bufferIndex() const
 {
   try
   {
-    if (!((itsReqParams.gridTimeBlockSize > 1) || (itsReqParams.gridParamBlockSize > 0)))
+    if ((itsReqParams.gridTimeBlockSize <= 1) && (itsReqParams.gridParamBlockSize <= 0))
       return 0;
 
     size_t index = 0;
@@ -5449,8 +5452,8 @@ void DataStreamer::extractGridData(string& chunk)
       //       parameter is a function parameter, but currently all data and result
       //       parameters are required to have the same geometryid
 
-      T::ParamLevelId gridLevelType;
-      int level;
+      T::ParamLevelId gridLevelType = 0;
+      int level = 0;
 
       if (!gridIterator.hasData(itsGridMetaData.geometryId, gridLevelType, level))
         continue;

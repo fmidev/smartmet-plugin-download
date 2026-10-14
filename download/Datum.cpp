@@ -37,7 +37,9 @@ namespace Datum
  */
 // ----------------------------------------------------------------------
 
-static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
+namespace
+{
+bool datumShiftFromString(const string& setting, DatumShift& datumShift)
 {
   try
   {
@@ -80,6 +82,7 @@ static bool datumShiftFromString(const string& setting, DatumShift& datumShift)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 bool parseDatumShift(const string& setting, DatumShift& datumShift)
 {
@@ -134,7 +137,7 @@ void getHelmertTransformationParameters(DatumShift datumShift,
 {
   try
   {
-    OGRErr err;
+    OGRErr err = 0;
 
     const double GR = M_PI / 180.0;
     const double lat0 = Area->CenterLatLon().X();

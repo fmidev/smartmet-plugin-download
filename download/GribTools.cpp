@@ -5,8 +5,9 @@
 // ======================================================================
 
 #include "GribTools.h"
-#include <newbase/NFmiCommentStripper.h>
 #include <macgyver/Exception.h>
+#include <newbase/NFmiCommentStripper.h>
+#include <cmath>
 
 #include <boost/lexical_cast.hpp>
 
@@ -26,7 +27,7 @@ void DUMP(grib_handle *grib, const char *ns)
     else
       std::cout << "\nValues for namespace " << ns << ":" << std::endl << std::endl;
 
-    grib_keys_iterator *kiter;
+    grib_keys_iterator* kiter = nullptr;
     if (ns == nullptr)
       kiter = grib_keys_iterator_new(grib, GRIB_KEYS_ITERATOR_ALL_KEYS, nullptr);
     else
@@ -49,7 +50,7 @@ void DUMP(grib_handle *grib, const char *ns)
       }
       else
       {
-        int type;
+        int type = 0;
         grib_get_native_type(grib, name, &type);
         switch (type)
         {
@@ -62,14 +63,14 @@ void DUMP(grib_handle *grib, const char *ns)
           }
           case GRIB_TYPE_DOUBLE:
           {
-            double value;
+            double value = NAN;
             grib_get_double(grib, name, &value);
             std::cout << name << " = " << value << std::endl;
             break;
           }
           case GRIB_TYPE_LONG:
           {
-            long value;
+            long value = 0;
             grib_get_long(grib, name, &value);
             std::cout << name << " = " << value << std::endl;
             break;
@@ -115,7 +116,7 @@ long get_long(grib_handle *g, const char *name)
 {
   try
   {
-    long value;
+    long value = 0;
     if (grib_get_long(g, name, &value))
       throw Fmi::Exception(
           BCP, "Failed to get long value for name '" + std::string(name) + "'!");

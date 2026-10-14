@@ -29,21 +29,14 @@ namespace Download
 // ======================================================================
 
 ParamChangeItem::ParamChangeItem()
-    : itsOriginalParamId(0),
-      itsWantedParam(
-          0, "", kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly),
-      itsConversionBase(0),
-      itsConversionScale(1.0),
-      itsLevel(nullptr),
-      itsPeriodLengthMinutes(0),
-      itsTemplateNumber(),
-      itsGridRelative(std::optional<bool>())
+    : itsWantedParam(
+          0, "", kFloatMissing, kFloatMissing, kFloatMissing, kFloatMissing, "%.1f", kLinearly)
+
 {
 }
 
 ParamChangeItem::~ParamChangeItem()
 {
-  if (itsLevel)
     delete itsLevel;
 }
 
@@ -101,6 +94,8 @@ ParamChangeItem& ParamChangeItem::operator=(const ParamChangeItem& theOther)
   }
 }
 
+namespace
+{
 // ======================================================================
 /*!
  * \brief Functions to convert a json value to a number or a string.
@@ -387,6 +382,7 @@ bool readNetCdfParamConfigField(const std::string& name,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ======================================================================
 /*!

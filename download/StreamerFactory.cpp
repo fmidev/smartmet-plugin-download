@@ -29,7 +29,9 @@ namespace Download
  */
 // ----------------------------------------------------------------------
 
-static bool getScaleFactorAndOffset(signed long id,
+namespace
+{
+bool getScaleFactorAndOffset(signed long id,
                                     const std::string &producerName,
                                     const std::string &paramName,
                                     OutputFormat outputFormat,
@@ -90,6 +92,7 @@ static bool getScaleFactorAndOffset(signed long id,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -185,7 +188,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
       i++;
     }
 
-    return (missingParams.size() == 0);
+    return (missingParams.empty());
   }
   catch (...)
   {
@@ -226,7 +229,7 @@ std::string getDownloadFileName(const std::string &producer,
     else
       oTime = Fmi::to_iso_string(originTime);
 
-    const char *extn;
+    const char* extn = nullptr;
 
     if (outputFormat == Grib1)
       extn = ".grb";

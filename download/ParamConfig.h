@@ -46,15 +46,15 @@ struct ParamChangeItem
   ~ParamChangeItem();
   ParamChangeItem &operator=(const ParamChangeItem &theOther);
 
-  unsigned long itsOriginalParamId;
+  unsigned long itsOriginalParamId = 0;
   NFmiParam itsWantedParam;
-  float itsConversionBase;              // f(x) = (scale * x) + base
-  float itsConversionScale;
-  NFmiLevel *itsLevel;
+  float itsConversionBase = 0;  // f(x) = (scale * x) + base
+  float itsConversionScale = 1.0;
+  NFmiLevel* itsLevel = nullptr;
   std::string itsLevelType;             // Temporary storage for level type ..
   std::optional<float> itsLevelValue; // .. and value; used when creating NFmiLevel object
   std::string itsStepType;              // Aggregate type, "accum", "max", "min", ...
-  unsigned int itsPeriodLengthMinutes;  // Aggregate period length in minutes
+  unsigned int itsPeriodLengthMinutes = 0;  // Aggregate period length in minutes
   std::string itsUnit;                  // Unit for netcdf parameters
   std::string itsStdName;               // Standfard name for netcdf parameters
   std::string itsLongName;              // Long name for netcdf parameters

@@ -44,7 +44,9 @@ namespace Download
  */
 // ----------------------------------------------------------------------
 
-static vector<string> splitPath(const string &resource)
+namespace
+{
+vector<string> splitPath(const string &resource)
 {
   vector<string> parts;
   boost::split(parts, resource, boost::is_any_of("/"));
@@ -56,6 +58,7 @@ static vector<string> splitPath(const string &resource)
 
   return parts;
 }
+}  // namespace
 
 // The root of the OGC API - Coverages resources
 static const string COVERAGES_ROOT = "/coverages";
@@ -66,7 +69,9 @@ static const string COVERAGES_ROOT = "/coverages";
  */
 // ----------------------------------------------------------------------
 
-static void setJsonResponse(Spine::HTTP::Response &theResponse, const Json::Value &doc)
+namespace
+{
+void setJsonResponse(Spine::HTTP::Response &theResponse, const Json::Value &doc)
 {
   Json::StreamWriterBuilder builder;
   builder["indentation"] = "  ";
@@ -83,7 +88,7 @@ static void setJsonResponse(Spine::HTTP::Response &theResponse, const Json::Valu
  */
 // ----------------------------------------------------------------------
 
-static void setProblemResponse(Spine::HTTP::Response &theResponse,
+void setProblemResponse(Spine::HTTP::Response &theResponse,
                                Spine::HTTP::Status status,
                                const string &title,
                                const string &detail)
@@ -97,7 +102,7 @@ static void setProblemResponse(Spine::HTTP::Response &theResponse,
   theResponse.setHeader("Content-Type", "application/problem+json");
 }
 
-static Json::Value makeLink(const string &href,
+Json::Value makeLink(const string &href,
                             const string &rel,
                             const string &type,
                             const string &title = "")
@@ -107,7 +112,7 @@ static Json::Value makeLink(const string &href,
 
 // Redact absolute filesystem paths from a message so internal server paths are not
 // leaked to clients through the X-Download-Error response header.
-static string redactPaths(const string &msg)
+string redactPaths(const string &msg)
 {
   vector<string> tokens;
   boost::algorithm::split(tokens, msg, boost::algorithm::is_space());
@@ -128,7 +133,7 @@ static string redactPaths(const string &msg)
  */
 // ----------------------------------------------------------------------
 
-static string mapOutputFormat(const string &f)
+string mapOutputFormat(const string &f)
 {
   string fl = Fmi::ascii_tolower_copy(f);
 
@@ -159,7 +164,7 @@ static string mapOutputFormat(const string &f)
  */
 // ----------------------------------------------------------------------
 
-static vector<string> splitSubsetRange(const string &value)
+vector<string> splitSubsetRange(const string &value)
 {
   vector<string> parts;
 
@@ -226,7 +231,7 @@ static vector<string> splitSubsetRange(const string &value)
  */
 // ----------------------------------------------------------------------
 
-static void parseSubset(const string &subset,
+void parseSubset(const string &subset,
                         Spine::HTTP::Request &dlReq)
 {
   // Split on comma for multiple axes: subset=pressure(500:850),time("2024-01-01":"2024-01-02")
@@ -298,7 +303,7 @@ static void parseSubset(const string &subset,
  */
 // ----------------------------------------------------------------------
 
-static string parseScaleSize(const string &scaleSize)
+string parseScaleSize(const string &scaleSize)
 {
   // Extract numeric values from Lon(nx),Lat(ny) or just nx,ny
   string result;
@@ -342,7 +347,7 @@ static string parseScaleSize(const string &scaleSize)
  */
 // ----------------------------------------------------------------------
 
-static string parseScaleFactor(const string &scaleFactor)
+string parseScaleFactor(const string &scaleFactor)
 {
   return scaleFactor + "," + scaleFactor;
 }
@@ -359,7 +364,7 @@ static string parseScaleFactor(const string &scaleFactor)
  */
 // ----------------------------------------------------------------------
 
-static void parseDatetime(const string &datetime,
+void parseDatetime(const string &datetime,
                           Spine::HTTP::Request &dlReq)
 {
   auto slashPos = datetime.find('/');
@@ -399,7 +404,7 @@ static void parseDatetime(const string &datetime,
  */
 // ----------------------------------------------------------------------
 
-static string crsToProjection(const string &crs)
+string crsToProjection(const string &crs)
 {
   // OGC CRS URIs
   const string epsgPrefix = "http://www.opengis.net/def/crs/EPSG/0/";
@@ -511,7 +516,7 @@ static string crsToProjection(const string &crs)
  */
 // ----------------------------------------------------------------------
 
-static Spine::HTTP::Request translateRequest(const Spine::HTTP::Request &theRequest,
+Spine::HTTP::Request translateRequest(const Spine::HTTP::Request &theRequest,
                                              const string &collectionId)
 {
   Spine::HTTP::Request dlReq = theRequest;
@@ -605,7 +610,7 @@ static Spine::HTTP::Request translateRequest(const Spine::HTTP::Request &theRequ
  */
 // ----------------------------------------------------------------------
 
-static string getMimeType(OutputFormat fmt)
+string getMimeType(OutputFormat fmt)
 {
   switch (fmt)
   {
@@ -634,7 +639,7 @@ static string getMimeType(OutputFormat fmt)
  */
 // ----------------------------------------------------------------------
 
-static const Producer &fillReqParams(const Spine::HTTP::Request &req,
+const Producer &fillReqParams(const Spine::HTTP::Request &req,
                                      ReqParams &reqParams,
                                      Config &config,
                                      const Engine::Querydata::Engine &qEngine,
@@ -874,6 +879,7 @@ static const Producer &fillReqParams(const Spine::HTTP::Request &req,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -919,13 +925,16 @@ void CoveragesHandler::init(Config &config,
  */
 // ----------------------------------------------------------------------
 
-static void notFound(const Spine::HTTP::Request &theRequest, Spine::HTTP::Response &theResponse)
+namespace
+{
+void notFound(const Spine::HTTP::Request &theRequest, Spine::HTTP::Response &theResponse)
 {
   setProblemResponse(theResponse,
                      Spine::HTTP::Status::not_found,
                      "Not Found",
                      "Unknown resource: " + theRequest.getResource());
 }
+}  // namespace
 
 void CoveragesHandler::requestHandler(const Spine::Reactor& /* theReactor */,
                                       const Spine::HTTP::Request &theRequest,
@@ -1070,7 +1079,9 @@ void CoveragesHandler::handleConformance(const Spine::HTTP::Request & /* theRequ
  */
 // ----------------------------------------------------------------------
 
-static Json::Value collectionDescription(const string &base,
+namespace
+{
+Json::Value collectionDescription(const string &base,
                                          const string &id,
                                          const Producer *producer)
 {
@@ -1102,6 +1113,7 @@ static Json::Value collectionDescription(const string &base,
   doc["crs"].append("http://www.opengis.net/def/crs/OGC/1.3/CRS84");
   return doc;
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!

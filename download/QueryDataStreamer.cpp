@@ -17,16 +17,12 @@ namespace Plugin
 {
 namespace Download
 {
-QDStreamer::QDStreamer(const Spine::HTTP::Request &req,
-                       const Config &config,
-                       const Query &query,
-                       const Producer &producer,
-                       const ReqParams &reqParams)
-    : DataStreamer(req, config, query, producer, reqParams),
-      itsMetaFlag(true),
-      itsLoadedFlag(false),
-      itsCurrentX(0),
-      itsCurrentY(0)
+QDStreamer::QDStreamer(const Spine::HTTP::Request& req,
+                       const Config& config,
+                       const Query& query,
+                       const Producer& producer,
+                       const ReqParams& reqParams)
+    : DataStreamer(req, config, query, producer, reqParams)
 {
 }
 
@@ -60,7 +56,7 @@ std::string QDStreamer::getChunk()
         auto it_p = itsParamIterator;
         itsCurrentX = itsCurrentY = 0;
 
-        if (itsGrids.size() > 0)
+        if (!itsGrids.empty())
         {
           itsGrids.clear();
           itsGrids.push_back(itsGridValues);
@@ -72,7 +68,7 @@ std::string QDStreamer::getChunk()
 
           // To handle missing/skipped parameters
           //
-          if (itsGrids.size() == 0)
+          if (itsGrids.empty())
             it_p = itsParamIterator;
 
           if (chunk.empty())
@@ -82,7 +78,7 @@ std::string QDStreamer::getChunk()
           else
             break;
         }
-        if (!(itsLoadedFlag = (itsGrids.size() > 0)))
+        if (!(itsLoadedFlag = (!itsGrids.empty())))
         {
           setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
           return "";
@@ -210,7 +206,8 @@ void QDStreamer::getDataChunk(Engine::Querydata::Q q,
     NFmiDataMatrix<float> croppedValues(itsCropping.gridSizeX, itsCropping.gridSizeY);
 
     std::size_t x0 = itsCropping.bottomLeftX, y0 = itsCropping.bottomLeftY;
-    std::size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx, cy, x, y;
+    std::size_t xN = x0 + itsCropping.gridSizeX, yN = y0 + itsCropping.gridSizeY, cx = 0, cy = 0,
+                x = 0, y = 0;
 
     for (y = y0, cy = 0; (y < yN); y++, cy++)
       for (x = x0, cx = 0; (x < xN); x++, cx++)

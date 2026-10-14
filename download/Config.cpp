@@ -14,7 +14,10 @@
 
 using namespace std;
 
-static const char* defaultTempDirectory = "/var/tmp";
+namespace
+{
+const char* defaultTempDirectory = "/var/tmp";
+}  // namespace
 
 namespace SmartMet
 {
@@ -345,9 +348,7 @@ void Config::parseConfigProducers(
 // ----------------------------------------------------------------------
 
 Config::Config(const string& configfile)
-    : itsGribPTable(),
-      itsNetCdfPTable(),
-      itsTempDirectory(defaultTempDirectory),
+    : itsTempDirectory(defaultTempDirectory),
       itsGrib2TablesVersionDefault(0),
       itsGrib2TablesVersionMin(0),
       itsGrib2TablesVersionMax(0),
@@ -523,7 +524,7 @@ const Producer& Config::getProducer(const string& name) const
     // Unnamed producer "mathces" at this point; the producer will be searched against
     // querydata's configuration
 
-    if (defaultProducerName() == "")
+    if (defaultProducerName().empty())
       return itsProducers.begin()->second;
 
     throw Fmi::Exception(BCP, "Unknown producer: " + name);
@@ -534,12 +535,12 @@ const Producer& Config::getProducer(const string& name) const
   }
 }
 
-const Producer& Config::getProducer(string& name, const Engine::Querydata::Engine& querydata)
+const Producer& Config::getProducer(string& name, const Engine::Querydata::Engine& /*querydata*/)
 {
   try
   {
     auto p = (name.empty() ? itsProducers.end() : itsProducers.find(name));
-    if ((p == itsProducers.end()) && (defaultProducerName() == ""))
+    if ((p == itsProducers.end()) && (defaultProducerName().empty()))
       // Unnamed producer "mathces" at this point; the producer will be searched against
       // querydata's configuration
       //

@@ -13,6 +13,7 @@
 #include <spine/Thread.h>
 #include <cpl_conv.h>
 #include <gdal_priv.h>
+#include <cmath>
 #include <unistd.h>
 
 namespace
@@ -374,7 +375,7 @@ void GeoTiffStreamer::storeBand()
       for (size_t i = 0; i < itsWidth; i++)
       {
         size_t srcX = x0 + i * xStep;
-        float value;
+        float value = NAN;
 
         if (isQueryData)
         {

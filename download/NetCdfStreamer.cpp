@@ -5,24 +5,25 @@
 // ======================================================================
 
 #include "NetCdfStreamer.h"
-#include <macgyver/DateTime.h>
 #include <boost/format.hpp>
+#include <fmt/format.h>
 #include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
 #include <spine/Convenience.h>
 #include <spine/Thread.h>
-#include <fmt/format.h>
 #include <atomic>
 #include <cerrno>
-#include <cstring>
 #include <csignal>
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <cmath>
 
 namespace
 {
@@ -396,6 +397,8 @@ void NetCdfStreamer::addAttribute(T1 resource, const std::string& attrName, int 
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime& t2, long timeStep)
 {
   try
@@ -432,6 +435,7 @@ int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime& t2, long timeSte
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -545,6 +549,8 @@ void NetCdfStreamer::addTimeDimension()
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 string getPeriodName(long periodLengthInMinutes)
 {
   try
@@ -570,6 +576,7 @@ string getPeriodName(long periodLengthInMinutes)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -1092,7 +1099,7 @@ void NetCdfStreamer::setSpheroidAndWKT(const NcVar &crsVar,
   {
     string srsWKT = (geometrySRS ? getWKT(geometrySRS) : ""), ellipsoid;
     const string &WKT = (geometrySRS ? srsWKT : areaWKT);
-    double radiusOrSemiMajor, invFlattening;
+    double radiusOrSemiMajor = NAN, invFlattening = NAN;
 
     extractSpheroidFromGeom(geometrySRS, areaWKT, ellipsoid, radiusOrSemiMajor, invFlattening);
 
@@ -1167,7 +1174,7 @@ void NetCdfStreamer::setStereographicGeometry(const NcVar &crsVar,
   try
   {
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
-    double lon_0, lat_0, lat_ts;
+    double lon_0 = NAN, lat_0 = NAN, lat_ts = NAN;
 
     if ((!geometrySRS) && (!area))
       throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
@@ -1331,7 +1338,7 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
       geometrySRS = &areaSRS;
     }
 
-    auto projection = geometrySRS->GetAttrValue("PROJECTION");
+    const auto* projection = geometrySRS->GetAttrValue("PROJECTION");
     if (!projection)
       throw Fmi::Exception(BCP, "Geometry PROJECTION not set");
 
@@ -1442,7 +1449,8 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
     size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
            yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
+           y = 0, n = 0;
     size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
            nLon = (projected ? (itsNY * itsNX) : itsNX);
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
@@ -1610,7 +1618,8 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     size_t x0 = 0, y0 = 0;
     size_t xN = itsReqGridSizeX, yN = itsReqGridSizeY;
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y, n;
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
+           y = 0, n = 0;
     size_t nLat = (projected ? (itsNY * itsNX) : itsNY),
            nLon = (projected ? (itsNY * itsNX) : itsNX);
     std::unique_ptr<double[]> latPtr(new double[nLat]), lonPtr(new double[nLon]);
@@ -1709,15 +1718,16 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     {
       // latlon or rotlatlon, grid defined as cartesian product of latitude and longitude axes
 
-      auto latCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-                          ? "latitude"
-                          : "grid_latitude";
-      auto latUnit = (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ? "degrees_north"
-                                                                                  : "degrees";
-      auto lonCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-                          ? "longitude"
-                          : "grid_longitude";
-      auto lonUnit =
+      const auto* latCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                                 ? "latitude"
+                                 : "grid_latitude";
+      const auto* latUnit = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                                ? "degrees_north"
+                                : "degrees";
+      const auto* lonCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                                 ? "longitude"
+                                 : "grid_longitude";
+      const auto* lonUnit =
           (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ? "degrees_east" : "degrees";
 
       latVar = addCoordVariable("lat", itsNY, ncFloat, latCoord, latUnit, "Lat", itsLatDim);
@@ -1733,8 +1743,8 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
       }
       else
       {
-        auto rotLat = itsGridMetaData.rotLatitudes.get();
-        auto rotLon = itsGridMetaData.rotLongitudes.get();
+        auto* rotLat = itsGridMetaData.rotLatitudes.get();
+        auto* rotLon = itsGridMetaData.rotLongitudes.get();
 
         for (y = 0, n = 0; (y < yN); y += yStep, n++)
           lat[n] = rotLat[y * xN];
@@ -1765,6 +1775,8 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 Fmi::DateTime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMinutes)
 {
   try
@@ -1813,6 +1825,7 @@ Fmi::DateTime getPeriodStartTime(const Fmi::DateTime &vt, long periodLengthInMin
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -1958,7 +1971,7 @@ void NetCdfStreamer::addVariables(bool relative_uv)
 
       NFmiParam theParam(it->number());
       string paramName, radonParam, stdName, longName, unit, timeDimName = "time";
-      size_t i, j;
+      size_t i = 0, j = 0;
 
       signed long usedParId = theParam.GetIdent();
 
@@ -2131,7 +2144,8 @@ void NetCdfStreamer::storeParamValues()
     size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
            yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
+           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x = 0,
+           y = 0;
 
     std::shared_ptr<float[]> values(new float[itsNY * itsNX]);
 
@@ -2152,7 +2166,7 @@ void NetCdfStreamer::storeParamValues()
     }
     else
     {
-      const auto vVec = &(getValueListItem(itsGridQuery)->mValueVector);
+      auto* const vVec = &(getValueListItem(itsGridQuery)->mValueVector);
       bool gridContent = (itsReqParams.dataSource == GridContent);
 
       for (y = y0; (y < yN); y += yStep)
@@ -2281,7 +2295,7 @@ void NetCdfStreamer::paramChanged(size_t nextParamOffset)
   {
     // Note: Netcdf varibles are created when first nonmissing querydata parameter is encountered
 
-    if (itsDataVars.size() > 0)
+    if (!itsDataVars.empty())
     {
       for (size_t n = 0; (n < nextParamOffset); n++)
       {

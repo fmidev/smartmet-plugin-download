@@ -105,13 +105,8 @@ bool Resources::hasGrid(const NFmiArea &a, size_t gridSizeX, size_t gridSizeY)
     NFmiGrid *g = grid.get();
     const NFmiArea *ga = (g ? g->Area() : nullptr);
 
-    if (!(ga && (ga->ClassId() == a.ClassId()) && (g->XNumber() == gridSizeX) &&
-          (g->YNumber() == gridSizeY)))
-    {
-      return false;
-    }
-
-    return true;
+    return ga && (ga->ClassId() == a.ClassId()) && (g->XNumber() == gridSizeX) &&
+           (g->YNumber() == gridSizeY);
   }
   catch (...)
   {
@@ -219,7 +214,7 @@ OGRCoordinateTransformation *Resources::getCoordinateTransformation(OGRSpatialRe
       //
       if (isGeometrySRS)
       {
-        OGRSpatialReference *srs;
+        OGRSpatialReference* srs = nullptr;
 
         if (!(srs = toSRS->Clone()))
           throw Fmi::Exception(BCP,

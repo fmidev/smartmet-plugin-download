@@ -157,7 +157,7 @@ std::optional<std::vector<std::pair<T, T>>> nPairsOfValues(std::string &pvs,
         throw Fmi::Exception(
             BCP, std::string("Invalid value for parameter '") + param + "': '" + pvs + "'");
 
-      std::size_t n;
+      std::size_t n = 0;
 
       for (n = 0; (n < nValues); n++)
       {

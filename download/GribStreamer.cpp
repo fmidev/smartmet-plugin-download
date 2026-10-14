@@ -19,6 +19,7 @@
 #include <newbase/NFmiQueryDataUtil.h>
 #include <newbase/NFmiTimeList.h>
 #include <sys/types.h>
+#include <cmath>
 #include <string>
 #include <unistd.h>
 
@@ -184,7 +185,7 @@ void GribStreamer::setShapeOfTheEarth(const NFmiArea *area)
   try
   {
     string ellipsoid;
-    double radiusOrSemiMajor, invFlattening;
+    double radiusOrSemiMajor = NAN, invFlattening = NAN;
 
     OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
 
@@ -208,7 +209,7 @@ void GribStreamer::setShapeOfTheEarth(const NFmiArea *area)
     }
     else
     {
-      uint8_t shapeOfTheEarth;
+      uint8_t shapeOfTheEarth = 0;
 
       if (ellipsoid == "WGS 84")
         shapeOfTheEarth = 5;  // WGS84
@@ -276,7 +277,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
     auto blLat = itsBoundingBox.bottomLeft.Y(), trLat = itsBoundingBox.topRight.Y();
     auto trLon2 = trLon;
     bool gridContent = (itsReqParams.dataSource == GridContent);
-    long iNegative, jPositive;
+    long iNegative = 0, jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -309,7 +310,7 @@ void GribStreamer::setLatlonGeometryToGrib() const
       //
       // So this swap should later be removed too if the initial bbox lat swapping is removed
 
-      if (! ((itsGridOrigo != kTopLeft) || itsCropping.crop))
+      if ((itsGridOrigo == kTopLeft) && !itsCropping.crop)
       {
         trLat = blLat;
         blLat = itsBoundingBox.topRight.Y();
@@ -359,7 +360,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
 
     if (itsReqParams.dataSource == QueryData)
     {
-      auto geometrySRS = itsResources.getGeometrySRS();
+      auto* geometrySRS = itsResources.getGeometrySRS();
 
       if ((!geometrySRS) && (!area))
         throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
@@ -377,8 +378,8 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
       slon = *opt_plon;
       slat = -(*opt_plat);
 
-      auto rotEqcSRS = srs.get();
-      char *p4Str;
+      auto* rotEqcSRS = srs.get();
+      char* p4Str = nullptr;
       rotEqcSRS->exportToProj4(&p4Str);
       string rotLLp4Str(boost::algorithm::replace_first_copy(string(p4Str), "eqc", "latlong"));
       CPLFree(p4Str);
@@ -432,7 +433,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
     double gridCellWidthInDegrees =
         fabs((rotLLBBox.topRight.X() - rotLLBBox.bottomLeft.X()) / (itsNX - 1));
 
-    long iNegative, jPositive;
+    long iNegative = 0, jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -488,7 +489,7 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     // Note: grib2 longitude 0-360
 
-    double lon = itsBoundingBox.bottomLeft.X(), lon_0, lat_0, lat_ts;
+    double lon = itsBoundingBox.bottomLeft.X(), lon_0 = NAN, lat_0 = NAN, lat_ts = NAN;
 
     if ((!itsGrib1Flag) && (lon < 0))
       lon += 360;
@@ -525,7 +526,7 @@ void GribStreamer::setStereographicGeometryToGrib(const NFmiArea *area) const
 
     gset(itsGribHandle, "orientationOfTheGridInDegrees", lon_0);
 
-    long iNegative, jPositive;
+    long iNegative = 0, jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -591,7 +592,7 @@ void GribStreamer::setMercatorGeometryToGrib() const
     gset(itsGribHandle, "DiInMetres", fabs(itsDX));
     gset(itsGribHandle, "DjInMetres", fabs(itsDY));
 
-    long iNegative, jPositive;
+    long iNegative = 0, jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -668,7 +669,7 @@ void GribStreamer::setLambertConformalGeometryToGrib(const NFmiArea *area) const
     gset(itsGribHandle, "DxInMetres", fabs(itsDX));
     gset(itsGribHandle, "DyInMetres", fabs(itsDY));
 
-    long iNegative, jPositive;
+    long iNegative = 0, jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -684,12 +685,12 @@ void GribStreamer::setLambertConformalGeometryToGrib(const NFmiArea *area) const
     double lat_ts = getProjParam(*geometrySRS, SRS_PP_LATITUDE_OF_ORIGIN);
     double lon_0 = getProjParam(*geometrySRS, SRS_PP_CENTRAL_MERIDIAN);
 
-    auto projection = geometrySRS->GetAttrValue("PROJECTION");
+    const auto* projection = geometrySRS->GetAttrValue("PROJECTION");
     if (!projection)
       throw Fmi::Exception(BCP, "Geometry PROJECTION not set");
 
     double latin1 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_1);
-    double latin2;
+    double latin2 = NAN;
 
     if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
       latin2 = getProjParam(*geometrySRS, SRS_PP_STANDARD_PARALLEL_2);
@@ -755,7 +756,7 @@ void GribStreamer::setLambertAzimuthalEqualAreaGeometryToGrib() const
     gset(itsGribHandle, "DxInMetres", fabs(itsDX));
     gset(itsGribHandle, "DyInMetres", fabs(itsDY));
 
-    long iNegative, jPositive;
+    long iNegative = 0, jPositive = 0;
 
     scanningDirections(iNegative, jPositive);
 
@@ -915,7 +916,7 @@ void GribStreamer::setGeometryToGrib(const NFmiArea *area, bool relative_uv)
  */
 // ----------------------------------------------------------------------
 
-void GribStreamer::setGridGeometryToGrib(const QueryServer::Query &gridQuery)
+void GribStreamer::setGridGeometryToGrib(const QueryServer::Query& /*gridQuery*/)
 {
   try
   {
@@ -1081,7 +1082,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     T::ForecastNumber forecastNumber = 0;
     std::optional<long> templateNumber;
     bool gridContent = (itsReqParams.dataSource == GridContent), foundParam = false;
-    std::size_t i, j = pTable.size();
+    std::size_t i = 0, j = pTable.size();
     auto paramIndexIter = paramConfigIndexes.end();
 
     paramIdx = pTable.size();
@@ -1302,12 +1303,12 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         if (config.itsGrib1Param)
           indicatorOfTimeRange = config.itsGrib1Param->itsIndicatorOfTimeRange;
 
-        hasStepType = (indicatorOfTimeRange ? true : false);
+        hasStepType = (static_cast<bool>(indicatorOfTimeRange));
       }
       else if (config.itsGrib2Param)
       {
         typeOfStatisticalProcessing = config.itsGrib2Param->itsTypeOfStatisticalProcessing;
-        hasStepType = (typeOfStatisticalProcessing ? true : false);
+        hasStepType = (static_cast<bool>(typeOfStatisticalProcessing));
       }
     }
 
@@ -1478,6 +1479,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
 {
   try
@@ -1507,6 +1510,7 @@ Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -1570,7 +1574,8 @@ void GribStreamer::addValuesToGrib(const Engine::Querydata::Q& q,
     std::size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
     std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
+                yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1),
+                x = 0, y = 0;
     int i = 0;
 
     for (y = y0; (y < yN); y += yStep)
@@ -1677,10 +1682,11 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
            yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
 
     std::size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
-           yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1), x, y;
+                yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1),
+                x = 0, y = 0;
     int i = 0;
 
-    const auto vVec = &(getValueListItem(gridQuery)->mValueVector);
+    auto* const vVec = &(getValueListItem(gridQuery)->mValueVector);
 
     if (itsReqParams.dataSource == GridContent)
     {
@@ -1751,8 +1757,8 @@ string GribStreamer::getGribMessage(const Engine::Querydata::Q& q,
 
     addValuesToGrib(q, mt, level, values, scale, offset);
 
-    const void *mesg;
-    std::size_t mesg_len;
+    const void* mesg = nullptr;
+    std::size_t mesg_len = 0;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
     // BRAINSTORM-3378; kludge for setting packing needed atleast with old eccodes (2.27.1)
@@ -1798,8 +1804,8 @@ string GribStreamer::getGridGribMessage(const QueryServer::Query &gridQuery,
   {
     addGridValuesToGrib(gridQuery, mt, level, scale, offset);
 
-    const void *mesg;
-    std::size_t mesg_len;
+    const void* mesg = nullptr;
+    std::size_t mesg_len = 0;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
     if (mesg_len == 0)

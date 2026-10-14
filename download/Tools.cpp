@@ -9,7 +9,10 @@ namespace Plugin
 {
 namespace Download
 {
-static time_t GridGenerationDeletionTimeOffset = 5;
+namespace
+{
+time_t GridGenerationDeletionTimeOffset = 5;
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -171,7 +174,7 @@ double getProjParam(const OGRSpatialReference &srs,
 {
   try
   {
-    OGRErr err;
+    OGRErr err = 0;
 
     double v = srs.GetNormProjParm(param, defaultValue, &err);
 

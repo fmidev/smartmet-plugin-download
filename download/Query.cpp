@@ -25,7 +25,10 @@ namespace Plugin
 {
 namespace Download
 {
-static const char* defaultTimeZone = "utc";
+namespace
+{
+const char* defaultTimeZone = "utc";
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
@@ -401,7 +404,7 @@ bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS
 
       if (! originTime.empty())
       {
-        auto generationInfo = generationInfoList.getGenerationInfoByAnalysisTime(originTime);
+        auto* generationInfo = generationInfoList.getGenerationInfoByAnalysisTime(originTime);
 
         if (generationInfo && isValidGeneration(generationInfo))
         {
@@ -416,7 +419,7 @@ bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS
 
       for (; ((idx > 0) && (pg->second.size() < 2)); idx--)
       {
-        auto generationInfo = generationInfoList.getGenerationInfoByIndex(idx - 1);
+        auto* generationInfo = generationInfoList.getGenerationInfoByIndex(idx - 1);
 
         if (isValidGeneration(generationInfo))
         {
@@ -479,10 +482,10 @@ bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS
  */
 // ----------------------------------------------------------------------
 
-bool Query::getOriginTimeGeneration(const Engine::Grid::ContentServer_sptr& cS,
-                                    const string &producer,
-                                    const string &originTime,
-                                    T::GenerationId &generationId)
+bool Query::getOriginTimeGeneration(const Engine::Grid::ContentServer_sptr& /*cS*/,
+                                    const string& producer,
+                                    const string& originTime,
+                                    T::GenerationId& generationId)
 {
   try
   {
@@ -615,7 +618,7 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     // Get generation id for the requested or latest common origintime
 
     auto cS = gridEngine->getContentServer_sptr();
-    T::GenerationId generationId;
+    T::GenerationId generationId = 0;
 
     if (!getOriginTimeGeneration(cS, producer, originTimeStr, generationId))
       return;
@@ -656,9 +659,9 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
 
           for (size_t idx = 0; (idx < contentLength); idx++)
           {
-            auto contentInfo = contentInfoList.getContentInfoByIndex(idx);
+            auto* contentInfo = contentInfoList.getContentInfoByIndex(idx);
             auto levelContents = levels.find(contentInfo->mParameterLevel);
-            auto cI = new T::ContentInfo(*contentInfo);
+            auto* cI = new T::ContentInfo(*contentInfo);
 
             if (levelContents != levels.end())
             {
@@ -776,7 +779,7 @@ void Query::parseParameters(const Spine::HTTP::Request& theReq,
       expandParameterFromRangeValues(
           gridEngine, originTime, gribOutput, blockQuery, paramDef, pOptions);
 
-    if (pOptions.size() == 0)
+    if (pOptions.empty())
       throw Fmi::Exception::Trace(BCP, "No data available").disableStackTrace();
   }
   catch (...)

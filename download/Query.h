@@ -56,14 +56,14 @@ struct Producer
   NamedSettings namedSettings;  // Named settings ('key = value;') to be set to output (used with
                                 // grib formats only)
 
-  bool verticalInterpolation;  // Set if vertical interpolation is allowed. Default: false
+  bool verticalInterpolation = false;  // Set if vertical interpolation is allowed. Default: false
 
   Plugin::Download::Datum::DatumShift datumShift;  // Datum handling. Default: native
                                                    // datum (no shift). See Datum.h
 
-  bool multiFile;  // If set, query can span over multiple grid origintimes
+  bool multiFile = false;  // If set, query can span over multiple grid origintimes
 
-  Producer() : verticalInterpolation(false), multiFile(false) {}
+  Producer() {}
 
   bool disabledReqParam(std::string param) const
   {

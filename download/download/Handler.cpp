@@ -34,10 +34,12 @@ namespace Download
  */
 // ----------------------------------------------------------------------
 
+namespace
+{
 // Redact absolute filesystem paths from a message so internal server paths are not
 // leaked to clients through the X-Download-Error response header. Detailed messages
 // (with paths) still reach the server log and the debug stack trace.
-static std::string redactPaths(const std::string &msg)
+std::string redactPaths(const std::string &msg)
 {
   std::vector<std::string> tokens;
   boost::algorithm::split(tokens, msg, boost::algorithm::is_space());
@@ -55,7 +57,7 @@ static std::string redactPaths(const std::string &msg)
  */
 // ----------------------------------------------------------------------
 
-static string getMimeType(OutputFormat fmt)
+string getMimeType(OutputFormat fmt)
 {
   switch (fmt)
   {
@@ -74,7 +76,7 @@ static string getMimeType(OutputFormat fmt)
   }
 }
 
-static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
+ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
 {
   try
   {
@@ -121,7 +123,7 @@ static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
             // detect if they match querydata's native projection; cropping is not possible.
             //
             OGRSpatialReference srs;
-            OGRErr err;
+            OGRErr err = 0;
 
             reqParams.epsgCode =
                 boost::lexical_cast<EpsgCode>(proj.substr(strlen(projections[i].proj)));
@@ -169,7 +171,7 @@ static ProjType getProjectionType(ReqParams &reqParams, bool legacyMode)
  */
 // ----------------------------------------------------------------------
 
-static string getRequestParam(const Spine::HTTP::Request &req,
+string getRequestParam(const Spine::HTTP::Request &req,
                               const Producer &producer,
                               const char *urlParam,
                               const string& defaultValue)
@@ -188,7 +190,7 @@ static string getRequestParam(const Spine::HTTP::Request &req,
   }
 }
 
-static int getRequestInt(const Spine::HTTP::Request &req,
+int getRequestInt(const Spine::HTTP::Request &req,
                          const Producer &producer,
                          const char *urlParam,
                          int defaultValue)
@@ -205,7 +207,7 @@ static int getRequestInt(const Spine::HTTP::Request &req,
   }
 }
 
-static unsigned long getRequestUInt(const Spine::HTTP::Request &req,
+unsigned long getRequestUInt(const Spine::HTTP::Request &req,
                                     const Producer &producer,
                                     const char *urlParam,
                                     uint defaultValue)
@@ -222,7 +224,7 @@ static unsigned long getRequestUInt(const Spine::HTTP::Request &req,
   }
 }
 
-static const Producer &getRequestParams(const Spine::HTTP::Request &req,
+const Producer &getRequestParams(const Spine::HTTP::Request &req,
                                         ReqParams &reqParams,
                                         Config &config,
                                         const Engine::Querydata::Engine &qEngine,
@@ -522,6 +524,7 @@ static const Producer &getRequestParams(const Spine::HTTP::Request &req,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+}  // namespace
 
 // ----------------------------------------------------------------------
 /*!
