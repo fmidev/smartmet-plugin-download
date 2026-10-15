@@ -48,7 +48,7 @@ class GribStreamer : public DataStreamer
                         std::string& chunk) override;
 
  private:
-  GribStreamer();
+  GribStreamer() = delete;
 
   grib_handle* itsGribHandle = nullptr;
   std::vector<double> itsValueArray;

@@ -52,7 +52,7 @@ class GeoTiffStreamer : public DataStreamer
                         std::string& chunk) override;
 
  private:
-  GeoTiffStreamer();
+  GeoTiffStreamer() = delete;
 
   // One raster band (a single param/time/level slice)
   struct Band

@@ -1858,7 +1858,7 @@ void DataStreamer::getBBox(const Engine::Querydata::Q& q,
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getBBox(Engine::Querydata::Q q,
+void DataStreamer::getBBox(const Engine::Querydata::Q& q,
                            const NFmiArea& sourceArea,
                            OGRSpatialReference& targetSRS,
                            OGRSpatialReference* targetLLSRS)
@@ -1959,7 +1959,7 @@ void DataStreamer::getBBox(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getRegLLBBox(Engine::Querydata::Q q,
+void DataStreamer::getRegLLBBox(const Engine::Querydata::Q& q,
                                 const NFmiArea& sourceArea,
                                 OGRSpatialReference& targetSRS)
 {
@@ -2005,7 +2005,7 @@ void DataStreamer::getRegLLBBox(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q,
+string DataStreamer::getRegLLBBoxStr(const Engine::Querydata::Q& q,
                                      const NFmiArea& sourceArea,
                                      const string& targetProjection)
 {
@@ -2040,7 +2040,7 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q,
  */
 // ----------------------------------------------------------------------
 
-string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q)
+string DataStreamer::getRegLLBBoxStr(const Engine::Querydata::Q& q)
 {
   try
   {
@@ -2067,7 +2067,7 @@ string DataStreamer::getRegLLBBoxStr(Engine::Querydata::Q q)
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::getLLBBox(Engine::Querydata::Q q)
+void DataStreamer::getLLBBox(const Engine::Querydata::Q& q)
 {
   try
   {
@@ -2422,7 +2422,7 @@ AreaClassId getProjectionType(const ReqParams& itsReqParams, const char* project
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiArea* area)
+void DataStreamer::setTransformedCoordinates(const Engine::Querydata::Q& q, const NFmiArea* area)
 {
   try
   {
@@ -2684,7 +2684,7 @@ void DataStreamer::setTransformedCoordinates(Engine::Querydata::Q q, const NFmiA
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::coordTransform(Engine::Querydata::Q q, const NFmiArea* area)
+void DataStreamer::coordTransform(const Engine::Querydata::Q& q, const NFmiArea* area)
 {
   try
   {

@@ -1032,23 +1032,23 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   }
   if (isHybridLevel(levelType, gridContent))
     return HybridLevel;
-  else if (isHeightLevel(levelType, level, gridContent))
+  if (isHeightLevel(levelType, level, gridContent))
     return HeightLevel;
-  else if (isDepthLevel(levelType, level, gridContent))
+  if (isDepthLevel(levelType, level, gridContent))
     return DepthLevel;
-  else if (isNominalTopLevel(levelType, gridContent))
+  if (isNominalTopLevel(levelType, gridContent))
   {
     level = 0;
     return NominalTopLevel;
   }
-  else if (isMeanSeaLevel(levelType, gridContent))
+  if (isMeanSeaLevel(levelType, gridContent))
   {
     if (level == 0)
       return MeanSeaLevel;
 
     return HeightLevel;
   }
-  else if (isMostUnstableParcelLevel(levelType, gridContent))
+  if (isMostUnstableParcelLevel(levelType, gridContent))
   {
     level = 0;
     return MostUnstableParcelLevel;
@@ -1521,7 +1521,7 @@ Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
                                  0));
     if (timeStepInMinutes == DataStreamer::minutesInDay)
       return Fmi::DateTime(pt.date(), Fmi::TimeDuration(0, 0, 0));
-    else if (timeStepInMinutes == DataStreamer::minutesInMonth)
+    if (timeStepInMinutes == DataStreamer::minutesInMonth)
       return Fmi::DateTime(Fmi::Date(pt.date().year(), pt.date().month(), 1),
                            Fmi::TimeDuration(0, 0, 0));
 

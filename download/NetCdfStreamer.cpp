@@ -417,13 +417,13 @@ int getTimeOffset(const Fmi::DateTime &t1, const Fmi::DateTime& t2, long timeSte
       auto dd = t1.date() - t2.date();
       return dd;
     }
-    else if (timeStep == DataStreamer::minutesInMonth)
+    if (timeStep == DataStreamer::minutesInMonth)
     {
       Fmi::Date d1(t1.date());
       Fmi::Date d2(t2.date());
       return (12 * (d1.year() - d2.year())) + (d1.month() - d2.month());
     }
-    else if (timeStep == DataStreamer::minutesInYear)
+    if (timeStep == DataStreamer::minutesInYear)
     {
       return t1.date().year() - t2.date().year();
     }
@@ -559,14 +559,14 @@ string getPeriodName(long periodLengthInMinutes)
       return boost::lexical_cast<string>(periodLengthInMinutes) + "min";
     if (periodLengthInMinutes == 60)
       return "h";
-    else if ((periodLengthInMinutes < DataStreamer::minutesInDay) &&
+    if ((periodLengthInMinutes < DataStreamer::minutesInDay) &&
              ((DataStreamer::minutesInDay % periodLengthInMinutes) == 0))
       return boost::lexical_cast<string>(periodLengthInMinutes / 60) + "h";
-    else if (periodLengthInMinutes == DataStreamer::minutesInDay)
+    if (periodLengthInMinutes == DataStreamer::minutesInDay)
       return "d";
-    else if (periodLengthInMinutes == DataStreamer::minutesInMonth)
+    if (periodLengthInMinutes == DataStreamer::minutesInMonth)
       return "mon";
-    else if (periodLengthInMinutes == DataStreamer::minutesInYear)
+    if (periodLengthInMinutes == DataStreamer::minutesInYear)
       return "y";
 
     return boost::lexical_cast<string>(periodLengthInMinutes);

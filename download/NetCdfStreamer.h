@@ -54,7 +54,7 @@ class NetCdfStreamer : public DataStreamer
                         std::string& chunk) override;
 
  private:
-  NetCdfStreamer();
+  NetCdfStreamer() = delete;
   void requireNcFile();
 
   std::string itsFilename;

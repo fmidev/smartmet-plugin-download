@@ -32,7 +32,7 @@ class QDStreamer : public DataStreamer
                     std::string& chunk) override;
 
  private:
-  QDStreamer();
+  QDStreamer() = delete;
 
   std::list<NFmiDataMatrix<float>> itsGrids;  // Stores all loaded data/grids for current parameter
   bool itsMetaFlag = true;     // If set, send querydata headers (loading the first chunk)

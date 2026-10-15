@@ -47,7 +47,7 @@ class Plugin : public SmartMetPlugin
                       Spine::HTTP::Response& theResponse) override;
 
  private:
-  Plugin();
+  Plugin() = delete;
 
   void coveragesRequestHandler(const Spine::Reactor& theReactor,
                                const Spine::HTTP::Request& theRequest,

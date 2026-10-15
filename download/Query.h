@@ -65,7 +65,7 @@ struct Producer
 
   Producer() {}
 
-  bool disabledReqParam(std::string param) const
+  bool disabledReqParam(const std::string& param) const
   {
     return (disabledReqParams.find(param) != disabledReqParams.end());
   }

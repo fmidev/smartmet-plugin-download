@@ -25,6 +25,8 @@
 #include <timeseries/TimeSeriesGenerator.h>
 #include <ogr_spatialref.h>
 
+#include <utility>
+
 namespace SmartMet
 {
 namespace Plugin
@@ -82,7 +84,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   virtual void getGridDataChunk(const QueryServer::Query &gridQuery,
                                 int level,
                                 const NFmiMetTime &mt,
-                                std::string &chunk){};
+                                std::string &chunk){
+  }
 
  protected:
   void createQD(const NFmiGrid &g);
@@ -166,7 +169,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                const char *crsName = "crs");
 
  private:
-  DataStreamer();
+  DataStreamer() = delete;
 
   bool resetDataSet();
 
@@ -177,18 +180,18 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getBBox(const Engine::Querydata::Q& q,
                const NFmiArea &sourceArea,
                OGRSpatialReference &targetSRS);
-  void getBBox(Engine::Querydata::Q q,
-               const NFmiArea &sourceArea,
-               OGRSpatialReference &targetSRS,
-               OGRSpatialReference *targetLLSRS);
-  void getRegLLBBox(Engine::Querydata::Q q,
-                    const NFmiArea &sourceArea,
-                    OGRSpatialReference &targetSRS);
-  std::string getRegLLBBoxStr(Engine::Querydata::Q q,
-                              const NFmiArea &sourceArea,
-                              const std::string &projection);
-  std::string getRegLLBBoxStr(Engine::Querydata::Q q);
-  void getLLBBox(Engine::Querydata::Q q);
+  void getBBox(const Engine::Querydata::Q& q,
+               const NFmiArea& sourceArea,
+               OGRSpatialReference& targetSRS,
+               OGRSpatialReference* targetLLSRS);
+  void getRegLLBBox(const Engine::Querydata::Q& q,
+                    const NFmiArea& sourceArea,
+                    OGRSpatialReference& targetSRS);
+  std::string getRegLLBBoxStr(const Engine::Querydata::Q& q,
+                              const NFmiArea& sourceArea,
+                              const std::string& projection);
+  std::string getRegLLBBoxStr(const Engine::Querydata::Q& q);
+  void getLLBBox(const Engine::Querydata::Q& q);
 
   void setSteppedGridSize();
   bool setRequestedGridSize(const NFmiArea &area,
@@ -199,8 +202,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                std::size_t nativeGridSizeY);
   void setCropping(const NFmiGrid &grid);
 
-  void setTransformedCoordinates(Engine::Querydata::Q q, const NFmiArea *area);
-  void coordTransform(Engine::Querydata::Q q, const NFmiArea *area);
+  void setTransformedCoordinates(const Engine::Querydata::Q& q, const NFmiArea* area);
+  void coordTransform(const Engine::Querydata::Q& q, const NFmiArea* area);
 
   std::string getGridCenterBBoxStr() const;
 
@@ -276,7 +279,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     class GridIterator
     {
      public:
-      GridIterator(GridMetaData *gM) : gridMetaData(gM) { init = true; }
+      GridIterator(GridMetaData* gM) : gridMetaData(gM) {}
 
       bool atEnd();
       bool hasData(T::GeometryId &geometryId, T::ParamLevelId &gridLevelType, int &level);
@@ -285,24 +288,24 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
       GridIterator operator++(int);
 
      private:
-      bool init;
+      bool init{true};
       GridMetaData *gridMetaData;
     };
 
-    GridMetaData(DataStreamer *dS, std::string producerName, bool paramOrder) : gridIterator(this)
+    GridMetaData(DataStreamer* dS, std::string producerName, bool paramOrder)
+        : producer(std::move(producerName)),
+
+          queryOrderParam(paramOrder),
+          dataStreamer(dS),
+          gridIterator(this)
     {
-      dataStreamer = dS;
-      producer = producerName;
-      paramLevelId = GridFmiLevelTypeNone;
-      relativeUV = false;
-      queryOrderParam = paramOrder;
     }
 
     std::string producer;
     std::string crs;                        // grid.crs/grid.original.crs
     T::GridProjection projType = 0;             // wkt PROJECTION or p4 EXTENSION
     std::string projection;                 //
-    bool relativeUV;                        // QueryServer::Query grid.original.relativeUV
+    bool relativeUV{false};                 // QueryServer::Query grid.original.relativeUV
     std::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
     double southernPoleLat = 0.0;                 // wkt p4 EXTENSION o_lat_p
     double southernPoleLon = 0.0;                 // wkt p4 EXTENSION o_lon_p
@@ -327,7 +330,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     StringMapSet originTimeTimes;
     std::map<std::string, std::string> paramKeys;
     std::map<std::string, T::ParamLevelId> paramLevelIds;
-    T::ParamLevelId paramLevelId;
+    T::ParamLevelId paramLevelId{GridFmiLevelTypeNone};
 
     bool queryOrderParam;
 
