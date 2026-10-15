@@ -872,7 +872,7 @@ NcDim NetCdfStreamer::getLevelDimension(
     if (levelDim == itsLevelDimensions.end())
       return {};
 
-    levelDimName = levelDim->second.c_str();
+    levelDimName = levelDim->second;
 
     return itsFile->getDim(levelDimName);
   }

@@ -602,8 +602,7 @@ void DownloadHandler::requestHandler(const Spine::Reactor& /* theReactor */,
       theResponse.setStatus(Spine::HTTP::Status::ok);
 
       theResponse.setHeader("Content-Type", getMimeType(reqParams.outputFormat));
-      theResponse.setHeader("Content-Disposition",
-                            (string("attachment; filename=") + filename).c_str());
+      theResponse.setHeader("Content-Disposition", string("attachment; filename=") + filename);
 
       // Defining the response header information
 
@@ -614,9 +613,9 @@ void DownloadHandler::requestHandler(const Spine::Reactor& /* theReactor */,
       std::string expiration = tformat->format(t_expires);
       std::string modification = tformat->format(t_now);
 
-      theResponse.setHeader("Cache-Control", cachecontrol.c_str());
-      theResponse.setHeader("Expires", expiration.c_str());
-      theResponse.setHeader("Last-Modified", modification.c_str());
+      theResponse.setHeader("Cache-Control", cachecontrol);
+      theResponse.setHeader("Expires", expiration);
+      theResponse.setHeader("Last-Modified", modification);
     }
     catch (...)
     {
@@ -652,7 +651,7 @@ void DownloadHandler::requestHandler(const Spine::Reactor& /* theReactor */,
       boost::algorithm::replace_all(msg, "\n", " ");
       msg = redactPaths(msg);
       msg = msg.substr(0, 300);
-      theResponse.setHeader("X-Download-Error", msg.c_str());
+      theResponse.setHeader("X-Download-Error", msg);
     }
   }
   catch (...)

@@ -580,7 +580,7 @@ Fmi::DateTime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
       originTimeLevels.erase(next(otl), originTimeLevels.end());
       originTimeTimes.erase(next(ott), originTimeTimes.end());
 
-      return Fmi::DateTime::from_iso_string(ot->c_str());
+      return Fmi::DateTime::from_iso_string(*ot);
     }
 
     throw Fmi::Exception(BCP, "Data has no common origintime");
@@ -5313,8 +5313,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
     if ((!widthAttr) || (!heightAttr))
       throw Fmi::Exception(BCP, "Grid width/height not set in query result");
 
-    auto gridSizeX = Fmi::stoul(widthAttr->mValue.c_str());
-    auto gridSizeY = Fmi::stoul(heightAttr->mValue.c_str());
+    auto gridSizeX = Fmi::stoul(widthAttr->mValue);
+    auto gridSizeY = Fmi::stoul(heightAttr->mValue);
 
     if (vVec->size() != (gridSizeX * gridSizeY))
       throw Fmi::Exception(BCP,
@@ -5354,8 +5354,8 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
     if ((!xResolAttr) || (!yResolAttr))
       throw Fmi::Exception(BCP, "Grid cell width/height not set in query result");
 
-    itsDX = Fmi::stod(xResolAttr->mValue.c_str());
-    itsDY = Fmi::stod(yResolAttr->mValue.c_str());
+    itsDX = Fmi::stod(xResolAttr->mValue);
+    itsDY = Fmi::stod(yResolAttr->mValue);
 
     // Adjust resolution by grid step
     //
@@ -5388,7 +5388,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
     itsGridMetaData.relativeUV = (uvAttr && (uvAttr->mValue == "1"));
 
     if ((itsGridMetaData.projType == T::GridProjectionValue::RotatedLatLon) &&
-        (itsReqParams.outputFormat == NetCdf) && (!itsGridMetaData.rotLongitudes.get()))
+        (itsReqParams.outputFormat == NetCdf) && (!itsGridMetaData.rotLongitudes))
     {
       // Transform regular latlon coords to rotated
 

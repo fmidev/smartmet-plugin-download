@@ -1016,7 +1016,7 @@ void CoveragesHandler::requestHandler(const Spine::Reactor& /* theReactor */,
       // OGC API - Common: an RFC 7807 problem details body. The X-Download-Error header is
       // kept for the clients which read the error from it.
       setProblemResponse(theResponse, Spine::HTTP::Status::bad_request, "Bad Request", msg);
-      theResponse.setHeader("X-Download-Error", msg.c_str());
+      theResponse.setHeader("X-Download-Error", msg);
     }
   }
   catch (...)
@@ -1284,8 +1284,7 @@ void CoveragesHandler::handleCoverage(const Spine::HTTP::Request &theRequest,
 
     // Set appropriate MIME type based on output format
     theResponse.setHeader("Content-Type", getMimeType(reqParams.outputFormat));
-    theResponse.setHeader("Content-Disposition",
-                          (string("attachment; filename=") + filename).c_str());
+    theResponse.setHeader("Content-Disposition", string("attachment; filename=") + filename);
     theResponse.setHeader("Access-Control-Allow-Origin", "*");
 
     // Cache headers
