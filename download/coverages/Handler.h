@@ -33,6 +33,7 @@ class CoveragesHandler
   CoveragesHandler() = default;
   CoveragesHandler(const CoveragesHandler &other) = delete;
   CoveragesHandler &operator=(const CoveragesHandler &other) = delete;
+  ~CoveragesHandler() = default;
 
   void init(Config &config,
             Engine::Querydata::Engine *qEngine,

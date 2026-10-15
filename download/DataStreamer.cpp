@@ -117,6 +117,7 @@ void DataStreamer::checkDataTimeStep(long timeStep)
 
     if (q && q->firstTime())
     {
+      // NOLINTNEXTLINE(cppcoreguidelines-slicing): only the time is wanted, not the time step
       NFmiTime t1 = q->validTime();
       itsDataTimeStep = (q->nextTime() ? q->validTime().DifferenceInMinutes(t1) : 60);
 

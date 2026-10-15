@@ -29,6 +29,7 @@ class DownloadHandler
   DownloadHandler() = default;
   DownloadHandler(const DownloadHandler &other) = delete;
   DownloadHandler &operator=(const DownloadHandler &other) = delete;
+  ~DownloadHandler() = default;
 
   void init(Config &config,
             Engine::Querydata::Engine *qEngine,

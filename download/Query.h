@@ -153,27 +153,27 @@ struct ReqParams
                            // data
   std::string endTime;     // Data end time. Default: last validtime of the latest/'originTime' data
   std::string originTime;  // Data origin time. Default: the origin time of the latest data
-  unsigned int timeSteps;  // Extract n validtimes. Default: 0; extract every validtime
-  unsigned int timeStep;   // Extract every n'th validtime. Default: 0; extract every validtime
-  unsigned int maxTimeSteps;  // Max # of validtimes extracted. Default: 0; extract every validtime.
-                              // Currently not used
+  unsigned int timeSteps = 0;  // Extract n validtimes. Default: 0; extract every validtime
+  unsigned int timeStep = 0;   // Extract every n'th validtime. Default: 0; extract every validtime
+  unsigned int maxTimeSteps = 0;  // Max # of validtimes extracted. Default: 0; extract every
+                                  // validtime. Currently not used
 
-  unsigned int gridParamBlockSize;  // # of grid parameters fetched as a block (single timestep)
-  unsigned int gridTimeBlockSize;   // # of grid timesteps fetched as a block (single parameter)
-  unsigned int chunkSize;           // Minimum chunk length to return
+  unsigned int gridParamBlockSize = 0;  // # of grid parameters fetched as a block (single timestep)
+  unsigned int gridTimeBlockSize = 0;   // # of grid timesteps fetched as a block (single parameter)
+  unsigned int chunkSize = 0;           // Minimum chunk length to return
 
   //
   // Level; pressure/hPa or hybrid or height level ranges/limits. Default: extract every level
   //
-  int minLevel;  // First level to extract
-  int maxLevel;  // Last level to extract
+  int minLevel = 0;  // First level to extract
+  int maxLevel = 0;  // Last level to extract
   //
   // Height (meters) ranges/limits
   //
   // Note: Currently not implemented
   //
-  int minHeight;
-  int maxHeight;
+  int minHeight = 0;
+  int maxHeight = 0;
   //
   // Projection. Default: native projection
   //
@@ -183,7 +183,7 @@ struct ReqParams
                             //
   ProjType projType;        // Derived; projection type based on projection
   AreaClassId areaClassId;  // Derived; area class id based on projection
-  EpsgCode epsgCode;        // Derived; epsg projection based on projection
+  EpsgCode epsgCode = 0;        // Derived; epsg projection based on projection
   //
   // Bounding. Default: the native area
   //
@@ -228,7 +228,7 @@ struct ReqParams
   std::string packing;              // If given, set to grib as is
   int bitsPerValue = -1;            // 0-32, default -1 for using grib_api default
                                     //
-  unsigned int grib2TablesVersion;  // If given (nonzero), set as grib2
+  unsigned int grib2TablesVersion = 0;  // If given (nonzero), set as grib2
                                     // 'gribMasterTablesVersionNumber'
   //
   // Datum handling. Default: native datum (no shift)
@@ -239,7 +239,7 @@ struct ReqParams
   //
   // Misc testing
   //
-  unsigned int test;
+  unsigned int test = 0;
 
   ReqParams() = default;
 };

@@ -31,6 +31,8 @@ class GeoTiffStreamer : public DataStreamer
                   const Producer& producer,
                   const ReqParams& reqParams);
   ~GeoTiffStreamer() override;
+  GeoTiffStreamer(const GeoTiffStreamer&) = delete;
+  GeoTiffStreamer& operator=(const GeoTiffStreamer&) = delete;
 
   std::string getChunk() override;
 

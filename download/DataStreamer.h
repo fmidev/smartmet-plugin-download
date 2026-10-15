@@ -300,12 +300,12 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     std::string producer;
     std::string crs;                        // grid.crs/grid.original.crs
-    T::GridProjection projType;             // wkt PROJECTION or p4 EXTENSION
+    T::GridProjection projType = 0;             // wkt PROJECTION or p4 EXTENSION
     std::string projection;                 //
     bool relativeUV;                        // QueryServer::Query grid.original.relativeUV
     std::optional<BBoxCorners> targetBBox;  // target projection native coordinate bbox
-    double southernPoleLat;                 // wkt p4 EXTENSION o_lat_p
-    double southernPoleLon;                 // wkt p4 EXTENSION o_lon_p
+    double southernPoleLat = 0.0;                 // wkt p4 EXTENSION o_lat_p
+    double southernPoleLon = 0.0;                 // wkt p4 EXTENSION o_lon_p
     std::unique_ptr<double> rotLongitudes;  // rotated coords for rotlat grid
     std::unique_ptr<double> rotLatitudes;   //
 
@@ -319,9 +319,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
     Fmi::DateTime originTime;      // Set if fixed (latest non-multifile or given) otime
     Fmi::DateTime gridOriginTime;  // otime of current grid (fixed or latest multifile)
-    T::ForecastType forecastType;
-    T::ForecastNumber forecastNumber;
-    T::GeometryId geometryId;
+    T::ForecastType forecastType = 0;
+    T::ForecastNumber forecastNumber = 0;
+    T::GeometryId geometryId = 0;
     StringMapSet originTimeParams;
     std::map<std::string, std::set<T::ParamLevel>> originTimeLevels;
     StringMapSet originTimeTimes;

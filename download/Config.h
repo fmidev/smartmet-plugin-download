@@ -34,6 +34,7 @@ class Config
   Config() = delete;
   Config(const Config& other) = delete;
   Config& operator=(const Config& other) = delete;
+  ~Config() = default;
 
   void init(Engine::Querydata::Engine* querydata, Engine::Grid::Engine* griddata);
 

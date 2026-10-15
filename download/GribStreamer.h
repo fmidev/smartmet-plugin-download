@@ -26,6 +26,8 @@ class GribStreamer : public DataStreamer
                const Producer& producer,
                const ReqParams& reqParams);
   ~GribStreamer() override;
+  GribStreamer(const GribStreamer&) = delete;
+  GribStreamer& operator=(const GribStreamer&) = delete;
 
   std::string getChunk() override;
 

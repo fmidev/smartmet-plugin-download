@@ -29,6 +29,8 @@ class NetCdfStreamer : public DataStreamer
                  const Producer &producer,
                  const ReqParams &reqParams);
   ~NetCdfStreamer() override;
+  NetCdfStreamer(const NetCdfStreamer&) = delete;
+  NetCdfStreamer& operator=(const NetCdfStreamer&) = delete;
 
   // Remove temporary files left behind by server processes which no longer run
   static void removeStaleTemporaryFiles(const std::string &theDirectory);

@@ -198,6 +198,7 @@ void Config::setEnvSettings()
           string val = settings[i];
 
           boost::trim(val);
+          // NOLINTNEXTLINE(concurrency-mt-unsafe): configured environment for the libraries, set once at initialization
           setenv(var.c_str(), val.c_str(), 1);
         }
       }
