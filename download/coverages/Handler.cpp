@@ -651,6 +651,223 @@ string getMimeType(OutputFormat fmt)
   }
 }
 
+// Parse the data source and check grid data is available if needed
+void parseDataSource(const Spine::HTTP::Request &req,
+                     ReqParams &reqParams,
+                     const Engine::Grid::Engine *gridEngine)
+{
+  reqParams.source = Spine::optional_string(req.getParameter("source"), "querydata");
+
+  if (reqParams.source == "querydata")
+    reqParams.dataSource = QueryData;
+  else if (reqParams.source == "gridmapping")
+    reqParams.dataSource = GridMapping;
+  else if (reqParams.source == "grid" || reqParams.source == "gridcontent")
+  {
+    reqParams.source = "gridcontent";
+    reqParams.dataSource = GridContent;
+  }
+  else
+    throw Fmi::Exception(BCP, "Unknown source: " + reqParams.source);
+
+  if (reqParams.dataSource != QueryData)
+  {
+    if (!gridEngine)
+      throw Fmi::Exception(BCP, "Grid data is not available");
+    if (!(gridEngine->isEnabled()))
+      throw Fmi::Exception(BCP, "Grid data is disabled");
+  }
+}
+
+// Parse time parameters
+void parseTimeParams(const Spine::HTTP::Request &req, ReqParams &reqParams)
+{
+  reqParams.startTime = Spine::optional_string(req.getParameter("starttime"), "");
+  reqParams.endTime = Spine::optional_string(req.getParameter("endtime"), "");
+  reqParams.originTime = Spine::optional_string(req.getParameter("origintime"), "");
+  reqParams.timeSteps = Spine::optional_unsigned_long(req.getParameter("timesteps"), 0);
+  reqParams.maxTimeSteps = 0;
+
+  string timeStepStr = Spine::optional_string(req.getParameter("timestep"), "");
+  reqParams.timeStep = ((timeStepStr != "data")
+                            ? Spine::optional_unsigned_long(req.getParameter("timestep"), 0)
+                            : 0);
+
+  if (reqParams.startTime == "data")
+    reqParams.startTime.clear();
+  if (reqParams.endTime == "data")
+    reqParams.endTime.clear();
+  if (reqParams.originTime == "data")
+    reqParams.originTime.clear();
+}
+
+// Parse datum
+void parseDatum(const Spine::HTTP::Request &req, ReqParams &reqParams)
+{
+  reqParams.datum = Spine::optional_string(req.getParameter("datum"), "");
+  if (!reqParams.datum.empty())
+  {
+    if (!Datum::parseDatumShift(reqParams.datum, reqParams.datumShift))
+      throw Fmi::Exception(BCP, "Invalid datum selected");
+  }
+  else
+  {
+    reqParams.datumShift = Datum::DatumShift::None;
+  }
+}
+
+// Parse projection
+void parseProjection(const Spine::HTTP::Request &req, ReqParams &reqParams)
+{
+  reqParams.projection = Spine::optional_string(req.getParameter("projection"), "");
+
+  if (reqParams.dataSource == QueryData && !reqParams.projection.empty())
+  {
+    // Simplified projection type detection for EPSG codes
+    string proj = Fmi::ascii_tolower_copy(reqParams.projection);
+    if (proj.find("epsg:") == 0)
+    {
+      reqParams.projType = P_Epsg;
+      reqParams.epsgCode = Fmi::stoul(proj.substr(5));
+      reqParams.areaClassId = A_Native;
+
+      // Check if it's a geographic CRS (treat as latlon for cropping)
+      OGRSpatialReference srs;
+      if (srs.importFromEPSG(reqParams.epsgCode) == OGRERR_NONE && !srs.IsProjected())
+      {
+        reqParams.projection = "latlon";
+        reqParams.projType = P_LatLon;
+        reqParams.areaClassId = A_LatLon;
+      }
+      else if (reqParams.datumShift == Datum::DatumShift::None)
+      {
+        reqParams.datumShift = Datum::DatumShift::Fmi;
+      }
+    }
+    else if (proj == "latlon")
+    {
+      reqParams.projType = P_LatLon;
+      reqParams.areaClassId = A_LatLon;
+    }
+    else
+    {
+      reqParams.projType = P_Native;
+      reqParams.areaClassId = A_Native;
+    }
+  }
+  else
+  {
+    reqParams.projType = P_Native;
+    reqParams.areaClassId = A_Native;
+  }
+}
+
+// Parse bounding box, grid center, size, resolution and step
+void parseGridParams(const Spine::HTTP::Request &req, ReqParams &reqParams)
+{
+  // Bounding box (same format in both APIs)
+  reqParams.bbox = reqParams.origBBox = Spine::optional_string(req.getParameter("bbox"), "");
+
+  if (!reqParams.bbox.empty())
+    reqParams.bboxRect = nPairsOfValues<double>(reqParams.bbox, "bbox", 2);
+
+  // Grid center lon,lat and width and height in km; lon,lat,width,height
+  reqParams.gridCenter = Spine::optional_string(req.getParameter("gridcenter"), "");
+
+  if (!reqParams.gridCenter.empty())
+  {
+    if (reqParams.bboxRect)
+      throw Fmi::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
+
+    reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
+  }
+
+  // Grid size (translated from scale-size)
+  reqParams.gridSize = Spine::optional_string(req.getParameter("gridsize"), "");
+  if (!reqParams.gridSize.empty())
+    reqParams.gridSizeXY = nPairsOfValues<unsigned int>(reqParams.gridSize, "gridsize", 1);
+
+  // Grid resolution (translated from scale-axes)
+  reqParams.gridResolution = Spine::optional_string(req.getParameter("gridresolution"), "");
+  if (!reqParams.gridResolution.empty())
+  {
+    if (reqParams.gridSizeXY)
+      throw Fmi::Exception(BCP, "Cannot specify both scale-size and scale-axes");
+    reqParams.gridResolutionXY =
+        nPairsOfValues<double>(reqParams.gridResolution, "gridresolution", 1);
+  }
+
+  // Grid step (translated from scale-factor)
+  reqParams.gridStep = Spine::optional_string(req.getParameter("gridstep"), "");
+  if (!reqParams.gridStep.empty())
+    reqParams.gridStepXY = nPairsOfValues<unsigned int>(reqParams.gridStep, "gridstep", 1);
+}
+
+// Parse output format
+void parseOutputFormat(const Spine::HTTP::Request &req, ReqParams &reqParams)
+{
+  reqParams.format = Spine::optional_string(req.getParameter("format"), "NETCDF");
+  Fmi::ascii_toupper(reqParams.format);
+
+  if (reqParams.format == "GRIB1")
+    reqParams.outputFormat = Grib1;
+  else if (reqParams.format == "GRIB2")
+    reqParams.outputFormat = Grib2;
+  else if (reqParams.format == "NETCDF")
+    reqParams.outputFormat = NetCdf;
+  else if ((reqParams.format == "GEOTIFF") || (reqParams.format == "GTIFF") ||
+           (reqParams.format == "TIFF"))
+    reqParams.outputFormat = GeoTiff;
+  else if (reqParams.format == "QD")
+  {
+    if (reqParams.dataSource != QueryData)
+      throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
+    reqParams.outputFormat = QD;
+  }
+  else
+    throw Fmi::Exception(BCP, "Unsupported output format: " + reqParams.format);
+}
+
+// Parse packing type and bitspervalue for grib
+void parsePacking(const Spine::HTTP::Request &req, ReqParams &reqParams, const Config &config)
+{
+  reqParams.packing = Spine::optional_string(req.getParameter("packing"), "");
+  Fmi::ascii_tolower(reqParams.packing);
+
+  auto bitsPerValue = Spine::optional_string(req.getParameter("bitspervalue"), "");
+
+  if (reqParams.packing.empty() != bitsPerValue.empty())
+    throw Fmi::Exception(BCP, "Both packing and bitspervalue must be given");
+
+  if (!reqParams.packing.empty())
+  {
+    if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
+      throw Fmi::Exception(BCP, "Packing can be specified with grib format only")
+          .addParameter("packing", reqParams.packing);
+
+    auto msg = config.packingErrorMessage(reqParams.packing);
+    if (!msg.empty())
+      throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
+  }
+
+  try
+  {
+    if (!bitsPerValue.empty())
+    {
+      auto bpv = Fmi::stoi(bitsPerValue);
+
+      if ((bpv < 0) || (bpv > 32))
+        throw Fmi::Exception(BCP, "");
+
+      reqParams.bitsPerValue = bpv;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Invalid packing bitspervalue, must be in range 0-32");
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Fill ReqParams from a translated download-style request
@@ -671,27 +888,7 @@ const Producer &fillReqParams(const Spine::HTTP::Request &req,
   {
     // Data source
     static Producer dummyProducer;
-    reqParams.source = Spine::optional_string(req.getParameter("source"), "querydata");
-
-    if (reqParams.source == "querydata")
-      reqParams.dataSource = QueryData;
-    else if (reqParams.source == "gridmapping")
-      reqParams.dataSource = GridMapping;
-    else if (reqParams.source == "grid" || reqParams.source == "gridcontent")
-    {
-      reqParams.source = "gridcontent";
-      reqParams.dataSource = GridContent;
-    }
-    else
-      throw Fmi::Exception(BCP, "Unknown source: " + reqParams.source);
-
-    if (reqParams.dataSource != QueryData)
-    {
-      if (!gridEngine)
-        throw Fmi::Exception(BCP, "Grid data is not available");
-      if (!(gridEngine->isEnabled()))
-        throw Fmi::Exception(BCP, "Grid data is disabled");
-    }
+    parseDataSource(req, reqParams, gridEngine);
 
     // Producer (set by translateRequest from collection ID)
     reqParams.producer = Spine::optional_string(req.getParameter("producer"), "");
@@ -707,23 +904,7 @@ const Producer &fillReqParams(const Spine::HTTP::Request &req,
       throw Fmi::Exception(BCP, "No producer / collection specified");
 
     // Time parameters (already translated by parseDatetime/parseSubset)
-    reqParams.startTime = Spine::optional_string(req.getParameter("starttime"), "");
-    reqParams.endTime = Spine::optional_string(req.getParameter("endtime"), "");
-    reqParams.originTime = Spine::optional_string(req.getParameter("origintime"), "");
-    reqParams.timeSteps = Spine::optional_unsigned_long(req.getParameter("timesteps"), 0);
-    reqParams.maxTimeSteps = 0;
-
-    string timeStepStr = Spine::optional_string(req.getParameter("timestep"), "");
-    reqParams.timeStep = ((timeStepStr != "data")
-                              ? Spine::optional_unsigned_long(req.getParameter("timestep"), 0)
-                              : 0);
-
-    if (reqParams.startTime == "data")
-      reqParams.startTime.clear();
-    if (reqParams.endTime == "data")
-      reqParams.endTime.clear();
-    if (reqParams.originTime == "data")
-      reqParams.originTime.clear();
+    parseTimeParams(req, reqParams);
 
     // Levels (already translated by parseSubset)
     reqParams.minLevel = Spine::optional_int(req.getParameter("minlevel"), -1);
@@ -731,155 +912,19 @@ const Producer &fillReqParams(const Spine::HTTP::Request &req,
     reqParams.minHeight = reqParams.maxHeight = -1;
 
     // Datum
-    reqParams.datum = Spine::optional_string(req.getParameter("datum"), "");
-    if (!reqParams.datum.empty())
-    {
-      if (!Datum::parseDatumShift(reqParams.datum, reqParams.datumShift))
-        throw Fmi::Exception(BCP, "Invalid datum selected");
-    }
-    else
-    {
-      reqParams.datumShift = Datum::DatumShift::None;
-    }
+    parseDatum(req, reqParams);
 
     // Projection (already translated by translateRequest from crs)
-    reqParams.projection = Spine::optional_string(req.getParameter("projection"), "");
+    parseProjection(req, reqParams);
 
-    if (reqParams.dataSource == QueryData && !reqParams.projection.empty())
-    {
-      // Simplified projection type detection for EPSG codes
-      string proj = Fmi::ascii_tolower_copy(reqParams.projection);
-      if (proj.find("epsg:") == 0)
-      {
-        reqParams.projType = P_Epsg;
-        reqParams.epsgCode = Fmi::stoul(proj.substr(5));
-        reqParams.areaClassId = A_Native;
-
-        // Check if it's a geographic CRS (treat as latlon for cropping)
-        OGRSpatialReference srs;
-        if (srs.importFromEPSG(reqParams.epsgCode) == OGRERR_NONE && !srs.IsProjected())
-        {
-          reqParams.projection = "latlon";
-          reqParams.projType = P_LatLon;
-          reqParams.areaClassId = A_LatLon;
-        }
-        else if (reqParams.datumShift == Datum::DatumShift::None)
-        {
-          reqParams.datumShift = Datum::DatumShift::Fmi;
-        }
-      }
-      else if (proj == "latlon")
-      {
-        reqParams.projType = P_LatLon;
-        reqParams.areaClassId = A_LatLon;
-      }
-      else
-      {
-        reqParams.projType = P_Native;
-        reqParams.areaClassId = A_Native;
-      }
-    }
-    else
-    {
-      reqParams.projType = P_Native;
-      reqParams.areaClassId = A_Native;
-    }
-
-    // Bounding box (same format in both APIs)
-    reqParams.bbox = reqParams.origBBox = Spine::optional_string(req.getParameter("bbox"), "");
-
-    if (!reqParams.bbox.empty())
-      reqParams.bboxRect = nPairsOfValues<double>(reqParams.bbox, "bbox", 2);
-
-    // Grid center lon,lat and width and height in km; lon,lat,width,height
-    reqParams.gridCenter = Spine::optional_string(req.getParameter("gridcenter"), "");
-
-    if (!reqParams.gridCenter.empty())
-    {
-      if (reqParams.bboxRect)
-        throw Fmi::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
-
-      reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
-    }
-
-    // Grid size (translated from scale-size)
-    reqParams.gridSize = Spine::optional_string(req.getParameter("gridsize"), "");
-    if (!reqParams.gridSize.empty())
-      reqParams.gridSizeXY = nPairsOfValues<unsigned int>(reqParams.gridSize, "gridsize", 1);
-
-    // Grid resolution (translated from scale-axes)
-    reqParams.gridResolution = Spine::optional_string(req.getParameter("gridresolution"), "");
-    if (!reqParams.gridResolution.empty())
-    {
-      if (reqParams.gridSizeXY)
-        throw Fmi::Exception(BCP, "Cannot specify both scale-size and scale-axes");
-      reqParams.gridResolutionXY =
-          nPairsOfValues<double>(reqParams.gridResolution, "gridresolution", 1);
-    }
-
-    // Grid step (translated from scale-factor)
-    reqParams.gridStep = Spine::optional_string(req.getParameter("gridstep"), "");
-    if (!reqParams.gridStep.empty())
-      reqParams.gridStepXY = nPairsOfValues<unsigned int>(reqParams.gridStep, "gridstep", 1);
+    // Bounding box, grid center, size, resolution and step
+    parseGridParams(req, reqParams);
 
     // Output format
-    reqParams.format = Spine::optional_string(req.getParameter("format"), "NETCDF");
-    Fmi::ascii_toupper(reqParams.format);
-
-    if (reqParams.format == "GRIB1")
-      reqParams.outputFormat = Grib1;
-    else if (reqParams.format == "GRIB2")
-      reqParams.outputFormat = Grib2;
-    else if (reqParams.format == "NETCDF")
-      reqParams.outputFormat = NetCdf;
-    else if ((reqParams.format == "GEOTIFF") || (reqParams.format == "GTIFF") ||
-             (reqParams.format == "TIFF"))
-      reqParams.outputFormat = GeoTiff;
-    else if (reqParams.format == "QD")
-    {
-      if (reqParams.dataSource != QueryData)
-        throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
-      reqParams.outputFormat = QD;
-    }
-    else
-      throw Fmi::Exception(BCP, "Unsupported output format: " + reqParams.format);
+    parseOutputFormat(req, reqParams);
 
     // Packing type and bitspervalue for grib
-    reqParams.packing = Spine::optional_string(req.getParameter("packing"), "");
-    Fmi::ascii_tolower(reqParams.packing);
-
-    auto bitsPerValue = Spine::optional_string(req.getParameter("bitspervalue"), "");
-
-    if (reqParams.packing.empty() != bitsPerValue.empty())
-      throw Fmi::Exception(BCP, "Both packing and bitspervalue must be given");
-
-    if (!reqParams.packing.empty())
-    {
-      if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
-        throw Fmi::Exception(BCP, "Packing can be specified with grib format only")
-            .addParameter("packing", reqParams.packing);
-
-      auto msg = config.packingErrorMessage(reqParams.packing);
-      if (!msg.empty())
-        throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
-    }
-
-    try
-    {
-      if (!bitsPerValue.empty())
-      {
-        auto bpv = Fmi::stoi(bitsPerValue);
-
-        if ((bpv < 0) || (bpv > 32))
-          throw Fmi::Exception(BCP, "");
-
-        reqParams.bitsPerValue = bpv;
-      }
-    }
-    catch (...)
-    {
-      throw Fmi::Exception(BCP, "Invalid packing bitspervalue, must be in range 0-32");
-    }
+    parsePacking(req, reqParams, config);
 
     // GRIB2 tables version
     reqParams.grib2TablesVersion =
