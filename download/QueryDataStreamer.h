@@ -34,6 +34,9 @@ class QDStreamer : public DataStreamer
  private:
   QDStreamer() = delete;
 
+  bool loadParamGrids();
+  void writeGridValues(std::ostringstream& os, long& chunkLen);
+
   std::list<NFmiDataMatrix<float>> itsGrids;  // Stores all loaded data/grids for current parameter
   bool itsMetaFlag = true;     // If set, send querydata headers (loading the first chunk)
   bool itsLoadedFlag = false;  // If set, all data has been loaded (but possibly not sent yet)

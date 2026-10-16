@@ -30,6 +30,93 @@ QDStreamer::~QDStreamer() = default;
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Load all data for the next parameter. Returns false if there is no more data.
+ */
+// ----------------------------------------------------------------------
+
+bool QDStreamer::loadParamGrids()
+{
+  try
+  {
+    // Load all data for the next parameter. First store it's first grid (it was loaded in
+    // previous call)
+    //
+    string chunk;
+    auto it_p = itsParamIterator;
+    itsCurrentX = itsCurrentY = 0;
+
+    if (!itsGrids.empty())
+    {
+      itsGrids.clear();
+      itsGrids.push_back(itsGridValues);
+    }
+
+    while (!itsDoneFlag)
+    {
+      extractData(chunk);
+
+      // To handle missing/skipped parameters
+      //
+      if (itsGrids.empty())
+        it_p = itsParamIterator;
+
+      if (chunk.empty())
+        itsDoneFlag = true;
+      else if (it_p == itsParamIterator)
+        itsGrids.push_back(itsGridValues);
+      else
+        break;
+    }
+    if (!(itsLoadedFlag = (!itsGrids.empty())))
+      return false;
+
+    itsReqGridSizeX = itsGrids.front().NX();
+    itsReqGridSizeY = itsGrids.front().NY();
+    return true;
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Write parameter values until the chunk is full or all values have been written
+ */
+// ----------------------------------------------------------------------
+
+void QDStreamer::writeGridValues(std::ostringstream& os, long& chunkLen)
+{
+  try
+  {
+    std::size_t valueSize = sizeof(itsGridValues[0][0]);
+
+    for (; ((itsCurrentY < itsReqGridSizeY) && (chunkLen < itsChunkLength));
+         itsCurrentY++, itsCurrentX = 0)
+    {
+      for (; (itsCurrentX < itsReqGridSizeX); itsCurrentX++)
+      {
+        // Note: Time is the fastest running querydata dimension; get the values from all grids
+        // for
+        // the current x/y cell
+        //
+        for (auto const &grid : itsGrids)
+        {
+          os.write((const char *)&grid[itsCurrentX][itsCurrentY], valueSize);
+          chunkLen += valueSize;
+        }
+      }
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get next chunk of data. Called from SmartMet server code
  *
  */
@@ -47,45 +134,10 @@ std::string QDStreamer::getChunk()
         return "";
       }
 
-      if (!itsLoadedFlag)
+      if (!itsLoadedFlag && !loadParamGrids())
       {
-        // Load all data for the next parameter. First store it's first grid (it was loaded in
-        // previous call)
-        //
-        string chunk;
-        auto it_p = itsParamIterator;
-        itsCurrentX = itsCurrentY = 0;
-
-        if (!itsGrids.empty())
-        {
-          itsGrids.clear();
-          itsGrids.push_back(itsGridValues);
-        }
-
-        while (!itsDoneFlag)
-        {
-          extractData(chunk);
-
-          // To handle missing/skipped parameters
-          //
-          if (itsGrids.empty())
-            it_p = itsParamIterator;
-
-          if (chunk.empty())
-            itsDoneFlag = true;
-          else if (it_p == itsParamIterator)
-            itsGrids.push_back(itsGridValues);
-          else
-            break;
-        }
-        if (!(itsLoadedFlag = (!itsGrids.empty())))
-        {
-          setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
-          return "";
-        }
-
-        itsReqGridSizeX = itsGrids.front().NX();
-        itsReqGridSizeY = itsGrids.front().NY();
+        setStatus(ContentStreamer::StreamerStatus::EXIT_OK);
+        return "";
       }
 
       ostringstream os;
@@ -115,22 +167,7 @@ std::string QDStreamer::getChunk()
 
       // Send parameter values
 
-      for (; ((itsCurrentY < itsReqGridSizeY) && (chunkLen < itsChunkLength));
-           itsCurrentY++, itsCurrentX = 0)
-      {
-        for (; (itsCurrentX < itsReqGridSizeX); itsCurrentX++)
-        {
-          // Note: Time is the fastest running querydata dimension; get the values from all grids
-          // for
-          // the current x/y cell
-          //
-          for (auto const &grid : itsGrids)
-          {
-            os.write((const char *)&grid[itsCurrentX][itsCurrentY], valueSize);
-            chunkLen += valueSize;
-          }
-        }
-      }
+      writeGridValues(os, chunkLen);
 
       if (itsCurrentY >= itsReqGridSizeY)
       {
