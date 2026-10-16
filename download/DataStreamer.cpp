@@ -365,6 +365,64 @@ bool DataStreamer::GridMetaData::GridIterator::atEnd()
   }
 }
 
+namespace
+{
+// Find the data level for the requested level, or the data levels below and above it when
+// the level can be interpolated. Returns false if the level is not available.
+template <typename LevelTimes, typename Level, typename Iterator>
+bool findDataLevel(const LevelTimes& levels,
+                   const Level& requestedLevel,
+                   bool interpolatable,
+                   bool exactLevel,
+                   Iterator& levelTimes,
+                   Iterator& prevLevelTimes)
+{
+  bool first = true;
+
+  for (; ((!exactLevel) && (levelTimes != levels.end())); first = false, levelTimes++)
+  {
+    if ((exactLevel = (levelTimes->first == requestedLevel)))
+      break;
+    if (requestedLevel < levelTimes->first)
+    {
+      // Interpolatable if between data levels, data is interpolatable and interpolation is
+      // allowed
+      //
+      if (!(interpolatable && (!first)))
+        return false;
+
+      break;
+    }
+
+    prevLevelTimes = levelTimes;
+  }
+
+  if (!exactLevel)
+    levelTimes = prevLevelTimes;
+
+  return true;
+}
+
+// Test whether the valid time is within the times of the origintime of all the given levels
+template <typename Iterator>
+bool hasValidTime(Iterator levelTimes,
+                  Iterator levelTimesEnd,
+                  const std::string& originTimeStr,
+                  const Fmi::DateTime& validTime)
+{
+  for (; levelTimes != levelTimesEnd; levelTimes++)
+  {
+    auto originTimeTimes = levelTimes->second.find(originTimeStr);
+
+    if ((originTimeTimes == levelTimes->second.end()) ||
+        (validTime < Fmi::DateTime::from_iso_string(*(originTimeTimes->second.begin()))) ||
+        (validTime > Fmi::DateTime::from_iso_string(*(originTimeTimes->second.rbegin()))))
+      return false;
+  }
+  return true;
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Check if data exists for current grid
@@ -414,47 +472,19 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId& geometryId
 
     bool gridContent = (ds->itsReqParams.dataSource == GridContent);
 
-    if (!gridContent)
-    {
-      bool interpolatable =
-          (isPressureLevel(ds->itsLevelType) && ds->itsProducer.verticalInterpolation);
-      bool exactLevel = isSurfaceLevel(ds->itsLevelType);
-      bool first = true;
-
-      for (; ((!exactLevel) && (levelTimes != geomLevels->second.end()));
-           first = false, levelTimes++)
-      {
-        if ((exactLevel = (levelTimes->first == *(ds->itsLevelIterator))))
-          break;
-        if (*ds->itsLevelIterator < levelTimes->first)
-        {
-          // Interpolatable if between data levels, data is interpolatable and interpolation is
-          // allowed
-          //
-          if (!(interpolatable && (!first)))
-            return false;
-
-          break;
-        }
-
-        prevLevelTimes = levelTimes;
-      }
-
-      if (!exactLevel)
-        levelTimes = prevLevelTimes;
-    }
+    if (!gridContent &&
+        !findDataLevel(geomLevels->second,
+                       *(ds->itsLevelIterator),
+                       (isPressureLevel(ds->itsLevelType) && ds->itsProducer.verticalInterpolation),
+                       isSurfaceLevel(ds->itsLevelType),
+                       levelTimes,
+                       prevLevelTimes))
+      return false;
 
     auto levelTimesEnd = next(levelTimes);
 
-    for (; levelTimes != levelTimesEnd; levelTimes++)
-    {
-      auto originTimeTimes = levelTimes->second.find(originTimeStr);
-
-      if ((originTimeTimes == levelTimes->second.end()) ||
-          (validTime < Fmi::DateTime::from_iso_string(*(originTimeTimes->second.begin()))) ||
-          (validTime > Fmi::DateTime::from_iso_string(*(originTimeTimes->second.rbegin()))))
-        return false;
-    }
+    if (!hasValidTime(levelTimes, levelTimesEnd, originTimeStr, validTime))
+      return false;
 
     auto paramLevelId = gridMetaData->paramLevelIds.find(ds->itsParamIterator->name());
 
