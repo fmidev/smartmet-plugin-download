@@ -53,6 +53,11 @@ test-impl:
 	$$ok
 
 start-redis-db:
+	@port=$$(sed -n 's/^REDIS_CONTENT_SERVER_PORT *= *//p' cnf/environment.conf); \
+	if bash -c "exec 3<>/dev/tcp/127.0.0.1/$$port" 2>/dev/null; then \
+		echo "*** Port $$port is already in use: the tests would read another Redis database"; \
+		exit 1; \
+	fi
 	rm -rf cnf/grid
 	cp -pr $(datadir)/smartmet/test/grid cnf/
 	@echo "*** Creating the Redis configuration file."
