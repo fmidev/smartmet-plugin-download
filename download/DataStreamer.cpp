@@ -4178,6 +4178,148 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Skip times earlier than first available validtime. Returns false if there
+ *        are no available times left.
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::skipToFirstDataTime()
+{
+  auto theTimesEnd = itsDataTimes.end();
+
+  auto timeInstant = itsFirstDataTime;
+
+  while (itsTimeIterator != theTimesEnd)
+  {
+    timeInstant = itsTimeIterator->utc_time();
+
+    if (timeInstant < itsFirstDataTime)
+    {
+      itsTimeIterator++;
+      itsTimeIndex++;
+    }
+    else
+      break;
+  }
+
+  // Skip times later than last available validtime
+
+  return !((itsTimeIterator == theTimesEnd) || (timeInstant > itsLastDataTime));
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Switch to the in-memory querydata object containing only current parameter(s)
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::setCurrentParamQ(Engine::Querydata::Q& q, int& level, bool& exactLevel)
+{
+  if (!itsCPQ)
+  {
+    // Get Q for in-memory querydata object containing only current parameter.
+    //
+    // For wind component true north adjustment both U and V are needed.
+    //
+    // Note: Should check all called newbase methods actually do the fix
+    // (DoWindComponentFix or whatever).
+
+    std::list<FmiParameterName> currentParams;
+
+    auto id = q->parameterName();
+    currentParams.push_back(id);
+
+    if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
+    {
+      FmiParameterName id2 = ((id == kFmiWindUMS) ? kFmiWindVMS : kFmiWindUMS);
+      if (q->param(id2))
+        currentParams.push_back(id2);
+
+      // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
+    }
+
+    itsCPQ = getCurrentParamQ(currentParams);
+  }
+
+  // Set level if not interpolated, time index gets set (or is not used) below
+
+  if (exactLevel)
+    isLevelAvailable(itsCPQ, level, exactLevel);
+
+  q = itsCPQ;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get grid values of the current parameter and time at exact (data) level
+ *        using newbase projection
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getExactLevelGridValues(const Engine::Querydata::Q& q,
+                                           NFmiGrid* grid,
+                                           bool nonNativeGrid,
+                                           const NFmiMetTime& mt)
+{
+  bool timeInterpolation = (!q->time(mt));
+
+  if (timeInterpolation || nonNativeGrid)
+  {
+    if (nonNativeGrid)
+      cachedProjGridValues(q, *grid, timeInterpolation ? &mt : nullptr);
+    else
+    {
+      // Must manually crop the data if bounding was given
+      // ('cropMan' was not set by the call to getAreaAndGrid())
+      //
+      itsCropping.cropMan = itsCropping.crop;
+      itsGridValues = q->values(mt);
+    }
+  }
+  else
+  {
+    if (itsCropping.cropped && (!itsCropping.cropMan))
+      itsGridValues = q->croppedValues(itsCropping.bottomLeftX,
+                                       itsCropping.bottomLeftY,
+                                       itsCropping.topRightX,
+                                       itsCropping.topRightY);
+    else
+      itsGridValues = q->values();
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get grid values of the current parameter, level and time
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getGridValues(const Engine::Querydata::Q& q,
+                                 NFmiGrid* grid,
+                                 bool nonNativeGrid,
+                                 bool exactLevel,
+                                 int level,
+                                 const NFmiMetTime& mt)
+{
+  if (itsReqParams.datumShift == Datum::DatumShift::None)
+  {
+    // Using newbase projection.
+    //
+    if (exactLevel)
+      getExactLevelGridValues(q, grid, nonNativeGrid, mt);
+    else if (nonNativeGrid)
+      itsGridValues = q->pressureValues(*grid, mt, level, q->isRelativeUV());
+    else
+      itsGridValues = q->pressureValues(mt, level);
+  }
+  else
+    // Using gdal/proj4 projection.
+    //
+    itsGridValues = q->values(itsSrcLatLons, mt, exactLevel ? kFloatMissing : level);
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Extract data
  *
  */
@@ -4209,7 +4351,6 @@ void DataStreamer::extractData(string& chunk)
     auto theLevelsBegin = itsSortedDataLevels.begin();
     auto theLevelsEnd = itsSortedDataLevels.end();
     auto theTimesBegin = itsDataTimes.begin();
-    auto theTimesEnd = itsDataTimes.end();
 
     // Note: for better performance looping order (param, level, time) follows the querydata
     // structure.
@@ -4229,26 +4370,10 @@ void DataStreamer::extractData(string& chunk)
       for (; (itsLevelIterator != theLevelsEnd);
            itsLevelIterator++, itsLevelIndex++, itsTimeIterator = theTimesBegin, itsTimeIndex = 0)
       {
-        // Skip times earlier than first available validtime
+        // Skip times earlier than first available validtime and times later than last
+        // available validtime
 
-        auto timeInstant = itsFirstDataTime;
-
-        while (itsTimeIterator != theTimesEnd)
-        {
-          timeInstant = itsTimeIterator->utc_time();
-
-          if (timeInstant < itsFirstDataTime)
-          {
-            itsTimeIterator++;
-            itsTimeIndex++;
-          }
-          else
-            break;
-        }
-
-        // Skip times later than last available validtime
-
-        if ((itsTimeIterator == theTimesEnd) || (timeInstant > itsLastDataTime))
+        if (!skipToFirstDataTime())
         {
           // Next level or parameter
           //
@@ -4292,82 +4417,9 @@ void DataStreamer::extractData(string& chunk)
         coordTransform(q, area);
 
         if (!itsMultiFile)
-        {
-          if (!itsCPQ)
-          {
-            // Get Q for in-memory querydata object containing only current parameter.
-            //
-            // For wind component true north adjustment both U and V are needed.
-            //
-            // Note: Should check all called newbase methods actually do the fix
-            // (DoWindComponentFix or whatever).
+          setCurrentParamQ(q, level, exactLevel);
 
-            std::list<FmiParameterName> currentParams;
-
-            auto id = q->parameterName();
-            currentParams.push_back(id);
-
-            if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
-            {
-              FmiParameterName id2 = ((id == kFmiWindUMS) ? kFmiWindVMS : kFmiWindUMS);
-              if (q->param(id2))
-                currentParams.push_back(id2);
-
-              // No need to reset param (to 'id') here, will be set by call to getCurrentParamQ
-            }
-
-            itsCPQ = getCurrentParamQ(currentParams);
-          }
-
-          // Set level if not interpolated, time index gets set (or is not used) below
-
-          if (exactLevel)
-            isLevelAvailable(itsCPQ, level, exactLevel);
-
-          q = itsCPQ;
-        }
-
-        if (itsReqParams.datumShift == Datum::DatumShift::None)
-        {
-          // Using newbase projection.
-          //
-          if (exactLevel)
-          {
-            bool timeInterpolation = (!q->time(mt));
-
-            if (timeInterpolation || nonNativeGrid)
-            {
-              if (nonNativeGrid)
-                cachedProjGridValues(q, *grid, timeInterpolation ? &mt : nullptr);
-              else
-              {
-                // Must manually crop the data if bounding was given
-                // ('cropMan' was not set by the call to getAreaAndGrid())
-                //
-                itsCropping.cropMan = itsCropping.crop;
-                itsGridValues = q->values(mt);
-              }
-            }
-            else
-            {
-              if (itsCropping.cropped && (!itsCropping.cropMan))
-                itsGridValues = q->croppedValues(itsCropping.bottomLeftX,
-                                                 itsCropping.bottomLeftY,
-                                                 itsCropping.topRightX,
-                                                 itsCropping.topRightY);
-              else
-                itsGridValues = q->values();
-            }
-          }
-          else if (nonNativeGrid)
-            itsGridValues = q->pressureValues(*grid, mt, level, q->isRelativeUV());
-          else
-            itsGridValues = q->pressureValues(mt, level);
-        }
-        else
-          // Using gdal/proj4 projection.
-          //
-          itsGridValues = q->values(itsSrcLatLons, mt, exactLevel ? kFloatMissing : level);
+        getGridValues(q, grid, nonNativeGrid, exactLevel, level, mt);
 
         // Load the data chunk from 'itsGridValues'.
         //

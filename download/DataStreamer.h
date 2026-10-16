@@ -90,6 +90,18 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
  protected:
   void createQD(const NFmiGrid &g);
   void extractData(std::string &chunk);
+  bool skipToFirstDataTime();
+  void setCurrentParamQ(Engine::Querydata::Q& q, int& level, bool& exactLevel);
+  void getExactLevelGridValues(const Engine::Querydata::Q& q,
+                               NFmiGrid* grid,
+                               bool nonNativeGrid,
+                               const NFmiMetTime& mt);
+  void getGridValues(const Engine::Querydata::Q& q,
+                     NFmiGrid* grid,
+                     bool nonNativeGrid,
+                     bool exactLevel,
+                     int level,
+                     const NFmiMetTime& mt);
   virtual void paramChanged(size_t nextParamOffset = 1) {}
 
   // A copy, not a Request reference: /coverages passes a translated temporary request
