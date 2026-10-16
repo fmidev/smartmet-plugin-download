@@ -51,9 +51,6 @@ namespace Plugin
 {
 namespace Download
 {
-template <typename T>
-std::optional<vector<pair<T, T>>> nPairsOfValues(string &pvs, const char *param, std::size_t nPairs);
-
 GribStreamer::GribStreamer(const Spine::HTTP::Request &req,
                            const Config &config,
                            const Query &query,
