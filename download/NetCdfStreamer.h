@@ -171,6 +171,21 @@ class NetCdfStreamer : public DataStreamer
                         const std::vector<std::string> &paramParts,
                         std::map<std::string, netCDF::NcVar> &paramVariables);
   void addVariables(bool relative_uv);
+  void getRadonParamDimensions(const std::string &paramName,
+                               const std::vector<std::string> &paramParts,
+                               netCDF::NcDim &ensembleDim,
+                               netCDF::NcDim &levelDim);
+  void setAggregateTimeDimension(const ParamChangeItem &config,
+                                 netCDF::NcDim &timeDim,
+                                 std::string &timeDimName);
+  netCDF::NcVar addDataVariable(const std::string &name,
+                                const netCDF::NcDim *dimensions,
+                                bool hasEnsembleDim);
+  void setDataVariableAttributes(netCDF::NcVar &dataVar,
+                                 const std::string &unit,
+                                 const std::string &stdName,
+                                 const std::string &longName,
+                                 const std::string &cellMethods);
 
   void storeParamValues();
   std::shared_ptr<float[]> getScaledParamValues(std::size_t& x0, std::size_t& y0);

@@ -16,6 +16,7 @@
 #include <newbase/NFmiQueryData.h>
 #include <spine/Convenience.h>
 #include <spine/Thread.h>
+#include <array>
 #include <atomic>
 #include <cerrno>
 #include <csignal>
@@ -2060,6 +2061,169 @@ NcDim NetCdfStreamer::addTimeBounds(long periodLengthInMinutes,
   }
 }
 
+namespace
+{
+// Find the parameter configuration index for radon parameter
+std::size_t findRadonParamConfig(const ParamChangeTable &pTable, const std::string &radonParam)
+{
+  for (std::size_t i = 0; (i < pTable.size()); ++i)
+    if (pTable[i].itsRadonName == radonParam)
+      return i;
+
+  throw Fmi::Exception(BCP, "Internal error: No netcdf configuration for parameter " + radonParam);
+}
+
+// Dimensions of a data variable; level dimension and ensemble dimension are omitted if not used
+std::array<NcDim, 5> dataDimensions(const NcDim &ensembleDim,
+                                    const NcDim &timeDim,
+                                    const NcDim &levelDim,
+                                    const NcDim &yOrLat,
+                                    const NcDim &xOrLon)
+{
+  return {
+      !ensembleDim.isNull() ? ensembleDim : NcDim(),  // Ensemble
+      timeDim,                                        // Time dimension
+      !levelDim.isNull() ? levelDim : yOrLat,         // Level or Y/lat
+      !levelDim.isNull() ? yOrLat : xOrLon,           // Y/lat or X/lon dimension
+      !levelDim.isNull() ? xOrLon : NcDim()           // X dimension or n/a
+  };
+}
+
+// Find the parameter configuration index for querydata parameter. Preferring the entry
+// with matching grid relativity, otherwise taking the only entry for the parameter.
+// Returns the table size if there is no entry.
+std::size_t findParamConfig(const ParamChangeTable &pTable,
+                            signed long usedParId,
+                            bool relative_uv)
+{
+  std::size_t i = 0;
+  std::size_t j = 0;
+
+  for (i = j = 0; i < pTable.size(); ++i)
+    if (usedParId == pTable[i].itsWantedParam.GetIdent())
+    {
+      if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
+        break;
+      if (j == 0)
+        j = i + 1;
+      else
+        throw Fmi::Exception(BCP,
+                             "Missing gridrelative configuration for parameter " +
+                                 boost::lexical_cast<string>(usedParId));
+    }
+
+  if ((i >= pTable.size()) && (j > 0))
+    i = j - 1;
+
+  return i;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get the ensemble and level dimension of radon parameter
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::getRadonParamDimensions(const string &paramName,
+                                             const vector<string> &paramParts,
+                                             NcDim &ensembleDim,
+                                             NcDim &levelDim)
+{
+  // Get ensemble dimension
+
+  if (!itsEnsembleDim.isNull())
+  {
+    auto forecastType = getForecastType(paramName, paramParts);
+    auto forecastNumber = getForecastNumber(paramName, paramParts);
+
+    ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
+  }
+
+  // Get level dimension
+
+  if (!itsLevelDim.isNull())
+  {
+    string levelDimName;
+    levelDim = getLevelDimension(paramName, levelDimName);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add data variable. The dimensions are ensemble (if used), time, level (if used)
+ *        and y/lat and x/lon.
+ */
+// ----------------------------------------------------------------------
+
+NcVar NetCdfStreamer::addDataVariable(const string &name,
+                                      const NcDim *dimensions,
+                                      bool hasEnsembleDim)
+{
+  const NcDim *dim = dimensions;
+
+  if (!hasEnsembleDim)
+    dim++;
+
+  const NcDim& dim1 = *(dim++);
+  const NcDim& dim2 = *(dim++);
+  const NcDim& dim3 = *(dim++);
+  const NcDim& dim4 = *(dim++);
+  const NcDim dim5 = (hasEnsembleDim ? *dim : NcDim());
+
+  return addVariable(name, ncFloat, dim1, dim2, dim3, dim4, dim5);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add aggregate period length specific time dimension and time bounds for
+ *        aggregate data. Use data period length if aggregate period length is not given.
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setAggregateTimeDimension(const ParamChangeItem &config,
+                                               NcDim &timeDim,
+                                               string &timeDimName)
+{
+  if ((!config.itsStepType.empty()) || (config.itsPeriodLengthMinutes > 0))
+    timeDim = addTimeBounds(
+        (config.itsPeriodLengthMinutes > 0) ? config.itsPeriodLengthMinutes : itsDataTimeStep,
+        timeDimName);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set data variable attributes
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setDataVariableAttributes(NcVar &dataVar,
+                                               const string &unit,
+                                               const string &stdName,
+                                               const string &longName,
+                                               const string &cellMethods)
+{
+  float missingValue =
+      (itsReqParams.dataSource == QueryData) ? kFloatMissing : gribMissingValue;
+
+  dataVar.putAtt("units", unit);
+  dataVar.putAtt("_FillValue", NcType::nc_FLOAT, missingValue);
+  dataVar.putAtt("missing_value", NcType::nc_FLOAT, missingValue);
+  dataVar.putAtt("grid_mapping", "crs");
+
+  if (!stdName.empty())
+    dataVar.putAtt("standard_name", stdName);
+
+  if (!longName.empty())
+    dataVar.putAtt("long_name", longName);
+
+  if (!cellMethods.empty())
+    dataVar.putAtt("cell_methods", cellMethods);
+
+  if (!itsYDim.isNull())
+    dataVar.putAtt("coordinates", "lat lon");
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Add parameters
@@ -2109,7 +2273,6 @@ void NetCdfStreamer::addVariables(bool relative_uv)
     const ParamChangeTable &pTable = itsCfg.getParamChangeTable(false);
     NcDim &yOrLat = (!itsYDim.isNull() ? itsYDim : itsLatDim);
     NcDim &xOrLon = (!itsYDim.isNull() ? itsXDim : itsLonDim);
-    NcDim tDim;
     map<string, NcVar> paramVariables;
     vector<string> paramParts;
     size_t nVars = 0;
@@ -2132,13 +2295,11 @@ void NetCdfStreamer::addVariables(bool relative_uv)
 
       NFmiParam theParam(it->number());
       string paramName;
-      string radonParam;
       string stdName;
       string longName;
       string unit;
       string timeDimName = "time";
       size_t i = 0;
-      size_t j = 0;
 
       signed long usedParId = theParam.GetIdent();
 
@@ -2154,62 +2315,20 @@ void NetCdfStreamer::addVariables(bool relative_uv)
 
         // Get param config index for the parameter
 
-        radonParam = paramParts.front();
+        i = findRadonParamConfig(pTable, paramParts.front());
 
-        for (i = j = 0; (i < pTable.size()); ++i)
-          if (pTable[i].itsRadonName == radonParam)
-            break;
+        // Get ensemble and level dimension
 
-        if (i >= pTable.size())
-          throw Fmi::Exception(
-              BCP, "Internal error: No netcdf configuration for parameter " + radonParam);
-
-        // Get ensemble dimension
-
-        if (!itsEnsembleDim.isNull())
-        {
-          auto forecastType = getForecastType(paramName, paramParts);
-          auto forecastNumber = getForecastNumber(paramName, paramParts);
-
-          ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
-        }
-
-        // Get level dimension
-
-        if (!itsLevelDim.isNull())
-        {
-          string levelDimName;
-          levelDim = getLevelDimension(paramName, levelDimName);
-        }
+        getRadonParamDimensions(paramName, paramParts, ensembleDim, levelDim);
 
         usedParId = ++nVars;
       }
       else
-      {
-        for (i = j = 0; i < pTable.size(); ++i)
-          if (usedParId == pTable[i].itsWantedParam.GetIdent())
-          {
-            if (relative_uv == (pTable[i].itsGridRelative ? *pTable[i].itsGridRelative : false))
-              break;
-            if (j == 0)
-              j = i + 1;
-            else
-              throw Fmi::Exception(BCP,
-                                   "Missing gridrelative configuration for parameter " +
-                                       boost::lexical_cast<string>(usedParId));
-          }
-      }
+        i = findParamConfig(pTable, usedParId, relative_uv);
 
-      NcDim dimensions[] = {
-          !ensembleDim.isNull() ? ensembleDim : NcDim(),    // Ensemble
-          itsTimeDim,                                       // Time dimension
-          !levelDim.isNull() ? levelDim : yOrLat,           // Level or Y/lat
-          !levelDim.isNull() ? yOrLat : xOrLon,             // Y/lat or X/lon dimension
-          !levelDim.isNull() ? xOrLon : NcDim()             // X dimension or n/a
-      };
+      auto dimensions = dataDimensions(ensembleDim, itsTimeDim, levelDim, yOrLat, xOrLon);
 
-      if ((i >= pTable.size()) && (j > 0))
-        i = j - 1;
+      string cellMethods;
 
       if (i < pTable.size())
       {
@@ -2218,61 +2337,20 @@ void NetCdfStreamer::addVariables(bool relative_uv)
         longName = pTable[i].itsLongName;
         unit = pTable[i].itsUnit;
 
-        if ((!pTable[i].itsStepType.empty()) || (pTable[i].itsPeriodLengthMinutes > 0))
-        {
-          // Add aggregate period length specific time dimension and time bounds.
-          // Use data period length if aggregate period length is not given.
-          //
-          tDim = addTimeBounds((pTable[i].itsPeriodLengthMinutes > 0)
-                                   ? pTable[i].itsPeriodLengthMinutes
-                                   : itsDataTimeStep,
-                               timeDimName);
-          dimensions[1] = tDim;
-        }
+        setAggregateTimeDimension(pTable[i], dimensions[1], timeDimName);
+
+        // Cell method for aggregate data
+
+        if (!pTable[i].itsStepType.empty())
+          cellMethods = (timeDimName + ": " + pTable[i].itsStepType);
       }
       else
         paramName = theParam.GetName();
 
-      const NcDim *dim = dimensions;
+      auto dataVar = addDataVariable(
+          paramName + "_" + Fmi::to_string(usedParId), dimensions.data(), !ensembleDim.isNull());
 
-      if (ensembleDim.isNull())
-        dim++;
-
-      const NcDim& dim1 = *(dim++);
-      const NcDim& dim2 = *(dim++);
-      const NcDim& dim3 = *(dim++);
-      const NcDim& dim4 = *(dim++);
-      const NcDim dim5 = (!ensembleDim.isNull() ? *dim : NcDim());
-
-      auto dataVar = addVariable(paramName + "_" + Fmi::to_string(usedParId),
-                                 ncFloat,
-                                 dim1,
-                                 dim2,
-                                 dim3,
-                                 dim4,
-                                 dim5);
-
-      float missingValue =
-          (itsReqParams.dataSource == QueryData) ? kFloatMissing : gribMissingValue;
-
-      dataVar.putAtt("units", unit);
-      dataVar.putAtt("_FillValue", NcType::nc_FLOAT, missingValue);
-      dataVar.putAtt("missing_value", NcType::nc_FLOAT, missingValue);
-      dataVar.putAtt("grid_mapping", "crs");
-
-      if (!stdName.empty())
-        dataVar.putAtt("standard_name", stdName);
-
-      if (!longName.empty())
-        dataVar.putAtt("long_name", longName);
-
-      if ((i < pTable.size()) && (!pTable[i].itsStepType.empty()))
-        // Cell method for aggregate data
-        //
-        dataVar.putAtt("cell_methods", (timeDimName + ": " + pTable[i].itsStepType));
-
-      if (!itsYDim.isNull())
-        dataVar.putAtt("coordinates", "lat lon");
+      setDataVariableAttributes(dataVar, unit, stdName, longName, cellMethods);
 
       itsDataVars.push_back(dataVar);
 
