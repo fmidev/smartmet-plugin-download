@@ -366,6 +366,31 @@ void GeoTiffStreamer::captureGridGeometry(const QueryServer::Query& gridQuery)
   }
 }
 
+namespace
+{
+// Scale a querydata value, missing values are kept as is
+float scaledQueryDataValue(float value, const std::pair<float, float>& scaling)
+{
+  if (value != kFloatMissing)
+    value = (value + scaling.second) / scaling.first;
+  return value;
+}
+
+// Scale a grid value unless it is from the grid content (already scaled). Missing values are
+// replaced by the output missing value.
+float scaledGridValue(float value,
+                      bool gridContent,
+                      const std::pair<float, float>& scaling,
+                      float missingValue)
+{
+  if (value == ParamValueMissing)
+    return missingValue;
+  if (!gridContent)
+    value = (value + scaling.second) / scaling.first;
+  return value;
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Store the current slice's values as a north-up raster band.
@@ -410,30 +435,11 @@ void GeoTiffStreamer::storeBand()
       for (size_t i = 0; i < itsWidth; i++)
       {
         size_t srcX = x0 + i * xStep;
-        float value = NAN;
-
         if (isQueryData)
-        {
-          value = itsGridValues[srcX][srcY];
-
-          if (value != kFloatMissing)
-            value = (value + itsScalingIterator->second) / itsScalingIterator->first;
-        }
+          out[i] = scaledQueryDataValue(itsGridValues[srcX][srcY], *itsScalingIterator);
         else
-        {
-          auto c = (srcY * xN) + srcX;
-          value = (*vVec)[c];
-
-          if (value != ParamValueMissing)
-          {
-            if (!gridContent)
-              value = (value + itsScalingIterator->second) / itsScalingIterator->first;
-          }
-          else
-            value = itsMissingValue;
-        }
-
-        out[i] = value;
+          out[i] = scaledGridValue(
+              (*vVec)[(srcY * xN) + srcX], gridContent, *itsScalingIterator, itsMissingValue);
       }
     }
 
