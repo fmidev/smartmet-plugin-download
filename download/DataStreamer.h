@@ -384,6 +384,13 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getGridBBox();
   void getGridBBoxFromUserBBox();
   void getGridProjection(const QueryServer::Query &gridQuery);
+  const T::Attribute *getGridCrsAttribute(const QueryServer::Query &gridQuery,
+                                          const char *&attr,
+                                          std::unique_ptr<T::Attribute> &crsPtr) const;
+  T::GridProjection getProjectedGridProjection(const OGRSpatialReference &srs,
+                                               const char *attr,
+                                               const std::string &crs);
+  void setRotatedPole(const char *p4Extension, const std::string &crs);
   void regLLToGridRotatedCoords(const QueryServer::Query &gridQuery);
   void getGridOrigo(const QueryServer::Query &gridQuery);
   bool setDataTimes(const QueryServer::Query &gridQuery);

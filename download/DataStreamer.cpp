@@ -4657,6 +4657,204 @@ void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get the grid crs attribute of the query result. If the attribute is not set,
+ *        the crs is taken from the requested geometry (owned by crsPtr).
+ */
+// ----------------------------------------------------------------------
+
+const T::Attribute* DataStreamer::getGridCrsAttribute(const QueryServer::Query& gridQuery,
+                                                      const char*& attr,
+                                                      std::unique_ptr<T::Attribute>& crsPtr) const
+{
+  auto* crsAttr = gridQuery.mAttributeList.getAttribute(attr);
+
+  if ((!crsAttr) || crsAttr->mValue.empty())
+  {
+    if (!itsReqParams.geometryId.empty())
+    {
+      auto geometryId = Fmi::stoi(itsReqParams.geometryId);
+      auto def = Identification::gridDef.getGrib2DefinitionByGeometryId(geometryId);
+
+      if (!def)
+        throw Fmi::Exception(BCP, "Unknown grid geometry")
+            .addParameter("geometryid", itsReqParams.geometryId)
+            .disableLogging();
+
+      crsPtr.reset(new SmartMet::T::Attribute(attr, def->getWKT()));
+      crsAttr = crsPtr.get();
+    }
+  }
+  else if (crsAttr->mValue == "crop")
+  {
+    attr = "grid.original.crs";
+    crsAttr = gridQuery.mAttributeList.getAttribute(attr);
+  }
+
+  return crsAttr;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set the southern pole of a rotated latlon grid from the proj4 extension
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::setRotatedPole(const char* p4Extension, const std::string& crs)
+{
+  const auto* o_lat_p = strstr(p4Extension, "+o_lat_p=");
+  const auto* o_lon_p = strstr(p4Extension, "+o_lon_p=");
+
+  if (o_lat_p)
+    o_lat_p += strlen("+o_lat_p=");
+  if (o_lon_p)
+    o_lon_p += strlen("+o_lon_p=");
+
+  if (o_lat_p && *o_lat_p && o_lon_p && *o_lon_p)
+  {
+    char olatpbuf[strcspn(o_lat_p, " ") + 1];
+    char olonpbuf[strcspn(o_lon_p, " ") + 1];
+
+    strncpy(olatpbuf, o_lat_p, sizeof(olatpbuf) - 1);
+    strncpy(olonpbuf, o_lon_p, sizeof(olonpbuf) - 1);
+
+    olatpbuf[sizeof(olatpbuf) - 1] = '\0';
+    olonpbuf[sizeof(olonpbuf) - 1] = '\0';
+
+    itsGridMetaData.southernPoleLat = 0 - Fmi::stod(olatpbuf);
+    itsGridMetaData.southernPoleLon = Fmi::stod(olonpbuf);
+
+    if (itsGridMetaData.southernPoleLat == 0)
+      throw Fmi::Exception(
+          BCP,
+          "rotlat grid crs proj4 extension is expected to have nonzero o_lat_p: " + crs);
+  }
+  else
+    throw Fmi::Exception(
+        BCP,
+        "rotlat grid crs proj4 extension is expected to have o_lat_p and o_lon_p: " +
+            crs);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get the projection of a projected grid crs
+ */
+// ----------------------------------------------------------------------
+
+T::GridProjection DataStreamer::getProjectedGridProjection(const OGRSpatialReference& srs,
+                                                           const char* attr,
+                                                           const std::string& crs)
+{
+  /*
+  static const GridProjection Unknown                             = 0;
+
+  static const GridProjection LatLon                              = 1;
+
+  static const GridProjection RotatedLatLon                       = 2;
+  +proj=ob_tran +o_proj=lonlat +o_lon_p=x o_lat_p=nonzero
+
+  static const GridProjection StretchedLatLon                     = 3;
+  static const GridProjection StretchedRotatedLatLon              = 4;
+  static const GridProjection VariableResolutionLatLon            = 5;
+  static const GridProjection VariableResolutionRotatedLatLon     = 6;
+
+  static const GridProjection Mercator                            = 7;
+  +proj=merc
+  SRS_PT_MERCATOR_1SP     "Mercator_1SP"
+  SRS_PT_MERCATOR_2SP     "Mercator_2SP"
+  [ SRS_PT_MERCATOR_AUXILIARY_SPHERE ]
+
+  static const GridProjection TransverseMercator                  = 8;
+  +proj=tmerc
+  SRS_PT_TRANSVERSE_MERCATOR
+  [ SRS_PT_TRANSVERSE_MERCATOR_SOUTH_ORIENTED ]
+
+  static const GridProjection PolarStereographic                  = 9;
+  +proj=stere +lat_0=90 +lat_ts=60
+  SRS_PT_POLAR_STEREOGRAPHIC
+  [ SRS_PT_STEREOGRAPHIC ] grib N/A, netcdf ?
+
+  static const GridProjection LambertConformal                    = 10;
+  +proj=lcc +lon_0=-90 +lat_1=33 +lat_2=45
+  SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP
+  SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP
+  [ SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP_BELGIUM ]
+
+  static const GridProjection ObliqueLambertConformal             = 11;
+  Specify the latitude origin and longitude origin to center the map projection
+  to the area to be mapped.
+  Specifying a non-Equatorial or non-polar origin causes an oblique projection
+  +proj=lcc +lon_0=-80 +lat_1=33 +lat_2=45
+  ?
+
+  static const GridProjection Albers                              = 12;
+  +proj=aea +lat_1=29.5 +lat_2=42.5
+  SRS_PT_ALBERS_CONIC_EQUAL_AREA
+
+  static const GridProjection Gaussian                            = 13;
+  static const GridProjection RotatedGaussian                     = 14;
+  static const GridProjection StretchedGaussian                   = 15;
+  static const GridProjection StretchedRotatedGaussian            = 16;
+  static const GridProjection SphericalHarmonic                   = 17;
+  static const GridProjection RotatedSphericalHarmonic            = 18;
+  static const GridProjection StretchedSphericalHarmonic          = 19;
+  static const GridProjection StretchedRotatedSphericalHarmonic   = 20;
+  static const GridProjection SpaceView                           = 21;
+  static const GridProjection Triangular                          = 22;
+  static const GridProjection Unstructured                        = 23;
+  static const GridProjection EquatorialAzimuthalEquidistant      = 24;
+  static const GridProjection AzimuthRange                        = 25;
+  static const GridProjection IrregularLatLon                     = 26;
+  static const GridProjection LambertAzimuthalEqualArea           = 27;
+  static const GridProjection CrossSection                        = 28;
+  static const GridProjection Hovmoller                           = 29;
+  static const GridProjection TimeSection                         = 30;
+  static const GridProjection GnomonicProjection                  = 31;
+  static const GridProjection SimplePolyconicProjection           = 32;
+  static const GridProjection MillersCylindricalProjection        = 33;
+  */
+
+  // Check PROJ4 EXTENSION for rotlat projection;
+  // search for +proj=ob_tran, +o_proj=lonlat, nonzero +o_lat_p and +o_lon_p
+
+  const auto* projection = srs.GetAttrValue("PROJECTION");
+  if (!projection)
+    throw Fmi::Exception(BCP, string(attr) + ": PROJECTION not set");
+
+  itsGridMetaData.projection = projection;
+
+  const auto* p4Extension = srs.GetExtension("PROJCS", "PROJ4", "");
+
+  if (strstr(p4Extension, "+proj=ob_tran") &&
+      (strstr(p4Extension, "+o_proj=latlon") || strstr(p4Extension, "+o_proj=lonlat") ||
+       strstr(p4Extension, "+o_proj=longlat")))
+  {
+    setRotatedPole(p4Extension, crs);
+    return T::GridProjectionValue::RotatedLatLon;
+  }
+
+  if (*p4Extension)
+    throw Fmi::Exception(BCP, "Unḱnown grid crs proj4 extension: " + string(p4Extension));
+  else if (EQUAL(projection, SRS_PT_POLAR_STEREOGRAPHIC))
+    return T::GridProjectionValue::PolarStereographic;
+  else if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP))
+    return T::GridProjectionValue::LambertConformal;
+  else if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
+    return T::GridProjectionValue::LambertConformal;
+  else if (EQUAL(projection, SRS_PT_MERCATOR_1SP))
+    return T::GridProjectionValue::Mercator;
+  else if (EQUAL(projection, SRS_PT_MERCATOR_2SP))
+    return T::GridProjectionValue::Mercator;
+  else if (EQUAL(projection, SRS_PT_LAMBERT_AZIMUTHAL_EQUAL_AREA))
+    return T::GridProjectionValue::LambertAzimuthalEqualArea;
+  else if (EQUAL(projection, SRS_PT_TRANSVERSE_MERCATOR))
+    return T::GridProjectionValue::TransverseMercator;
+  else
+    throw Fmi::Exception(BCP, "Unsupported projection in input data: " + crs);
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get grid projection and datum
  *
  */
@@ -4669,30 +4867,8 @@ void DataStreamer::getGridProjection(const QueryServer::Query& gridQuery)
     std::unique_ptr<SmartMet::T::Attribute> crsPtr;
 
     const auto* attr = "grid.crs";
-    auto* crsAttr = gridQuery.mAttributeList.getAttribute(attr);
-    auto gridProjection = T::GridProjectionValue::Unknown;
-
-    if ((!crsAttr) || crsAttr->mValue.empty())
-    {
-      if (!itsReqParams.geometryId.empty())
-      {
-        auto geometryId = Fmi::stoi(itsReqParams.geometryId);
-        auto def = Identification::gridDef.getGrib2DefinitionByGeometryId(geometryId);
-
-        if (!def)
-          throw Fmi::Exception(BCP, "Unknown grid geometry")
-              .addParameter("geometryid", itsReqParams.geometryId)
-              .disableLogging();
-
-        crsPtr.reset(new SmartMet::T::Attribute(attr, def->getWKT()));
-        crsAttr = crsPtr.get();
-      }
-    }
-    else if (crsAttr->mValue == "crop")
-    {
-      attr = "grid.original.crs";
-      crsAttr = gridQuery.mAttributeList.getAttribute(attr);
-    }
+    const auto* crsAttr = getGridCrsAttribute(gridQuery, attr, crsPtr);
+    T::GridProjection gridProjection = T::GridProjectionValue::Unknown;
 
     if ((!crsAttr) || crsAttr->mValue.empty())
       throw Fmi::Exception(BCP, string(attr) + " not set in query result");
@@ -4704,146 +4880,7 @@ void DataStreamer::getGridProjection(const QueryServer::Query& gridQuery)
     const auto& srs = *fsrs;
 
     if (srs.IsProjected())
-    {
-      /*
-      static const GridProjection Unknown                             = 0;
-
-      static const GridProjection LatLon                              = 1;
-
-      static const GridProjection RotatedLatLon                       = 2;
-      +proj=ob_tran +o_proj=lonlat +o_lon_p=x o_lat_p=nonzero
-
-      static const GridProjection StretchedLatLon                     = 3;
-      static const GridProjection StretchedRotatedLatLon              = 4;
-      static const GridProjection VariableResolutionLatLon            = 5;
-      static const GridProjection VariableResolutionRotatedLatLon     = 6;
-
-      static const GridProjection Mercator                            = 7;
-      +proj=merc
-      SRS_PT_MERCATOR_1SP     "Mercator_1SP"
-      SRS_PT_MERCATOR_2SP     "Mercator_2SP"
-      [ SRS_PT_MERCATOR_AUXILIARY_SPHERE ]
-
-      static const GridProjection TransverseMercator                  = 8;
-      +proj=tmerc
-      SRS_PT_TRANSVERSE_MERCATOR
-      [ SRS_PT_TRANSVERSE_MERCATOR_SOUTH_ORIENTED ]
-
-      static const GridProjection PolarStereographic                  = 9;
-      +proj=stere +lat_0=90 +lat_ts=60
-      SRS_PT_POLAR_STEREOGRAPHIC
-      [ SRS_PT_STEREOGRAPHIC ] grib N/A, netcdf ?
-
-      static const GridProjection LambertConformal                    = 10;
-      +proj=lcc +lon_0=-90 +lat_1=33 +lat_2=45
-      SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP
-      SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP
-      [ SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP_BELGIUM ]
-
-      static const GridProjection ObliqueLambertConformal             = 11;
-      Specify the latitude origin and longitude origin to center the map projection
-      to the area to be mapped.
-      Specifying a non-Equatorial or non-polar origin causes an oblique projection
-      +proj=lcc +lon_0=-80 +lat_1=33 +lat_2=45
-      ?
-
-      static const GridProjection Albers                              = 12;
-      +proj=aea +lat_1=29.5 +lat_2=42.5
-      SRS_PT_ALBERS_CONIC_EQUAL_AREA
-
-      static const GridProjection Gaussian                            = 13;
-      static const GridProjection RotatedGaussian                     = 14;
-      static const GridProjection StretchedGaussian                   = 15;
-      static const GridProjection StretchedRotatedGaussian            = 16;
-      static const GridProjection SphericalHarmonic                   = 17;
-      static const GridProjection RotatedSphericalHarmonic            = 18;
-      static const GridProjection StretchedSphericalHarmonic          = 19;
-      static const GridProjection StretchedRotatedSphericalHarmonic   = 20;
-      static const GridProjection SpaceView                           = 21;
-      static const GridProjection Triangular                          = 22;
-      static const GridProjection Unstructured                        = 23;
-      static const GridProjection EquatorialAzimuthalEquidistant      = 24;
-      static const GridProjection AzimuthRange                        = 25;
-      static const GridProjection IrregularLatLon                     = 26;
-      static const GridProjection LambertAzimuthalEqualArea           = 27;
-      static const GridProjection CrossSection                        = 28;
-      static const GridProjection Hovmoller                           = 29;
-      static const GridProjection TimeSection                         = 30;
-      static const GridProjection GnomonicProjection                  = 31;
-      static const GridProjection SimplePolyconicProjection           = 32;
-      static const GridProjection MillersCylindricalProjection        = 33;
-      */
-
-      // Check PROJ4 EXTENSION for rotlat projection;
-      // search for +proj=ob_tran, +o_proj=lonlat, nonzero +o_lat_p and +o_lon_p
-
-      const auto* projection = srs.GetAttrValue("PROJECTION");
-      if (!projection)
-        throw Fmi::Exception(BCP, string(attr) + ": PROJECTION not set");
-
-      itsGridMetaData.projection = projection;
-
-      const auto* p4Extension = srs.GetExtension("PROJCS", "PROJ4", "");
-
-      if (strstr(p4Extension, "+proj=ob_tran") &&
-          (strstr(p4Extension, "+o_proj=latlon") || strstr(p4Extension, "+o_proj=lonlat") ||
-           strstr(p4Extension, "+o_proj=longlat")))
-      {
-        const auto* o_lat_p = strstr(p4Extension, "+o_lat_p=");
-        const auto* o_lon_p = strstr(p4Extension, "+o_lon_p=");
-
-        if (o_lat_p)
-          o_lat_p += strlen("+o_lat_p=");
-        if (o_lon_p)
-          o_lon_p += strlen("+o_lon_p=");
-
-        if (o_lat_p && *o_lat_p && o_lon_p && *o_lon_p)
-        {
-          char olatpbuf[strcspn(o_lat_p, " ") + 1];
-          char olonpbuf[strcspn(o_lon_p, " ") + 1];
-
-          strncpy(olatpbuf, o_lat_p, sizeof(olatpbuf) - 1);
-          strncpy(olonpbuf, o_lon_p, sizeof(olonpbuf) - 1);
-
-          olatpbuf[sizeof(olatpbuf) - 1] = '\0';
-          olonpbuf[sizeof(olonpbuf) - 1] = '\0';
-
-          itsGridMetaData.southernPoleLat = 0 - Fmi::stod(olatpbuf);
-          itsGridMetaData.southernPoleLon = Fmi::stod(olonpbuf);
-
-          if (itsGridMetaData.southernPoleLat != 0)
-            gridProjection = T::GridProjectionValue::RotatedLatLon;
-          else
-            throw Fmi::Exception(
-                BCP,
-                "rotlat grid crs proj4 extension is expected to have nonzero o_lat_p: " +
-                    crsAttr->mValue);
-        }
-        else
-          throw Fmi::Exception(
-              BCP,
-              "rotlat grid crs proj4 extension is expected to have o_lat_p and o_lon_p: " +
-                  crsAttr->mValue);
-      }
-      else if (*p4Extension)
-        throw Fmi::Exception(BCP, "Unḱnown grid crs proj4 extension: " + string(p4Extension));
-      else if (EQUAL(projection, SRS_PT_POLAR_STEREOGRAPHIC))
-        gridProjection = T::GridProjectionValue::PolarStereographic;
-      else if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_1SP))
-        gridProjection = T::GridProjectionValue::LambertConformal;
-      else if (EQUAL(projection, SRS_PT_LAMBERT_CONFORMAL_CONIC_2SP))
-        gridProjection = T::GridProjectionValue::LambertConformal;
-      else if (EQUAL(projection, SRS_PT_MERCATOR_1SP))
-        gridProjection = T::GridProjectionValue::Mercator;
-      else if (EQUAL(projection, SRS_PT_MERCATOR_2SP))
-        gridProjection = T::GridProjectionValue::Mercator;
-      else if (EQUAL(projection, SRS_PT_LAMBERT_AZIMUTHAL_EQUAL_AREA))
-        gridProjection = T::GridProjectionValue::LambertAzimuthalEqualArea;
-      else if (EQUAL(projection, SRS_PT_TRANSVERSE_MERCATOR))
-        gridProjection = T::GridProjectionValue::TransverseMercator;
-      else
-        throw Fmi::Exception(BCP, "Unsupported projection in input data: " + crsAttr->mValue);
-    }
+      gridProjection = getProjectedGridProjection(srs, attr, crsAttr->mValue);
     else if (!srs.IsGeographic())
       throw Fmi::Exception(BCP, "Grid crs is neither projected nor geographic: " + crsAttr->mValue);
     else if (srs.IsDerivedGeographic())
