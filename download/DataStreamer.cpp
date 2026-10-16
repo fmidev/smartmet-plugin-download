@@ -2501,6 +2501,260 @@ AreaClassId getProjectionType(const ReqParams& itsReqParams, const char* project
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get qd projected (or latlon/geographic) cs and qd geographic cs, with
+ *        Helmert transformation parameters for wgs84 output
+ */
+// ----------------------------------------------------------------------
+
+OGRSpatialReference* DataStreamer::getQDGeogCS(const NFmiArea* area,
+                                               OGRSpatialReference& qdProjectedSrs)
+{
+  // qd projected (or latlon/geographic) cs
+  // Copy from the cached factory instead of re-parsing the WKT (proj.db lookup).
+
+  qdProjectedSrs = *Fmi::OGRSpatialReferenceFactory::Create(area->WKT());
+
+  qdProjectedSrs.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+  // qd geographic cs
+
+  OGRSpatialReference* qdLLSrsPtr = itsResources.cloneGeogCS(qdProjectedSrs);
+  if (!qdLLSrsPtr)
+    throw Fmi::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
+
+  qdLLSrsPtr->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+  // Helmert transformation parameters for wgs84 output
+
+  if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
+  {
+    double htp[7];
+    Datum::getHelmertTransformationParameters(itsReqParams.datumShift, area, qdProjectedSrs, htp);
+
+    qdLLSrsPtr->SetTOWGS84(htp[0], htp[1], htp[2], htp[3], htp[4], htp[5], htp[6]);
+  }
+  //  else
+  //    qdLLSrsPtr->SetTOWGS84(0, 0, 0, 0, 0, 0, 0);
+
+  return qdLLSrsPtr;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get bbox'ed source area and/or grid size
+ */
+// ----------------------------------------------------------------------
+
+const NFmiArea* DataStreamer::getSourceAreaAndGridSize(const NFmiArea* area,
+                                                       const string& sourceProjection)
+{
+  bool useNativeBBox = (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty());
+  bool useNativeResolution = ((!itsReqParams.gridSizeXY) && (!itsReqParams.gridResolutionXY));
+
+  const auto* sourceArea = area;
+
+  if (useNativeBBox && useNativeResolution)
+    return sourceArea;
+
+  if (!useNativeBBox)
+  {
+    auto bbox = (itsReqParams.bbox.empty() ? getGridCenterBBoxStr() : itsReqParams.bbox);
+    sourceArea = itsResources.createArea(sourceProjection + "|" + bbox);
+  }
+
+  if (useNativeResolution)
+  {
+    auto xScale = sourceArea->WorldXYWidth() / (area->WorldXYWidth() - 1);
+    auto yScale = sourceArea->WorldXYHeight() / (area->WorldXYHeight() - 1);
+
+    itsReqGridSizeX = ceil(xScale * itsReqGridSizeX);
+    itsReqGridSizeY = ceil(yScale * itsReqGridSizeY);
+  }
+
+  setRequestedGridSize(*sourceArea, itsReqGridSizeX, itsReqGridSizeY);
+
+  return sourceArea;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get the target (output) cs. Returns true if the target cs is geographic.
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::getTargetCS(OGRSpatialReference& wgs84ProjectedSrs,
+                               const OGRSpatialReference& qdProjectedSrs,
+                               bool qdProjLL,
+                               const string& sourceProjection)
+{
+  OGRErr err = 0;
+
+  if (itsReqParams.projType == P_Epsg)
+  {
+    // Epsg projection
+    //
+    if ((err = wgs84ProjectedSrs.importFromEPSG(itsReqParams.epsgCode)) != OGRERR_NONE)
+      throw Fmi::Exception(BCP,
+                           "transform: srs.importFromEPSG(" +
+                               boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
+                               boost::lexical_cast<string>(err));
+
+    bool wgs84ProjLL = (!(wgs84ProjectedSrs.IsProjected()));
+
+    if (!wgs84ProjLL)
+      itsReqParams.areaClassId =
+          getProjectionType(itsReqParams, wgs84ProjectedSrs.GetAttrValue("PROJECTION"));
+    else
+      itsReqParams.areaClassId = A_LatLon;
+
+    return wgs84ProjLL;
+  }
+
+  // qd projection
+  //
+  if (itsReqParams.projection.empty() || (sourceProjection.find(itsReqParams.projection) == 0))
+  {
+    // Native
+
+    wgs84ProjectedSrs = qdProjectedSrs;
+    return qdProjLL;
+  }
+
+  const auto* targetArea = itsResources.createArea(itsReqParams.projection);
+
+  wgs84ProjectedSrs = *Fmi::OGRSpatialReferenceFactory::Create(targetArea->WKT());
+
+  return (targetArea->SpatialReference().isGeographic() ||
+          (targetArea->AreaStr().find("rotlatlon") != string::npos));
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Transform output cs grid cell projected (or latlon) coordinates to qd latlons,
+ *        and store output cs latlons and world xy coordinates for netcdf/geotiff output
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::transformGridCoordinates(OGRCoordinateTransformation* wgs84Pr2QDLLct,
+                                            OGRCoordinateTransformation* wgs84Pr2LLct,
+                                            bool qdProjLL,
+                                            bool wgs84ProjLL)
+{
+  using sz_t = NFmiDataMatrix<float>::size_type;
+  double xc = NAN;
+  double yc = NAN;
+
+  NFmiPoint bl = itsBoundingBox.bottomLeft;
+  NFmiPoint tr = itsBoundingBox.topRight;
+
+  itsSrcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+  const sz_t xs = itsSrcLatLons.width();
+  const sz_t ys = itsSrcLatLons.height();
+  const sz_t xN = xs - 1;
+  const sz_t yN = ys - 1;
+  sz_t x = 0;
+  sz_t y = 0;
+
+  if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
+  {
+    itsTargetLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+    itsTargetWorldXYs = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
+  }
+
+  itsDX = ((tr.X() - bl.X()) / xN);
+  itsDY = ((tr.Y() - bl.Y()) / yN);
+
+  for (y = 0, yc = bl.Y(); y < ys; y++, yc += itsDY)
+  {
+    xc = bl.X();
+
+    if (qdProjLL && wgs84ProjLL &&
+        (((y == 0) && (yc <= -89.999)) || ((y == yN) && (yc >= 89.999))))
+    {
+      for (x = 0; x < xs; x++, xc += itsDX)
+        itsSrcLatLons.set(x, y, xc, (y == 0) ? -90.0 : 90.0);
+
+      continue;
+    }
+
+    for (x = 0; x < xs; x++, xc += itsDX)
+    {
+      double txc = xc;
+      double tyc = yc;
+
+      if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
+        throw Fmi::Exception(BCP, "transform: Transform(wgs84,qd) failed");
+
+      itsSrcLatLons.set(x, y, txc, tyc);
+
+      bool isCorner = (((y == 0) && (x == 0)) || ((y == yN) && (x == xN)));
+      setTargetCellCoordinates(x, y, xc, yc, isCorner, wgs84Pr2LLct, wgs84ProjLL);
+    }
+  }
+
+  itsDX = fabs((tr.X() - bl.X()) / xs);
+  itsDY = fabs((tr.Y() - bl.Y()) / ys);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store output cs grid corner latlons, and output cs latlons and world xy
+ *        coordinates of a grid cell for netcdf/geotiff output
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::setTargetCellCoordinates(size_t x,
+                                            size_t y,
+                                            double xc,
+                                            double yc,
+                                            bool isCorner,
+                                            OGRCoordinateTransformation* wgs84Pr2LLct,
+                                            bool wgs84ProjLL)
+{
+  double txc = xc;
+  double tyc = yc;
+  bool netcdfOrGeoTiff =
+      ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff));
+
+  if (!wgs84ProjLL)
+  {
+    if (isCorner)
+    {
+      // Output cs grid bottom left and top right projected coordinates to latlons
+      //
+      if (!(wgs84Pr2LLct->Transform(1, &txc, &tyc)))
+        throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
+
+      if (y == 0)
+        itsBoundingBox.bottomLeft = NFmiPoint(txc, tyc);
+      else
+        itsBoundingBox.topRight = NFmiPoint(txc, tyc);
+    }
+
+    if (netcdfOrGeoTiff)
+    {
+      // Output cs world xy coordinates for netcdf/geotiff output
+      //
+      itsTargetWorldXYs.set(x, y, xc, yc);
+    }
+  }
+
+  if (netcdfOrGeoTiff)
+  {
+    // Output cs grid (projected coordinates to) latlons for netcdf/geotiff output
+    //
+    txc = xc;
+    tyc = yc;
+
+    if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
+      throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
+
+    itsTargetLatLons.set(x, y, txc, tyc);
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Coordinate transformation from querydata 'datum'/projection to
  * 		requested projection with or without datum shift to wgs84
  *
@@ -2519,49 +2773,19 @@ void DataStreamer::setTransformedCoordinates(const Engine::Querydata::Q& q, cons
 {
   try
   {
+    // qd projected (or latlon/geographic) cs and qd geographic cs
+
     OGRSpatialReference qdProjectedSrs;
-    OGRSpatialReference* qdLLSrsPtr = nullptr;
-    OGRErr err = 0;
-
-    // qd projected (or latlon/geographic) cs
-    // Copy from the cached factory instead of re-parsing the WKT (proj.db lookup).
-
-    qdProjectedSrs = *Fmi::OGRSpatialReferenceFactory::Create(area->WKT());
-
-    qdProjectedSrs.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
-    // qd geographic cs
-
-    qdLLSrsPtr = itsResources.cloneGeogCS(qdProjectedSrs);
-    if (!qdLLSrsPtr)
-      throw Fmi::Exception(BCP, "transform: qdsrs.cloneGeogCS() failed");
-
-    qdLLSrsPtr->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
-    // Helmert transformation parameters for wgs84 output
-
-    if (Datum::isDatumShiftToWGS84(itsReqParams.datumShift))
-    {
-      double htp[7];
-      Datum::getHelmertTransformationParameters(itsReqParams.datumShift, area, qdProjectedSrs, htp);
-
-      qdLLSrsPtr->SetTOWGS84(htp[0], htp[1], htp[2], htp[3], htp[4], htp[5], htp[6]);
-    }
-    //  else
-    //    qdLLSrsPtr->SetTOWGS84(0, 0, 0, 0, 0, 0, 0);
+    OGRSpatialReference* qdLLSrsPtr = getQDGeogCS(area, qdProjectedSrs);
 
     OGRSpatialReference wgs84ProjectedSrs;
     OGRSpatialReference* wgs84PrSrsPtr = &wgs84ProjectedSrs;
     OGRSpatialReference* wgs84LLSrsPtr = &wgs84ProjectedSrs;
-    bool wgs84ProjLL = false;
+    OGRErr err = 0;
     bool qdProjLL = (area->SpatialReference().isGeographic() ||
                      (area->AreaStr().find("rotlatlon") != string::npos));
 
-    bool useNativeBBox = (itsReqParams.bbox.empty() && itsReqParams.gridCenter.empty());
-    bool useNativeResolution = ((!itsReqParams.gridSizeXY) && (!itsReqParams.gridResolutionXY));
-
-    const auto* sourceArea = area;
-    const auto areaStr = sourceArea->AreaStr();
+    const auto areaStr = area->AreaStr();
     size_t bboxPos = areaStr.find(':');
 
     if ((bboxPos == string::npos) || (bboxPos == 0) || (bboxPos >= (areaStr.length() - 1)))
@@ -2570,65 +2794,11 @@ void DataStreamer::setTransformedCoordinates(const Engine::Querydata::Q& q, cons
 
     string sourceProjection = areaStr.substr(0, bboxPos);
 
-    if ((!useNativeBBox) || (!useNativeResolution))
-    {
-      // Get bbox'ed source area and/or grid size
+    // Get bbox'ed source area and/or grid size
 
-      if (!useNativeBBox)
-      {
-        auto bbox = (itsReqParams.bbox.empty() ? getGridCenterBBoxStr() : itsReqParams.bbox);
-        sourceArea = itsResources.createArea(sourceProjection + "|" + bbox);
-      }
+    const auto* sourceArea = getSourceAreaAndGridSize(area, sourceProjection);
 
-      if (useNativeResolution)
-      {
-        auto xScale = sourceArea->WorldXYWidth() / (area->WorldXYWidth() - 1);
-        auto yScale = sourceArea->WorldXYHeight() / (area->WorldXYHeight() - 1);
-
-        itsReqGridSizeX = ceil(xScale * itsReqGridSizeX);
-        itsReqGridSizeY = ceil(yScale * itsReqGridSizeY);
-      }
-
-      setRequestedGridSize(*sourceArea, itsReqGridSizeX, itsReqGridSizeY);
-    }
-
-    if (itsReqParams.projType == P_Epsg)
-    {
-      // Epsg projection
-      //
-      if ((err = wgs84PrSrsPtr->importFromEPSG(itsReqParams.epsgCode)) != OGRERR_NONE)
-        throw Fmi::Exception(BCP,
-                             "transform: srs.importFromEPSG(" +
-                                 boost::lexical_cast<string>(itsReqParams.epsgCode) + ") error " +
-                                 boost::lexical_cast<string>(err));
-
-      if (!(wgs84ProjLL = (!(wgs84PrSrsPtr->IsProjected()))))
-        itsReqParams.areaClassId =
-            getProjectionType(itsReqParams, wgs84PrSrsPtr->GetAttrValue("PROJECTION"));
-      else
-        itsReqParams.areaClassId = A_LatLon;
-    }
-    else
-    {
-      // qd projection
-      //
-      if (itsReqParams.projection.empty() || (sourceProjection.find(itsReqParams.projection) == 0))
-      {
-        // Native
-
-        wgs84ProjectedSrs = qdProjectedSrs;
-        wgs84ProjLL = qdProjLL;
-      }
-      else
-      {
-        const auto* targetArea = itsResources.createArea(itsReqParams.projection);
-
-        *wgs84PrSrsPtr = *Fmi::OGRSpatialReferenceFactory::Create(targetArea->WKT());
-
-        wgs84ProjLL = (targetArea->SpatialReference().isGeographic() ||
-                       (targetArea->AreaStr().find("rotlatlon") != string::npos));
-      }
-    }
+    bool wgs84ProjLL = getTargetCS(wgs84ProjectedSrs, qdProjectedSrs, qdProjLL, sourceProjection);
 
     // Clone/store target cs to be used later when setting output geometry
 
@@ -2673,96 +2843,7 @@ void DataStreamer::setTransformedCoordinates(const Engine::Querydata::Q& q, cons
         (!(wgs84Pr2LLct = itsResources.getCoordinateTransformation(wgs84PrSrsPtr, wgs84LLSrsPtr))))
       throw Fmi::Exception(BCP, "transform: OGRCreateCoordinateTransformation(wgs84,wgs84) failed");
 
-    using sz_t = NFmiDataMatrix<float>::size_type;
-    double xc = NAN;
-    double yc = NAN;
-
-    NFmiPoint bl = itsBoundingBox.bottomLeft;
-    NFmiPoint tr = itsBoundingBox.topRight;
-
-    itsSrcLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
-    const sz_t xs = itsSrcLatLons.width();
-    const sz_t ys = itsSrcLatLons.height();
-    const sz_t xN = xs - 1;
-    const sz_t yN = ys - 1;
-    sz_t x = 0;
-    sz_t y = 0;
-
-    if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
-    {
-      itsTargetLatLons = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
-      itsTargetWorldXYs = Fmi::CoordinateMatrix(itsReqGridSizeX, itsReqGridSizeY);
-    }
-
-    itsDX = ((tr.X() - bl.X()) / xN);
-    itsDY = ((tr.Y() - bl.Y()) / yN);
-
-    for (y = 0, yc = bl.Y(); y < ys; y++, yc += itsDY)
-    {
-      xc = bl.X();
-
-      if (qdProjLL && wgs84ProjLL &&
-          (((y == 0) && (yc <= -89.999)) || ((y == yN) && (yc >= 89.999))))
-      {
-        for (x = 0; x < xs; x++, xc += itsDX)
-          itsSrcLatLons.set(x, y, xc, (y == 0) ? -90.0 : 90.0);
-
-        continue;
-      }
-
-      for (x = 0; x < xs; x++, xc += itsDX)
-      {
-        double txc = xc;
-        double tyc = yc;
-
-        if (!(wgs84Pr2QDLLct->Transform(1, &txc, &tyc)))
-          throw Fmi::Exception(BCP, "transform: Transform(wgs84,qd) failed");
-
-        itsSrcLatLons.set(x, y, txc, tyc);
-
-        if (!wgs84ProjLL)
-        {
-          if (((y == 0) && (x == 0)) || ((y == yN) && (x == xN)))
-          {
-            // Output cs grid bottom left and top right projected coordinates to latlons
-            //
-            txc = xc;
-            tyc = yc;
-
-            if (!(wgs84Pr2LLct->Transform(1, &txc, &tyc)))
-              throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
-
-            if (y == 0)
-              itsBoundingBox.bottomLeft = NFmiPoint(txc, tyc);
-            else
-              itsBoundingBox.topRight = NFmiPoint(txc, tyc);
-          }
-
-          if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
-          {
-            // Output cs world xy coordinates for netcdf/geotiff output
-            //
-            itsTargetWorldXYs.set(x, y, xc, yc);
-          }
-        }
-
-        if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
-        {
-          // Output cs grid (projected coordinates to) latlons for netcdf/geotiff output
-          //
-          txc = xc;
-          tyc = yc;
-
-          if ((!wgs84ProjLL) && (!(wgs84Pr2LLct->Transform(1, &txc, &tyc))))
-            throw Fmi::Exception(BCP, "transform: Transform(wgs84,wgs84) failed");
-
-          itsTargetLatLons.set(x, y, txc, tyc);
-        }
-      }
-    }
-
-    itsDX = fabs((tr.X() - bl.X()) / xs);
-    itsDY = fabs((tr.Y() - bl.Y()) / ys);
+    transformGridCoordinates(wgs84Pr2QDLLct, wgs84Pr2LLct, qdProjLL, wgs84ProjLL);
   }
   catch (...)
   {

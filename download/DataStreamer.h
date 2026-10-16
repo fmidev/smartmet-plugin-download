@@ -201,6 +201,24 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void setCropping(const NFmiGrid &grid);
 
   void setTransformedCoordinates(const Engine::Querydata::Q& q, const NFmiArea* area);
+  OGRSpatialReference* getQDGeogCS(const NFmiArea* area, OGRSpatialReference& qdProjectedSrs);
+  const NFmiArea* getSourceAreaAndGridSize(const NFmiArea* area,
+                                           const std::string& sourceProjection);
+  bool getTargetCS(OGRSpatialReference& wgs84ProjectedSrs,
+                   const OGRSpatialReference& qdProjectedSrs,
+                   bool qdProjLL,
+                   const std::string& sourceProjection);
+  void transformGridCoordinates(OGRCoordinateTransformation* wgs84Pr2QDLLct,
+                                OGRCoordinateTransformation* wgs84Pr2LLct,
+                                bool qdProjLL,
+                                bool wgs84ProjLL);
+  void setTargetCellCoordinates(std::size_t x,
+                                std::size_t y,
+                                double xc,
+                                double yc,
+                                bool isCorner,
+                                OGRCoordinateTransformation* wgs84Pr2LLct,
+                                bool wgs84ProjLL);
   void coordTransform(const Engine::Querydata::Q& q, const NFmiArea* area);
 
   std::string getGridCenterBBoxStr() const;
