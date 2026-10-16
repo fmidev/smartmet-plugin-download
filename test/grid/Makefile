@@ -36,10 +36,21 @@ test-impl:
 	@echo "*** coverages suites; these are separate grid-source tests      ***"
 	@echo "*******************************************************************"
 	@echo ""
+	@ok=true; \
 	$(TEST_RUNNER) smartmet-plugin-test \
 		--handler /download \
 		--reactor-config cnf/reactor.conf \
-		--timeout $(TEST_TIMEOUT)
+		--timeout $(TEST_TIMEOUT) || ok=false; \
+	echo ""; \
+	echo "*** OGC API Coverages metadata of grid-engine producers         ***"; \
+	echo "*** (requests: test/grid/input-coverages)                       ***"; \
+	echo ""; \
+	$(TEST_RUNNER) smartmet-plugin-test \
+		--handler /coverages \
+		--reactor-config cnf/reactor.conf \
+		--input-dir input-coverages \
+		--timeout $(TEST_TIMEOUT) || ok=false; \
+	$$ok
 
 start-redis-db:
 	rm -rf cnf/grid

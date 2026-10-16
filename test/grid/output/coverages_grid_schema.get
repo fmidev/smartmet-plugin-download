@@ -1,0 +1,160 @@
+Status: 200
+Content-Type: application/json
+
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "properties" : 
+  {
+    "DD-D" : 
+    {
+      "title" : "Wind Direction in Degrees",
+      "type" : "number",
+      "x-ogc-unit" : "Deg"
+    },
+    "DF-MS" : 
+    {
+      "title" : "Wind Vector in m/s",
+      "type" : "number",
+      "x-ogc-unit" : "m s-1"
+    },
+    "FF-MS" : 
+    {
+      "title" : "Wind speed in m/s",
+      "type" : "number",
+      "x-ogc-unit" : "m s-1"
+    },
+    "FOGINT-N" : 
+    {
+      "title" : "Fog intensity from 0..2",
+      "type" : "number",
+      "x-ogc-unit" : "No Unit"
+    },
+    "HESSAA-N" : 
+    {
+      "title" : "Simple weather symbol fo HS and others",
+      "type" : "number",
+      "x-ogc-unit" : "No Unit"
+    },
+    "HSADE1-N" : 
+    {
+      "title" : "Precalculated weather symbol",
+      "type" : "number",
+      "x-ogc-unit" : "No Unit"
+    },
+    "KINDEX-N" : 
+    {
+      "title" : "Stability index (-50 -> 50)",
+      "type" : "number",
+      "x-ogc-unit" : "No Unit"
+    },
+    "N-PRCNT" : 
+    {
+      "title" : "Total Cloud Cover in %",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "NH-PRCNT" : 
+    {
+      "title" : "High Cloud Amount",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "NL-PRCNT" : 
+    {
+      "title" : "Low Cloud Amount",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "NLM-PRCNT" : 
+    {
+      "title" : "Low and middle cloud cover",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "NM-PRCNT" : 
+    {
+      "title" : "Medium Cloud Amount",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "P-PA" : 
+    {
+      "title" : "Pressure in Pascals",
+      "type" : "number",
+      "x-ogc-unit" : "kg m-1 s-2"
+    },
+    "POP-PRCNT" : 
+    {
+      "title" : "Probability of precipitation",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "POT-PRCNT" : 
+    {
+      "title" : "Probability of thunderstorms",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "PRECFORM-N" : 
+    {
+      "title" : "Precipitation form",
+      "type" : "number",
+      "x-ogc-unit" : "JustAnumber"
+    },
+    "PRECTYPE-N" : 
+    {
+      "title" : "Precipitation type, large scale or convective",
+      "type" : "number",
+      "x-ogc-unit" : "JustAnumber"
+    },
+    "RADGLO-WM2" : 
+    {
+      "title" : "Global radiation",
+      "type" : "number",
+      "x-ogc-unit" : "W m-2"
+    },
+    "RADLW-WM2" : 
+    {
+      "title" : "Long wave radiation",
+      "type" : "number",
+      "x-ogc-unit" : "W m-2"
+    },
+    "RH-PRCNT" : 
+    {
+      "title" : "Relative Humidity in percents",
+      "type" : "number",
+      "x-ogc-unit" : "%"
+    },
+    "RRR-KGM2" : 
+    {
+      "title" : "Total Precipitation rate in kg m-2",
+      "type" : "number",
+      "x-ogc-unit" : "kg m-2 h-1"
+    },
+    "T-K" : 
+    {
+      "title" : "Temperature in Kelvins",
+      "type" : "number",
+      "x-ogc-unit" : "K"
+    },
+    "TD-C" : 
+    {
+      "title" : "Dew point Temperature in C",
+      "type" : "number",
+      "x-ogc-unit" : "C"
+    },
+    "U-MS" : 
+    {
+      "title" : "U wind in m/s",
+      "type" : "number",
+      "x-ogc-unit" : "m s-1"
+    },
+    "V-MS" : 
+    {
+      "title" : "V wind in m/s",
+      "type" : "number",
+      "x-ogc-unit" : "m s-1"
+    }
+  },
+  "type" : "object"
+}

@@ -1234,12 +1234,28 @@ Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
   {
     if (md.analysisTime != latest)
       continue;
+    // The west edge from the left corners and the east edge from the right ones: taking the
+    // extremes of all the corners fails for grids crossing the antimeridian, and for global
+    // grids whose corners are at 0 and 359.9 (= -0.1) degrees
+    const double west = std::min(md.latlon_bottomLeft.x(), md.latlon_topLeft.x());
+    double east = std::max(md.latlon_bottomRight.x(), md.latlon_topRight.x());
+    if (east <= west)
+      east += 360;
+    if (east - west >= 359)
+    {
+      xmin = -180;
+      xmax = 180;
+    }
+    else
+    {
+      // A box crossing the antimeridian has minx > maxx, as in OGC API - Common
+      xmin = std::min(xmin, west);
+      xmax = std::max(xmax, east > 180 ? east - 360 : east);
+    }
     for (const auto& c :
          {md.latlon_bottomLeft, md.latlon_bottomRight, md.latlon_topLeft, md.latlon_topRight})
     {
-      xmin = std::min(xmin, c.x());
       ymin = std::min(ymin, c.y());
-      xmax = std::max(xmax, c.x());
       ymax = std::max(ymax, c.y());
     }
     times.insert(md.times.begin(), md.times.end());
@@ -1256,9 +1272,21 @@ Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
     grid["wkt"] = md.wkt;
     grid["width"] = md.xNumber;
     grid["height"] = md.yNumber;
+    // The corners in longitude and latitude, as for querydata
+    const auto corner = [](const T::Coordinate& c)
+    {
+      Json::Value v(Json::arrayValue);
+      v.append(c.x());
+      v.append(c.y());
+      return v;
+    };
+    grid["corners"]["bottomleft"] = corner(md.latlon_bottomLeft);
+    grid["corners"]["bottomright"] = corner(md.latlon_bottomRight);
+    grid["corners"]["topleft"] = corner(md.latlon_topLeft);
+    grid["corners"]["topright"] = corner(md.latlon_topRight);
     grids.append(grid);
   }
-  if (xmin > xmax)
+  if (ymin > ymax)
     return extent;
 
   extent["spatial"]["bbox"].append(bboxValue(xmin, ymin, xmax, ymax));
@@ -1715,6 +1743,9 @@ void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
       if (x1 > x2)
         throw Fmi::Exception(BCP, "The area cannot be expressed in the output crs");
     }
+    // A global longitude-latitude grid has its corners at 0 and 359.9 (= -0.1) degrees
+    if (target->IsGeographic() && bbox.empty() && x2 <= x1)
+      x2 += 360;
     if (x1 > x2)
       std::swap(x1, x2);
     if (y1 > y2)
