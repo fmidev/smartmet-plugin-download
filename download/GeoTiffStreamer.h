@@ -67,6 +67,7 @@ class GeoTiffStreamer : public DataStreamer
   };
 
   void captureGeometry(const Engine::Querydata::Q& q, const NFmiArea* area, const NFmiGrid* grid);
+  std::string projectionWKT(int classId, bool projected, const NFmiArea* area);
   void captureGridGeometry(const QueryServer::Query& gridQuery);
   void storeBand();
   void writeFile();

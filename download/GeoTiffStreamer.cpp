@@ -158,6 +158,25 @@ std::string GeoTiffStreamer::getChunk()
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Projection WKT of the output grid
+ */
+// ----------------------------------------------------------------------
+
+std::string GeoTiffStreamer::projectionWKT(int classId, bool projected, const NFmiArea* area)
+{
+  OGRSpatialReference* geometrySRS = itsResources.getGeometrySRS();
+
+  if (geometrySRS)
+    return getWKT(geometrySRS);
+  if (classId == kNFmiYKJArea)
+    return getWKT(Fmi::SpatialReference(2393).get());
+  if (!projected)
+    return getWKT(Fmi::SpatialReference(4326).get());
+  return area->WKT();
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Capture target grid geometry (geotransform and projection) from
  *        the first querydata slice.
  */
@@ -232,16 +251,7 @@ void GeoTiffStreamer::captureGeometry(const Engine::Querydata::Q& q,
     // as a projected equirectangular CRS in metres; label the file as geographic WGS84
     // (EPSG:4326) instead so that the degree coordinates are interpreted correctly.
 
-    OGRSpatialReference* geometrySRS = itsResources.getGeometrySRS();
-
-    if (geometrySRS)
-      itsProjectionWKT = getWKT(geometrySRS);
-    else if (classId == kNFmiYKJArea)
-      itsProjectionWKT = getWKT(Fmi::SpatialReference(2393).get());
-    else if (!projected)
-      itsProjectionWKT = getWKT(Fmi::SpatialReference(4326).get());
-    else
-      itsProjectionWKT = area->WKT();
+    itsProjectionWKT = projectionWKT(classId, projected, area);
 
     itsMissingValue =
         (itsReqParams.dataSource == QueryData) ? kFloatMissing : (float)gribMissingValue;
