@@ -4172,6 +4172,102 @@ void DataStreamer::extractData(string& chunk)
   }
 }
 
+namespace
+{
+const double kmPerDegree = 2 * M_PI * 6371.0 / 360;
+
+// Native cell size in km. Returns true if the grid reports its cell size in degrees (latlon
+// grids), in which case the size is converted to km.
+bool getNativeCellSize(GRIB2::GridDefinition& gridDef, double& cellWidth, double& cellHeight)
+{
+  bool degrees = !gridDef.getGridMetricCellSize(cellWidth, cellHeight);
+
+  if (degrees)
+  {
+    double lat = 0;
+    double lon = 0;
+    double cosLat = 1;
+
+    if (gridDef.getGridProjection() == T::GridProjectionValue::LatLon &&
+        gridDef.getGridLatLonCoordinatesByGridPoint(C_UINT(gridDef.getGridColumnCount() / 2),
+                                                    C_UINT(gridDef.getGridRowCount() / 2),
+                                                    lat,
+                                                    lon))
+      cosLat = cos(lat * M_PI / 180);
+
+    cellWidth = fabs(cellWidth) * kmPerDegree * cosLat;
+    cellHeight = fabs(cellHeight) * kmPerDegree;
+  }
+
+  return degrees;
+}
+
+// Test whether bbox coordinates are latlon coordinates
+bool isLatLonBBox(double x1, double y1, double x2, double y2)
+{
+  return ((fabs(x1) <= 360) && (fabs(y1) <= 180) && (fabs(x2) <= 360) && (fabs(y2) <= 180));
+}
+
+// Extent of a latlon bbox in km
+void latLonBBoxExtent(double x1, double y1, double x2, double y2, double& width, double& height)
+{
+  double midLat = (y1 + y2) / 2;
+  width = fabs(x2 - x1) * kmPerDegree * cos(midLat * M_PI / 180);
+  height = fabs(y2 - y1) * kmPerDegree;
+}
+
+// Extent of a metric bbox in km
+void metricBBoxExtent(double x1, double y1, double x2, double y2, double& width, double& height)
+{
+  width = fabs(x2 - x1) / 1000;
+  height = fabs(y2 - y1) / 1000;
+}
+
+// Extent in km of the span of a latlon bbox in native grid cells. The extent is not set
+// if none of the corners is inside the grid.
+void gridCellSpanExtent(GRIB2::GridDefinition& gridDef,
+                        double x1,
+                        double y1,
+                        double x2,
+                        double y2,
+                        double cellWidth,
+                        double cellHeight,
+                        double& width,
+                        double& height)
+{
+
+  double minI = 0;
+  double maxI = 0;
+  double minJ = 0;
+  double maxJ = 0;
+  bool first = true;
+
+  for (const auto& corner : {std::make_pair(x1, y1),
+                             std::make_pair(x1, y2),
+                             std::make_pair(x2, y1),
+                             std::make_pair(x2, y2)})
+  {
+    double i = 0;
+    double j = 0;
+
+    if (!gridDef.getGridPointByLatLonCoordinatesNoCache(corner.second, corner.first, i, j))
+      continue;
+
+    minI = (first ? i : std::min(minI, i));
+    maxI = (first ? i : std::max(maxI, i));
+    minJ = (first ? j : std::min(minJ, j));
+    maxJ = (first ? j : std::max(maxJ, j));
+    first = false;
+  }
+
+  if (!first)
+  {
+    width = (maxI - minI) * cellWidth;
+    height = (maxJ - minJ) * cellHeight;
+  }
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Convert requested grid resolution (km) into grid size for grid data
@@ -4185,8 +4281,6 @@ void DataStreamer::getGridSizeByResolution(size_t& gridSizeX, size_t& gridSizeY)
 {
   try
   {
-    const double kmPerDegree = 2 * M_PI * 6371.0 / 360;
-
     auto gridDef =
         Identification::gridDef.getGrib2DefinitionByGeometryId(itsGridMetaData.geometryId);
 
@@ -4195,28 +4289,9 @@ void DataStreamer::getGridSizeByResolution(size_t& gridSizeX, size_t& gridSizeY)
     double cellWidth = 0;
     double cellHeight = 0;
     bool degrees = false;
-    double cosLat = 1;
 
     if (gridDef)
-    {
-      degrees = !gridDef->getGridMetricCellSize(cellWidth, cellHeight);
-
-      if (degrees)
-      {
-        double lat = 0;
-        double lon = 0;
-
-        if (gridDef->getGridProjection() == T::GridProjectionValue::LatLon &&
-            gridDef->getGridLatLonCoordinatesByGridPoint(C_UINT(gridDef->getGridColumnCount() / 2),
-                                                         C_UINT(gridDef->getGridRowCount() / 2),
-                                                         lat,
-                                                         lon))
-          cosLat = cos(lat * M_PI / 180);
-
-        cellWidth = fabs(cellWidth) * kmPerDegree * cosLat;
-        cellHeight = fabs(cellHeight) * kmPerDegree;
-      }
-    }
+      degrees = getNativeCellSize(*gridDef, cellWidth, cellHeight);
 
     // Metric extent of the output area in km
 
@@ -4241,17 +4316,10 @@ void DataStreamer::getGridSizeByResolution(size_t& gridSizeX, size_t& gridSizeY)
       double x2 = tb.topRight.X();
       double y2 = tb.topRight.Y();
 
-      if ((fabs(x1) <= 360) && (fabs(y1) <= 180) && (fabs(x2) <= 360) && (fabs(y2) <= 180))
-      {
-        double midLat = (y1 + y2) / 2;
-        width = fabs(x2 - x1) * kmPerDegree * cos(midLat * M_PI / 180);
-        height = fabs(y2 - y1) * kmPerDegree;
-      }
+      if (isLatLonBBox(x1, y1, x2, y2))
+        latLonBBoxExtent(x1, y1, x2, y2, width, height);
       else
-      {
-        width = fabs(x2 - x1) / 1000;
-        height = fabs(y2 - y1) / 1000;
-      }
+        metricBBoxExtent(x1, y1, x2, y2, width, height);
     }
     else if (itsReqParams.bboxRect)
     {
@@ -4260,56 +4328,20 @@ void DataStreamer::getGridSizeByResolution(size_t& gridSizeX, size_t& gridSizeY)
       double x2 = (*itsReqParams.bboxRect)[1].first;
       double y2 = (*itsReqParams.bboxRect)[1].second;
 
-      bool latlonBBox =
-          ((fabs(x1) <= 360) && (fabs(y1) <= 180) && (fabs(x2) <= 360) && (fabs(y2) <= 180));
-
-      if (!latlonBBox)
+      if (!isLatLonBBox(x1, y1, x2, y2))
       {
         // Native projection metric bbox
 
-        width = fabs(x2 - x1) / 1000;
-        height = fabs(y2 - y1) / 1000;
+        metricBBoxExtent(x1, y1, x2, y2, width, height);
       }
       else if (gridDef && !degrees && itsReqParams.projection.empty())
       {
         // Span of the latlon bbox in native grid cells
 
-        double minI = 0;
-        double maxI = 0;
-        double minJ = 0;
-        double maxJ = 0;
-        bool first = true;
-
-        for (const auto& corner : {std::make_pair(x1, y1),
-                                   std::make_pair(x1, y2),
-                                   std::make_pair(x2, y1),
-                                   std::make_pair(x2, y2)})
-        {
-          double i = 0;
-          double j = 0;
-
-          if (!gridDef->getGridPointByLatLonCoordinatesNoCache(corner.second, corner.first, i, j))
-            continue;
-
-          minI = (first ? i : std::min(minI, i));
-          maxI = (first ? i : std::max(maxI, i));
-          minJ = (first ? j : std::min(minJ, j));
-          maxJ = (first ? j : std::max(maxJ, j));
-          first = false;
-        }
-
-        if (!first)
-        {
-          width = (maxI - minI) * cellWidth;
-          height = (maxJ - minJ) * cellHeight;
-        }
+        gridCellSpanExtent(*gridDef, x1, y1, x2, y2, cellWidth, cellHeight, width, height);
       }
       else
-      {
-        double midLat = (y1 + y2) / 2;
-        width = fabs(x2 - x1) * kmPerDegree * cos(midLat * M_PI / 180);
-        height = fabs(y2 - y1) * kmPerDegree;
-      }
+        latLonBBoxExtent(x1, y1, x2, y2, width, height);
     }
     else if (gridDef)
     {
