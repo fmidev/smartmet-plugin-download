@@ -1540,6 +1540,16 @@ Fmi::DateTime adjustToTimeStep(const Fmi::DateTime &pt, long timeStepInMinutes)
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+// Output value of a grid value, possibly scaled
+double gribValue(float value, bool scaled, float scale, float offset, double missingValue)
+{
+  if (value == ParamValueMissing)
+    return missingValue;
+  if (!scaled)
+    return value;
+  return (value + offset) / scale;
+}
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -1723,37 +1733,16 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
 
     auto* const vVec = &(getValueListItem(gridQuery)->mValueVector);
 
-    if (itsReqParams.dataSource == GridContent)
+    // No scaling applied to grid content data
+
+    bool scaled = (itsReqParams.dataSource != GridContent);
+
+    for (y = y0; (y < yN); y += yStep)
     {
-      // No scaling applied
+      int j = y * xN;
 
-      for (y = y0; (y < yN); y += yStep)
-      {
-        int j = y * xN;
-
-        for (x = x0; (x < xN); x += xStep, j += xStep, i++)
-        {
-          float value = (*vVec)[j];
-          itsValueArray[i] = ((value != ParamValueMissing) ? value : gribMissingValue);
-        }
-      }
-    }
-    else
-    {
-      for (y = y0; (y < yN); y += yStep)
-      {
-        int j = y * xN;
-
-        for (x = x0; (x < xN); x += xStep, j += xStep, i++)
-        {
-          float value = (*vVec)[j];
-
-          if (value != ParamValueMissing)
-            itsValueArray[i] = (value + offset) / scale;
-          else
-            itsValueArray[i] = gribMissingValue;
-        }
-      }
+      for (x = x0; (x < xN); x += xStep, j += xStep, i++)
+        itsValueArray[i] = gribValue((*vVec)[j], scaled, scale, offset, gribMissingValue);
     }
 
     grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
