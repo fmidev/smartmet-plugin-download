@@ -1881,6 +1881,45 @@ void DataStreamer::getBBox(const Engine::Querydata::Q& q,
   }
 }
 
+namespace
+{
+// Transform the bounding box corners and return the bounding box of the transformed corners
+void transformBBox(OGRCoordinateTransformation* ct,
+                   double& blX,
+                   double& blY,
+                   double& trX,
+                   double& trY)
+{
+  double c[] = {blX, blY, blX, trY, trX, trY, trX, blY};
+  double* x = c;
+  double* y = c + 1;
+
+  for (int i = 0; (i < 4); i++, x += 2, y += 2)
+  {
+    if (!(ct->Transform(1, x, y)))
+      throw Fmi::Exception(BCP, "Transform failed");
+
+    if (i == 0)
+    {
+      blX = trX = *x;
+      blY = trY = *y;
+    }
+    else
+    {
+      if (*x < blX)
+        blX = *x;
+      else if (*x > trX)
+        trX = *x;
+
+      if (*y < blY)
+        blY = *y;
+      else if (*y > trY)
+        trY = *y;
+    }
+  }
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Get projected or latlon source area bbox or requested bbox for target projection
@@ -1943,35 +1982,7 @@ void DataStreamer::getBBox(const Engine::Querydata::Q& q,
       trY = (*itsRegBoundingBox).topRight.Y();
 
       if (targetLLSRS)
-      {
-        double c[] = {blX, blY, blX, trY, trX, trY, trX, blY};
-        double* x = c;
-        double* y = c + 1;
-
-        for (int i = 0; (i < 4); i++, x += 2, y += 2)
-        {
-          if (!(LL2Prct->Transform(1, x, y)))
-            throw Fmi::Exception(BCP, "Transform failed");
-
-          if (i == 0)
-          {
-            blX = trX = *x;
-            blY = trY = *y;
-          }
-          else
-          {
-            if (*x < blX)
-              blX = *x;
-            else if (*x > trX)
-              trX = *x;
-
-            if (*y < blY)
-              blY = *y;
-            else if (*y > trY)
-              trY = *y;
-          }
-        }
-      }
+        transformBBox(LL2Prct, blX, blY, trX, trY);
     }
 
     itsBoundingBox = BBoxCorners{NFmiPoint(blX, blY), NFmiPoint(trX, trY)};
