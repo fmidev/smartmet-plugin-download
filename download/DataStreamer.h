@@ -235,6 +235,13 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       NFmiGrid **grid);
   void checkRequestDataSize() const;
 
+  NFmiLevelBag makeRequestedLevelBag(const Engine::Querydata::Q& q,
+                                     bool levelInterpolation) const;
+  NFmiLevelBag makeNativeLevelBag(const Engine::Querydata::Q& q, bool levelInterpolation) const;
+  bool isPastLevel(float nativeLevel, int requestedLevel) const;
+  void skipPrecedingRequestedLevels(std::list<int>::const_iterator& reqLevel,
+                                    float nativeLevel,
+                                    bool isNativeLevel) const;
   NFmiVPlaceDescriptor makeVPlaceDescriptor(const Engine::Querydata::Q& q,
                                             bool requestLevels = false,
                                             bool nativeLevels = false) const;

@@ -2881,6 +2881,150 @@ void DataStreamer::extractSpheroidFromGeom(OGRSpatialReference* geometrySRS,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Test whether native level is past the requested level in data level order
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::isPastLevel(float nativeLevel, int requestedLevel) const
+{
+  return itsRisingLevels ? (nativeLevel > requestedLevel) : (nativeLevel < requestedLevel);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Advance to the next requested level, and further past the requested levels
+ *        preceeding the native level if it is not a requested level
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::skipPrecedingRequestedLevels(std::list<int>::const_iterator& reqLevel,
+                                                float nativeLevel,
+                                                bool isNativeLevel) const
+{
+  float level1 = 0;
+  float level2 = 0;
+
+  for (bool more = true; more;
+       more = (!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2))
+  {
+    if ((++reqLevel != itsSortedDataLevels.end()) && (!isNativeLevel))
+    {
+      level1 = (itsRisingLevels ? nativeLevel : *reqLevel);
+      level2 = (itsRisingLevels ? *reqLevel : nativeLevel);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Build level bag for the requested levels
+ */
+// ----------------------------------------------------------------------
+
+NFmiLevelBag DataStreamer::makeRequestedLevelBag(const Engine::Querydata::Q& q,
+                                                 bool levelInterpolation) const
+{
+  NFmiLevelBag lbag;
+  auto levelIndex = q->levelIndex();
+
+  if (levelInterpolation)
+  {
+    for (auto reqLevel = itsSortedDataLevels.begin(); (reqLevel != itsSortedDataLevels.end());
+         reqLevel++)
+    {
+      lbag.AddLevel(NFmiLevel(itsNativeLevelType, *reqLevel));
+
+      if (itsReqParams.outputFormat != QD)
+      {
+        // Only one level for querydata created for cached projection handling
+        //
+        break;
+      }
+    }
+  }
+  else
+  {
+    for (q->resetLevel(); q->nextLevel();)
+    {
+      if (find(itsSortedDataLevels.begin(), itsSortedDataLevels.end(), q->levelValue()) !=
+          itsSortedDataLevels.end())
+      {
+        lbag.AddLevel(q->level());
+
+        if (itsReqParams.outputFormat != QD)
+          break;
+      }
+    }
+
+    if (lbag.GetSize() == 0)
+      throw Fmi::Exception(BCP, "No requested level available in data");
+
+    q->levelIndex(levelIndex);
+  }
+
+  return lbag;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Build level bag for the requested native levels and the native
+ *        levels needed for interpolation
+ */
+// ----------------------------------------------------------------------
+
+NFmiLevelBag DataStreamer::makeNativeLevelBag(const Engine::Querydata::Q& q,
+                                              bool levelInterpolation) const
+{
+  NFmiLevelBag lbag;
+  auto levelIndex = q->levelIndex();
+
+  auto reqLevel = itsSortedDataLevels.begin();
+  std::optional<NFmiLevel> prevNativeLevel;
+
+  for (q->resetLevel(); q->nextLevel();)
+  {
+    bool hasReqLevel = (reqLevel != itsSortedDataLevels.end());
+    bool isNativeLevel = ((!hasReqLevel) || (q->levelValue() == *reqLevel));
+    bool isInterpolatedLevel = (!hasReqLevel);
+    if (!isNativeLevel && levelInterpolation)
+      isInterpolatedLevel = isPastLevel(q->levelValue(), *reqLevel);
+
+    if (isInterpolatedLevel && prevNativeLevel)
+      lbag.AddLevel(*prevNativeLevel);
+
+    if (!hasReqLevel)
+      break;
+
+    if (!(isNativeLevel || isInterpolatedLevel))
+    {
+      // Skip native levels preceeding first requested level
+
+      prevNativeLevel = q->level();
+      continue;
+    }
+
+    lbag.AddLevel(q->level());
+
+    if (isNativeLevel)
+      prevNativeLevel.reset();
+    else
+      prevNativeLevel = q->level();
+
+    // Skip requested levels preceeding current native level
+
+    skipPrecedingRequestedLevels(reqLevel, q->levelValue(), isNativeLevel);
+  }
+
+  if (lbag.GetSize() == 0)
+    throw Fmi::Exception(BCP, "No requested level available in data");
+
+  q->levelIndex(levelIndex);
+
+  return lbag;
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Build a new NFmiVPlaceDescriptor
  *
  */
@@ -2898,107 +3042,18 @@ NFmiVPlaceDescriptor DataStreamer::makeVPlaceDescriptor(const Engine::Querydata:
       return NFmiVPlaceDescriptor(((NFmiQueryInfo*)&(*info))->VPlaceDescriptor());
     }
 
-    NFmiLevelBag lbag;
-    auto levelIndex = q->levelIndex();
     bool levelInterpolation =
         (isPressureLevel(itsNativeLevelType) && itsProducer.verticalInterpolation);
 
     if (requestLevels)
     {
-      if (levelInterpolation)
-      {
-        for (auto reqLevel = itsSortedDataLevels.begin(); (reqLevel != itsSortedDataLevels.end());
-             reqLevel++)
-        {
-          lbag.AddLevel(NFmiLevel(itsNativeLevelType, *reqLevel));
-
-          if (itsReqParams.outputFormat != QD)
-          {
-            // Only one level for querydata created for cached projection handling
-            //
-            break;
-          }
-        }
-      }
-      else
-      {
-        for (q->resetLevel(); q->nextLevel();)
-        {
-          if (find(itsSortedDataLevels.begin(), itsSortedDataLevels.end(), q->levelValue()) !=
-              itsSortedDataLevels.end())
-          {
-            lbag.AddLevel(q->level());
-
-            if (itsReqParams.outputFormat != QD)
-              break;
-          }
-        }
-
-        if (lbag.GetSize() == 0)
-          throw Fmi::Exception(BCP, "No requested level available in data");
-
-        q->levelIndex(levelIndex);
-      }
-
+      NFmiLevelBag lbag = makeRequestedLevelBag(q, levelInterpolation);
       return NFmiVPlaceDescriptor(lbag);
     }
 
     // Requested native levels and native levels needed for interpolation
 
-    auto reqLevel = itsSortedDataLevels.begin();
-    std::optional<NFmiLevel> prevNativeLevel;
-
-    for (q->resetLevel(); q->nextLevel();)
-    {
-      bool hasReqLevel = (reqLevel != itsSortedDataLevels.end());
-      bool isNativeLevel = ((!hasReqLevel) || (q->levelValue() == *reqLevel));
-      bool isInterpolatedLevel = (!hasReqLevel);
-      if (!isNativeLevel && levelInterpolation)
-        isInterpolatedLevel =
-            itsRisingLevels ? (q->levelValue() > *reqLevel) : (q->levelValue() < *reqLevel);
-
-      if (isInterpolatedLevel && prevNativeLevel)
-        lbag.AddLevel(*prevNativeLevel);
-
-      if (!hasReqLevel)
-        break;
-
-      if (!(isNativeLevel || isInterpolatedLevel))
-      {
-        // Skip native levels preceeding first requested level
-
-        prevNativeLevel = q->level();
-        continue;
-      }
-
-      lbag.AddLevel(q->level());
-
-      if (isNativeLevel)
-        prevNativeLevel.reset();
-      else
-        prevNativeLevel = q->level();
-
-      float level1 = 0;
-      float level2 = 0;
-
-      // Skip requested levels preceeding current native level
-
-      for (bool more = true; more;
-           more = (!isNativeLevel) && (reqLevel != itsSortedDataLevels.end()) && (level1 > level2))
-      {
-        if ((++reqLevel != itsSortedDataLevels.end()) && (!isNativeLevel))
-        {
-          level1 = (itsRisingLevels ? q->levelValue() : *reqLevel);
-          level2 = (itsRisingLevels ? *reqLevel : q->levelValue());
-        }
-      }
-    }
-
-    if (lbag.GetSize() == 0)
-      throw Fmi::Exception(BCP, "No requested level available in data");
-
-    q->levelIndex(levelIndex);
-
+    NFmiLevelBag lbag = makeNativeLevelBag(q, levelInterpolation);
     return NFmiVPlaceDescriptor(lbag);
   }
   catch (...)
