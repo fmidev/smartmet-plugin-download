@@ -49,6 +49,60 @@ GeoTiffStreamer::~GeoTiffStreamer()
   unlink(itsFilename.c_str());
 }
 
+namespace
+{
+// Read the next chunk of the file, or an empty string at the end of the file
+std::string readFileChunk(std::ifstream &stream, unsigned int chunkLength)
+{
+  std::string chunk;
+  if (!stream.eof())
+  {
+    std::unique_ptr<char[]> mesg(new char[chunkLength]);
+
+    stream.read(mesg.get(), chunkLength);
+    std::streamsize mesg_len = stream.gcount();
+
+    if (mesg_len > 0)
+      chunk = std::string(mesg.get(), mesg_len);
+  }
+  return chunk;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Load all the data into the output file and open it for streaming
+ */
+// ----------------------------------------------------------------------
+
+void GeoTiffStreamer::loadFile()
+{
+  string chunk;
+
+  // Collect all slices into raster bands. 'chunk' serves only as 'end of data' indicator;
+  // the actual values are read from 'itsGridValues' (querydata) or the grid query result.
+
+  for (bool more = true; more; more = !itsLoadedFlag)
+  {
+    extractData(chunk);
+
+    if (chunk.empty())
+      itsLoadedFlag = true;
+    else
+      storeBand();
+  }
+
+  if (itsBands.empty())
+    throw Fmi::Exception(BCP, "No data to write to GeoTIFF");
+
+  writeFile();
+
+  itsStream.open(itsFilename, ifstream::in | ifstream::binary);
+
+  if (!itsStream)
+    throw Fmi::Exception(BCP, "Unable to open file stream");
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Get next chunk of data. Called from SmartMet server code
@@ -70,41 +124,9 @@ std::string GeoTiffStreamer::getChunk()
       if (!itsDoneFlag)
       {
         if (!itsLoadedFlag)
-        {
-          // Collect all slices into raster bands. 'chunk' serves only as 'end of data' indicator;
-          // the actual values are read from 'itsGridValues' (querydata) or the grid query result.
+          loadFile();
 
-          for (bool more = true; more; more = !itsLoadedFlag)
-          {
-            extractData(chunk);
-
-            if (chunk.empty())
-              itsLoadedFlag = true;
-            else
-              storeBand();
-          }
-
-          if (itsBands.empty())
-            throw Fmi::Exception(BCP, "No data to write to GeoTIFF");
-
-          writeFile();
-
-          itsStream.open(itsFilename, ifstream::in | ifstream::binary);
-
-          if (!itsStream)
-            throw Fmi::Exception(BCP, "Unable to open file stream");
-        }
-
-        if (!itsStream.eof())
-        {
-          std::unique_ptr<char[]> mesg(new char[itsChunkLength]);
-
-          itsStream.read(mesg.get(), itsChunkLength);
-          streamsize mesg_len = itsStream.gcount();
-
-          if (mesg_len > 0)
-            chunk = string(mesg.get(), mesg_len);
-        }
+        chunk = readFileChunk(itsStream, itsChunkLength);
 
         if (chunk.empty())
           itsDoneFlag = true;

@@ -148,6 +148,77 @@ catch (...)
   throw Fmi::Exception(BCP, "Operation failed!");
 }
 
+namespace
+{
+// Read the next chunk of the file, or an empty string at the end of the file
+std::string readFileChunk(std::ifstream &stream, unsigned int chunkLength)
+{
+  std::string chunk;
+  if (!stream.eof())
+  {
+    std::unique_ptr<char[]> mesg(new char[chunkLength]);
+
+    stream.read(mesg.get(), chunkLength);
+    std::streamsize mesg_len = stream.gcount();
+
+    if (mesg_len > 0)
+      chunk = std::string(mesg.get(), mesg_len);
+  }
+  return chunk;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Load all the data into the output file and open it for streaming
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::loadFile()
+{
+  string chunk;
+
+  // The data is first loaded into a netcdf file (memory mapped filesystem assumed).
+  //
+  // Note: the data is loaded from 'itsGridValues'; 'chunk' serves only as 'end of data'
+  // indicator.
+  //
+  for (bool more = true; more; more = !itsLoadedFlag)
+  {
+    extractData(chunk);
+
+    if (chunk.empty())
+      itsLoadedFlag = true;
+    else
+      storeParamValues();
+  }
+
+  // Then outputting the file/data in chunks
+  //
+  // Unset NcFile pointer has caused crashes when calling close(); (possible) reason is
+  // that when query initialization (hasRequestedData(), checking atleast some requested
+  // data is available) has succeeded and then 1'st call to extractData has for any reason
+  // returned an empty result (denoting end of data), NcFile object has not been created.
+  //
+  // Possible empty query result for 1'st grid is now checked by query initialization and
+  // "no data" exception is thrown if nothing was returned.
+
+  if (!itsFile)
+    throw Fmi::Exception(BCP, "Netcdf file object is unset");
+
+  itsFile->close();
+
+  itsStream.open(itsFilename, ifstream::in | ifstream::binary);
+
+  if (!itsStream)
+  {
+    const auto error = errno;
+    throw Fmi::Exception(BCP, "Unable to open file stream")
+        .addParameter("File", itsFilename)
+        .addParameter("Error", std::strerror(error));
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Get next chunk of data. Called from SmartMet server code
@@ -166,58 +237,9 @@ std::string NetCdfStreamer::getChunk()
       if (!itsDoneFlag)
       {
         if (!itsLoadedFlag)
-        {
-          // The data is first loaded into a netcdf file (memory mapped filesystem assumed).
-          //
-          // Note: the data is loaded from 'itsGridValues'; 'chunk' serves only as 'end of data'
-          // indicator.
-          //
-          for (bool more = true; more; more = !itsLoadedFlag)
-          {
-            extractData(chunk);
+          loadFile();
 
-            if (chunk.empty())
-              itsLoadedFlag = true;
-            else
-              storeParamValues();
-          }
-
-          // Then outputting the file/data in chunks
-          //
-          // Unset NcFile pointer has caused crashes when calling close(); (possible) reason is
-          // that when query initialization (hasRequestedData(), checking atleast some requested
-          // data is available) has succeeded and then 1'st call to extractData has for any reason
-          // returned an empty result (denoting end of data), NcFile object has not been created.
-          //
-          // Possible empty query result for 1'st grid is now checked by query initialization and
-          // "no data" exception is thrown if nothing was returned.
-
-          if (!itsFile)
-            throw Fmi::Exception(BCP, "Netcdf file object is unset");
-
-          itsFile->close();
-
-          itsStream.open(itsFilename, ifstream::in | ifstream::binary);
-
-          if (!itsStream)
-          {
-            const auto error = errno;
-            throw Fmi::Exception(BCP, "Unable to open file stream")
-                .addParameter("File", itsFilename)
-                .addParameter("Error", std::strerror(error));
-          }
-        }
-
-        if (!itsStream.eof())
-        {
-          std::unique_ptr<char[]> mesg(new char[itsChunkLength]);
-
-          itsStream.read(mesg.get(), itsChunkLength);
-          streamsize mesg_len = itsStream.gcount();
-
-          if (mesg_len > 0)
-            chunk = string(mesg.get(), mesg_len);
-        }
+        chunk = readFileChunk(itsStream, itsChunkLength);
 
         if (chunk.empty())
           itsDoneFlag = true;
