@@ -363,6 +363,31 @@ Spine::OpenAPI::Document apiDefinition(const Config& config,
     add_coverage_operation(
         doc, "/collections/{collectionId}", "getCoverage", collection, OA::ref("parameters", "f"));
 
+    // The area and the size of a coverage before it is downloaded (a SmartMet extension)
+    {
+      auto& op = doc.operation("/collections/{collectionId}/outline", "get");
+      op["tags"].append(TAG_COLLECTIONS);
+      op["summary"] = "The area and the size of a coverage";
+      op["description"] =
+          "The polygon (longitude and latitude) the coverage of the same bbox, crs and "
+          "scale-size options would cover, the rectangle in the output crs, the grid size and "
+          "the number of values. Sizes not given by scale-size are estimated from the native "
+          "resolution. A SmartMet extension for clients choosing an area.";
+      op["operationId"] = "getOutline";
+      op["x-fmi-extension"] = true;
+      Json::Value params(Json::arrayValue);
+      params.append(OA::ref("parameters", "collectionId"));
+      for (const char* name : {"bbox", "crs", "scale-size", "datetime", "properties", "x.levels"})
+        params.append(OA::ref("parameters", name));
+      op["parameters"] = params;
+      auto& ok = op["responses"]["200"];
+      ok["description"] = "A GeoJSON Feature";
+      Json::Value schema;
+      schema["type"] = "object";
+      ok["content"]["application/geo+json"]["schema"] = schema;
+      OA::Document::addErrorResponses(op);
+    }
+
     // Collection specific coverage paths, with the formats the producer allows
     if (settings.expand_collections && config.getProducers().size() <= max_enum)
     {

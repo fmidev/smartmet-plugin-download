@@ -24,11 +24,15 @@
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
+#include <macgyver/TimeParser.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
 #include <algorithm>
 #include <cpl_conv.h>
+#include <limits>
+#include <memory>
+#include <ogr_spatialref.h>
 #include <set>
 #include <vector>
 
@@ -978,6 +982,8 @@ void CoveragesHandler::requestHandler(const Spine::Reactor& /* theReactor */,
         {
           if (parts[3] == "schema")
             handleSchema(theRequest, theResponse, parts[2]);
+          else if (parts[3] == "outline")
+            handleOutline(theRequest, theResponse, parts[2]);
           else if (parts[3] == "coverage")
             handleCoverage(theRequest, theResponse, parts[2]);
           else
@@ -1536,6 +1542,312 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request& /* theRequest */
   }
 
   setJsonResponse(theResponse, doc);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief The area and the size of a coverage before it is downloaded
+ *
+ * /coverages/collections/{id}/outline?bbox=..&crs=..&scale-size=..&datetime=..&properties=..
+ * returns a GeoJSON Feature: the polygon (longitude and latitude) the output
+ * grid covers, and the rectangle in the output CRS, the grid size, the number
+ * of values and their size as 32 bit floats. As in the coverage requests, the
+ * bbox gives the corners of the area in longitude and latitude, and the area
+ * is the rectangle between them in the output CRS. Sizes not given by
+ * scale-size are estimated from the native resolution.
+ */
+// ----------------------------------------------------------------------
+
+namespace
+{
+// The OGR spatial reference of a crs parameter or a WKT, in longitude-latitude axis order
+std::unique_ptr<OGRSpatialReference> spatialReference(const string& desc)
+{
+  string d = desc;
+  const string epsgPrefix = "http://www.opengis.net/def/crs/EPSG/0/";
+  if (d.find(epsgPrefix) == 0)
+    d = "EPSG:" + d.substr(epsgPrefix.size());
+  else if (d.find("CRS84") != string::npos)
+    d = "EPSG:4326";
+  auto srs = std::make_unique<OGRSpatialReference>();
+  if (srs->SetFromUserInput(d.c_str()) != OGRERR_NONE)
+    throw Fmi::Exception(BCP, "Unsupported crs '" + desc + "'");
+  srs->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+  return srs;
+}
+
+struct Transformation
+{
+  std::unique_ptr<OGRCoordinateTransformation> ct;
+  bool apply(double& x, double& y) const { return ct && ct->Transform(1, &x, &y) != 0; }
+};
+
+Transformation transformation(const OGRSpatialReference& from, const OGRSpatialReference& to)
+{
+  Transformation t;
+  t.ct.reset(OGRCreateCoordinateTransformation(&from, &to));
+  if (!t.ct)
+    throw Fmi::Exception(BCP, "Failed to create a coordinate transformation");
+  return t;
+}
+
+// Minutes of an ISO 8601 duration PTnM, PTnH or PnD, 0 if it is none of these
+long durationMinutes(const string& d)
+{
+  try
+  {
+    if (d.size() > 3 && d.compare(0, 2, "PT") == 0 && d.back() == 'M')
+      return std::stol(d.substr(2, d.size() - 3));
+    if (d.size() > 3 && d.compare(0, 2, "PT") == 0 && d.back() == 'H')
+      return 60 * std::stol(d.substr(2, d.size() - 3));
+    if (d.size() > 2 && d[0] == 'P' && d.back() == 'D')
+      return 1440 * std::stol(d.substr(1, d.size() - 2));
+  }
+  catch (...)
+  {
+  }
+  return 0;
+}
+
+std::size_t countItems(const string& list)
+{
+  vector<string> parts;
+  boost::split(parts, list, boost::is_any_of(","));
+  return std::count_if(
+      parts.begin(), parts.end(), [](const string& p) { return !boost::trim_copy(p).empty(); });
+}
+}  // namespace
+
+void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
+                                     Spine::HTTP::Response& theResponse,
+                                     const std::string& collectionId)
+{
+  try
+  {
+    const auto ext = extent(collectionId);
+    if (!ext.isObject())
+    {
+      setProblemResponse(theResponse,
+                         Spine::HTTP::Status::not_found,
+                         "Not Found",
+                         "No metadata for collection '" + collectionId + "'");
+      return;
+    }
+
+    // The native grid
+    Json::Value native;
+    if (ext.isMember("x-smartmet-grid"))
+      native = ext["x-smartmet-grid"];
+    else if (ext["x-smartmet-grids"].isArray() && ext["x-smartmet-grids"].size() > 0)
+      native = ext["x-smartmet-grids"][0];
+
+    // The output CRS: the crs option, the native grid, or longitude-latitude
+    const auto crs = Spine::optional_string(theRequest.getParameter("crs"), "");
+    std::unique_ptr<OGRSpatialReference> target;
+    if (!crs.empty())
+      target = spatialReference(crs);
+    else if (native["wkt"].isString() && !native["wkt"].asString().empty())
+      target = spatialReference(native["wkt"].asString());
+    else
+      target = spatialReference("EPSG:4326");
+    auto lonlat = spatialReference("EPSG:4326");
+    const auto forward = transformation(*lonlat, *target);
+    const auto inverse = transformation(*target, *lonlat);
+
+    // The rectangle in the output CRS
+    double x1 = 0;
+    double y1 = 0;
+    double x2 = 0;
+    double y2 = 0;
+    const auto bbox = Spine::optional_string(theRequest.getParameter("bbox"), "");
+    const auto& corners = native["corners"];
+    if (!bbox.empty())
+    {
+      vector<string> parts;
+      boost::split(parts, bbox, boost::is_any_of(","));
+      if (parts.size() != 4)
+        throw Fmi::Exception(BCP, "bbox must be minlon,minlat,maxlon,maxlat");
+      x1 = Fmi::stod(boost::trim_copy(parts[0]));
+      y1 = Fmi::stod(boost::trim_copy(parts[1]));
+      x2 = Fmi::stod(boost::trim_copy(parts[2]));
+      y2 = Fmi::stod(boost::trim_copy(parts[3]));
+      if (!forward.apply(x1, y1) || !forward.apply(x2, y2))
+        throw Fmi::Exception(BCP, "The bbox cannot be expressed in the output crs");
+    }
+    else if (crs.empty() && corners.isObject())
+    {
+      x1 = corners["bottomleft"][0].asDouble();
+      y1 = corners["bottomleft"][1].asDouble();
+      x2 = corners["topright"][0].asDouble();
+      y2 = corners["topright"][1].asDouble();
+      if (!forward.apply(x1, y1) || !forward.apply(x2, y2))
+        throw Fmi::Exception(BCP, "The native grid cannot be expressed in its own crs");
+    }
+    else
+    {
+      // The extent of the native area in the output CRS
+      const auto& b = ext["spatial"]["bbox"][0];
+      x1 = y1 = std::numeric_limits<double>::max();
+      x2 = y2 = std::numeric_limits<double>::lowest();
+      const int n = 32;
+      for (int i = 0; i <= n; i++)
+        for (int edge = 0; edge < 4; edge++)
+        {
+          const double f = static_cast<double>(i) / n;
+          double lon = b[0].asDouble() + f * (b[2].asDouble() - b[0].asDouble());
+          double lat = b[1].asDouble() + f * (b[3].asDouble() - b[1].asDouble());
+          if (edge == 0)
+            lat = b[1].asDouble();
+          else if (edge == 1)
+            lat = b[3].asDouble();
+          else if (edge == 2)
+            lon = b[0].asDouble();
+          else
+            lon = b[2].asDouble();
+          if (forward.apply(lon, lat))
+          {
+            x1 = std::min(x1, lon);
+            y1 = std::min(y1, lat);
+            x2 = std::max(x2, lon);
+            y2 = std::max(y2, lat);
+          }
+        }
+      if (x1 > x2)
+        throw Fmi::Exception(BCP, "The area cannot be expressed in the output crs");
+    }
+    if (x1 > x2)
+      std::swap(x1, x2);
+    if (y1 > y2)
+      std::swap(y1, y2);
+
+    // The outline in longitude and latitude
+    Json::Value ring(Json::arrayValue);
+    const int n = 32;
+    for (int edge = 0; edge < 4; edge++)
+      for (int i = 0; i < n; i++)
+      {
+        const double f = static_cast<double>(i) / n;
+        double x = (edge == 0   ? x1 + f * (x2 - x1)
+                    : edge == 1 ? x2
+                    : edge == 2 ? x2 - f * (x2 - x1)
+                                : x1);
+        double y = (edge == 0   ? y1
+                    : edge == 1 ? y1 + f * (y2 - y1)
+                    : edge == 2 ? y2
+                                : y2 - f * (y2 - y1));
+        if (!inverse.apply(x, y))
+          continue;
+        Json::Value point(Json::arrayValue);
+        point.append(x);
+        point.append(y);
+        ring.append(point);
+      }
+    if (ring.size() > 0)
+      ring.append(ring[0]);
+
+    // The size of the grid: given, or estimated from the native resolution
+    Json::Value grid;
+    const auto scaleSize = Spine::optional_string(theRequest.getParameter("scale-size"), "");
+    if (!scaleSize.empty())
+    {
+      vector<string> sizes;
+      boost::split(sizes, parseScaleSize(scaleSize), boost::is_any_of(","));
+      if (sizes.size() == 2)
+      {
+        grid["width"] = Fmi::stoi(sizes[0]);
+        grid["height"] = Fmi::stoi(sizes[1]);
+        grid["estimated"] = false;
+      }
+    }
+    else if (crs.empty() && bbox.empty() && native.isMember("width"))
+    {
+      grid["width"] = native["width"];
+      grid["height"] = native["height"];
+      grid["estimated"] = false;
+    }
+    else if (native["resolution_km"].isArray())
+    {
+      // Kilometres to the units of the output CRS
+      double km = native["resolution_km"][0].asDouble();
+      double unit = (target->IsGeographic() ? 111.32 : target->GetLinearUnits() / 1000.0);
+      if (km > 0 && unit > 0)
+      {
+        const double step = km / unit;
+        grid["width"] = std::max(1, static_cast<int>(std::lround((x2 - x1) / step)) + 1);
+        grid["height"] = std::max(1, static_cast<int>(std::lround((y2 - y1) / step)) + 1);
+        grid["estimated"] = true;
+      }
+    }
+
+    // The number of times, parameters and levels
+    const auto& temporal = ext["temporal"];
+    std::size_t times = temporal["grid"]["cellsCount"].asUInt64();
+    const auto datetime = Spine::optional_string(theRequest.getParameter("datetime"), "");
+    const long step = durationMinutes(temporal["grid"]["resolution"].asString());
+    if (!datetime.empty())
+    {
+      const auto slash = datetime.find('/');
+      if (slash == string::npos)
+        times = 1;
+      else if (step > 0)
+      {
+        try
+        {
+          const auto& interval = temporal["interval"][0];
+          auto t1 = datetime.substr(0, slash);
+          auto t2 = datetime.substr(slash + 1);
+          if (t1 == ".." || t1.empty())
+            t1 = interval[0].asString();
+          if (t2 == ".." || t2.empty())
+            t2 = interval[1].asString();
+          const auto start =
+              std::max(Fmi::TimeParser::parse(t1), Fmi::TimeParser::parse(interval[0].asString()));
+          const auto end =
+              std::min(Fmi::TimeParser::parse(t2), Fmi::TimeParser::parse(interval[1].asString()));
+          const long minutes = (end - start).total_seconds() / 60;
+          times = (minutes < 0 ? 0 : static_cast<std::size_t>(minutes / step) + 1);
+        }
+        catch (...)
+        {
+          // The count of the whole data stays as an upper limit
+        }
+      }
+    }
+    const auto properties = Spine::optional_string(theRequest.getParameter("properties"), "");
+    const std::size_t params =
+        (properties.empty() ? parameters(collectionId).size() : countItems(properties));
+    const auto levelsOption = Spine::optional_string(theRequest.getParameter("levels"), "");
+    std::size_t levels = std::max<std::size_t>(1, ext["vertical"]["grid"]["coordinates"].size());
+    if (!levelsOption.empty())
+      levels = countItems(levelsOption);
+
+    Json::Value doc;
+    doc["type"] = "Feature";
+    doc["geometry"]["type"] = "Polygon";
+    doc["geometry"]["coordinates"].append(ring);
+    auto& props = doc["properties"];
+    props["crs"] = (crs.empty() ? (native.isMember("wkt") ? "native" : "EPSG:4326") : crs);
+    for (double v : {x1, y1, x2, y2})
+      props["bbox"].append(v);
+    props["times"] = static_cast<Json::UInt64>(times);
+    props["parameters"] = static_cast<Json::UInt64>(params);
+    props["levels"] = static_cast<Json::UInt64>(levels);
+    if (grid.isObject())
+    {
+      props["grid"] = grid;
+      const double values = grid["width"].asDouble() * grid["height"].asDouble() *
+                            static_cast<double>(times * params * levels);
+      props["values"] = values;
+      props["bytes"] = values * 4;
+    }
+    setJsonResponse(theResponse, doc);
+    theResponse.setHeader("Content-Type", "application/geo+json");
+  }
+  catch (...)
+  {
+    // The request handler answers with problem details
+    throw Fmi::Exception::Trace(BCP, "Outline request failed");
+  }
 }
 
 // ----------------------------------------------------------------------

@@ -220,6 +220,22 @@ or grid engine:
 
 The collection listing (`/coverages/collections`) gives the same descriptions.
 
+## Outline endpoint
+
+`/coverages/collections/{collectionId}/outline` tells what a coverage request
+would cover before it is made, for clients choosing an area. It takes the
+`bbox`, `crs`, `scale-size`, `datetime`, `properties` and `levels` options of
+the coverage request and returns a GeoJSON Feature:
+
+- the geometry: the polygon in longitude and latitude the output grid covers.
+  As in the coverage request, the bbox gives the longitude and latitude of the
+  bottom left and the top right corner, and the area is the rectangle between
+  them in the output CRS; without a bbox the area is the native grid
+- `bbox`: that rectangle in the output CRS
+- `grid`: the width and the height of the output grid, `estimated` when they
+  are computed from the native resolution rather than given by `scale-size`
+- `times`, `parameters`, `levels`, `values` and `bytes` (as 32 bit floats)
+
 ## Schema endpoint
 
 `/coverages/collections/{collectionId}/schema` returns a JSON Schema (draft

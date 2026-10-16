@@ -109,6 +109,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %changelog
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-3.fmi
+- New /coverages/collections/{id}/outline: the area (GeoJSON polygon) and the size of a
+  coverage request before it is made, for the data explorer
 - Coverages collection extents (area, times, levels, native grid) from the engine metadata
 - The schema of a collection lists only the parameters of its producer
 - Listed in the API catalog with the kind coverages

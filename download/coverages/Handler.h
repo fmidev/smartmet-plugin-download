@@ -70,6 +70,9 @@ class CoveragesHandler
   void handleSchema(const Spine::HTTP::Request &theRequest,
                     Spine::HTTP::Response &theResponse,
                     const std::string &collectionId);
+  void handleOutline(const Spine::HTTP::Request& theRequest,
+                     Spine::HTTP::Response& theResponse,
+                     const std::string& collectionId);
   void handleCoverage(const Spine::HTTP::Request &theRequest,
                       Spine::HTTP::Response &theResponse,
                       const std::string &collectionId);

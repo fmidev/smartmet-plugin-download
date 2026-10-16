@@ -1,0 +1,3 @@
+GET /coverages/collections/pal_skandinavia/outline?bbox=20,59,32,70&crs=EPSG:3067 HTTP/1.0
+X-Test-Headers: Content-Type
+
