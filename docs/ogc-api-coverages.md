@@ -206,7 +206,19 @@ and may be combined with the OGC parameters:
 `/coverages/collections/{collectionId}` returns OGC API Common collection
 JSON with links to the coverage and schema resources, the supported output
 format MIME types (QueryData is omitted when disabled for the producer), and
-the supported CRS list.
+the supported CRS list. The `extent` comes from the metadata of the querydata
+or grid engine:
+
+- `spatial.bbox` — the area in CRS84
+- `temporal` — the first and last time, the number of times and the time step
+  (or the times themselves when the steps vary), and `x-smartmet-origintime`
+- `vertical` — the levels, when there are several, and `x-smartmet-leveltype`
+- `x-smartmet-grid` (querydata) — the native grid: the projection as WKT, the
+  size, the resolution in kilometres and the corners in longitude and latitude
+- `x-smartmet-grids` (grid data) — the geometries of the latest model run with
+  their projections and sizes
+
+The collection listing (`/coverages/collections`) gives the same descriptions.
 
 ## Schema endpoint
 
@@ -221,7 +233,10 @@ Each property includes:
 - `x-ogc-propertyName` — CF standard name (when configured)
 - `x-ogc-unit` — unit (when configured)
 
-Currently the same schema is returned for all collections.
+Only the parameters of the producer are listed, as given by the engine
+metadata; parameters without a GRIB or NetCDF mapping are listed with the
+description and unit of the data. A producer unknown to the engines gets all
+configured parameters.
 
 ## Coverage response
 
