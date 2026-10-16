@@ -32,7 +32,18 @@ SmartMet::Spine::MutexType myFileOpenMutex;
 }  // namespace
 
 // Keep the NetCDF error message as the cause
-#define CHECK(x, message) try { x; } catch (...) { throw Fmi::Exception::Trace(BCP, message); }
+// An expression, so that the calls can end with a semicolon
+#define CHECK(x, message)                                                          \
+  ([&, checkFunction = static_cast<const char*>(__PRETTY_FUNCTION__)] {            \
+    try                                                                            \
+    {                                                                              \
+      x;                                                                           \
+    }                                                                              \
+    catch (...)                                                                    \
+    {                                                                              \
+      throw Fmi::Exception::Trace(__FILE__, __LINE__, checkFunction, message);     \
+    }                                                                              \
+  }())
 
 
 using namespace std;

@@ -169,8 +169,6 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                const char *crsName = "crs");
 
  private:
-  DataStreamer() = delete;
-
   bool resetDataSet();
 
   void checkDataTimeStep(long timeStep = -1);
