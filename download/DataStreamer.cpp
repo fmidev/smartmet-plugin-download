@@ -3652,6 +3652,41 @@ void DataStreamer::createGrid(const NFmiArea& area,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Check the number of requested data values against the configured limits
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::checkRequestDataSize() const
+{
+  auto gs = (itsCropping.crop ? itsCropping.gridSizeX * itsCropping.gridSizeY
+                              : itsReqGridSizeX * itsReqGridSizeY);
+  unsigned long numValues =
+      itsDataParams.size() * itsDataLevels.size() * itsDataTimes.size() * gs;
+
+  if (numValues > itsCfg.getMaxRequestDataValues())
+  {
+    throw Fmi::Exception(
+        BCP,
+        "Too much data requested (" + Fmi::to_string(numValues) + " values, max " +
+            Fmi::to_string(itsCfg.getMaxRequestDataValues()) +
+            "); adjust area/grid and/or number of parameters, levels and times");
+  }
+
+  auto logValues = itsCfg.getLogRequestDataValues();
+
+  if ((logValues > 0) && (numValues > logValues))
+    fprintf(stderr,
+            "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
+            numValues,
+            itsDataParams.size(),
+            itsDataLevels.size(),
+            itsDataTimes.size(),
+            gs,
+            itsURI.c_str());
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief 	Inspect request's gridsize and projection related parameters
  *		and create target projection (area object) and grid if needed.
  *
@@ -3726,33 +3761,7 @@ bool DataStreamer::getAreaAndGrid(const Engine::Querydata::Q& q,
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
       }
 
-      auto gs = (itsCropping.crop ? itsCropping.gridSizeX * itsCropping.gridSizeY
-                                  : itsReqGridSizeX * itsReqGridSizeY);
-      unsigned long numValues =
-          itsDataParams.size() * itsDataLevels.size() * itsDataTimes.size() * gs;
-
-      if (numValues > itsCfg.getMaxRequestDataValues())
-      {
-        throw Fmi::Exception(
-            BCP,
-            "Too much data requested (" + Fmi::to_string(numValues) + " values, max " +
-                Fmi::to_string(itsCfg.getMaxRequestDataValues()) +
-                "); adjust area/grid and/or number of parameters, levels and times");
-      }
-      else
-      {
-        auto logValues = itsCfg.getLogRequestDataValues();
-
-        if ((logValues > 0) && (numValues > logValues))
-          fprintf(stderr,
-                  "Query for %lu (p=%lu,l=%lu,t=%lu,g=%lu) values; '%s'\n",
-                  numValues,
-                  itsDataParams.size(),
-                  itsDataLevels.size(),
-                  itsDataTimes.size(),
-                  gs,
-                  itsURI.c_str());
-      }
+      checkRequestDataSize();
 
       itsProjectionChecked = true;
     }

@@ -224,6 +224,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       bool interpolation,
                       const NFmiArea **area,
                       NFmiGrid **grid);
+  void checkRequestDataSize() const;
 
   NFmiVPlaceDescriptor makeVPlaceDescriptor(const Engine::Querydata::Q& q,
                                             bool requestLevels = false,
