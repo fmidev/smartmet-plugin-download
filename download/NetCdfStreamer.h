@@ -133,6 +133,36 @@ class NetCdfStreamer : public DataStreamer
                                    const NFmiArea *area = nullptr);
   void setGeometry(const Engine::Querydata::Q& q, const NFmiArea *area, const NFmiGrid *grid);
 
+  // Output grid index range and steps
+  struct GridRange
+  {
+    std::size_t x0;
+    std::size_t y0;
+    std::size_t xN;
+    std::size_t yN;
+    std::size_t xStep;
+    std::size_t yStep;
+  };
+
+  void storeProjectedAxes(const NFmiPoint &p0, const NFmiPoint &pN, const GridRange &range);
+  void storeProjectedCoordinates(const NFmiGrid *grid,
+                                 const GridRange &range,
+                                 netCDF::NcVar &latVar,
+                                 netCDF::NcVar &lonVar);
+  void storeLatLonCoordinates(const NFmiGrid *grid,
+                              const GridRange &range,
+                              netCDF::NcVar &latVar,
+                              netCDF::NcVar &lonVar);
+  void storeProjectedGridCoordinates(const T::Coordinate_vec &coords,
+                                     OGRSpatialReference *geometrySRS,
+                                     const GridRange &range,
+                                     netCDF::NcVar &latVar,
+                                     netCDF::NcVar &lonVar);
+  void storeLatLonGridCoordinates(const T::Coordinate_vec &coords,
+                                  const GridRange &range,
+                                  netCDF::NcVar &latVar,
+                                  netCDF::NcVar &lonVar);
+
   netCDF::NcDim addTimeBounds(long periodLengthInMinutes, std::string &timeDimName);
 
   bool hasParamVariable(const std::vector<std::string> &paramParts,

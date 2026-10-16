@@ -1444,6 +1444,154 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Store projected y and x coordinate variables
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::storeProjectedAxes(const NFmiPoint& p0,
+                                        const NFmiPoint& pN,
+                                        const GridRange& range)
+{
+  const size_t x0 = range.x0;
+  const size_t y0 = range.y0;
+  const size_t xN = range.xN;
+  const size_t yN = range.yN;
+  const size_t xStep = range.xStep;
+  const size_t yStep = range.yStep;
+
+  auto yVar =
+      addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);
+  auto xVar =
+      addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", itsXDim);
+
+  double worldY[itsNY];
+  double worldX[itsNX];
+  double wY = p0.Y();
+  double wX = p0.X();
+  double stepY = yStep * ((itsNY > 1) ? ((pN.Y() - p0.Y()) / (yN - y0 - 1)) : 0.0);
+  double stepX = xStep * ((itsNX > 1) ? ((pN.X() - p0.X()) / (xN - x0 - 1)) : 0.0);
+
+  for (size_t y = 0; (y < itsNY); wY += stepY, y++)
+    worldY[y] = wY;
+  for (size_t x = 0; (x < itsNX); wX += stepX, x++)
+    worldX[x] = wX;
+
+  CHECK(yVar.putVar(worldY), "Failed to store y -coordinates");
+  CHECK(xVar.putVar(worldX), "Failed to store x -coordinates");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store y, x and 2d (y,x) lat/lon coordinates of projected querydata
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::storeProjectedCoordinates(const NFmiGrid* grid,
+                                               const GridRange& range,
+                                               NcVar& latVar,
+                                               NcVar& lonVar)
+{
+  const size_t x0 = range.x0;
+  const size_t y0 = range.y0;
+  const size_t xN = range.xN;
+  const size_t yN = range.yN;
+  const size_t xStep = range.xStep;
+  const size_t yStep = range.yStep;
+  size_t x = 0;
+  size_t y = 0;
+  size_t n = 0;
+  std::unique_ptr<double[]> latPtr(new double[itsNY * itsNX]);
+  std::unique_ptr<double[]> lonPtr(new double[itsNY * itsNX]);
+  double* lat = latPtr.get();
+  double* lon = lonPtr.get();
+
+  // Store y, x and 2d (y,x) lat/lon coordinates.
+  //
+  // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
+  // 2011):
+  //
+  // "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and
+  // lev(k). The vertical coordinate is represented by the coordinate variable lev(lev) and
+  // the latitude and longitude coordinates are represented by the auxiliary coordinate
+  // variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates attribute.
+  //
+  // Note that coordinate variables are also defined for the xc and yc dimensions. This
+  // faciliates processing of this data by generic applications that don't recognize the
+  // multidimensional latitude and longitude coordinates."
+
+  NFmiPoint p0 =
+      ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToWorldXY(x0, y0)
+                                                            : itsTargetWorldXYs(x0, y0));
+  NFmiPoint pN = ((itsReqParams.datumShift == Datum::DatumShift::None)
+                      ? grid->GridToWorldXY(xN - 1, yN - 1)
+                      : itsTargetWorldXYs(xN - 1, yN - 1));
+
+  storeProjectedAxes(p0, pN, range);
+
+  latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
+  lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
+
+  for (y = y0, n = 0; (y < yN); y += yStep)
+    for (x = x0; (x < xN); x += xStep, n++)
+    {
+      const NFmiPoint p =
+          ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, y)
+                                                                : itsTargetLatLons(x, y));
+
+      lat[n] = p.Y();
+      lon[n] = p.X();
+    }
+
+  CHECK(latVar.putVar(lat), "Failed to store latitude(y,x) coordinates");
+  CHECK(lonVar.putVar(lon), "Failed to store longitude(y,x) coordinates");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store lat and lon coordinates of latlon querydata
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::storeLatLonCoordinates(const NFmiGrid* grid,
+                                            const GridRange& range,
+                                            NcVar& latVar,
+                                            NcVar& lonVar)
+{
+  const size_t x0 = range.x0;
+  const size_t y0 = range.y0;
+  const size_t xN = range.xN;
+  const size_t yN = range.yN;
+  const size_t xStep = range.xStep;
+  const size_t yStep = range.yStep;
+  size_t x = 0;
+  size_t y = 0;
+  size_t n = 0;
+  std::unique_ptr<double[]> latPtr(new double[itsNY]);
+  std::unique_ptr<double[]> lonPtr(new double[itsNX]);
+  double* lat = latPtr.get();
+  double* lon = lonPtr.get();
+
+  // latlon, grid defined as cartesian product of latitude and longitude axes
+  //
+  latVar = addCoordVariable("lat", itsNY, ncFloat, "latitude", "degrees_north", "Y", itsLatDim);
+  lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", itsLonDim);
+
+  for (y = y0, n = 0; (y < yN); y += yStep, n++)
+    lat[n] =
+        ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(0, y).Y()
+                                                              : itsTargetLatLons.y(0, y));
+
+  for (x = x0, n = 0; (x < xN); x += xStep, n++)
+    lon[n] =
+        ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
+                                                              : itsTargetLatLons.x(x, 0));
+
+  CHECK(latVar.putVar(lat), "Failed to store latitude coordinates");
+  CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set metadata
  *
  */
@@ -1503,19 +1651,12 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
 
     size_t x0 = (itsCropping.cropped ? itsCropping.bottomLeftX : 0);
     size_t y0 = (itsCropping.cropped ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
-    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
-    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
-    size_t x = 0;
-    size_t y = 0;
-    size_t n = 0;
-    size_t nLat = (projected ? (itsNY * itsNX) : itsNY);
-    size_t nLon = (projected ? (itsNY * itsNX) : itsNX);
-    std::unique_ptr<double[]> latPtr(new double[nLat]);
-    std::unique_ptr<double[]> lonPtr(new double[nLon]);
-    double* lat = latPtr.get();
-    double* lon = lonPtr.get();
+    GridRange range{x0,
+                    y0,
+                    (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+                    (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY),
+                    (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+                    (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1)};
 
     NcVar latVar;
     NcVar lonVar;
@@ -1524,85 +1665,9 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
       grid = &q->grid();
 
     if (projected)
-    {
-      // Store y, x and 2d (y,x) lat/lon coordinates.
-      //
-      // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
-      // 2011):
-      //
-      // "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and
-      // lev(k). The vertical coordinate is represented by the coordinate variable lev(lev) and
-      // the latitude and longitude coordinates are represented by the auxiliary coordinate
-      // variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates attribute.
-      //
-      // Note that coordinate variables are also defined for the xc and yc dimensions. This
-      // faciliates processing of this data by generic applications that don't recognize the
-      // multidimensional latitude and longitude coordinates."
-
-      auto yVar =
-          addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);
-      auto xVar =
-          addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", itsXDim);
-
-      NFmiPoint p0 =
-          ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToWorldXY(x0, y0)
-                                                                : itsTargetWorldXYs(x0, y0));
-      NFmiPoint pN = ((itsReqParams.datumShift == Datum::DatumShift::None)
-                          ? grid->GridToWorldXY(xN - 1, yN - 1)
-                          : itsTargetWorldXYs(xN - 1, yN - 1));
-
-      double worldY[itsNY];
-      double worldX[itsNX];
-      double wY = p0.Y();
-      double wX = p0.X();
-      double stepY = yStep * ((itsNY > 1) ? ((pN.Y() - p0.Y()) / (yN - y0 - 1)) : 0.0);
-      double stepX = xStep * ((itsNX > 1) ? ((pN.X() - p0.X()) / (xN - x0 - 1)) : 0.0);
-
-      for (y = 0; (y < itsNY); wY += stepY, y++)
-        worldY[y] = wY;
-      for (x = 0; (x < itsNX); wX += stepX, x++)
-        worldX[x] = wX;
-
-      CHECK(yVar.putVar(worldY), "Failed to store y -coordinates");
-      CHECK(xVar.putVar(worldX), "Failed to store x -coordinates");
-
-      latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
-      lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
-
-      for (y = y0, n = 0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep, n++)
-        {
-          const NFmiPoint p =
-              ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, y)
-                                                                    : itsTargetLatLons(x, y));
-
-          lat[n] = p.Y();
-          lon[n] = p.X();
-        }
-
-      CHECK(latVar.putVar(lat), "Failed to store latitude(y,x) coordinates");
-      CHECK(lonVar.putVar(lon), "Failed to store longitude(y,x) coordinates");
-    }
+      storeProjectedCoordinates(grid, range, latVar, lonVar);
     else
-    {
-      // latlon, grid defined as cartesian product of latitude and longitude axes
-      //
-      latVar = addCoordVariable("lat", itsNY, ncFloat, "latitude", "degrees_north", "Y", itsLatDim);
-      lonVar = addCoordVariable("lon", itsNX, ncFloat, "longitude", "degrees_east", "X", itsLonDim);
-
-      for (y = y0, n = 0; (y < yN); y += yStep, n++)
-        lat[n] =
-            ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(0, y).Y()
-                                                                  : itsTargetLatLons.y(0, y));
-
-      for (x = x0, n = 0; (x < xN); x += xStep, n++)
-        lon[n] =
-            ((itsReqParams.datumShift == Datum::DatumShift::None) ? grid->GridToLatLon(x, 0).X()
-                                                                  : itsTargetLatLons.x(x, 0));
-
-      CHECK(latVar.putVar(lat), "Failed to store latitude coordinates");
-      CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
-    }
+      storeLatLonCoordinates(grid, range, latVar, lonVar);
 
     latVar.putAtt("standard_name", "latitude");
     latVar.putAtt("long_name", "latitude");
@@ -1620,6 +1685,156 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store y, x and 2d (y,x) lat/lon coordinates of projected grid data
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::storeProjectedGridCoordinates(const T::Coordinate_vec& coords,
+                                                   OGRSpatialReference* geometrySRS,
+                                                   const GridRange& range,
+                                                   NcVar& latVar,
+                                                   NcVar& lonVar)
+{
+  const size_t xN = range.xN;
+  const size_t yN = range.yN;
+  const size_t xStep = range.xStep;
+  const size_t yStep = range.yStep;
+  size_t x = 0;
+  size_t y = 0;
+  size_t n = 0;
+  std::unique_ptr<double[]> latPtr(new double[itsNY * itsNX]);
+  std::unique_ptr<double[]> lonPtr(new double[itsNY * itsNX]);
+  double* lat = latPtr.get();
+  double* lon = lonPtr.get();
+
+  // Store y, x and 2d (y,x) lat/lon coordinates.
+  //
+  // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
+  // 2011):
+  //
+  //	 "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and lev(k).
+  //	  The vertical coordinate is represented by the coordinate variable lev(lev) and
+  //	  the latitude and longitude coordinates are represented by the auxiliary coordinate
+  //	  variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates
+  //	  attribute.
+  //
+  //	  Note that coordinate variables are also defined for the xc and yc dimensions. This
+  //	  faciliates processing of this data by generic applications that don't recognize
+  //	  the multidimensional latitude and longitude coordinates."
+
+  OGRSpatialReference llSRS;
+  llSRS.CopyGeogCSFrom(geometrySRS);
+
+  // Coordinates are geographic (lon,lat); force traditional GIS axis order so
+  // the transform returns (easting,northing) instead of swapping the axes.
+  llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+  geometrySRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
+
+  OGRCoordinateTransformation *ct =
+      itsResources.getCoordinateTransformation(&llSRS, geometrySRS);
+
+  double xc[] = {coords[0].x(), coords[coords.size() - 1].x()};
+  double yc[] = {coords[0].y(), coords[coords.size() - 1].y()};
+  int pabSuccess[2];
+
+  int status = ct->Transform(2, xc, yc, nullptr, pabSuccess);
+
+  if (!(status && pabSuccess[0] && pabSuccess[1]))
+    throw Fmi::Exception(BCP, "Failed to transform llbbox to bbox: " + itsGridMetaData.crs);
+
+  NFmiPoint p0(xc[0], yc[0]);
+  NFmiPoint pN(xc[1], yc[1]);
+
+  storeProjectedAxes(p0, pN, range);
+
+  latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
+  lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
+
+  latVar.putAtt("standard_name", "latitude");
+  latVar.putAtt("units", "degrees_north");
+  lonVar.putAtt("standard_name", "longitude");
+  lonVar.putAtt("units", "degrees_east");
+
+  for (y = 0, n = 0; (y < yN); y += yStep)
+    for (x = 0; (x < xN); x += xStep, n++)
+    {
+      auto c = (y * xN) + x;
+      const NFmiPoint p(coords[c].x(), coords[c].y());
+
+      lat[n] = p.Y();
+      lon[n] = p.X();
+    }
+
+  CHECK(latVar.putVar(lat), "Failed to store latitude(y,x) coordinates");
+  CHECK(lonVar.putVar(lon), "Failed to store longitude(y,x) coordinates");
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store lat and lon coordinates of latlon or rotated latlon grid data
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::storeLatLonGridCoordinates(const T::Coordinate_vec& coords,
+                                                const GridRange& range,
+                                                NcVar& latVar,
+                                                NcVar& lonVar)
+{
+  const size_t xN = range.xN;
+  const size_t yN = range.yN;
+  const size_t xStep = range.xStep;
+  const size_t yStep = range.yStep;
+  size_t x = 0;
+  size_t y = 0;
+  size_t n = 0;
+  std::unique_ptr<double[]> latPtr(new double[itsNY]);
+  std::unique_ptr<double[]> lonPtr(new double[itsNX]);
+  double* lat = latPtr.get();
+  double* lon = lonPtr.get();
+
+  // latlon or rotlatlon, grid defined as cartesian product of latitude and longitude axes
+
+  const auto* latCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                             ? "latitude"
+                             : "grid_latitude";
+  const auto* latUnit = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                            ? "degrees_north"
+                            : "degrees";
+  const auto* lonCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+                             ? "longitude"
+                             : "grid_longitude";
+  const auto* lonUnit =
+      (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ? "degrees_east" : "degrees";
+
+  latVar = addCoordVariable("lat", itsNY, ncFloat, latCoord, latUnit, "Lat", itsLatDim);
+  lonVar = addCoordVariable("lon", itsNX, ncFloat, lonCoord, lonUnit, "Lon", itsLonDim);
+
+  if (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+  {
+    for (y = 0, n = 0; (y < yN); y += yStep, n++)
+      lat[n] = coords[y * xN].y();
+
+    for (x = 0, n = 0; (x < xN); x += xStep, n++)
+      lon[n] = coords[x].x();
+  }
+  else
+  {
+    auto* rotLat = itsGridMetaData.rotLatitudes.get();
+    auto* rotLon = itsGridMetaData.rotLongitudes.get();
+
+    for (y = 0, n = 0; (y < yN); y += yStep, n++)
+      lat[n] = rotLat[y * xN];
+
+    for (x = 0, n = 0; (x < xN); x += xStep, n++)
+      lon[n] = rotLon[x];
+  }
+
+  CHECK(latVar.putVar(lat), "Failed to store latitude coordinates");
+  CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
 }
 
 void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
@@ -1679,21 +1894,12 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
     bool projected = ((itsGridMetaData.projType != T::GridProjectionValue::LatLon) &&
                       (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon));
 
-    size_t x0 = 0;
-    size_t y0 = 0;
-    size_t xN = itsReqGridSizeX;
-    size_t yN = itsReqGridSizeY;
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
-    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
-    size_t x = 0;
-    size_t y = 0;
-    size_t n = 0;
-    size_t nLat = (projected ? (itsNY * itsNX) : itsNY);
-    size_t nLon = (projected ? (itsNY * itsNX) : itsNX);
-    std::unique_ptr<double[]> latPtr(new double[nLat]);
-    std::unique_ptr<double[]> lonPtr(new double[nLon]);
-    double* lat = latPtr.get();
-    double* lon = lonPtr.get();
+    GridRange range{0,
+                    0,
+                    itsReqGridSizeX,
+                    itsReqGridSizeY,
+                    (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+                    (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1)};
 
     NcVar latVar;
     NcVar lonVar;
@@ -1707,128 +1913,9 @@ void NetCdfStreamer::setGridGeometry(const QueryServer::Query &gridQuery)
                                Fmi::to_string(itsReqGridSizeY) + ") mismatch");
 
     if (projected)
-    {
-      // Store y, x and 2d (y,x) lat/lon coordinates.
-      //
-      // Note: NetCDF Climate and Forecast (CF) Metadata Conventions (Version 1.6, 5 December,
-      // 2011):
-      //
-      //	 "T(k,j,i) is associated with the coordinate values lon(j,i), lat(j,i), and lev(k).
-      //	  The vertical coordinate is represented by the coordinate variable lev(lev) and
-      //	  the latitude and longitude coordinates are represented by the auxiliary coordinate
-      //	  variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates
-      //	  attribute.
-      //
-      //	  Note that coordinate variables are also defined for the xc and yc dimensions. This
-      //	  faciliates processing of this data by generic applications that don't recognize
-      //	  the multidimensional latitude and longitude coordinates."
-
-      OGRSpatialReference llSRS;
-      llSRS.CopyGeogCSFrom(geometrySRS);
-
-      // Coordinates are geographic (lon,lat); force traditional GIS axis order so
-      // the transform returns (easting,northing) instead of swapping the axes.
-      llSRS.SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-      geometrySRS->SetAxisMappingStrategy(OAMS_TRADITIONAL_GIS_ORDER);
-
-      OGRCoordinateTransformation *ct =
-          itsResources.getCoordinateTransformation(&llSRS, geometrySRS);
-
-      double xc[] = {coords[0].x(), coords[coords.size() - 1].x()};
-      double yc[] = {coords[0].y(), coords[coords.size() - 1].y()};
-      int pabSuccess[2];
-
-      int status = ct->Transform(2, xc, yc, nullptr, pabSuccess);
-
-      if (!(status && pabSuccess[0] && pabSuccess[1]))
-        throw Fmi::Exception(BCP, "Failed to transform llbbox to bbox: " + itsGridMetaData.crs);
-
-      auto yVar =
-          addCoordVariable("y", itsNY, ncFloat, "projection_y_coordinate", "m", "Y", itsYDim);
-      auto xVar =
-          addCoordVariable("x", itsNX, ncFloat, "projection_x_coordinate", "m", "X", itsXDim);
-
-      NFmiPoint p0(xc[0], yc[0]);
-      NFmiPoint pN(xc[1], yc[1]);
-
-      double worldY[itsNY];
-      double worldX[itsNX];
-      double wY = p0.Y();
-      double wX = p0.X();
-      double stepY = yStep * ((itsNY > 1) ? ((pN.Y() - p0.Y()) / (yN - y0 - 1)) : 0.0);
-      double stepX = xStep * ((itsNX > 1) ? ((pN.X() - p0.X()) / (xN - x0 - 1)) : 0.0);
-
-      for (y = 0; (y < itsNY); wY += stepY, y++)
-        worldY[y] = wY;
-      for (x = 0; (x < itsNX); wX += stepX, x++)
-        worldX[x] = wX;
-
-      CHECK(yVar.putVar(worldY), "Failed to store y -coordinates");
-      CHECK(xVar.putVar(worldX), "Failed to store x -coordinates");
-
-      latVar = addVariable("lat", ncFloat, itsYDim, itsXDim);
-      lonVar = addVariable("lon", ncFloat, itsYDim, itsXDim);
-
-      latVar.putAtt("standard_name", "latitude");
-      latVar.putAtt("units", "degrees_north");
-      lonVar.putAtt("standard_name", "longitude");
-      lonVar.putAtt("units", "degrees_east");
-
-      for (y = 0, n = 0; (y < yN); y += yStep)
-        for (x = 0; (x < xN); x += xStep, n++)
-        {
-          auto c = (y * xN) + x;
-          const NFmiPoint p(coords[c].x(), coords[c].y());
-
-          lat[n] = p.Y();
-          lon[n] = p.X();
-        }
-
-      CHECK(latVar.putVar(lat), "Failed to store latitude(y,x) coordinates");
-      CHECK(lonVar.putVar(lon), "Failed to store longitude(y,x) coordinates");
-    }
+      storeProjectedGridCoordinates(coords, geometrySRS, range, latVar, lonVar);
     else
-    {
-      // latlon or rotlatlon, grid defined as cartesian product of latitude and longitude axes
-
-      const auto* latCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-                                 ? "latitude"
-                                 : "grid_latitude";
-      const auto* latUnit = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-                                ? "degrees_north"
-                                : "degrees";
-      const auto* lonCoord = (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-                                 ? "longitude"
-                                 : "grid_longitude";
-      const auto* lonUnit =
-          (itsGridMetaData.projType == T::GridProjectionValue::LatLon) ? "degrees_east" : "degrees";
-
-      latVar = addCoordVariable("lat", itsNY, ncFloat, latCoord, latUnit, "Lat", itsLatDim);
-      lonVar = addCoordVariable("lon", itsNX, ncFloat, lonCoord, lonUnit, "Lon", itsLonDim);
-
-      if (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-      {
-        for (y = 0, n = 0; (y < yN); y += yStep, n++)
-          lat[n] = coords[y * xN].y();
-
-        for (x = 0, n = 0; (x < xN); x += xStep, n++)
-          lon[n] = coords[x].x();
-      }
-      else
-      {
-        auto* rotLat = itsGridMetaData.rotLatitudes.get();
-        auto* rotLon = itsGridMetaData.rotLongitudes.get();
-
-        for (y = 0, n = 0; (y < yN); y += yStep, n++)
-          lat[n] = rotLat[y * xN];
-
-        for (x = 0, n = 0; (x < xN); x += xStep, n++)
-          lon[n] = rotLon[x];
-      }
-
-      CHECK(latVar.putVar(lat), "Failed to store latitude coordinates");
-      CHECK(lonVar.putVar(lon), "Failed to store longitude coordinates");
-    }
+      storeLatLonGridCoordinates(coords, range, latVar, lonVar);
 
     latVar.putAtt("long_name", "latitude");
     lonVar.putAtt("long_name", "longitude");
