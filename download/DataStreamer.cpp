@@ -1602,6 +1602,128 @@ bool DataStreamer::hasRequestedGridData(const Producer& producer,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Check if any of the requested parameters exists. Leading missing parameters
+ *        and their scaling information are erased.
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::skipMissingParams(const Engine::Querydata::Q& q)
+{
+  bool hasData = false;
+  size_t nMissingParam = 0;
+
+  for (auto const& param : itsDataParams)
+  {
+    if (q->param(param.number()))
+    {
+      hasData = true;
+      break;
+    }
+
+    // Count leading missing parameters and erase their scaling information
+
+    nMissingParam++;
+
+    if (itsReqParams.outputFormat != QD)
+    {
+      if (!itsValScaling.empty())
+        itsValScaling.pop_front();
+      else
+        throw Fmi::Exception(BCP, "Internal error in skipping missing parameters");
+    }
+  }
+
+  if (!hasData)
+    return false;
+
+  // Erase leading missing parameters. The first parameter in 'itsDataParams' must be the first
+  // valid/existent parameter after the initialization phase.
+  // At the end of initialization parameter iterator is set to the start of 'itsDataParams', which
+  // must be the same as itsQ's current parameter set in loop above; data chunking starts with it
+
+  if (nMissingParam > 0)
+    itsDataParams.erase(itsDataParams.begin(), itsDataParams.begin() + nMissingParam);
+
+  return true;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Match a data level against a requested level. Level interpolation is
+ *        possible for pressure data only.
+ */
+// ----------------------------------------------------------------------
+
+DataStreamer::LevelMatch DataStreamer::matchDataLevel(int level,
+                                                      int queryLevel,
+                                                      bool first,
+                                                      const Producer& producer) const
+{
+  if (itsLevelRng)
+  {
+    if ((itsReqParams.maxLevel > 0) && (level > itsReqParams.maxLevel))
+      return (itsRisingLevels ? LevelMatch::Stop : LevelMatch::Skip);
+    if ((itsReqParams.minLevel >= 0) && (level < itsReqParams.minLevel))
+      return (itsRisingLevels ? LevelMatch::Skip : LevelMatch::Stop);
+    return LevelMatch::Match;
+  }
+
+  //
+  // Height range query currently not implemented.
+  //
+
+  if (isSurfaceLevel(itsLevelType) || (level == queryLevel))
+    return LevelMatch::Match;
+
+  bool notInterpolatable =
+      (first || (!isPressureLevel(itsLevelType)) || (!producer.verticalInterpolation));
+
+  if (queryLevel > level)
+  {
+    if (itsRisingLevels)
+      return LevelMatch::Skip;
+    return (notInterpolatable ? LevelMatch::Stop : LevelMatch::Match);
+  }
+
+  if (itsRisingLevels)
+    return (notInterpolatable ? LevelMatch::Stop : LevelMatch::Match);
+
+  return LevelMatch::Skip;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check if any of the requested levels exist or is interpolatable.
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::hasRequestedLevel(const Engine::Querydata::Q& q, const Producer& producer) const
+{
+  for (auto const& queryLevel : itsDataLevels)
+  {
+    // Loop over the available data levels.
+    //
+    // Note: Height level data can have negative levels.
+
+    bool first = true;
+
+    for (q->resetLevel(); q->nextLevel(); first = false)
+    {
+      int level = abs(boost::numeric_cast<int>(q->levelValue()));
+      auto match = matchDataLevel(level, queryLevel, first, producer);
+
+      if (match == LevelMatch::Stop)
+        break;
+      if (match == LevelMatch::Match)
+        return true;
+    }  // for available levels
+  }  // for queried levels
+
+  return false;
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Check if (any) requested data is available.
  *
  */
@@ -1618,7 +1740,6 @@ bool DataStreamer::hasRequestedData(const Producer& producer,
       return hasRequestedGridData(producer, originTime, startTime, endTime);
 
     auto q = itsQ;
-    bool hasData = false;
 
     // Get grid's origo
 
@@ -1631,100 +1752,13 @@ bool DataStreamer::hasRequestedData(const Producer& producer,
 
     // Check if any of the requested parameters exists.
 
-    size_t nMissingParam = 0;
-    for (auto const& param : itsDataParams)
-    {
-      if (q->param(param.number()))
-      {
-        hasData = true;
-        break;
-      }
-
-      // Count leading missing parameters and erase their scaling information
-
-      nMissingParam++;
-
-      if (itsReqParams.outputFormat != QD)
-      {
-        if (!itsValScaling.empty())
-          itsValScaling.pop_front();
-        else
-          throw Fmi::Exception(BCP, "Internal error in skipping missing parameters");
-      }
-    }
-
-    if (!hasData)
+    if (!skipMissingParams(q))
       return false;
-
-    // Erase leading missing parameters. The first parameter in 'itsDataParams' must be the first
-    // valid/existent parameter after the initialization phase.
-    // At the end of initialization parameter iterator is set to the start of 'itsDataParams', which
-    // must be the same as itsQ's current parameter set in loop above; data chunking starts with it
-
-    if (nMissingParam > 0)
-      itsDataParams.erase(itsDataParams.begin(), itsDataParams.begin() + nMissingParam);
 
     // Check if any of the requested levels exist or is interpolatable.
 
-    for (auto const& queryLevel : itsDataLevels)
-    {
-      // Loop over the available data levels. Level interpolation is possible for pressure data
-      // only.
-      //
-      // Note: Height level data can have negative levels.
-
-      int level = 0;
-      bool first = true;
-
-      for (q->resetLevel(); q->nextLevel(); first = false)
-      {
-        level = abs(boost::numeric_cast<int>(q->levelValue()));
-
-        if (itsLevelRng)
-        {
-          if ((itsReqParams.maxLevel > 0) && (level > itsReqParams.maxLevel))
-            if (itsRisingLevels)
-              break;
-            else
-              continue;
-          else if ((itsReqParams.minLevel >= 0) && (level < itsReqParams.minLevel))
-          {
-            if (itsRisingLevels)
-              continue;
-            break;
-          }
-        }
-
-        //
-        // Height range query currently not implemented.
-        //
-        //			else if (heightrng) {
-        //			}
-        else if (!isSurfaceLevel(itsLevelType))
-        {
-          if (level != queryLevel)
-          {
-            if (queryLevel > level)
-              if (itsRisingLevels)
-                continue;
-              else
-              {
-                if (first || (!isPressureLevel(itsLevelType)) || (!producer.verticalInterpolation))
-                  break;
-              }
-            else if (itsRisingLevels)
-            {
-              if (first || (!isPressureLevel(itsLevelType)) || (!producer.verticalInterpolation))
-                break;
-            }
-            else
-              continue;
-          }
-        }
-
-        return resetDataSet();
-      }  // for available levels
-    }  // for queried levels
+    if (hasRequestedLevel(q, producer))
+      return resetDataSet();
 
     return false;
   }

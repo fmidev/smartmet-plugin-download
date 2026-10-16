@@ -235,6 +235,18 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                                 const NFmiMetTime* mt,
                                 FmiParameterName id,
                                 const GridRange& range);
+  // Result of matching a data level against a requested level
+  enum class LevelMatch
+  {
+    Skip,  // Not a match, continue with the next data level
+    Stop,  // Not a match, no later data level can match either
+    Match  // Level is available or interpolatable
+  };
+
+  bool skipMissingParams(const Engine::Querydata::Q& q);
+  LevelMatch matchDataLevel(int level, int queryLevel, bool first, const Producer& producer) const;
+  bool hasRequestedLevel(const Engine::Querydata::Q& q, const Producer& producer) const;
+
   void cachedProjGridValues(const Engine::Querydata::Q& q,
                             NFmiGrid &wantedGrid,
                             const NFmiMetTime *mt);
