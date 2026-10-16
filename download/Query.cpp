@@ -28,6 +28,24 @@ namespace Download
 namespace
 {
 const char* defaultTimeZone = "utc";
+
+// ISO time string without fractional seconds
+string isoTimeWithoutFraction(const Fmi::DateTime &t)
+{
+  string ret = to_iso_string(t);
+  auto pos = ret.find(',');
+  if (pos != string::npos)
+    ret = ret.substr(0, pos);
+  return ret;
+}
+
+// ISO time string without fractional seconds, or the given default for an unset time
+string isoTimeWithoutFraction(const Fmi::DateTime &t, const string &defaultValue)
+{
+  if (t.is_not_a_date_time())
+    return defaultValue;
+  return isoTimeWithoutFraction(t);
+}
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -361,6 +379,77 @@ void Query::parseParameterLevelAndForecastNumberRanges(
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Store the valid generation of the given origintime, or the latest
+ *        two valid generations if origintime is not given
+ */
+// ----------------------------------------------------------------------
+
+void Query::storeProducerGenerations(T::GenerationInfoList &generationInfoList,
+                                     const string &originTime,
+                                     OriginTimeGenerations &generations)
+{
+  size_t idx = generationInfoList.getLength();
+
+  if (! originTime.empty())
+  {
+    auto* generationInfo = generationInfoList.getGenerationInfoByAnalysisTime(originTime);
+
+    if (generationInfo && isValidGeneration(generationInfo))
+    {
+      generationInfos.insert(make_pair(generationInfo->mGenerationId, *generationInfo));
+      generations.insert(make_pair(originTime, generationInfo->mGenerationId));
+    }
+
+    return;
+  }
+
+  // Generations are fetched to ascending analysistime order
+
+  for (; ((idx > 0) && (generations.size() < 2)); idx--)
+  {
+    auto* generationInfo = generationInfoList.getGenerationInfoByIndex(idx - 1);
+
+    if (isValidGeneration(generationInfo))
+    {
+      generationInfos.insert(make_pair(generationInfo->mGenerationId, *generationInfo));
+      generations.insert(
+          make_pair(generationInfo->mAnalysisTime, generationInfo->mGenerationId));
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Find the latest origintime of the producer common to all producers
+ */
+// ----------------------------------------------------------------------
+
+string Query::findCommonOriginTime(ProducerGenerations::const_iterator pg) const
+{
+  auto og = pg->second.rbegin();
+
+  for (; (og != pg->second.rend()); og++)
+  {
+    auto pg2 = producerGenerations.begin();
+
+    for (; (pg2 != producerGenerations.end()); pg2++)
+    {
+      if ((pg2 == pg) || (pg2->second.empty()))
+        continue;
+
+      if (pg2->second.find(og->first) == pg2->second.end())
+        break;
+    }
+
+    if (pg2 == producerGenerations.end())
+      return og->first;
+  }
+
+  throw Fmi::Exception(BCP, "Data has no common origintime");
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Load generation data for given origintime or for parameters
  *        latest common origitintime
  */
@@ -401,36 +490,13 @@ bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS
       generationInfoList.setComparisonMethod(T::GenerationInfo::ComparisonMethod::analysisTime);
       cS->getGenerationInfoListByProducerName(0, producer, generationInfoList);
 
-      size_t idx = generationInfoList.getLength();
-      if (idx == 0)
+      if (generationInfoList.getLength() == 0)
         continue;
 
-      if (! originTime.empty())
-      {
-        auto* generationInfo = generationInfoList.getGenerationInfoByAnalysisTime(originTime);
+      storeProducerGenerations(generationInfoList, originTime, pg->second);
 
-        if (generationInfo && isValidGeneration(generationInfo))
-        {
-          generationInfos.insert(make_pair(generationInfo->mGenerationId, *generationInfo));
-          pg->second.insert(make_pair(originTime, generationInfo->mGenerationId));
-        }
-
+      if (!originTime.empty())
         continue;
-      }
-
-      // Generations are fetched to ascending analysistime order
-
-      for (; ((idx > 0) && (pg->second.size() < 2)); idx--)
-      {
-        auto* generationInfo = generationInfoList.getGenerationInfoByIndex(idx - 1);
-
-        if (isValidGeneration(generationInfo))
-        {
-          generationInfos.insert(make_pair(generationInfo->mGenerationId, *generationInfo));
-          pg->second.insert(
-              make_pair(generationInfo->mAnalysisTime, generationInfo->mGenerationId));
-        }
-      }
 
       if (pg->second.empty())
         continue;
@@ -443,30 +509,7 @@ bool Query::loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS
 
       // Get common origintime
 
-      auto og = pg->second.rbegin();
-
-      for (; (og != pg->second.rend()); og++)
-      {
-        auto pg2 = producerGenerations.begin();
-
-        for (; (pg2 != producerGenerations.end()); pg2++)
-        {
-          if ((pg2 == pg) || (pg2->second.empty()))
-            continue;
-
-          if (pg2->second.find(og->first) == pg2->second.end())
-            break;
-        }
-
-        if (pg2 == producerGenerations.end())
-        {
-          commonOriginTime = og->first;
-          break;
-        }
-      }
-
-      if (og == pg->second.rend())
-        throw Fmi::Exception(BCP, "Data has no common origintime");
+      commonOriginTime = findCommonOriginTime(pg);
     }
 
     originTime = commonOriginTime;
@@ -520,6 +563,63 @@ bool Query::getOriginTimeGeneration(const Engine::Grid::ContentServer_sptr& /*cS
   catch (...)
   {
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Add the parameters expanded from the content records and store
+ *        their contents
+ */
+// ----------------------------------------------------------------------
+
+void Query::addExpandedParameters(T::ContentInfoList &contentInfoList,
+                                  int fN,
+                                  vector<string> &paramParts,
+                                  map<T::ParamLevel, ParameterContents::iterator> &levels,
+                                  TimeSeries::OptionParsers::ParameterOptions &pOptions)
+{
+  auto contentLength = contentInfoList.getLength();
+  string fcNumber;
+
+  for (size_t idx = 0; (idx < contentLength); idx++)
+  {
+    auto* contentInfo = contentInfoList.getContentInfoByIndex(idx);
+    auto levelContents = levels.find(contentInfo->mParameterLevel);
+    auto* cI = new T::ContentInfo(*contentInfo);
+
+    if (levelContents != levels.end())
+    {
+      levelContents->second->second.addContentInfo(cI);
+      continue;
+    }
+
+    paramParts[4] = Fmi::to_string(contentInfo->mParameterLevel);
+
+    fcNumber = Fmi::to_string(fN);
+    if (fN >= 0)
+      paramParts[6] = fcNumber;
+    else
+      paramParts.pop_back();
+
+    string expandedParamName;
+
+    for (auto const &part : paramParts)
+      expandedParamName += (((&part != &paramParts[0]) ? ":" : "") + part);
+
+    pOptions.add(Spine::Parameter(expandedParamName, Spine::Parameter::Type::Data,
+                                  FmiParameterName(kFmiPressure + pOptions.size())));
+
+    if (fN < 0)
+      paramParts.push_back(fcNumber);
+
+    radonParameters.insert(make_pair(expandedParamName, paramParts));
+
+    auto paramContents = parameterContents.insert(
+        make_pair(expandedParamName, T::ContentInfoList())).first;
+    paramContents->second.addContentInfo(cI);
+
+    levels.insert(make_pair(contentInfo->mParameterLevel, paramContents));
   }
 }
 
@@ -594,29 +694,9 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
     if (!tOptions.endTimeData)
       eTime = tOptions.endTime;
 
-    string originTimeStr(to_iso_string(originTime));
-    string startTimeStr(sTime.is_not_a_date_time() ? "" : to_iso_string(sTime));
-    string endTimeStr(eTime.is_not_a_date_time() ? "" : to_iso_string(eTime));
-    string fcNumber;
-
-    auto pos = originTimeStr.find(',');
-    if (pos != string::npos) originTimeStr = originTimeStr.substr(0, pos);
-
-    if (startTimeStr.empty())
-      startTimeStr = "19000101T000000";
-    else
-    {
-      pos = startTimeStr.find(',');
-      if (pos != string::npos) startTimeStr = startTimeStr.substr(0, pos);
-    }
-
-    if (endTimeStr.empty())
-      endTimeStr = "99991231T235959";
-    else
-    {
-      pos = endTimeStr.find(',');
-      if (pos != string::npos) endTimeStr = endTimeStr.substr(0, pos);
-    }
+    string originTimeStr = isoTimeWithoutFraction(originTime);
+    string startTimeStr = isoTimeWithoutFraction(sTime, "19000101T000000");
+    string endTimeStr = isoTimeWithoutFraction(eTime, "99991231T235959");
 
     if (startTimeStr > endTimeStr)
       startTimeStr = endTimeStr;
@@ -663,45 +743,7 @@ void Query::expandParameterFromRangeValues(const Engine::Grid::Engine *gridEngin
                  << " fT=" << forecastType << " fN=" << fN
                  << " sT=" << startTimeStr << " eT=" << endTimeStr << std::endl;
 
-          for (size_t idx = 0; (idx < contentLength); idx++)
-          {
-            auto* contentInfo = contentInfoList.getContentInfoByIndex(idx);
-            auto levelContents = levels.find(contentInfo->mParameterLevel);
-            auto* cI = new T::ContentInfo(*contentInfo);
-
-            if (levelContents != levels.end())
-            {
-              levelContents->second->second.addContentInfo(cI);
-              continue;
-            }
-
-            paramParts[4] = Fmi::to_string(contentInfo->mParameterLevel);
-
-            fcNumber = Fmi::to_string(fN);
-            if (fN >= 0)
-              paramParts[6] = fcNumber;
-            else
-              paramParts.pop_back();
-
-            string expandedParamName;
-
-            for (auto const &part : paramParts)
-              expandedParamName += (((&part != &paramParts[0]) ? ":" : "") + part);
-
-            pOptions.add(Spine::Parameter(expandedParamName, Spine::Parameter::Type::Data,
-                                          FmiParameterName(kFmiPressure + pOptions.size())));
-
-            if (fN < 0)
-              paramParts.push_back(fcNumber);
-
-            radonParameters.insert(make_pair(expandedParamName, paramParts));
-
-            auto paramContents = parameterContents.insert(
-                make_pair(expandedParamName, T::ContentInfoList())).first;
-            paramContents->second.addContentInfo(cI);
-
-            levels.insert(make_pair(contentInfo->mParameterLevel, paramContents));
-          }
+          addExpandedParameters(contentInfoList, fN, paramParts, levels, pOptions);
         }
       }
     }

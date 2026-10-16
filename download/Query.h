@@ -307,6 +307,15 @@ class Query
   bool loadOriginTimeGenerations(const Engine::Grid::ContentServer_sptr& cS,
                                  const std::vector<std::string> &params,
                                  std::string &originTime);
+  void storeProducerGenerations(T::GenerationInfoList &generationInfoList,
+                                const std::string &originTime,
+                                OriginTimeGenerations &generations);
+  std::string findCommonOriginTime(ProducerGenerations::const_iterator pg) const;
+  void addExpandedParameters(T::ContentInfoList &contentInfoList,
+                             int fN,
+                             std::vector<std::string> &paramParts,
+                             std::map<T::ParamLevel, ParameterContents::iterator> &levels,
+                             TimeSeries::OptionParsers::ParameterOptions &pOptions);
   bool getOriginTimeGeneration(const Engine::Grid::ContentServer_sptr& cS,
                                const std::string &producer,
                                const std::string &originTime,
