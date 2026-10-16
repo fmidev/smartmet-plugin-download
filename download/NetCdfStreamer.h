@@ -143,6 +143,9 @@ class NetCdfStreamer : public DataStreamer
   void addVariables(bool relative_uv);
 
   void storeParamValues();
+  std::shared_ptr<float[]> getScaledParamValues(std::size_t& x0, std::size_t& y0);
+  void skipMissingParamVariables();
+  void getParamDimensions(netCDF::NcDim& ensembleDim, netCDF::NcDim& levelDim, int& levelIndex);
 
   void paramChanged(size_t nextParamOffset = 1) override;
 

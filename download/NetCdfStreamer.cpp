@@ -2203,6 +2203,133 @@ void NetCdfStreamer::addVariables(bool relative_uv)
   }
 }
 
+namespace
+{
+// Scale a querydata value, missing values are kept as is
+float scaledQueryDataValue(float value, const std::pair<float, float>& scaling)
+{
+  if (value != kFloatMissing)
+    return (value + scaling.second) / scaling.first;
+  return value;
+}
+
+// Scale a grid value unless it is from the grid content (already scaled). Missing values are
+// replaced by the output missing value.
+float scaledGridValue(float value,
+                      bool gridContent,
+                      const std::pair<float, float>& scaling,
+                      float missingValue)
+{
+  if (value == ParamValueMissing)
+    return missingValue;
+  if (gridContent)
+    return value;
+  return (value + scaling.second) / scaling.first;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get current parameter's/grid's scaled values, cropping the grid/values if
+ *        manual cropping is set. Returns the grid offsets of the values too.
+ */
+// ----------------------------------------------------------------------
+
+std::shared_ptr<float[]> NetCdfStreamer::getScaledParamValues(std::size_t& x0, std::size_t& y0)
+{
+  // Load scaled values into a continuous buffer, cropping the grid/values if manual cropping is
+  // set
+  //
+  // Note: Using heap because buffer size might exceed stack size
+
+  bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
+  x0 = (cropxy ? itsCropping.bottomLeftX : 0);
+  y0 = (cropxy ? itsCropping.bottomLeftY : 0);
+  size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
+  size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
+  size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
+  size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
+  size_t x = 0;
+  size_t y = 0;
+
+  std::shared_ptr<float[]> values(new float[itsNY * itsNX]);
+
+  int i = 0;
+
+  if (itsReqParams.dataSource == QueryData)
+  {
+    for (y = y0; (y < yN); y += yStep)
+      for (x = x0; (x < xN); x += xStep, i++)
+        values[i] = scaledQueryDataValue(itsGridValues[x][y], *itsScalingIterator);
+  }
+  else
+  {
+    auto* const vVec = &(getValueListItem(itsGridQuery)->mValueVector);
+    bool gridContent = (itsReqParams.dataSource == GridContent);
+
+    for (y = y0; (y < yN); y += yStep)
+      for (x = x0; (x < xN); x += xStep, i++)
+      {
+        auto c = (y * xN) + x;
+        values[i] = scaledGridValue((*vVec)[c], gridContent, *itsScalingIterator, gribMissingValue);
+      }
+  }
+
+  return values;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Skip variables for missing parameters if any
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::skipMissingParamVariables()
+{
+  if ((itsVarIterator == itsDataVars.begin()) && (itsParamIterator != itsDataParams.begin()))
+    for (auto it_p = itsDataParams.begin(); (it_p != itsParamIterator); it_p++)
+    {
+      itsVarIterator++;
+
+      if (itsVarIterator == itsDataVars.end())
+        throw Fmi::Exception(BCP, "storeParamValues: internal: No more netcdf variables");
+    }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get the ensemble and level dimension and the level index of the current
+ *        radon parameter
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::getParamDimensions(netCDF::NcDim& ensembleDim,
+                                        netCDF::NcDim& levelDim,
+                                        int& levelIndex)
+{
+  vector<string> paramParts;
+  itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
+
+  if (!itsEnsembleDim.isNull())
+  {
+    // Get ensemble dimension
+
+    auto forecastType = getForecastType(itsParamIterator->name(), paramParts);
+    auto forecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);
+
+    ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
+  }
+
+  if (!itsLevelDim.isNull())
+  {
+    // Get level dimension and index
+
+    int level = getParamLevel(itsParamIterator->name(), paramParts);
+
+    levelDim = getLevelDimAndIndex(itsParamIterator->name(), level, levelIndex);
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Store current parameter's/grid's values.
@@ -2216,58 +2343,10 @@ void NetCdfStreamer::storeParamValues()
   {
     // Load scaled values into a continuous buffer, cropping the grid/values if manual cropping is
     // set
-    //
-    // Note: Using heap because buffer size might exceed stack size
 
-    bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
-    size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
-    size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
-    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
-    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
-    size_t x = 0;
-    size_t y = 0;
-
-    std::shared_ptr<float[]> values(new float[itsNY * itsNX]);
-
-    int i = 0;
-
-    if (itsReqParams.dataSource == QueryData)
-    {
-      for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep, i++)
-        {
-          auto value = itsGridValues[x][y];
-
-          if (value != kFloatMissing)
-            values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
-          else
-            values[i] = value;
-        }
-    }
-    else
-    {
-      auto* const vVec = &(getValueListItem(itsGridQuery)->mValueVector);
-      bool gridContent = (itsReqParams.dataSource == GridContent);
-
-      for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep, i++)
-        {
-          auto c = (y * xN) + x;
-          auto value = (*vVec)[c];
-
-          if (value != ParamValueMissing)
-          {
-            if (gridContent)
-              values[i] = value;
-            else
-              values[i] = (value + itsScalingIterator->second) / itsScalingIterator->first;
-          }
-          else
-            values[i] = gribMissingValue;
-        }
-    }
+    size_t x0 = 0;
+    size_t y0 = 0;
+    std::shared_ptr<float[]> values = getScaledParamValues(x0, y0);
 
     // Store the values for current parameter/[level/]validtime.
     //
@@ -2278,14 +2357,7 @@ void NetCdfStreamer::storeParamValues()
 
     auto timeIndex = itsTimeIndex - ((itsReqParams.dataSource == QueryData) ? 1 : 0);
 
-    if ((itsVarIterator == itsDataVars.begin()) && (itsParamIterator != itsDataParams.begin()))
-      for (auto it_p = itsDataParams.begin(); (it_p != itsParamIterator); it_p++)
-      {
-        itsVarIterator++;
-
-        if (itsVarIterator == itsDataVars.end())
-          throw Fmi::Exception(BCP, "storeParamValues: internal: No more netcdf variables");
-      }
+    skipMissingParamVariables();
 
     // Note: when querying with radon parameter names (when gridContent is true) itsEnsembleDim
     // and/or itsLevelDim is set if any on the parameters has ensemble and/or level dimension
@@ -2303,29 +2375,7 @@ void NetCdfStreamer::storeParamValues()
     int levelIndex = itsLevelIndex;
 
     if (gridContent)
-    {
-      vector<string> paramParts;
-      itsQuery.parseRadonParameterName(itsParamIterator->name(), paramParts);
-
-      if (!itsEnsembleDim.isNull())
-      {
-        // Get ensemble dimension
-
-        auto forecastType = getForecastType(itsParamIterator->name(), paramParts);
-        auto forecastNumber = getForecastNumber(itsParamIterator->name(), paramParts);
-
-        ensembleDim = getEnsembleDimension(forecastType, forecastNumber);
-      }
-
-      if (!itsLevelDim.isNull())
-      {
-        // Get level dimension and index
-
-        int level = getParamLevel(itsParamIterator->name(), paramParts);
-
-        levelDim = getLevelDimAndIndex(itsParamIterator->name(), level, levelIndex);
-      }
-    }
+      getParamDimensions(ensembleDim, levelDim, levelIndex);
 
     const bool hasLevelDim = !levelDim.isNull();
     std::size_t nX = (long)itsNX;
