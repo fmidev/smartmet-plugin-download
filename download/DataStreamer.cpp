@@ -3469,6 +3469,99 @@ bool projectionMatches(const std::string& projection, const NFmiArea& area)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Select whether native projection, bounding box and grid size or resolution are used
+ *        for the requested bounding box and projection
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::selectNativeGridUsage(const Engine::Querydata::Q& q,
+                                         const NFmiArea& nativeArea,
+                                         unsigned long nativeClassId,
+                                         size_t nativeGridSizeX,
+                                         size_t nativeGridSizeY,
+                                         string& bboxStr)
+{
+  if (!itsUseNativeBBox &&
+      (((itsReqParams.outputFormat == QD) && (!itsUseNativeProj)) || (!itsUseNativeGridSize)))
+  {
+    // Creating native or nonnative projection with given bounding to load data using
+    // absolute gridsize
+    if (itsUseNativeGridSize)
+    {
+      // Projected qd output; set native gridresolution for output querydata
+      setNativeGridResolution(nativeArea, nativeGridSizeX, nativeGridSizeY);
+      itsUseNativeGridSize = false;
+    }
+
+    itsUseNativeProj = false;
+  }
+  else if ((!itsUseNativeProj) && (nativeClassId != kNFmiLatLonArea))
+  {
+    // If bbox is not given, get native area latlon bounding box for nonnative projection.
+    // Set itsRetainNativeGridResolution to retain native gridresolution if projecting to
+    // latlon.
+
+    if (itsUseNativeBBox)
+    {
+      // In WGS84 mode or with rotlat area transform source grid egde projected coordinates to
+      // projected target coordinates and then projected target corners to latlon.
+      //
+      // bbox produced by rotlat grid egde to latlon transformation (getRegLLBBoxStr(q),
+      // q->latLon()) has resulted flipped target area and output data has not been valid.
+
+      if (itsCfg.getLegacyMode() &&
+          ((itsReqParams.projType == P_LatLon) || (nativeClassId != A_RotLatLon)))
+        bboxStr = getRegLLBBoxStr(q);
+      else
+        bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
+    }
+
+    if ((itsCfg.getLegacyMode() || (nativeClassId != A_RotLatLon)) &&
+        (itsReqParams.projType == P_LatLon))
+      itsRetainNativeGridResolution = itsUseNativeGridSize;
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Create the target area (owned by the resource manager)
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::createTargetArea(const Engine::Querydata::Q& q,
+                                    const string& projStr,
+                                    string& bboxStr)
+{
+  if (itsUseNativeProj)
+  {
+    // Set cropping to the native grid and adjust the target bbox.
+    //
+    setCropping(q->grid());
+  }
+
+  if (!itsReqParams.bbox.empty())
+  {
+    // bbox from the request or set by setCropping()
+
+    bboxStr = itsReqParams.bbox;
+  }
+  else if (!itsReqParams.gridCenter.empty())
+  {
+    // lon,lat,xkm,ykm
+
+    bboxStr = getGridCenterBBoxStr();
+  }
+  else
+  {
+    // Native area latlon bounding box from getRegLLBBoxStr()
+  }
+
+  string projection = projStr + "|" + bboxStr;
+  itsResources.createArea(projection);
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Inspect request's gridsize and projection related parameters
  *	  and create target projection (area object) if needed.
  *
@@ -3541,77 +3634,13 @@ void DataStreamer::createArea(const Engine::Querydata::Q& q,
     itsUseNativeBBox = ((itsReqParams.bbox.empty() || (itsReqParams.bbox == bboxStr)) &&
                         itsReqParams.gridCenter.empty());
 
-    if (!itsUseNativeBBox &&
-        (((itsReqParams.outputFormat == QD) && (!itsUseNativeProj)) || (!itsUseNativeGridSize)))
-    {
-      // Creating native or nonnative projection with given bounding to load data using
-      // absolute gridsize
-      if (itsUseNativeGridSize)
-      {
-        // Projected qd output; set native gridresolution for output querydata
-        setNativeGridResolution(nativeArea, nativeGridSizeX, nativeGridSizeY);
-        itsUseNativeGridSize = false;
-      }
-
-      itsUseNativeProj = false;
-    }
-    else if ((!itsUseNativeProj) && (nativeClassId != kNFmiLatLonArea))
-    {
-      // If bbox is not given, get native area latlon bounding box for nonnative projection.
-      // Set itsRetainNativeGridResolution to retain native gridresolution if projecting to
-      // latlon.
-
-      if (itsUseNativeBBox)
-      {
-        // In WGS84 mode or with rotlat area transform source grid egde projected coordinates to
-        // projected target coordinates and then projected target corners to latlon.
-        //
-        // bbox produced by rotlat grid egde to latlon transformation (getRegLLBBoxStr(q),
-        // q->latLon()) has resulted flipped target area and output data has not been valid.
-
-        if (itsCfg.getLegacyMode() &&
-            ((itsReqParams.projType == P_LatLon) || (nativeClassId != A_RotLatLon)))
-          bboxStr = getRegLLBBoxStr(q);
-        else
-          bboxStr = getRegLLBBoxStr(q, nativeArea, itsReqParams.projection);
-      }
-
-      if ((itsCfg.getLegacyMode() || (nativeClassId != A_RotLatLon)) &&
-          (itsReqParams.projType == P_LatLon))
-        itsRetainNativeGridResolution = itsUseNativeGridSize;
-    }
+    selectNativeGridUsage(
+        q, nativeArea, nativeClassId, nativeGridSizeX, nativeGridSizeY, bboxStr);
 
     itsReqParams.projection = projStr;
 
     if ((!itsUseNativeProj) || ((itsReqParams.outputFormat == QD) && (!itsUseNativeBBox)))
-    {
-      if (itsUseNativeProj)
-      {
-        // Set cropping to the native grid and adjust the target bbox.
-        //
-        setCropping(q->grid());
-      }
-
-      if (!itsReqParams.bbox.empty())
-      {
-        // bbox from the request or set by setCropping()
-
-        bboxStr = itsReqParams.bbox;
-      }
-      else if (!itsReqParams.gridCenter.empty())
-      {
-        // lon,lat,xkm,ykm
-
-        bboxStr = getGridCenterBBoxStr();
-      }
-      else
-      {
-        // Native area latlon bounding box from getRegLLBBoxStr()
-      }
-
-      projection = projStr + "|" + bboxStr;
-      itsResources.createArea(projection);
-    }
+      createTargetArea(q, projStr, bboxStr);
 
     itsCropping.crop |= (itsUseNativeProj && (!itsUseNativeBBox) && itsUseNativeGridSize);
   }

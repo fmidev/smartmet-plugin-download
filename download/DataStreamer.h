@@ -216,6 +216,15 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                   unsigned long nativeClassId,
                   std::size_t nativeGridSizeX,
                   std::size_t nativeGridSizeY);
+  void selectNativeGridUsage(const Engine::Querydata::Q& q,
+                             const NFmiArea &nativeArea,
+                             unsigned long nativeClassId,
+                             std::size_t nativeGridSizeX,
+                             std::size_t nativeGridSizeY,
+                             std::string &bboxStr);
+  void createTargetArea(const Engine::Querydata::Q& q,
+                        const std::string &projStr,
+                        std::string &bboxStr);
   void createGrid(const NFmiArea &area,
                   std::size_t nativeGridSizeX,
                   std::size_t nativeGridSizeY,
