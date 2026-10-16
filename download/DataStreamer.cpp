@@ -3784,6 +3784,32 @@ void DataStreamer::nextParam(const Engine::Querydata::Q& q)
   }
 }
 
+namespace
+{
+// Copy the values of all levels and available times at the current location and parameter.
+// A negative time index implies the time is not available.
+void copyLevelValues(NFmiFastQueryInfo& srcInfo,
+                     NFmiFastQueryInfo& dstInfo,
+                     const std::vector<long>& timeindexes)
+{
+  for (dstInfo.ResetLevel(); dstInfo.NextLevel();)
+  {
+    if (srcInfo.Level(*dstInfo.Level()))
+    {
+      for (unsigned long i = 0; i < timeindexes.size(); i++)
+      {
+        if (timeindexes[i] >= 0)
+        {
+          dstInfo.TimeIndex(i);
+          srcInfo.TimeIndex(timeindexes[i]);
+          dstInfo.FloatValue(srcInfo.FloatValue());
+        }
+      }
+    }
+  }
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Get Q for in-memory querydata object containing only current parameter(s)
@@ -3827,21 +3853,7 @@ Engine::Querydata::Q DataStreamer::getCurrentParamQ(
       for (dstInfo.ResetLocation(), srcInfo->ResetLocation();
            dstInfo.NextLocation() && srcInfo->NextLocation();)
       {
-        for (dstInfo.ResetLevel(); dstInfo.NextLevel();)
-        {
-          if (srcInfo->Level(*dstInfo.Level()))
-          {
-            for (unsigned long i = 0; i < timeDescriptor.Size(); i++)
-            {
-              if (timeindexes[i] >= 0)
-              {
-                dstInfo.TimeIndex(i);
-                srcInfo->TimeIndex(timeindexes[i]);
-                dstInfo.FloatValue(srcInfo->FloatValue());
-              }
-            }
-          }
-        }
+        copyLevelValues(*srcInfo, dstInfo, timeindexes);
       }
     }
 
