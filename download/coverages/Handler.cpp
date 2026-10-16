@@ -10,16 +10,16 @@
 // ======================================================================
 
 #include "coverages/Handler.h"
-#include "coverages/ApiDefinition.h"
 #include "ParamConfig.h"
 #include "Query.h"
 #include "StreamerFactory.h"
-#include <algorithm>
+#include "coverages/ApiDefinition.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-#include <cpl_conv.h>
+#include <engines/querydata/MetaQueryOptions.h>
 #include <gis/ProjInfo.h>
 #include <json/writer.h>
+#include <macgyver/CharsetTools.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -27,6 +27,8 @@
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
+#include <algorithm>
+#include <cpl_conv.h>
 #include <set>
 #include <vector>
 
@@ -1082,9 +1084,219 @@ void CoveragesHandler::handleConformance(const Spine::HTTP::Request & /* theRequ
 
 namespace
 {
-Json::Value collectionDescription(const string &base,
-                                         const string &id,
-                                         const Producer *producer)
+string isoTime(const Fmi::DateTime& t)
+{
+  return Fmi::date_time::to_iso_extended_string(t) + "Z";
+}
+
+// ISO 8601 duration of a time step in minutes
+string isoDuration(long minutes)
+{
+  if (minutes > 0 && minutes % 1440 == 0)
+    return "P" + Fmi::to_string(minutes / 1440) + "D";
+  if (minutes > 0 && minutes % 60 == 0)
+    return "PT" + Fmi::to_string(minutes / 60) + "H";
+  return "PT" + Fmi::to_string(minutes) + "M";
+}
+
+// The constant step of sorted times in minutes, or 0 if the steps vary
+long timeStep(const std::list<Fmi::DateTime>& times)
+{
+  long step = 0;
+  const Fmi::DateTime* previous = nullptr;
+  for (const auto& t : times)
+  {
+    if (previous != nullptr)
+    {
+      const long minutes = (t - *previous).total_seconds() / 60;
+      if (step == 0)
+        step = minutes;
+      else if (minutes != step)
+        return 0;
+    }
+    previous = &t;
+  }
+  return step;
+}
+
+Json::Value temporalExtent(const std::list<Fmi::DateTime>& times, const Fmi::DateTime& origin)
+{
+  Json::Value temporal;
+  if (times.empty())
+    return temporal;
+  Json::Value interval(Json::arrayValue);
+  interval.append(isoTime(times.front()));
+  interval.append(isoTime(times.back()));
+  temporal["interval"].append(interval);
+  temporal["trs"] = "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian";
+  temporal["grid"]["cellsCount"] = static_cast<Json::UInt64>(times.size());
+  const auto step = timeStep(times);
+  if (step > 0)
+    temporal["grid"]["resolution"] = isoDuration(step);
+  else
+    for (const auto& t : times)
+      temporal["grid"]["coordinates"].append(isoTime(t));
+  if (!origin.is_not_a_date_time())
+    temporal["x-smartmet-origintime"] = isoTime(origin);
+  return temporal;
+}
+
+Json::Value bboxValue(double xmin, double ymin, double xmax, double ymax)
+{
+  Json::Value bbox(Json::arrayValue);
+  for (double v : {xmin, ymin, xmax, ymax})
+    bbox.append(v);
+  return bbox;
+}
+
+// The extent of querydata. The native grid is described in the x-smartmet-grid extension:
+// the WKT of the projection, the grid size and resolution and the corners.
+Json::Value querydataExtent(const Engine::Querydata::MetaData& md)
+{
+  Json::Value extent;
+  auto& spatial = extent["spatial"];
+  const auto& lon = md.wgs84Envelope.getRangeLon();
+  const auto& lat = md.wgs84Envelope.getRangeLat();
+  spatial["bbox"].append(bboxValue(lon.getMin(), lat.getMin(), lon.getMax(), lat.getMax()));
+  spatial["crs"] = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
+
+  auto& grid = extent["x-smartmet-grid"];
+  grid["wkt"] = md.WKT;
+  grid["width"] = md.xNumber;
+  grid["height"] = md.yNumber;
+  grid["resolution_km"].append(md.xResolution);
+  grid["resolution_km"].append(md.yResolution);
+  auto& corners = grid["corners"];
+  const auto corner = [](double x, double y)
+  {
+    Json::Value c(Json::arrayValue);
+    c.append(x);
+    c.append(y);
+    return c;
+  };
+  corners["bottomleft"] = corner(md.bllon, md.bllat);
+  corners["bottomright"] = corner(md.brlon, md.brlat);
+  corners["topleft"] = corner(md.ullon, md.ullat);
+  corners["topright"] = corner(md.urlon, md.urlat);
+
+  extent["temporal"] = temporalExtent(md.times, md.originTime);
+
+  if (md.levels.size() > 1)
+  {
+    auto& vertical = extent["vertical"];
+    double vmin = md.levels.front().value;
+    double vmax = vmin;
+    for (const auto& level : md.levels)
+    {
+      vmin = std::min<double>(vmin, level.value);
+      vmax = std::max<double>(vmax, level.value);
+      vertical["grid"]["coordinates"].append(level.value);
+    }
+    Json::Value interval(Json::arrayValue);
+    interval.append(vmin);
+    interval.append(vmax);
+    vertical["interval"].append(interval);
+    vertical["x-smartmet-leveltype"] = md.levels.front().type;
+  }
+  return extent;
+}
+
+// The extent of grid data: the union of the geometries of the latest generation, each
+// described in x-smartmet-grids
+Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
+{
+  Json::Value extent;
+  if (metadata.empty())
+    return extent;
+
+  // The latest generation
+  std::string latest;
+  for (const auto& md : metadata)
+    latest = std::max(latest, md.analysisTime);
+
+  double xmin = 180;
+  double ymin = 90;
+  double xmax = -180;
+  double ymax = -90;
+  std::set<std::string> times;
+  std::set<int> levels;
+  std::set<int> geometries;
+  std::string level_name;
+  Json::Value grids(Json::arrayValue);
+  for (const auto& md : metadata)
+  {
+    if (md.analysisTime != latest)
+      continue;
+    for (const auto& c :
+         {md.latlon_bottomLeft, md.latlon_bottomRight, md.latlon_topLeft, md.latlon_topRight})
+    {
+      xmin = std::min(xmin, c.x());
+      ymin = std::min(ymin, c.y());
+      xmax = std::max(xmax, c.x());
+      ymax = std::max(ymax, c.y());
+    }
+    times.insert(md.times.begin(), md.times.end());
+    if (level_name.empty() || level_name == md.levelName)
+    {
+      level_name = md.levelName;
+      levels.insert(md.levels.begin(), md.levels.end());
+    }
+    if (!geometries.insert(md.geometryId).second)
+      continue;
+    Json::Value grid;
+    grid["geometry"] = md.geometryId;
+    grid["projection"] = md.projectionName;
+    grid["wkt"] = md.wkt;
+    grid["width"] = md.xNumber;
+    grid["height"] = md.yNumber;
+    grids.append(grid);
+  }
+  if (xmin > xmax)
+    return extent;
+
+  extent["spatial"]["bbox"].append(bboxValue(xmin, ymin, xmax, ymax));
+  extent["spatial"]["crs"] = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
+  extent["x-smartmet-grids"] = grids;
+
+  std::list<Fmi::DateTime> parsed;
+  for (const auto& t : times)
+  {
+    try
+    {
+      parsed.push_back(Fmi::DateTime::from_iso_string(t));
+    }
+    catch (...)
+    {
+    }
+  }
+  Fmi::DateTime origin;
+  try
+  {
+    origin = Fmi::DateTime::from_iso_string(latest);
+  }
+  catch (...)
+  {
+  }
+  extent["temporal"] = temporalExtent(parsed, origin);
+
+  if (levels.size() > 1)
+  {
+    auto& vertical = extent["vertical"];
+    Json::Value interval(Json::arrayValue);
+    interval.append(*levels.begin());
+    interval.append(*levels.rbegin());
+    vertical["interval"].append(interval);
+    for (int level : levels)
+      vertical["grid"]["coordinates"].append(level);
+    vertical["x-smartmet-leveltype"] = level_name;
+  }
+  return extent;
+}
+
+Json::Value collectionDescription(const string& base,
+                                  const string& id,
+                                  const Producer* producer,
+                                  const Json::Value& extent = Json::Value())
 {
   const auto href = base + "/collections/" + id;
 
@@ -1101,7 +1313,7 @@ Json::Value collectionDescription(const string &base,
 
   doc["description"] = "Coverage collection for producer " + id;
   links.append(makeLink(href + "/schema", "describedby", "application/json"));
-  doc["extent"] = Json::Value(Json::objectValue);
+  doc["extent"] = (extent.isObject() ? extent : Json::Value(Json::objectValue));
 
   // Output formats the producer allows
   auto &formats = doc["outputFormats"];
@@ -1115,6 +1327,41 @@ Json::Value collectionDescription(const string &base,
   return doc;
 }
 }  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief The extent of a collection from the querydata or grid engine metadata
+ *
+ * Null if neither engine knows the producer.
+ */
+// ----------------------------------------------------------------------
+
+Json::Value CoveragesHandler::extent(const std::string& collectionId) const
+{
+  try
+  {
+    if (itsQEngine != nullptr)
+    {
+      Engine::Querydata::MetaQueryOptions options;
+      options.setProducer(collectionId);
+      auto metadata = itsQEngine->getEngineMetadata(options);
+      if (!metadata.empty())
+        return querydataExtent(metadata.back());
+    }
+    if (itsGridEngine != nullptr && itsGridEngine->isEnabled())
+    {
+      auto metadata = itsGridEngine->getEngineMetadata(collectionId.c_str());
+      if (!metadata.empty())
+        return gridExtent(metadata);
+    }
+    return {};
+  }
+  catch (...)
+  {
+    // Missing metadata must not break the collection listing
+    return {};
+  }
+}
 
 // ----------------------------------------------------------------------
 /*!
@@ -1132,7 +1379,8 @@ void CoveragesHandler::handleCollections(const Spine::HTTP::Request &theRequest,
   auto &collections = doc["collections"];
   collections = Json::Value(Json::arrayValue);
   for (const auto &entry : itsConfig->getProducers())
-    collections.append(collectionDescription(base, entry.first, nullptr));
+    collections.append(
+        collectionDescription(base, entry.first, &entry.second, extent(entry.first)));
 
   setJsonResponse(theResponse, doc);
 }
@@ -1155,7 +1403,8 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request &theRequest,
   // the producer even without explicit download.conf configuration), with minimal metadata
   const Producer *producer = (it == producers.end() ? nullptr : &it->second);
 
-  setJsonResponse(theResponse, collectionDescription(base, collectionId, producer));
+  setJsonResponse(theResponse,
+                  collectionDescription(base, collectionId, producer, extent(collectionId)));
 }
 
 // ----------------------------------------------------------------------
@@ -1164,10 +1413,56 @@ void CoveragesHandler::handleCollection(const Spine::HTTP::Request &theRequest,
  */
 // ----------------------------------------------------------------------
 
-void CoveragesHandler::handleSchema(const Spine::HTTP::Request & /* theRequest */,
-                                    Spine::HTTP::Response &theResponse,
-                                    const std::string & /* collectionId */)
+// ----------------------------------------------------------------------
+/*!
+ * \brief The parameters of a collection from the engine metadata
+ *
+ * By lower case name. Empty if neither engine
+ * knows the producer.
+ */
+// ----------------------------------------------------------------------
+
+std::map<std::string, CoveragesHandler::ParameterInfo> CoveragesHandler::parameters(
+    const std::string& collectionId) const
 {
+  std::map<std::string, ParameterInfo> ret;
+  try
+  {
+    if (itsQEngine != nullptr)
+    {
+      Engine::Querydata::MetaQueryOptions options;
+      options.setProducer(collectionId);
+      auto metadata = itsQEngine->getEngineMetadata(options);
+      if (!metadata.empty())
+      {
+        for (const auto& p : metadata.back().parameters)
+          ret[boost::algorithm::to_lower_copy(p.name)] = {
+              p.name, Fmi::latin1_to_utf8(p.description), ""};
+        return ret;
+      }
+    }
+    if (itsGridEngine != nullptr && itsGridEngine->isEnabled())
+    {
+      for (const auto& md : itsGridEngine->getEngineMetadata(collectionId.c_str()))
+        for (const auto& p : md.parameters)
+          ret[boost::algorithm::to_lower_copy(p.parameterName)] = {
+              p.parameterName, p.parameterDescription, p.parameterUnits};
+    }
+  }
+  catch (...)
+  {
+    // Missing metadata must not break the schema
+  }
+  return ret;
+}
+
+void CoveragesHandler::handleSchema(const Spine::HTTP::Request& /* theRequest */,
+                                    Spine::HTTP::Response& theResponse,
+                                    const std::string& collectionId)
+{
+  // The parameters of the producer, all configured parameters if the engines do not know it
+  auto available = parameters(collectionId);
+
   // Build field schema from the parameter configuration tables.
   // Use the NetCDF table as the primary source since it has CF standard names,
   // long names and units.  Supplement with GRIB table for parameters that
@@ -1208,6 +1503,14 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request & /* theRequest *
     if (name.empty())
       continue;
 
+    if (!available.empty())
+    {
+      auto pos = available.find(boost::algorithm::to_lower_copy(name));
+      if (pos == available.end())
+        continue;
+      available.erase(pos);
+    }
+
     auto &property = properties[name];
     property["type"] = "number";
     property["x-fmi-id"] = static_cast<Json::Int64>(entry.first);
@@ -1217,6 +1520,18 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request & /* theRequest *
       property["x-ogc-propertyName"] = item.itsStdName;
     if (!item.itsUnit.empty())
       property["x-ogc-unit"] = item.itsUnit;
+  }
+
+  // Parameters of the data without a GRIB or NetCDF mapping
+  for (const auto& item : available)
+  {
+    const auto& info = item.second;
+    auto& property = properties[info.name];
+    property["type"] = "number";
+    if (!info.description.empty())
+      property["title"] = info.description;
+    if (!info.unit.empty())
+      property["x-ogc-unit"] = info.unit;
   }
 
   setJsonResponse(theResponse, doc);

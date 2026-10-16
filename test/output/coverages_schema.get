@@ -1,0 +1,140 @@
+Status: 200
+Content-Type: application/json
+
+{
+  "$schema" : "https://json-schema.org/draft/2020-12/schema",
+  "properties" : 
+  {
+    "DewPoint" : 
+    {
+      "title" : "Kastepiste",
+      "type" : "number"
+    },
+    "FogIntensity" : 
+    {
+      "title" : "Density of Fog",
+      "type" : "number"
+    },
+    "HighCloudCover" : 
+    {
+      "title" : "High Cloud Cover",
+      "type" : "number"
+    },
+    "HourlyMaximumGust" : 
+    {
+      "type" : "number",
+      "x-fmi-id" : 467
+    },
+    "Humidity" : 
+    {
+      "title" : "Suhteellinen kosteus",
+      "type" : "number"
+    },
+    "KIndex" : 
+    {
+      "title" : "K-indeksi",
+      "type" : "number"
+    },
+    "LowCloudCover" : 
+    {
+      "title" : "Low Cloud Cover",
+      "type" : "number"
+    },
+    "MediumCloudCover" : 
+    {
+      "title" : "Medium Cloud Cover",
+      "type" : "number"
+    },
+    "MiddleAndLowCloudCover" : 
+    {
+      "title" : "Middle+Low Cloud Cover",
+      "type" : "number"
+    },
+    "PoP" : 
+    {
+      "title" : "PoP",
+      "type" : "number"
+    },
+    "Precipitation1h" : 
+    {
+      "title" : "Precipitation mm/h",
+      "type" : "number"
+    },
+    "PrecipitationForm" : 
+    {
+      "type" : "number",
+      "x-fmi-id" : 57
+    },
+    "PrecipitationType" : 
+    {
+      "type" : "number",
+      "x-fmi-id" : 56
+    },
+    "Pressure" : 
+    {
+      "title" : "Pintapaine",
+      "type" : "number"
+    },
+    "ProbabilityThunderstorm" : 
+    {
+      "title" : "Probability of Thunder",
+      "type" : "number"
+    },
+    "RadiationGlobal" : 
+    {
+      "title" : "Auringon säteily",
+      "type" : "number"
+    },
+    "RadiationLW" : 
+    {
+      "title" : "Pitkäaaltoinen säteily",
+      "type" : "number"
+    },
+    "Temperature" : 
+    {
+      "title" : "Lämpötila",
+      "type" : "number"
+    },
+    "TotalCloudCover" : 
+    {
+      "title" : "Total Cloud Cover",
+      "type" : "number"
+    },
+    "WeatherSymbol1" : 
+    {
+      "title" : "Precipitation Symbol",
+      "type" : "number"
+    },
+    "WeatherSymbol3" : 
+    {
+      "title" : "Weather Symbol",
+      "type" : "number"
+    },
+    "WindDirection" : 
+    {
+      "title" : "Wind dir",
+      "type" : "number"
+    },
+    "WindSpeedMS" : 
+    {
+      "title" : "Wind speed",
+      "type" : "number"
+    },
+    "WindUMS" : 
+    {
+      "title" : "U",
+      "type" : "number"
+    },
+    "WindVMS" : 
+    {
+      "title" : "V",
+      "type" : "number"
+    },
+    "WindVectorMS" : 
+    {
+      "title" : "Wind vector",
+      "type" : "number"
+    }
+  },
+  "type" : "object"
+}

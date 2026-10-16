@@ -16,9 +16,11 @@
 #include <engines/geonames/Engine.h>
 #include <engines/grid/Engine.h>
 #include <engines/querydata/Engine.h>
+#include <json/json.h>
 #include <spine/HTTP.h>
 #include <spine/OpenApi.h>
 #include <spine/Reactor.h>
+#include <map>
 #include <memory>
 
 namespace SmartMet
@@ -52,6 +54,16 @@ class CoveragesHandler
                          Spine::HTTP::Response &theResponse);
   void handleCollections(const Spine::HTTP::Request &theRequest,
                          Spine::HTTP::Response &theResponse);
+  struct ParameterInfo
+  {
+    std::string name;
+    std::string description;
+    std::string unit;
+  };
+
+  Json::Value extent(const std::string& collectionId) const;
+  std::map<std::string, ParameterInfo> parameters(const std::string& collectionId) const;
+
   void handleCollection(const Spine::HTTP::Request &theRequest,
                         Spine::HTTP::Response &theResponse,
                         const std::string &collectionId);
