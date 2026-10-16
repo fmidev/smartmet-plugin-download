@@ -355,6 +355,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
     GridIterator &getGridIterator() { return gridIterator; }
 
    private:
+    std::set<std::string> getLatestOriginTimes() const;
+    bool isCommonOriginTime(const std::string &originTime) const;
+    void eraseNewerOriginTimes(const std::string &originTime);
+
     DataStreamer *dataStreamer;  // To access chunking loop iterators
     GridIterator gridIterator;   //
   };

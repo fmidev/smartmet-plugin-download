@@ -508,6 +508,100 @@ bool DataStreamer::GridMetaData::GridIterator::hasData(T::GeometryId& geometryId
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Collect (max) 2 latest origintimes of each grid
+ */
+// ----------------------------------------------------------------------
+
+std::set<std::string> DataStreamer::GridMetaData::getLatestOriginTimes() const
+{
+  set<std::string> originTimeSet;
+
+  for (auto const& paramGeom : paramGeometries)
+    for (auto const& geomLevels : paramGeom.second)
+      for (auto const& levelTimes : geomLevels.second)
+      {
+        auto ot = levelTimes.second.rbegin();
+
+        for (int i = 0; (ot != levelTimes.second.rend()) && (i < 2); ot++, i++)
+          originTimeSet.insert(ot->first);
+      }
+
+  return originTimeSet;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Test whether the origintime is among the 2 latest origintimes of all grids
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::GridMetaData::isCommonOriginTime(const std::string& originTime) const
+{
+  long index = -1;
+
+  for (auto const& paramGeom : paramGeometries)
+    for (auto const& geomLevels : paramGeom.second)
+      for (auto const& levelTimes : geomLevels.second)
+      {
+        auto otLevel = levelTimes.second.find(originTime);
+
+        if (otLevel != levelTimes.second.end())
+        {
+          index = levelTimes.second.size() - distance(levelTimes.second.begin(), otLevel);
+
+          // Check if latest data covers the last validtime of 2'nd latest data
+
+          /*
+          if ((index == 1) && (levelTimes.second.size() > 1) &&
+              (*(otLevel->second.rbegin()) < *(prev(otLevel)->second.rbegin())))
+            index = -1;
+          */
+        }
+        else
+          index = -1;
+
+        if ((index < 0) || (index > 2))
+          return false;
+      }
+
+  return (index >= 0);
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Erase origintimes newer than the given origintime from metadata
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::GridMetaData::eraseNewerOriginTimes(const std::string& originTime)
+{
+  for (auto& paramGeom : paramGeometries)
+    for (auto& geomLevels : paramGeom.second)
+      for (auto& levelTimes : geomLevels.second)
+      {
+        auto otl = levelTimes.second.find(originTime);
+
+        if (otl == levelTimes.second.end())
+          throw Fmi::Exception(BCP, "GridMetaData: internal: Latest origintime not in metadata");
+
+        levelTimes.second.erase(next(otl), levelTimes.second.end());
+      }
+
+  auto otp = originTimeParams.find(originTime);
+  auto otl = originTimeLevels.find(originTime);
+  auto ott = originTimeTimes.find(originTime);
+
+  if ((otp == originTimeParams.end()) || (otl == originTimeLevels.end()) ||
+      (ott == originTimeTimes.end()))
+    throw Fmi::Exception(BCP, "GridMetaData: internal: Latest origintime not in common metadata");
+
+  originTimeParams.erase(next(otp), originTimeParams.end());
+  originTimeLevels.erase(next(otl), originTimeLevels.end());
+  originTimeTimes.erase(next(ott), originTimeTimes.end());
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Return the latest common origintime
  *
  */
@@ -521,94 +615,18 @@ Fmi::DateTime DataStreamer::GridMetaData::selectGridLatestValidOriginTime()
     //
     // Collect (max) 2 latest origitimes for each grid
 
-    set<std::string> originTimeSet;
-
-    for (auto const& paramGeom : paramGeometries)
-      for (auto const& geomLevels : paramGeom.second)
-        for (auto const& levelTimes : geomLevels.second)
-        {
-          auto ot = levelTimes.second.rbegin();
-
-          for (int i = 0; (ot != levelTimes.second.rend()) && (i < 2); ot++, i++)
-            originTimeSet.insert(ot->first);
-        }
+    set<std::string> originTimeSet = getLatestOriginTimes();
 
     // Search common origintime among grid's 2 latest origintimes
 
-    long index = -1;
-
-    auto ot = originTimeSet.rbegin();
-
-    for (; ot != originTimeSet.rend(); ot++)
+    for (auto ot = originTimeSet.rbegin(); ot != originTimeSet.rend(); ot++)
     {
-      for (auto const& paramGeom : paramGeometries)
-      {
-        for (auto const& geomLevels : paramGeom.second)
-        {
-          for (auto const& levelTimes : geomLevels.second)
-          {
-            auto otLevel = levelTimes.second.find(*ot);
-
-            if (otLevel != levelTimes.second.end())
-            {
-              index = levelTimes.second.size() - distance(levelTimes.second.begin(), otLevel);
-
-              // Check if latest data covers the last validtime of 2'nd latest data
-
-              /*
-              if ((index == 1) && (levelTimes.second.size() > 1) &&
-                  (*(otLevel->second.rbegin()) < *(prev(otLevel)->second.rbegin())))
-                index = -1;
-              */
-            }
-            else
-              index = -1;
-
-            if ((index < 0) || (index > 2))
-            {
-              index = -1;
-              break;
-            }
-          }
-
-          if (index < 0)
-            break;
-        }
-
-        if (index < 0)
-          break;
-      }
-
-      if (index < 0)
+      if (!isCommonOriginTime(*ot))
         continue;
 
       // Erase newer/nonvalid origintimes from metadata
 
-      for (auto& paramGeom : paramGeometries)
-        for (auto& geomLevels : paramGeom.second)
-          for (auto& levelTimes : geomLevels.second)
-          {
-            auto otl = levelTimes.second.find(*ot);
-
-            if (otl == levelTimes.second.end())
-              throw Fmi::Exception(BCP,
-                                   "GridMetaData: internal: Latest origintime not in metadata");
-
-            levelTimes.second.erase(next(otl), levelTimes.second.end());
-          }
-
-      auto otp = originTimeParams.find(*ot);
-      auto otl = originTimeLevels.find(*ot);
-      auto ott = originTimeTimes.find(*ot);
-
-      if ((otp == originTimeParams.end()) || (otl == originTimeLevels.end()) ||
-          (ott == originTimeTimes.end()))
-        throw Fmi::Exception(BCP,
-                             "GridMetaData: internal: Latest origintime not in common metadata");
-
-      originTimeParams.erase(next(otp), originTimeParams.end());
-      originTimeLevels.erase(next(otl), originTimeLevels.end());
-      originTimeTimes.erase(next(ott), originTimeTimes.end());
+      eraseNewerOriginTimes(*ot);
 
       return Fmi::DateTime::from_iso_string(*ot);
     }
