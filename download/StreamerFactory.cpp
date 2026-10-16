@@ -31,6 +31,34 @@ namespace Download
 
 namespace
 {
+// Test whether a parameter table entry matches the radon parameter. The index of the
+// first matching entry without a radon producer is stored to j as a fallback.
+bool matchRadonParam(const ParamChangeTable &ptable,
+                     size_t i,
+                     const std::string &paramName,
+                     const std::string &producerName,
+                     OutputFormat outputFormat,
+                     size_t &j)
+{
+  if (paramName != ptable[i].itsRadonName)
+    return false;
+
+  if ((outputFormat == NetCdf) || (outputFormat == GeoTiff))
+    return true;
+
+  if (!(((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
+        ((outputFormat == Grib2) && ptable[i].itsGrib2Param)))
+    return false;
+
+  auto const &confProducer = ptable[i].itsRadonProducer;
+
+  if (producerName == confProducer)
+    return true;
+  if ((j == ptable.size()) && confProducer.empty())
+    j = i;
+  return false;
+}
+
 bool getScaleFactorAndOffset(signed long id,
                                     const std::string &producerName,
                                     const std::string &paramName,
@@ -49,22 +77,8 @@ bool getScaleFactorAndOffset(signed long id,
     {
       if (radonParam)
       {
-        if (paramName == ptable[i].itsRadonName)
-        {
-          if ((outputFormat == NetCdf) || (outputFormat == GeoTiff))
-            break;
-
-          if (((outputFormat == Grib1) && ptable[i].itsGrib1Param) ||
-              ((outputFormat == Grib2) && ptable[i].itsGrib2Param))
-          {
-            auto const &confProducer = ptable[i].itsRadonProducer;
-
-            if (producerName == confProducer)
-              break;
-            if ((j == ptable.size()) && confProducer.empty())
-              j = i;
-          }
-        }
+        if (matchRadonParam(ptable, i, paramName, producerName, outputFormat, j))
+          break;
 
         continue;
       }
@@ -266,6 +280,104 @@ std::string getDownloadFileName(const std::string &producer,
   }
 }
 
+namespace
+{
+// Create the format specific streamer and get scaling information for the requested
+// parameters. Unknown (and special) parameters are ignored.
+std::shared_ptr<DataStreamer> makeFormatStreamer(
+    const Spine::HTTP::Request &req,
+    Config &config,
+    const ReqParams &reqParams,
+    const Producer &producer,
+    const Query &query,
+    TimeSeries::OptionParsers::ParameterList &knownParams,
+    Scaling &scaling)
+{
+  std::shared_ptr<DataStreamer> ds;
+
+  if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
+  {
+    ds = std::shared_ptr<DataStreamer>(new GribStreamer(req, config, query, producer, reqParams));
+    getParamConfig(config.getParamChangeTable(),
+                   query,
+                   reqParams.dataSource,
+                   reqParams.outputFormat,
+                   knownParams,
+                   scaling);
+  }
+  else if ((reqParams.outputFormat == NetCdf) || (reqParams.outputFormat == GeoTiff))
+  {
+    if (reqParams.outputFormat == NetCdf)
+      ds = std::shared_ptr<DataStreamer>(
+          new NetCdfStreamer(req, config, query, producer, reqParams));
+    else
+      ds = std::shared_ptr<DataStreamer>(
+          new GeoTiffStreamer(req, config, query, producer, reqParams));
+
+    getParamConfig(config.getParamChangeTable(false),
+                   query,
+                   reqParams.dataSource,
+                   reqParams.outputFormat,
+                   knownParams,
+                   scaling);
+  }
+  else
+  {
+    ds = std::shared_ptr<DataStreamer>(new QDStreamer(req, config, query, producer, reqParams));
+
+    for (const Spine::Parameter& param : query.pOptions.parameters())
+    {
+      knownParams.push_back(param);
+    }
+  }
+
+  return ds;
+}
+
+// Get the Q object for the producer and origintime. The origintime is updated to the
+// origintime of the selected data.
+Engine::Querydata::Q getProducerQ(DataStreamer &ds,
+                                  const Engine::Querydata::Engine &qEngine,
+                                  const ReqParams &reqParams,
+                                  Fmi::DateTime &originTime)
+{
+  Engine::Querydata::Q q;
+
+  if (reqParams.dataSource == QueryData)
+  {
+    ds.setMultiFile(qEngine.getProducerConfig(reqParams.producer).ismultifile);
+
+    if (!reqParams.originTime.empty())
+    {
+      if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
+        originTime = Fmi::DateTime(Fmi::DateTime::POS_INFINITY);
+      else if (reqParams.originTime == "oldest")
+        originTime = Fmi::DateTime(Fmi::DateTime::NEG_INFINITY);
+      else
+        originTime = Fmi::TimeParser::parse(reqParams.originTime);
+
+      q = qEngine.get(reqParams.producer, originTime);
+
+      originTime = q->originTime();
+    }
+    else
+    {
+      q = qEngine.get(reqParams.producer);
+    }
+  }
+  else
+  {
+    if (!reqParams.originTime.empty())
+      originTime = Fmi::TimeParser::parse(reqParams.originTime);
+
+    ds.setMultiFile(false);  // TODO: always ?
+  }
+
+  return q;
+}
+
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Create and initialize a data streamer.
@@ -289,45 +401,10 @@ std::shared_ptr<DataStreamer> createStreamer(const Spine::HTTP::Request &req,
     // Create format specific streamer and get scaling information for the requested parameters.
     // Unknown (and special) parameters are ignored.
 
-    std::shared_ptr<DataStreamer> ds;
     TimeSeries::OptionParsers::ParameterList knownParams;
     Scaling scaling;
-
-    if ((reqParams.outputFormat == Grib1) || (reqParams.outputFormat == Grib2))
-    {
-      ds = std::shared_ptr<DataStreamer>(new GribStreamer(req, config, query, producer, reqParams));
-      getParamConfig(config.getParamChangeTable(),
-                     query,
-                     reqParams.dataSource,
-                     reqParams.outputFormat,
-                     knownParams,
-                     scaling);
-    }
-    else if ((reqParams.outputFormat == NetCdf) || (reqParams.outputFormat == GeoTiff))
-    {
-      if (reqParams.outputFormat == NetCdf)
-        ds = std::shared_ptr<DataStreamer>(
-            new NetCdfStreamer(req, config, query, producer, reqParams));
-      else
-        ds = std::shared_ptr<DataStreamer>(
-            new GeoTiffStreamer(req, config, query, producer, reqParams));
-
-      getParamConfig(config.getParamChangeTable(false),
-                     query,
-                     reqParams.dataSource,
-                     reqParams.outputFormat,
-                     knownParams,
-                     scaling);
-    }
-    else
-    {
-      ds = std::shared_ptr<DataStreamer>(new QDStreamer(req, config, query, producer, reqParams));
-
-      for (const Spine::Parameter& param : query.pOptions.parameters())
-      {
-        knownParams.push_back(param);
-      }
-    }
+    std::shared_ptr<DataStreamer> ds =
+        makeFormatStreamer(req, config, reqParams, producer, query, knownParams, scaling);
 
     if (knownParams.empty())
       throw Fmi::Exception(
@@ -345,38 +422,8 @@ std::shared_ptr<DataStreamer> createStreamer(const Spine::HTTP::Request &req,
 
     // Get Q object for the producer/origintime
 
-    Engine::Querydata::Q q;
     Fmi::DateTime originTime;
-
-    if (reqParams.dataSource == QueryData)
-    {
-      ds->setMultiFile(qEngine.getProducerConfig(reqParams.producer).ismultifile);
-
-      if (!reqParams.originTime.empty())
-      {
-        if (reqParams.originTime == "latest" || reqParams.originTime == "newest")
-          originTime = Fmi::DateTime(Fmi::DateTime::POS_INFINITY);
-        else if (reqParams.originTime == "oldest")
-          originTime = Fmi::DateTime(Fmi::DateTime::NEG_INFINITY);
-        else
-          originTime = Fmi::TimeParser::parse(reqParams.originTime);
-
-        q = qEngine.get(reqParams.producer, originTime);
-
-        originTime = q->originTime();
-      }
-      else
-      {
-        q = qEngine.get(reqParams.producer);
-      }
-    }
-    else
-    {
-      if (!reqParams.originTime.empty())
-        originTime = Fmi::TimeParser::parse(reqParams.originTime);
-
-      ds->setMultiFile(false);  // TODO: always ?
-    }
+    Engine::Querydata::Q q = getProducerQ(*ds, qEngine, reqParams, originTime);
 
     if (reqParams.dataSource == QueryData)
     {
