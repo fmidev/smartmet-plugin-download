@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.10.15
+Version: 26.10.16
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -25,16 +25,16 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.10.15
-BuildRequires: smartmet-library-macgyver-devel >= 26.10.15
-BuildRequires: smartmet-library-timeseries-devel >= 26.10.15
-BuildRequires: smartmet-library-newbase-devel >= 26.10.15
-BuildRequires: smartmet-library-grid-content-devel >= 26.10.15
-BuildRequires: smartmet-library-grid-files-devel >= 26.10.15
+BuildRequires: smartmet-library-spine-devel >= 26.10.16
+BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
+BuildRequires: smartmet-library-timeseries-devel >= 26.10.16
+BuildRequires: smartmet-library-newbase-devel >= 26.10.16
+BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
+BuildRequires: smartmet-library-grid-files-devel >= 26.10.16
 BuildRequires: netcdf-devel
-BuildRequires: smartmet-engine-querydata-devel >= 26.10.15
-BuildRequires: smartmet-engine-geonames-devel >= 26.10.15
-BuildRequires: smartmet-engine-grid-devel >= 26.10.15
+BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
+BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
+BuildRequires: smartmet-engine-grid-devel >= 26.10.16
 BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
@@ -43,16 +43,16 @@ Requires: eccodes <= 2.31.1
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
-Requires: smartmet-library-macgyver >= 26.10.15
-Requires: smartmet-library-timeseries >= 26.10.15
-Requires: smartmet-library-spine >= 26.10.15
+Requires: smartmet-library-macgyver >= 26.10.16
+Requires: smartmet-library-timeseries >= 26.10.16
+Requires: smartmet-library-spine >= 26.10.16
 Requires: smartmet-swagger-ui
-Requires: smartmet-library-newbase >= 26.10.15
-Requires: smartmet-engine-querydata >= 26.10.15
-Requires: smartmet-library-grid-content >= 26.10.15
-Requires: smartmet-library-grid-files >= 26.10.15
-Requires: smartmet-engine-grid >= 26.10.15
-Requires: smartmet-server >= 26.10.15
+Requires: smartmet-library-newbase >= 26.10.16
+Requires: smartmet-engine-querydata >= 26.10.16
+Requires: smartmet-library-grid-content >= 26.10.16
+Requires: smartmet-library-grid-files >= 26.10.16
+Requires: smartmet-engine-grid >= 26.10.16
+Requires: smartmet-server >= 26.10.16
 Requires: %{smartmet_boost}-iostreams
 Requires: %{smartmet_boost}-system
 Requires: %{smartmet_boost}-thread
@@ -66,17 +66,17 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel
-#TestRequires: smartmet-engine-geonames >= 26.10.15
-#TestRequires: smartmet-engine-grid >= 26.10.15
-#TestRequires: smartmet-engine-querydata >= 26.10.15
+#TestRequires: smartmet-engine-geonames >= 26.10.16
+#TestRequires: smartmet-engine-grid >= 26.10.16
+#TestRequires: smartmet-engine-querydata >= 26.10.16
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.15
-#TestRequires: smartmet-library-newbase-devel >= 26.10.15
-#TestRequires: smartmet-qdtools >= 26.10.11
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16
+#TestRequires: smartmet-library-newbase-devel >= 26.10.16
+#TestRequires: smartmet-qdtools >= 26.10.16
 #TestRequires: smartmet-test-data >= 26.8.26
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-library-grid-files-test >= 26.10.15
-#TestRequires: smartmet-library-grid-files >= 26.10.15
+#TestRequires: smartmet-library-grid-files-test >= 26.10.16
+#TestRequires: smartmet-library-grid-files >= 26.10.16
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
@@ -108,6 +108,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
+- Fixed compiler warnings and clang-tidy findings (unused code, unreachable code, empty statements, member initialization, parameter passing, noexcept), no functional changes
+
 * Thu Oct 15 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.15-1.fmi
 - Declare member functions and parameters const where nothing is modified (const correctness), no functional changes
 - Requires 26.10.15 versions of newbase, spine, grid-files, grid-content, engine-grid due to their ABI changes
