@@ -3231,6 +3231,126 @@ void valBufDeleter(float* ptr)
 }
 }  // namespace
 
+// ----------------------------------------------------------------------
+/*!
+ * \brief Interpolate the current parameter's values using location and time caches
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::interpolateCachedValues(const Engine::Querydata::Q& q,
+                                           const NFmiTimeCache& tc,
+                                           const NFmiMetTime* mt,
+                                           const GridRange& range,
+                                           size_t xs,
+                                           float* values)
+{
+  for (size_t y = range.y0; (y < range.yN); y += range.yStep)
+    for (size_t x = range.x0; (x < range.xN); x += range.xStep)
+    {
+      NFmiLocationCache& lc = itsLocCache[x][y];
+      *(values + ((y * xs) + x)) =
+          (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));
+    }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Rotate wind components by the difference of the true north azimuthal angles
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::rotateWindComponents(const Engine::Querydata::Q& q,
+                                        NFmiGrid& wantedGrid,
+                                        FmiParameterName id,
+                                        const GridRange& range,
+                                        size_t xs,
+                                        const float* uPtr0,
+                                        const float* vPtr0)
+{
+  const NFmiArea* sourceArea = q->grid().Area();
+  const NFmiArea* targetArea = wantedGrid.Area();
+
+  for (size_t y = range.y0; (y < range.yN); y += range.yStep)
+    for (size_t x = range.x0; (x < range.xN); x += range.xStep)
+    {
+      const float* vPtr = vPtr0 + ((y * xs) + x);
+      const float* uPtr = uPtr0 + ((y * xs) + x);
+      double value = kFloatMissing;
+
+      if ((*uPtr != kFloatMissing) && (*vPtr != kFloatMissing))
+      {
+        if (!wantedGrid.Index(wantedGrid.Index(x, y)))
+          throw Fmi::Exception(BCP, "Internal error: could not set grid index");
+
+        double azimuth1 = sourceArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
+        double azimuth2 = targetArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
+        double da = azimuth2 - azimuth1;
+
+        double uu = *uPtr * cos(da) + *vPtr * sin(da);
+        double vv = *vPtr * cos(da) - *uPtr * sin(da);
+
+        value = ((id == kFmiWindUMS) ? uu : vv);
+      }
+
+      itsGridValues[x][y] = boost::numeric_cast<float>(value);
+    }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get grid relative wind component values rotated to the target grid
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::cachedRelativeWindValues(const Engine::Querydata::Q& q,
+                                            NFmiGrid& wantedGrid,
+                                            const NFmiTimeCache& tc,
+                                            const NFmiMetTime* mt,
+                                            FmiParameterName id,
+                                            const GridRange& range)
+{
+  // Wind components need to be rotated by the difference of the true north azimuthal angles.
+  //
+  // Note: getting/setting isSubParamUsed flag is obsolete when no more setting the parameter
+  // index; for now keeping it.
+
+  unsigned long xs = wantedGrid.XNumber();
+  bool isSubParamUsed = q->isSubParamUsed();
+
+  if (!q->param(kFmiWindUMS))
+    throw Fmi::Exception(BCP, "Data does not contain Wind U-component");
+  if (!q->param(kFmiWindVMS))
+    throw Fmi::Exception(BCP, "Data does not contain Wind V-component");
+
+  q->setIsSubParamUsed(isSubParamUsed);
+
+  // Get V values
+
+  using valBuf = std::unique_ptr<float, void (*)(float*)>;
+
+  valBuf vValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
+  interpolateCachedValues(q, tc, mt, range, xs, vValues.get());
+
+  // Get U values
+
+  if (!q->param(kFmiWindUMS))
+    throw Fmi::Exception(BCP, "Internal error: could not switch to parameter U");
+  q->setIsSubParamUsed(isSubParamUsed);
+
+  valBuf uValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
+  interpolateCachedValues(q, tc, mt, range, xs, uValues.get());
+
+  // Rotate
+
+  rotateWindComponents(q, wantedGrid, id, range, xs, uValues.get(), vValues.get());
+
+  if (!q->param(id))
+    throw Fmi::Exception(BCP,
+                         "Internal error: could not switch to parameter " +
+                             boost::lexical_cast<std::string>(id));
+  q->setIsSubParamUsed(isSubParamUsed);
+}
+
 void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
                                         NFmiGrid& wantedGrid,
                                         const NFmiMetTime* mt)
@@ -3266,105 +3386,24 @@ void DataStreamer::cachedProjGridValues(const Engine::Querydata::Q& q,
     bool cropxy = (itsCropping.cropped && itsCropping.cropMan);
     size_t x0 = (cropxy ? itsCropping.bottomLeftX : 0);
     size_t y0 = (cropxy ? itsCropping.bottomLeftY : 0);
-    size_t xN = (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX);
-    size_t yN = (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY);
-
-    size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
-    size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
-    size_t x = 0;
-    size_t y = 0;
+    GridRange range{x0,
+                    y0,
+                    (itsCropping.cropped ? (x0 + itsCropping.gridSizeX) : itsReqGridSizeX),
+                    (itsCropping.cropped ? (y0 + itsCropping.gridSizeY) : itsReqGridSizeY),
+                    (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1),
+                    (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1)};
 
     if (q->isRelativeUV() && ((id == kFmiWindUMS) || (id == kFmiWindVMS)))
     {
-      // Wind components need to be rotated by the difference of the true north azimuthal angles.
-      //
-      // Note: getting/setting isSubParamUsed flag is obsolete when no more setting the parameter
-      // index; for now keeping it.
-
-      bool isSubParamUsed = q->isSubParamUsed();
-
-      if (!q->param(kFmiWindUMS))
-        throw Fmi::Exception(BCP, "Data does not contain Wind U-component");
-      if (!q->param(kFmiWindVMS))
-        throw Fmi::Exception(BCP, "Data does not contain Wind V-component");
-
-      q->setIsSubParamUsed(isSubParamUsed);
-
-      // Get V values
-
-      using valBuf = std::unique_ptr<float, void (*)(float*)>;
-
-      valBuf vValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
-      float* vPtr0 = vValues.get();
-
-      for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep)
-        {
-          NFmiLocationCache& lc = itsLocCache[x][y];
-          *(vPtr0 + ((y * xs) + x)) =
-              (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));
-        }
-
-      // Get U values
-
-      if (!q->param(kFmiWindUMS))
-        throw Fmi::Exception(BCP, "Internal error: could not switch to parameter U");
-      q->setIsSubParamUsed(isSubParamUsed);
-
-      valBuf uValues(new float[xs * wantedGrid.YNumber()], valBufDeleter);
-      float* uPtr0 = uValues.get();
-
-      for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep)
-        {
-          NFmiLocationCache& lc = itsLocCache[x][y];
-          *(uPtr0 + ((y * xs) + x)) =
-              (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));
-        }
-
-      // Rotate
-
-      const NFmiArea* sourceArea = q->grid().Area();
-      const NFmiArea* targetArea = wantedGrid.Area();
-
-      for (y = y0; (y < yN); y += yStep)
-        for (x = x0; (x < xN); x += xStep)
-        {
-          float* vPtr = vPtr0 + ((y * xs) + x);
-          float* uPtr = uPtr0 + ((y * xs) + x);
-          double value = kFloatMissing;
-
-          if ((*uPtr != kFloatMissing) && (*vPtr != kFloatMissing))
-          {
-            if (!wantedGrid.Index(wantedGrid.Index(x, y)))
-              throw Fmi::Exception(BCP, "Internal error: could not set grid index");
-
-            double azimuth1 = sourceArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
-            double azimuth2 = targetArea->TrueNorthAzimuth(wantedGrid.LatLon()).ToRad();
-            double da = azimuth2 - azimuth1;
-
-            double uu = *uPtr * cos(da) + *vPtr * sin(da);
-            double vv = *vPtr * cos(da) - *uPtr * sin(da);
-
-            value = ((id == kFmiWindUMS) ? uu : vv);
-          }
-
-          itsGridValues[x][y] = boost::numeric_cast<float>(value);
-        }
-
-      if (!q->param(id))
-        throw Fmi::Exception(BCP,
-                             "Internal error: could not switch to parameter " +
-                                 boost::lexical_cast<std::string>(id));
-      q->setIsSubParamUsed(isSubParamUsed);
+      cachedRelativeWindValues(q, wantedGrid, tc, mt, id, range);
     }
     else
     {
       // Normal access
 
-      for (y = y0; (y < yN); y += yStep)
+      for (size_t y = range.y0; (y < range.yN); y += range.yStep)
       {
-        for (x = x0; (x < xN); x += xStep)
+        for (size_t x = range.x0; (x < range.xN); x += range.xStep)
         {
           NFmiLocationCache& lc = itsLocCache[x][y];
           itsGridValues[x][y] = (mt ? q->cachedInterpolation(lc, tc) : q->cachedInterpolation(lc));

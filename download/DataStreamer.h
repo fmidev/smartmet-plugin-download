@@ -205,6 +205,36 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
 
   std::string getGridCenterBBoxStr() const;
 
+  // Output grid index range and steps
+  struct GridRange
+  {
+    std::size_t x0;
+    std::size_t y0;
+    std::size_t xN;
+    std::size_t yN;
+    std::size_t xStep;
+    std::size_t yStep;
+  };
+
+  void interpolateCachedValues(const Engine::Querydata::Q& q,
+                               const NFmiTimeCache& tc,
+                               const NFmiMetTime* mt,
+                               const GridRange& range,
+                               std::size_t xs,
+                               float* values);
+  void rotateWindComponents(const Engine::Querydata::Q& q,
+                            NFmiGrid& wantedGrid,
+                            FmiParameterName id,
+                            const GridRange& range,
+                            std::size_t xs,
+                            const float* uValues,
+                            const float* vValues);
+  void cachedRelativeWindValues(const Engine::Querydata::Q& q,
+                                NFmiGrid& wantedGrid,
+                                const NFmiTimeCache& tc,
+                                const NFmiMetTime* mt,
+                                FmiParameterName id,
+                                const GridRange& range);
   void cachedProjGridValues(const Engine::Querydata::Q& q,
                             NFmiGrid &wantedGrid,
                             const NFmiMetTime *mt);
