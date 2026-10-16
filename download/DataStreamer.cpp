@@ -1291,6 +1291,358 @@ void DataStreamer::getParameterDetailsFromContentData(
   }
 }
 
+namespace
+{
+// Test whether the grid mapping level type is supported
+bool isSupportedMappingLevelType(T::ParamLevelId levelId)
+{
+  return ((levelId == GridFmiLevelTypeGround) || (levelId == GridFmiLevelTypePressure) ||
+          (levelId == GridFmiLevelTypeHybrid) || (levelId == GridFmiLevelTypeHeight) ||
+          (levelId == GridFmiLevelTypeDepth) || (levelId == GridFmiLevelTypeEntireAtmosphere));
+}
+
+// Newbase level type of a supported grid mapping level type
+FmiLevelType mappingLevelTypeOf(T::ParamLevelId levelId)
+{
+  if ((levelId == GridFmiLevelTypeGround) || (levelId == GridFmiLevelTypeHeight) ||
+      (levelId == GridFmiLevelTypeEntireAtmosphere))
+    return kFmiGroundSurface;
+  if (levelId == GridFmiLevelTypePressure)
+    return kFmiPressureLevel;
+  if (levelId == GridFmiLevelTypeHybrid)
+    return kFmiHybridLevel;
+  return kFmiDepth;
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Test whether a parameter detail is to be skipped: no mappings found, or
+ *        data not matching the first forecasttype/number
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::isOtherGridParamDetail(
+    const SmartMet::Engine::Grid::ParameterDetails& paramDetail,
+    const string& paramKey,
+    const string& forecastType,
+    const string& forecastNumber) const
+{
+  return (
+      // No mappings found ?
+      //
+      (strcasecmp(paramDetail.mProducerName.c_str(), paramKey.c_str()) == 0) ||
+      (
+          // TODO: Currently selecting data matching first forecasttype/number
+          //
+          (itsGridMetaData.paramLevelId != GridFmiLevelTypeNone) &&
+          ((paramDetail.mForecastType != forecastType) ||
+           (paramDetail.mForecastNumber != forecastNumber))));
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check that level type does not change, except allow ground and height
+ *        (e.g. 2m) above ground
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::checkGridMappingLevelType(const string& paramName,
+                                             const SmartMet::QueryServer::ParameterMapping& pm,
+                                             T::ParamLevelId paramLevelId) const
+{
+  // Level type must not change, except allow ground and height (e.g. 2m) above ground
+  //
+  // clang-format off
+  if (
+           (
+            (paramLevelId != GridFmiLevelTypeNone) &&
+            (pm.mParameterLevelId != paramLevelId)
+           ) ||
+           (
+            (pm.mParameterLevelId != itsGridMetaData.paramLevelId) &&
+            (pm.mParameterLevelId != GridFmiLevelTypeGround) &&
+            (pm.mParameterLevelId != GridFmiLevelTypeHeight) &&
+            (pm.mParameterLevelId != GridFmiLevelTypeEntireAtmosphere) &&
+            (itsGridMetaData.paramLevelId != GridFmiLevelTypeGround) &&
+            (itsGridMetaData.paramLevelId != GridFmiLevelTypeHeight) &&
+            (itsGridMetaData.paramLevelId != GridFmiLevelTypeEntireAtmosphere)
+           )
+          )
+  {
+    string itsLevelTypeId = (paramLevelId != GridFmiLevelTypeNone)
+                                ? "," + Fmi::to_string(paramLevelId)
+                                : "";
+
+    throw Fmi::Exception(BCP,
+                         "GridMetaData: Multiple leveltypes: " + paramName + "," +
+                             Fmi::to_string(pm.mParameterLevelId) + itsLevelTypeId +
+                             "," + Fmi::to_string(itsGridMetaData.paramLevelId));
+  }
+  // clang-format on
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check if a mapping of newbase parameter name is to be used: level type
+ *        must be supported and level requested, and parameter, geometry and level type
+ *        must not change
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::acceptGridMapping(const Producer& producer,
+                                     const string& paramName,
+                                     const SmartMet::QueryServer::ParameterMapping& pm,
+                                     int level,
+                                     string& paramKey,
+                                     T::ParamLevelId paramLevelId,
+                                     FmiLevelType& mappingLevelType) const
+{
+  // Check for supported level type
+
+  if (!isSupportedMappingLevelType(pm.mParameterLevelId))
+    return false;
+
+  // Check if level is requested by the query
+
+  mappingLevelType = mappingLevelTypeOf(pm.mParameterLevelId);
+
+  if (!isGridLevelRequested(producer, itsQuery, mappingLevelType, level))
+    return false;
+
+  if (paramKey.empty())
+    paramKey = pm.mParameterName + ":" + pm.mProducerName;
+
+  if (itsGridMetaData.paramLevelId == GridFmiLevelTypeNone)
+    return true;
+
+  // TODO: Currently selecting data matching first geometry
+
+  if ((itsReqParams.dataSource == GridMapping) && (pm.mGeometryId != itsGridMetaData.geometryId))
+    return false;
+
+  // Parameter must not change (e.g. Temperature, TEMPERATURE)
+  //
+  // TODO: Currently selecting data matching first parameter
+  //
+  auto pKey = pm.mParameterName + ":" + pm.mProducerName;
+
+  if (pKey != paramKey)
+    return false;
+  /*
+  throw Fmi::Exception(BCP,
+                       "GridMetaData: Multiple mappings: " + paramName + ": " +
+                           paramKey + "," + pKey);
+  */
+
+  checkGridMappingLevelType(paramName, pm, paramLevelId);
+
+  return true;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store available parameter, times and levels of an origintime to metadata
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::storeGridMappingTimes(const string& paramName,
+                                         const SmartMet::QueryServer::ParameterMapping& pm,
+                                         FmiLevelType mappingLevelType,
+                                         int level,
+                                         const string& originTime,
+                                         const std::set<string>& validTimes,
+                                         T::ParamLevelId& paramLevelId)
+{
+  bool gridContent = (itsReqParams.dataSource == GridContent);
+
+  if (itsGridMetaData.paramLevelId == GridFmiLevelTypeNone)
+  {
+    // With radon parameters leveltype, level and geometry are taken from name.
+    //
+    // Since metadata's paramLevelId (grid level type) is tested later against None
+    // to check if data is available, set it from 1'st parameter. Undefined level
+    // type (e.g. in old test data) is taken as ground level (BRAINSTORM-2741);
+    // the parameter's level type used when fetching data is not changed
+
+    itsGridMetaData.paramLevelId =
+        ((pm.mParameterLevelId == GridFmiLevelTypeNone) ? GridFmiLevelTypeGround
+                                                        : pm.mParameterLevelId);
+    itsGridMetaData.geometryId = pm.mGeometryId;
+
+    itsLevelType = mappingLevelType;
+  }
+
+  if (paramLevelId == GridFmiLevelTypeNone)
+    paramLevelId = pm.mParameterLevelId;
+
+  using GeometryLevels = GridMetaData::GeometryLevels;
+  using LevelOriginTimes = GridMetaData::LevelOriginTimes;
+  using OriginTimeTimes = GridMetaData::OriginTimeTimes;
+
+  auto paramGeom =
+      itsGridMetaData.paramGeometries.insert(make_pair(paramName, GeometryLevels()));
+  auto geomLevels = paramGeom.first->second.insert(
+      make_pair(itsGridMetaData.geometryId, LevelOriginTimes()));
+  auto levelTimes = geomLevels.first->second.insert(make_pair(level, OriginTimeTimes()));
+  auto originTimes =
+      levelTimes.first->second.insert(make_pair(originTime, set<string>()));
+  originTimes.first->second.insert(validTimes.begin(), validTimes.end());
+
+  auto otp =
+      itsGridMetaData.originTimeParams.insert(make_pair(originTime, set<string>()));
+  otp.first->second.insert(paramName);
+
+  // Store level 0 for surface data for level iteration; parameter specific
+  // level is used when fetching or storing parameter data
+
+  bool surfaceLevel = (gridContent ? false : isSurfaceLevel(itsLevelType));
+
+  auto otl = itsGridMetaData.originTimeLevels.insert(
+      make_pair(originTime, set<T::ParamLevel>()));
+  auto levels = otl.first->second.insert(surfaceLevel ? 0 : level);
+
+  (void)levels;
+  /*
+  TODO: Why this check for origintime scoped data, should be at param level if at all ?
+
+  if ((!levels.second) && (!surfaceLevel))
+    throw Fmi::Exception(BCP,
+                         "GridMetaData: Duplicate level; " + paramName + "," +
+                             Fmi::to_string(level));
+  */
+
+  auto ott =
+      itsGridMetaData.originTimeTimes.insert(make_pair(originTime, set<string>()));
+  ott.first->second.insert(validTimes.begin(), validTimes.end());
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Collect origintimes and available parameters, times and levels of a parameter
+ *        detail. Returns true if the parameter is available.
+ */
+// ----------------------------------------------------------------------
+
+bool DataStreamer::addGridParamMappings(const Producer& producer,
+                                        const string& paramName,
+                                        const SmartMet::Engine::Grid::ParameterDetails& paramDetail,
+                                        const string& originTimeStr,
+                                        string& paramKey,
+                                        T::ParamLevelId& paramLevelId,
+                                        string& forecastType,
+                                        string& forecastNumber)
+{
+  bool gridContent = (itsReqParams.dataSource == GridContent);
+  bool hasParam = false;
+
+  for (auto const& paramMapping : paramDetail.mMappings)
+  {
+    auto const& pm = paramMapping.mMapping;
+
+    auto mappingLevelType = FmiLevelType(pm.mParameterLevelId);
+    int level = 0;
+
+    if ((!gridContent) && (pm.mParameterLevelId == GridFmiLevelTypePressure))
+      level = pm.mParameterLevel * 0.01;  // e.g. levels=850
+    else
+      level = pm.mParameterLevel;  // e.g. param=T-K::1093:2:85000:...
+
+    if ((!gridContent) &&
+        (!acceptGridMapping(
+            producer, paramName, pm, level, paramKey, paramLevelId, mappingLevelType)))
+      continue;
+
+    // Collect origintimes and available parameters, times and levels for each of them
+
+    if (paramMapping.mTimes.empty())
+      throw Fmi::Exception(BCP, "GridMetaData: Mapping with no times: " + paramName);
+
+    forecastType = paramDetail.mForecastType;
+    forecastNumber = paramDetail.mForecastNumber;
+
+    for (auto const& dataTimes : paramMapping.mTimes)
+    {
+      if ((!originTimeStr.empty()) && (originTimeStr != dataTimes.first))
+        continue;
+      if (dataTimes.second.empty())
+        throw Fmi::Exception(BCP, "GridMetaData: Mapping with no validtimes: " + paramName);
+
+      storeGridMappingTimes(
+          paramName, pm, mappingLevelType, level, dataTimes.first, dataTimes.second, paramLevelId);
+
+      hasParam = true;
+    }
+  }
+
+  return hasParam;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Collect origintimes and available times and levels of a data parameter
+ *        from the first valid parameter detail
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::addGridParam(const Producer& producer,
+                                const string& paramName,
+                                const string& originTimeStr,
+                                string& forecastType,
+                                string& forecastNumber)
+{
+  bool gridContent = (itsReqParams.dataSource == GridContent);
+
+  SmartMet::Engine::Grid::ParameterDetails_vec paramDetails;
+
+  if (gridContent)
+    getParameterDetailsFromContentData(paramName, paramDetails);
+  else
+    itsGridEngine->getParameterDetails(itsReqParams.producer, paramName, paramDetails);
+
+  for (auto const& paramDetail : paramDetails)
+  {
+    string paramKey = (gridContent ? paramName : itsReqParams.producer + ";" + paramName);
+
+    if (!gridContent)
+    {
+      if (isOtherGridParamDetail(paramDetail, paramKey, forecastType, forecastNumber))
+        continue;
+
+      if (&paramDetail == &(paramDetails.front()))
+        itsGridEngine->mapParameterDetails(paramDetails);
+
+      paramKey.clear();
+    }
+
+    T::ParamLevelId paramLevelId = GridFmiLevelTypeNone;
+    bool hasParam = addGridParamMappings(producer,
+                                         paramName,
+                                         paramDetail,
+                                         originTimeStr,
+                                         paramKey,
+                                         paramLevelId,
+                                         forecastType,
+                                         forecastNumber);
+
+    if (hasParam)
+    {
+      // The first valid detail is selected when using newbase parameter names.
+      // With radon names there is only 1 detail set from content records.
+      //
+      // Store producer from 1'st radon parameter, it is used when naming output file
+
+      itsGridMetaData.paramKeys.insert(make_pair(paramName, paramKey));
+      itsGridMetaData.paramLevelIds.insert(make_pair(paramName, paramLevelId));
+
+      if (gridContent && itsReqParams.producer.empty())
+        itsReqParams.producer = paramDetail.mProducerName;
+
+      break;
+    }
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Check if (any) requested grid data is available.
@@ -1327,235 +1679,7 @@ bool DataStreamer::hasRequestedGridData(const Producer& producer,
         continue;
       }
 
-      SmartMet::Engine::Grid::ParameterDetails_vec paramDetails;
-
-      if (gridContent)
-        getParameterDetailsFromContentData(param.name(), paramDetails);
-      else
-        itsGridEngine->getParameterDetails(itsReqParams.producer, param.name(), paramDetails);
-
-      for (auto const& paramDetail : paramDetails)
-      {
-        string paramKey = (gridContent ? param.name() : itsReqParams.producer + ";" + param.name());
-
-        if (!gridContent)
-        {
-          if (
-              // No mappings found ?
-              //
-              (strcasecmp(paramDetail.mProducerName.c_str(), paramKey.c_str()) == 0) ||
-              (
-                  // TODO: Currently selecting data matching first forecasttype/number
-                  //
-                  (itsGridMetaData.paramLevelId != GridFmiLevelTypeNone) &&
-                  ((paramDetail.mForecastType != forecastType) ||
-                   (paramDetail.mForecastNumber != forecastNumber))))
-            continue;
-
-          if (&paramDetail == &(paramDetails.front()))
-            itsGridEngine->mapParameterDetails(paramDetails);
-
-          paramKey.clear();
-        }
-
-        T::ParamLevelId paramLevelId = GridFmiLevelTypeNone;
-        bool hasParam = false;
-
-        for (auto const& paramMapping : paramDetail.mMappings)
-        {
-          auto const& pm = paramMapping.mMapping;
-
-          auto mappingLevelType = FmiLevelType(pm.mParameterLevelId);
-          int level = 0;
-
-          if ((!gridContent) && (pm.mParameterLevelId == GridFmiLevelTypePressure))
-            level = pm.mParameterLevel * 0.01;  // e.g. levels=850
-          else
-            level = pm.mParameterLevel;  // e.g. param=T-K::1093:2:85000:...
-
-          if (!gridContent)
-          {
-            // Check for supported level type
-
-            if ((pm.mParameterLevelId != GridFmiLevelTypeGround) &&
-                (pm.mParameterLevelId != GridFmiLevelTypePressure) &&
-                (pm.mParameterLevelId != GridFmiLevelTypeHybrid) &&
-                (pm.mParameterLevelId != GridFmiLevelTypeHeight) &&
-                (pm.mParameterLevelId != GridFmiLevelTypeDepth) &&
-                (pm.mParameterLevelId != GridFmiLevelTypeEntireAtmosphere))
-              continue;
-
-            // Check if level is requested by the query
-
-            if ((pm.mParameterLevelId == GridFmiLevelTypeGround) ||
-                (pm.mParameterLevelId == GridFmiLevelTypeHeight) ||
-                (pm.mParameterLevelId == GridFmiLevelTypeEntireAtmosphere))
-              mappingLevelType = kFmiGroundSurface;
-            else if (pm.mParameterLevelId == GridFmiLevelTypePressure)
-              mappingLevelType = kFmiPressureLevel;
-            else if (pm.mParameterLevelId == GridFmiLevelTypeHybrid)
-              mappingLevelType = kFmiHybridLevel;
-            else
-              mappingLevelType = kFmiDepth;
-
-            if (!isGridLevelRequested(producer, itsQuery, mappingLevelType, level))
-              continue;
-
-            if (paramKey.empty())
-              paramKey = pm.mParameterName + ":" + pm.mProducerName;
-
-            if (itsGridMetaData.paramLevelId != GridFmiLevelTypeNone)
-            {
-              if (itsReqParams.dataSource == GridMapping)
-              {
-                // TODO: Currently selecting data matching first geometry
-
-                if (pm.mGeometryId != itsGridMetaData.geometryId)
-                  continue;
-              }
-
-              // Parameter must not change (e.g. Temperature, TEMPERATURE)
-              //
-              // TODO: Currently selecting data matching first parameter
-              //
-              auto pKey = pm.mParameterName + ":" + pm.mProducerName;
-
-              if (pKey != paramKey)
-                continue;
-              /*
-              throw Fmi::Exception(BCP,
-                                   "GridMetaData: Multiple mappings: " + param.name() + ": " +
-                                       paramKey + "," + pKey);
-              */
-
-              // Level type must not change, except allow ground and height (e.g. 2m) above ground
-              //
-              // clang-format off
-              if (
-                       (
-                        (paramLevelId != GridFmiLevelTypeNone) &&
-                        (pm.mParameterLevelId != paramLevelId)
-                       ) ||
-                       (
-                        (pm.mParameterLevelId != itsGridMetaData.paramLevelId) &&
-                        (pm.mParameterLevelId != GridFmiLevelTypeGround) &&
-                        (pm.mParameterLevelId != GridFmiLevelTypeHeight) &&
-                        (pm.mParameterLevelId != GridFmiLevelTypeEntireAtmosphere) &&
-                        (itsGridMetaData.paramLevelId != GridFmiLevelTypeGround) &&
-                        (itsGridMetaData.paramLevelId != GridFmiLevelTypeHeight) &&
-                        (itsGridMetaData.paramLevelId != GridFmiLevelTypeEntireAtmosphere)
-                       )
-                      )
-              {
-                string itsLevelTypeId = (paramLevelId != GridFmiLevelTypeNone)
-                                            ? "," + Fmi::to_string(paramLevelId)
-                                            : "";
-
-                throw Fmi::Exception(BCP,
-                                     "GridMetaData: Multiple leveltypes: " + param.name() + "," +
-                                         Fmi::to_string(pm.mParameterLevelId) + itsLevelTypeId +
-                                         "," + Fmi::to_string(itsGridMetaData.paramLevelId));
-              }
-              // clang-format on
-            }
-          }
-
-          // Collect origintimes and available parameters, times and levels for each of them
-
-          if (paramMapping.mTimes.empty())
-            throw Fmi::Exception(BCP, "GridMetaData: Mapping with no times: " + param.name());
-
-          forecastType = paramDetail.mForecastType;
-          forecastNumber = paramDetail.mForecastNumber;
-
-          for (auto const& dataTimes : paramMapping.mTimes)
-          {
-            if ((!originTimeStr.empty()) && (originTimeStr != dataTimes.first))
-              continue;
-            if (dataTimes.second.empty())
-              throw Fmi::Exception(BCP,
-                                   "GridMetaData: Mapping with no validtimes: " + param.name());
-
-            if (itsGridMetaData.paramLevelId == GridFmiLevelTypeNone)
-            {
-              // With radon parameters leveltype, level and geometry are taken from name.
-              //
-              // Since metadata's paramLevelId (grid level type) is tested later against None
-              // to check if data is available, set it from 1'st parameter. Undefined level
-              // type (e.g. in old test data) is taken as ground level (BRAINSTORM-2741);
-              // the parameter's level type used when fetching data is not changed
-
-              itsGridMetaData.paramLevelId =
-                  ((pm.mParameterLevelId == GridFmiLevelTypeNone) ? GridFmiLevelTypeGround
-                                                                  : pm.mParameterLevelId);
-              itsGridMetaData.geometryId = pm.mGeometryId;
-
-              itsLevelType = mappingLevelType;
-            }
-
-            if (paramLevelId == GridFmiLevelTypeNone)
-              paramLevelId = pm.mParameterLevelId;
-
-            using GeometryLevels = GridMetaData::GeometryLevels;
-            using LevelOriginTimes = GridMetaData::LevelOriginTimes;
-            using OriginTimeTimes = GridMetaData::OriginTimeTimes;
-
-            auto paramGeom =
-                itsGridMetaData.paramGeometries.insert(make_pair(param.name(), GeometryLevels()));
-            auto geomLevels = paramGeom.first->second.insert(
-                make_pair(itsGridMetaData.geometryId, LevelOriginTimes()));
-            auto levelTimes = geomLevels.first->second.insert(make_pair(level, OriginTimeTimes()));
-            auto originTimes =
-                levelTimes.first->second.insert(make_pair(dataTimes.first, set<string>()));
-            originTimes.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
-
-            auto otp =
-                itsGridMetaData.originTimeParams.insert(make_pair(dataTimes.first, set<string>()));
-            otp.first->second.insert(param.name());
-
-            // Store level 0 for surface data for level iteration; parameter specific
-            // level is used when fetching or storing parameter data
-
-            bool surfaceLevel = (gridContent ? false : isSurfaceLevel(itsLevelType));
-
-            auto otl = itsGridMetaData.originTimeLevels.insert(
-                make_pair(dataTimes.first, set<T::ParamLevel>()));
-            auto levels = otl.first->second.insert(surfaceLevel ? 0 : level);
-
-            (void)levels;
-            /*
-            TODO: Why this check for origintime scoped data, should be at param level if at all ?
-
-            if ((!levels.second) && (!surfaceLevel))
-              throw Fmi::Exception(BCP,
-                                   "GridMetaData: Duplicate level; " + param.name() + "," +
-                                       Fmi::to_string(level));
-            */
-
-            auto ott =
-                itsGridMetaData.originTimeTimes.insert(make_pair(dataTimes.first, set<string>()));
-            ott.first->second.insert(dataTimes.second.begin(), dataTimes.second.end());
-
-            hasParam = true;
-          }
-        }
-
-        if (hasParam)
-        {
-          // The first valid detail is selected when using newbase parameter names.
-          // With radon names there is only 1 detail set from content records.
-          //
-          // Store producer from 1'st radon parameter, it is used when naming output file
-
-          itsGridMetaData.paramKeys.insert(make_pair(param.name(), paramKey));
-          itsGridMetaData.paramLevelIds.insert(make_pair(param.name(), paramLevelId));
-
-          if (gridContent && itsReqParams.producer.empty())
-            itsReqParams.producer = paramDetail.mProducerName;
-
-          break;
-        }
-      }
+      addGridParam(producer, param.name(), originTimeStr, forecastType, forecastNumber);
 
       // Count leading missing parameters and erase their scaling information
 

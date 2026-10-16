@@ -453,6 +453,40 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                             Fmi::DateTime &oTime,
                             Fmi::DateTime &sTime,
                             Fmi::DateTime &eTime);
+  void addGridParam(const Producer &producer,
+                    const std::string &paramName,
+                    const std::string &originTimeStr,
+                    std::string &forecastType,
+                    std::string &forecastNumber);
+  bool isOtherGridParamDetail(const SmartMet::Engine::Grid::ParameterDetails &paramDetail,
+                              const std::string &paramKey,
+                              const std::string &forecastType,
+                              const std::string &forecastNumber) const;
+  bool addGridParamMappings(const Producer &producer,
+                            const std::string &paramName,
+                            const SmartMet::Engine::Grid::ParameterDetails &paramDetail,
+                            const std::string &originTimeStr,
+                            std::string &paramKey,
+                            T::ParamLevelId &paramLevelId,
+                            std::string &forecastType,
+                            std::string &forecastNumber);
+  bool acceptGridMapping(const Producer &producer,
+                         const std::string &paramName,
+                         const SmartMet::QueryServer::ParameterMapping &pm,
+                         int level,
+                         std::string &paramKey,
+                         T::ParamLevelId paramLevelId,
+                         FmiLevelType &mappingLevelType) const;
+  void checkGridMappingLevelType(const std::string &paramName,
+                                 const SmartMet::QueryServer::ParameterMapping &pm,
+                                 T::ParamLevelId paramLevelId) const;
+  void storeGridMappingTimes(const std::string &paramName,
+                             const SmartMet::QueryServer::ParameterMapping &pm,
+                             FmiLevelType mappingLevelType,
+                             int level,
+                             const std::string &originTime,
+                             const std::set<std::string> &validTimes,
+                             T::ParamLevelId &paramLevelId);
   bool isGridLevelRequested(const Producer &producer,
                             const Query &query,
                             FmiLevelType mappingLevelType,
