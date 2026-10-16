@@ -985,6 +985,41 @@ void GribStreamer::setGridGeometryToGrib(const QueryServer::Query& /*gridQuery*/
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get grib level type for the less common level types
+ */
+// ----------------------------------------------------------------------
+
+string GribStreamer::gribOtherLevelType(bool gridContent, FmiLevelType levelType, int &level) const
+{
+  if (isMostUnstableParcelLevel(levelType, gridContent))
+  {
+    level = 0;
+    return MostUnstableParcelLevel;
+  }
+  else if (isMaxThetaELevel(levelType, gridContent))
+  {
+    return HeightAboveGroundLevel;
+  }
+  else if (isHeightLayerLevel(levelType, gridContent))
+  {
+    return HeightAboveGroundLevel;
+  }
+  else if (isIsothermalLevel(levelType, gridContent))
+  {
+    // Level value is the temperature in 1/100 K; passed through as the scaled value
+    return IsothermalLevel;
+  }
+  else if (isMaxWindLevel(levelType, gridContent))
+  {
+    return HeightAboveGroundLevel;
+  }
+
+  throw Fmi::Exception(
+      BCP, "Unrecognized level type " + boost::lexical_cast<string>(levelType));
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Set grib level and parameter. Parameter's index in config
  * 		table is returned in 'paramIdx'
  *
@@ -1045,31 +1080,7 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
 
     return HeightLevel;
   }
-  if (isMostUnstableParcelLevel(levelType, gridContent))
-  {
-    level = 0;
-    return MostUnstableParcelLevel;
-  }
-  else if (isMaxThetaELevel(levelType, gridContent))
-  {
-    return HeightAboveGroundLevel;
-  }
-  else if (isHeightLayerLevel(levelType, gridContent))
-  {
-    return HeightAboveGroundLevel;
-  }
-  else if (isIsothermalLevel(levelType, gridContent))
-  {
-    // Level value is the temperature in 1/100 K; passed through as the scaled value
-    return IsothermalLevel;
-  }
-  else if (isMaxWindLevel(levelType, gridContent))
-  {
-    return HeightAboveGroundLevel;
-  }
-
-  throw Fmi::Exception(
-      BCP, "Unrecognized level type " + boost::lexical_cast<string>(levelType));
+  return gribOtherLevelType(gridContent, levelType, level);
 }
 
 void GribStreamer::setLevelAndParameterToGrib(int level,
