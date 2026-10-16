@@ -93,6 +93,34 @@ bool getScaleFactorAndOffset(signed long id,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+// Parse the producer and parameter names of a grid parameter and check its geometry
+// is the same as that of the previous parameters
+void parseGridParameter(const Query &query,
+                        const Spine::Parameter &param,
+                        vector<string> &paramParts,
+                        string &paramName,
+                        string &producerName,
+                        int &geometry)
+{
+  // All parameters must have the same geometry
+
+  query.parseRadonParameterName(param.name(), paramParts);
+  paramName = paramParts[0];
+  producerName = paramParts[1];
+
+  auto geom = getGeometryId(paramName, paramParts);
+
+  if (geometry >= 0)
+  {
+    if (geom != geometry)
+      throw Fmi::Exception(BCP,
+                           "All parameters must have the same geometryid " +
+                               Fmi::to_string(geometry) + ": " + param.name());
+  }
+  else
+    geometry = geom;
+}
 }  // namespace
 
 // ----------------------------------------------------------------------
@@ -146,25 +174,7 @@ bool getParamConfig(const ParamChangeTable &pTable,
         auto lid = boost::numeric_cast<unsigned long>(id);
 
         if (gridContent)
-        {
-          // All parameters must have the same geometry
-
-          query.parseRadonParameterName(param.name(), paramParts);
-          paramName = paramParts[0];
-          producerName = paramParts[1];
-
-          auto geom = getGeometryId(paramName, paramParts);
-
-          if (geometry >= 0)
-          {
-            if (geom != geometry)
-              throw Fmi::Exception(BCP,
-                                   "All parameters must have the same geometryid " +
-                                       Fmi::to_string(geometry) + ": " + param.name());
-          }
-          else
-            geometry = geom;
-        }
+          parseGridParameter(query, param, paramParts, paramName, producerName, geometry);
 
         ok = getScaleFactorAndOffset(
             lid, producerName, paramName, outputFormat, &scale, &offset, pTable);
