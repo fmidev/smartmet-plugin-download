@@ -1284,6 +1284,169 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
   }
 }
 
+namespace
+{
+// Get the configured grib1 indicatorOfTimeRange or grib2 typeOfStatisticalProcessing.
+// Returns true if the step type is set.
+bool getGribStepType(const ParamChangeItem &config,
+                     bool grib1,
+                     std::optional<long> &indicatorOfTimeRange,
+                     std::optional<long> &typeOfStatisticalProcessing)
+{
+  if (grib1)
+  {
+    if (config.itsGrib1Param)
+      indicatorOfTimeRange = config.itsGrib1Param->itsIndicatorOfTimeRange;
+
+    return (static_cast<bool>(indicatorOfTimeRange));
+  }
+  if (config.itsGrib2Param)
+  {
+    typeOfStatisticalProcessing = config.itsGrib2Param->itsTypeOfStatisticalProcessing;
+    return (static_cast<bool>(typeOfStatisticalProcessing));
+  }
+  return false;
+}
+
+// Set the start and end step of a sub daily aggregate
+void setSubDailyAggregateSteps(const Fmi::DateTime &validTime,
+                               long periodLengthMinutes,
+                               long step,
+                               long dataTimeStep,
+                               bool endTimeStamped,
+                               long &startStep,
+                               long &endStep)
+{
+  Fmi::TimeDuration td(validTime.time_of_day());
+  long validTimeMinutes = (td.hours() * 60) + td.minutes();
+  long periodStartMinutes = (validTimeMinutes / periodLengthMinutes) * periodLengthMinutes;
+
+  if (endTimeStamped)
+  {
+    // Use validtime as end step
+    //
+    if (periodStartMinutes == validTimeMinutes)
+    {
+      // Set start step backwards to the start of ending/full aggregate period
+      //
+      startStep = step - periodLengthMinutes;
+    }
+    else
+    {
+      // Set start step backwards to the start of current/incomplete aggregate period
+      //
+      startStep = step - (validTimeMinutes - periodStartMinutes);
+    }
+  }
+  else
+  {
+    // Set start step to the start of current/incomplete aggregate period and advance end
+    // step
+    //
+    startStep = step - (validTimeMinutes - periodStartMinutes);
+    endStep += dataTimeStep;
+  }
+}
+
+// Get the aggregate period of daily and monthly data.
+//
+// Note: For daily and monthly data aggregate period length (if given/nonzero) must equal
+// time step; we do not support cumulative aggregates
+void getDailyAggregatePeriod(const Fmi::DateTime &validTime,
+                             long timeStep,
+                             bool endTimeStamped,
+                             Fmi::DateTime &periodStart,
+                             Fmi::DateTime &periodEnd)
+{
+  Fmi::DateTime validTimeDate = validTime.date();
+
+  if (endTimeStamped)
+  {
+    if (timeStep == DataStreamer::minutesInDay)
+    {
+      // Previous day
+      //
+      periodStart = Fmi::DateTime((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
+      periodEnd = validTimeDate;
+    }
+    else
+    {
+      // Previous month
+      //
+      Fmi::Date d((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
+      periodStart = Fmi::DateTime(Fmi::Date(d.year(), d.month(), 1));
+      periodEnd = Fmi::DateTime(Fmi::Date(
+          validTimeDate.date().year(), validTimeDate.date().month(), 1));
+    }
+  }
+  else
+  {
+    if (timeStep == DataStreamer::minutesInDay)
+    {
+      // Current day
+      //
+      periodStart = validTimeDate;
+      periodEnd = Fmi::DateTime((periodStart + Fmi::TimeDuration(25, 0, 0)).date());
+    }
+    else
+    {
+      // Current month
+      //
+      periodStart = Fmi::DateTime(Fmi::Date(
+          validTimeDate.date().year(), validTimeDate.date().month(), 1));
+      Fmi::DateTime t(periodStart + Fmi::TimeDuration(32 * 24, 0, 0));
+      periodEnd = Fmi::DateTime(Fmi::Date(t.date().year(), t.date().month(), 1));
+    }
+  }
+}
+
+// Check that the aggregate period length is the same or multiple of data time step for
+// time steps less than day
+void checkAggregatePeriodLength(long periodLengthMinutes, long dataTimeStep, long timeStep)
+{
+  if (((dataTimeStep < DataStreamer::minutesInDay) && (periodLengthMinutes % dataTimeStep)) ||
+      ((timeStep >= DataStreamer::minutesInDay) && (periodLengthMinutes != timeStep)) ||
+      (timeStep > DataStreamer::minutesInMonth))
+    throw Fmi::Exception(BCP,
+                         "Aggregate period length " +
+                             boost::lexical_cast<string>(periodLengthMinutes) +
+                             " min is not valid for data time step " +
+                             boost::lexical_cast<string>(timeStep) + " min");
+}
+
+// Set the step type, or the configured indicatorOfTimeRange or typeOfStatisticalProcessing
+// into grib buffer
+void setGribStepType(grib_handle *gribHandle,
+                     bool grib1,
+                     const std::string &stepType,
+                     const std::optional<long> &indicatorOfTimeRange,
+                     const std::optional<long> &typeOfStatisticalProcessing)
+{
+  if (stepType.empty())
+  {
+    if (grib1)
+      gset(gribHandle, "indicatorOfTimeRange", indicatorOfTimeRange.value());
+    else
+      gset(gribHandle, "typeOfStatisticalProcessing", typeOfStatisticalProcessing.value());
+  }
+  else
+    gset(gribHandle, "stepType", stepType);
+}
+
+// Set the date and time of the origintime into grib buffer
+void setGribDateAndTime(grib_handle *gribHandle, const Fmi::DateTime &originTime)
+{
+  Fmi::Date d = originTime.date();
+  Fmi::TimeDuration t = originTime.time_of_day();
+
+  long dateLong = d.year() * 10000 + d.month() * 100 + d.day();
+  long timeLong = t.hours() * 100 + t.minutes();
+
+  gset(gribHandle, "date", dateLong);
+  gset(gribHandle, "time", timeLong);
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Set step data into grib buffer
@@ -1325,22 +1488,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     std::optional<long> typeOfStatisticalProcessing;
 
     if (hasParamConfig && (!hasStepType))
-    {
-      auto const &config = pTable[paramIdx];
-
-      if (itsGrib1Flag)
-      {
-        if (config.itsGrib1Param)
-          indicatorOfTimeRange = config.itsGrib1Param->itsIndicatorOfTimeRange;
-
-        hasStepType = (static_cast<bool>(indicatorOfTimeRange));
-      }
-      else if (config.itsGrib2Param)
-      {
-        typeOfStatisticalProcessing = config.itsGrib2Param->itsTypeOfStatisticalProcessing;
-        hasStepType = (static_cast<bool>(typeOfStatisticalProcessing));
-      }
-    }
+      hasStepType = getGribStepType(
+          pTable[paramIdx], itsGrib1Flag, indicatorOfTimeRange, typeOfStatisticalProcessing);
 
     if (hasStepType)
     {
@@ -1356,101 +1505,24 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 
       if (pTable[paramIdx].itsPeriodLengthMinutes > 0)
       {
-        if (((itsDataTimeStep < minutesInDay) &&
-             (pTable[paramIdx].itsPeriodLengthMinutes % itsDataTimeStep)) ||
-            ((timeStep >= minutesInDay) && (pTable[paramIdx].itsPeriodLengthMinutes != timeStep)) ||
-            (timeStep > minutesInMonth))
-          throw Fmi::Exception(
-              BCP,
-              "Aggregate period length " +
-                  boost::lexical_cast<string>(pTable[paramIdx].itsPeriodLengthMinutes) +
-                  " min is not valid for data time step " + boost::lexical_cast<string>(timeStep) +
-                  " min");
+        checkAggregatePeriodLength(
+            pTable[paramIdx].itsPeriodLengthMinutes, itsDataTimeStep, timeStep);
 
         if (timeStep < minutesInDay)
-        {
-          Fmi::TimeDuration td(validTime.time_of_day());
-          long validTimeMinutes = (td.hours() * 60) + td.minutes();
-          long periodLengthMinutes = pTable[paramIdx].itsPeriodLengthMinutes;
-          long periodStartMinutes = (validTimeMinutes / periodLengthMinutes) * periodLengthMinutes;
-
-          if (bDataIsEndTimeStamped)
-          {
-            // Use validtime as end step
-            //
-            if (periodStartMinutes == validTimeMinutes)
-            {
-              // Set start step backwards to the start of ending/full aggregate period
-              //
-              startStep = step - periodLengthMinutes;
-            }
-            else
-            {
-              // Set start step backwards to the start of current/incomplete aggregate period
-              //
-              startStep = step - (validTimeMinutes - periodStartMinutes);
-            }
-          }
-          else
-          {
-            // Set start step to the start of current/incomplete aggregate period and advance end
-            // step
-            //
-            startStep = step - (validTimeMinutes - periodStartMinutes);
-            endStep += itsDataTimeStep;
-          }
-        }
+          setSubDailyAggregateSteps(validTime,
+                                    pTable[paramIdx].itsPeriodLengthMinutes,
+                                    step,
+                                    itsDataTimeStep,
+                                    bDataIsEndTimeStamped,
+                                    startStep,
+                                    endStep);
       }
 
       if (timeStep >= minutesInDay)
       {
-        // Note: For daily and monthly data aggregate period length (if given/nonzero) must equal
-        // time
-        // step;
-        //		 we do not support cumulative aggregates
-        //
-        Fmi::DateTime validTimeDate = validTime.date();
         Fmi::DateTime periodStart;
         Fmi::DateTime periodEnd;
-
-        if (bDataIsEndTimeStamped)
-        {
-          if (timeStep == minutesInDay)
-          {
-            // Previous day
-            //
-            periodStart = Fmi::DateTime((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
-            periodEnd = validTimeDate;
-          }
-          else
-          {
-            // Previous month
-            //
-            Fmi::Date d((validTimeDate - Fmi::TimeDuration(1, 0, 0)).date());
-            periodStart = Fmi::DateTime(Fmi::Date(d.year(), d.month(), 1));
-            periodEnd = Fmi::DateTime(Fmi::Date(
-                validTimeDate.date().year(), validTimeDate.date().month(), 1));
-          }
-        }
-        else
-        {
-          if (timeStep == minutesInDay)
-          {
-            // Current day
-            //
-            periodStart = validTimeDate;
-            periodEnd = Fmi::DateTime((periodStart + Fmi::TimeDuration(25, 0, 0)).date());
-          }
-          else
-          {
-            // Current month
-            //
-            periodStart = Fmi::DateTime(Fmi::Date(
-                validTimeDate.date().year(), validTimeDate.date().month(), 1));
-            Fmi::DateTime t(periodStart + Fmi::TimeDuration(32 * 24, 0, 0));
-            periodEnd = Fmi::DateTime(Fmi::Date(t.date().year(), t.date().month(), 1));
-          }
-        }
+        getDailyAggregatePeriod(validTime, timeStep, bDataIsEndTimeStamped, periodStart, periodEnd);
 
         startStep = (periodStart - itsGribOriginTime).hours() * 60;
         endStep = (periodEnd - itsGribOriginTime).hours() * 60;
@@ -1467,28 +1539,15 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
         setOriginTime = true;
       }
 
-      if (pTable[paramIdx].itsStepType.empty())
-      {
-        if (itsGrib1Flag)
-          gset(itsGribHandle, "indicatorOfTimeRange", indicatorOfTimeRange.value());
-        else
-          gset(itsGribHandle, "typeOfStatisticalProcessing", typeOfStatisticalProcessing.value());
-      }
-      else
-        gset(itsGribHandle, "stepType", pTable[paramIdx].itsStepType);
+      setGribStepType(itsGribHandle,
+                      itsGrib1Flag,
+                      pTable[paramIdx].itsStepType,
+                      indicatorOfTimeRange,
+                      typeOfStatisticalProcessing);
     }
 
     if (setOriginTime)
-    {
-      Fmi::Date d = itsGribOriginTime.date();
-      Fmi::TimeDuration t = itsGribOriginTime.time_of_day();
-
-      long dateLong = d.year() * 10000 + d.month() * 100 + d.day();
-      long timeLong = t.hours() * 100 + t.minutes();
-
-      gset(itsGribHandle, "date", dateLong);
-      gset(itsGribHandle, "time", timeLong);
-    }
+      setGribDateAndTime(itsGribHandle, itsGribOriginTime);
 
     // Set time step and unit
 
