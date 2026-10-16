@@ -89,6 +89,12 @@ class Config
   void parseConfigProducers(
       const Engine::Querydata::Engine& querydata, const Engine::Grid::Engine* griddata);
   void parseConfigProducer(const std::string& name, Producer& currentSettings);
+  void parseConfigProducerSetting(libconfig::Setting& settings,
+                                  int i,
+                                  std::string& optName,
+                                  Producer& currentSettings);
+  void parseGrib2TablesVersions();
+  void parsePackingSettings();
 
   void setEnvSettings();
 

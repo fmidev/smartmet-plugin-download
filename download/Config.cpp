@@ -25,6 +25,123 @@ namespace Plugin
 {
 namespace Download
 {
+namespace
+{
+// Relative paths are relative to the directory of the configuration file
+string relativeToConfigFile(const string& path, const string& configfile)
+{
+  if (path[0] == '/')
+    return path;
+  std::filesystem::path p(configfile);
+  return p.parent_path().string() + "/" + path;
+}
+
+// Parse a producer array setting (disabledReqParameters, disabledDataParameters or
+// gridDefaultLevels)
+void parseProducerArraySetting(libconfig::Setting& setting,
+                               const string& optName,
+                               const string& paramName,
+                               Producer& currentSettings)
+{
+  if (!setting.isArray())
+    throw Fmi::Exception(BCP,
+                         optName + "." + paramName +
+                             " must be an array in dls configuration file line " +
+                             boost::lexical_cast<string>(setting.getSourceLine()));
+
+  if (paramName == "disabledReqParameters")
+  {
+    currentSettings.disabledReqParams.clear();
+
+    for (int j = 0; j < setting.getLength(); ++j)
+    {
+      string param = setting[j];
+      boost::trim(param);
+
+      currentSettings.disabledReqParams.insert(param);
+    }
+  }
+  else if (paramName == "disabledDataParameters")
+  {
+    currentSettings.disabledDataParams.clear();
+
+    for (int j = 0; j < setting.getLength(); ++j)
+    {
+      int param = setting[j];
+      currentSettings.disabledDataParams.insert(param);
+    }
+  }
+  else
+  {
+    currentSettings.gridDefaultLevels.clear();
+
+    for (int j = 0; j < setting.getLength(); ++j)
+    {
+      int level = setting[j];
+      currentSettings.gridDefaultLevels.insert(level);
+    }
+  }
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse a setting of a named producer
+ */
+// ----------------------------------------------------------------------
+
+void Config::parseConfigProducerSetting(libconfig::Setting& settings,
+                                        int i,
+                                        string& optName,
+                                        Producer& currentSettings)
+{
+  string paramName = settings[i].getName();
+
+  if ((paramName == "disabledReqParameters") || (paramName == "disabledDataParameters") ||
+      (paramName == "gridDefaultLevels"))
+  {
+    parseProducerArraySetting(settings[i], optName, paramName, currentSettings);
+  }
+  else if (
+      (paramName ==
+       "grib") /* || (paramName == "grib1") || (paramName == "grib2") || (paramName == "netcdf") */)
+  {
+    optName += ("." + paramName);
+    libconfig::Setting& formatSettings = itsConfig.lookup(optName);
+
+    if (!formatSettings.isGroup())
+      throw Fmi::Exception(BCP,
+                           optName + " must be an array in dls configuration file line " +
+                               boost::lexical_cast<string>(formatSettings.getSourceLine()));
+
+    for (int j = 0; j < formatSettings.getLength(); ++j)
+      currentSettings.namedSettings.insert(
+          NamedSettings::value_type(formatSettings[j].getName(), formatSettings[j]));
+  }
+  else if (paramName == "verticalInterpolation")
+  {
+    currentSettings.verticalInterpolation = settings[i];
+  }
+  else if (paramName == "datum")
+  {
+    if (!Plugin::Download::Datum::parseDatumShift(settings[i], currentSettings.datumShift))
+      throw Fmi::Exception(BCP,
+                           "Invalid datum in dls configuration file line " +
+                               boost::lexical_cast<string>(settings.getSourceLine()));
+  }
+  else if (paramName == "multiFile")
+  {
+    currentSettings.multiFile = settings[i];
+  }
+  else
+  {
+    throw Fmi::Exception(BCP,
+                         string("Unrecognized parameter '") + paramName +
+                             "' in dls configuration on line " +
+                             boost::lexical_cast<string>(settings[i].getSourceLine()));
+  }
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse a named producer setting
@@ -50,92 +167,9 @@ void Config::parseConfigProducer(const string& name, Producer& currentSettings)
 
       for (int i = 0; i < settings.getLength(); ++i)
       {
-        string paramName = settings[i].getName();
-
         try
         {
-          if ((paramName == "disabledReqParameters") || (paramName == "disabledDataParameters") ||
-              (paramName == "gridDefaultLevels"))
-          {
-            libconfig::Setting& setting = settings[i];
-
-            if (!setting.isArray())
-              throw Fmi::Exception(BCP,
-                                   optName + "." + paramName +
-                                       " must be an array in dls configuration file line " +
-                                       boost::lexical_cast<string>(setting.getSourceLine()));
-
-            if (paramName == "disabledReqParameters")
-            {
-              currentSettings.disabledReqParams.clear();
-
-              for (int j = 0; j < setting.getLength(); ++j)
-              {
-                string param = setting[j];
-                boost::trim(param);
-
-                currentSettings.disabledReqParams.insert(param);
-              }
-            }
-            else if (paramName == "disabledDataParameters")
-            {
-              currentSettings.disabledDataParams.clear();
-
-              for (int j = 0; j < setting.getLength(); ++j)
-              {
-                int param = setting[j];
-                currentSettings.disabledDataParams.insert(param);
-              }
-            }
-            else
-            {
-              currentSettings.gridDefaultLevels.clear();
-
-              for (int j = 0; j < setting.getLength(); ++j)
-              {
-                int level = setting[j];
-                currentSettings.gridDefaultLevels.insert(level);
-              }
-            }
-          }
-          else if (
-              (paramName ==
-               "grib") /* || (paramName == "grib1") || (paramName == "grib2") || (paramName == "netcdf") */)
-          {
-            optName += ("." + paramName);
-            libconfig::Setting& formatSettings = itsConfig.lookup(optName);
-
-            if (!formatSettings.isGroup())
-              throw Fmi::Exception(BCP,
-                                   optName + " must be an array in dls configuration file line " +
-                                       boost::lexical_cast<string>(formatSettings.getSourceLine()));
-
-            for (int j = 0; j < formatSettings.getLength(); ++j)
-              currentSettings.namedSettings.insert(
-                  NamedSettings::value_type(formatSettings[j].getName(), formatSettings[j]));
-          }
-          else if (paramName == "verticalInterpolation")
-          {
-            currentSettings.verticalInterpolation = settings[i];
-          }
-          else if (paramName == "datum")
-          {
-            if (!Plugin::Download::Datum::parseDatumShift(settings[i], currentSettings.datumShift))
-              throw Fmi::Exception(BCP,
-                                   "Invalid datum in dls configuration file line " +
-                                       boost::lexical_cast<string>(settings.getSourceLine()));
-          }
-          else if (paramName == "multiFile")
-          {
-            currentSettings.multiFile = settings[i];
-          }
-          else
-          {
-            throw Fmi::Exception(BCP,
-                                 string("Unrecognized parameter '") + paramName +
-                                     "' in dls configuration on line " +
-                                     boost::lexical_cast<string>(settings[i].getSourceLine()));
-          }
+          parseConfigProducerSetting(settings, i, optName, currentSettings);
         }
         catch (...)
         {
@@ -346,6 +380,98 @@ void Config::parseConfigProducers(
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Parse the grib2 tables version settings
+ */
+// ----------------------------------------------------------------------
+
+void Config::parseGrib2TablesVersions()
+{
+  if (itsConfig.exists("grib2.tablesversion.default"))
+    itsConfig.lookupValue("grib2.tablesversion.default", itsGrib2TablesVersionDefault);
+
+  bool hasMin = itsConfig.exists("grib2.tablesversion.min");
+  bool hasMax = itsConfig.exists("grib2.tablesversion.max");
+
+  if (hasMin != hasMax)
+    throw Fmi::Exception(BCP,
+                         "Neither or both grib2.tablesversion.min and "
+                         "grib2.tablesversion.max must be given in DLS "
+                         "configuration");
+
+  if (hasMin)
+  {
+    itsConfig.lookupValue("grib2.tablesversion.min", itsGrib2TablesVersionMin);
+    itsConfig.lookupValue("grib2.tablesversion.max", itsGrib2TablesVersionMax);
+
+    if (itsGrib2TablesVersionMin > itsGrib2TablesVersionMax)
+      throw Fmi::Exception(
+          BCP,
+          "Invalid DLS configuration: grib2.tablesversion.min must be less than or equal to "
+          "grib2.tablesversion.max");
+
+    if (
+        (itsGrib2TablesVersionDefault > 0) && (itsGrib2TablesVersionMax > 0) &&
+        (
+         (itsGrib2TablesVersionDefault < itsGrib2TablesVersionMin) ||
+         (itsGrib2TablesVersionDefault > itsGrib2TablesVersionMax)
+        )
+       )
+      throw Fmi::Exception(
+          BCP,
+          "Invalid DLS configuration: grib2.tablesversion.default must be within "
+          "grib2.tablesversion.min and grib2.tablesversion.max range");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Parse the GRIB packing settings
+ */
+// ----------------------------------------------------------------------
+
+void Config::parsePackingSettings()
+{
+  itsPackingWarningMessage = "Selected packing type is not enabled in this server.";
+  itsPackingErrorMessage = "Selected packing type is disabled in this server.";
+
+  if (itsConfig.exists("packing"))
+  {
+    // Override error messages
+
+    itsConfig.lookupValue("packing.warning", itsPackingWarningMessage);
+    itsConfig.lookupValue("packing.error", itsPackingErrorMessage);
+
+    // Explicitly allowed packing types
+
+    if (itsConfig.exists("packing.enabled"))
+    {
+      libconfig::Setting& enabled = itsConfig.lookup("packing.enabled");
+      if (!enabled.isArray())
+        throw Fmi::Exception(BCP, "packing.enabled must be an array");
+
+      if (enabled.getLength() == 0)
+        throw Fmi::Exception(BCP, "packing.enabled must not be an empty array");
+
+      for (auto i = 0; i < enabled.getLength(); ++i)
+        itsEnabledPackingTypes.insert(enabled[i]);
+    }
+
+    // Explicitly disabled packing types
+
+    if (itsConfig.exists("packing.disabled"))
+    {
+      libconfig::Setting& disabled = itsConfig.lookup("packing.disabled");
+      if (!disabled.isArray())
+        throw Fmi::Exception(BCP, "packing.disabled must be an array");
+
+      for (auto i = 0; i < disabled.getLength(); ++i)
+        itsDisabledPackingTypes.insert(disabled[i]);
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Constructor
  */
 // ----------------------------------------------------------------------
@@ -373,102 +499,24 @@ Config::Config(const string& configfile)
     itsConfig.lookupValue("gribconfig", itsGribConfig);
     if (!itsGribConfig.empty())
     {
-      if (itsGribConfig[0] != '/')
-      {
-        std::filesystem::path p(configfile);
-        itsGribConfig = p.parent_path().string() + "/" + itsGribConfig;
-      }
+      itsGribConfig = relativeToConfigFile(itsGribConfig, configfile);
       itsGribPTable = readParamConfig(itsGribConfig);
     }
 
     itsConfig.lookupValue("netcdfconfig", itsNetCdfConfig);
     if (!itsNetCdfConfig.empty())
     {
-      if (itsNetCdfConfig[0] != '/')
-      {
-        std::filesystem::path p(configfile);
-        itsNetCdfConfig = p.parent_path().string() + "/" + itsNetCdfConfig;
-      }
+      itsNetCdfConfig = relativeToConfigFile(itsNetCdfConfig, configfile);
       itsNetCdfPTable = readParamConfig(itsNetCdfConfig, false);
     }
 
     itsConfig.lookupValue("tempdirectory", itsTempDirectory);
 
-    if (itsConfig.exists("grib2.tablesversion.default"))
-      itsConfig.lookupValue("grib2.tablesversion.default", itsGrib2TablesVersionDefault);
-
-    bool hasMin = itsConfig.exists("grib2.tablesversion.min");
-    bool hasMax = itsConfig.exists("grib2.tablesversion.max");
-
-    if (hasMin != hasMax)
-      throw Fmi::Exception(BCP,
-                           "Neither or both grib2.tablesversion.min and "
-                           "grib2.tablesversion.max must be given in DLS "
-                           "configuration");
-
-    if (hasMin)
-    {
-      itsConfig.lookupValue("grib2.tablesversion.min", itsGrib2TablesVersionMin);
-      itsConfig.lookupValue("grib2.tablesversion.max", itsGrib2TablesVersionMax);
-
-      if (itsGrib2TablesVersionMin > itsGrib2TablesVersionMax)
-        throw Fmi::Exception(
-            BCP,
-            "Invalid DLS configuration: grib2.tablesversion.min must be less than or equal to "
-            "grib2.tablesversion.max");
-
-      if (
-          (itsGrib2TablesVersionDefault > 0) && (itsGrib2TablesVersionMax > 0) &&
-          (
-           (itsGrib2TablesVersionDefault < itsGrib2TablesVersionMin) ||
-           (itsGrib2TablesVersionDefault > itsGrib2TablesVersionMax)
-          )
-         )
-        throw Fmi::Exception(
-            BCP,
-            "Invalid DLS configuration: grib2.tablesversion.default must be within "
-            "grib2.tablesversion.min and grib2.tablesversion.max range");
-    }
+    parseGrib2TablesVersions();
 
     // GRIB packing settings
 
-    itsPackingWarningMessage = "Selected packing type is not enabled in this server.";
-    itsPackingErrorMessage = "Selected packing type is disabled in this server.";
-
-    if (itsConfig.exists("packing"))
-    {
-      // Override error messages
-
-      itsConfig.lookupValue("packing.warning", itsPackingWarningMessage);
-      itsConfig.lookupValue("packing.error", itsPackingErrorMessage);
-
-      // Explicitly allowed packing types
-
-      if (itsConfig.exists("packing.enabled"))
-      {
-        libconfig::Setting& enabled = itsConfig.lookup("packing.enabled");
-        if (!enabled.isArray())
-          throw Fmi::Exception(BCP, "packing.enabled must be an array");
-
-        if (enabled.getLength() == 0)
-          throw Fmi::Exception(BCP, "packing.enabled must not be an empty array");
-
-        for (auto i = 0; i < enabled.getLength(); ++i)
-          itsEnabledPackingTypes.insert(enabled[i]);
-      }
-
-      // Explicitly disabled packing types
-
-      if (itsConfig.exists("packing.disabled"))
-      {
-        libconfig::Setting& disabled = itsConfig.lookup("packing.disabled");
-        if (!disabled.isArray())
-          throw Fmi::Exception(BCP, "packing.disabled must be an array");
-
-        for (auto i = 0; i < disabled.getLength(); ++i)
-          itsDisabledPackingTypes.insert(disabled[i]);
-      }
-    }
+    parsePackingSettings();
 
     if (itsConfig.exists("maxrequestdatavalues"))
       itsMaxRequestDataValues = itsConfig.lookup("maxrequestdatavalues");
