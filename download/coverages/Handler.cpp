@@ -27,6 +27,7 @@
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -214,6 +215,18 @@ vector<string> splitSubsetRange(const string &value)
   return parts;
 }
 
+// Set the request parameters of a low:high subset range. Empty limits are not set.
+void setRangeParameters(Spine::HTTP::Request &dlReq,
+                        const vector<string> &range,
+                        const string &lowName,
+                        const string &highName)
+{
+  if (!range[0].empty())
+    dlReq.setParameter(lowName, range[0]);
+  if (!range[1].empty())
+    dlReq.setParameter(highName, range[1]);
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Parse OGC subset parameter
@@ -259,12 +272,7 @@ void parseSubset(const string &subset,
     {
       // Range: low:high or single value
       if (range.size() == 2)
-      {
-        if (!range[0].empty())
-          dlReq.setParameter("minlevel", range[0]);
-        if (!range[1].empty())
-          dlReq.setParameter("maxlevel", range[1]);
-      }
+        setRangeParameters(dlReq, range, "minlevel", "maxlevel");
       else
       {
         // Single level
@@ -275,12 +283,7 @@ void parseSubset(const string &subset,
     {
       // Range: t1:t2 or single value
       if (range.size() == 2)
-      {
-        if (!range[0].empty())
-          dlReq.setParameter("starttime", range[0]);
-        if (!range[1].empty())
-          dlReq.setParameter("endtime", range[1]);
-      }
+        setRangeParameters(dlReq, range, "starttime", "endtime");
       else
       {
         dlReq.setParameter("starttime", range[0]);
@@ -388,6 +391,62 @@ void parseDatetime(const string &datetime,
   }
 }
 
+// Test whether the projection uses the WGS84 datum or a spherical earth, and no false
+// easting/northing or scaling, as newbase projections assume
+bool isNewbaseDatum(const Fmi::ProjInfo &projInfo)
+{
+  auto datum = projInfo.getString("datum");
+  auto ellps = projInfo.getString("ellps");
+  auto r = projInfo.getDouble("R");
+  auto a = projInfo.getDouble("a");
+  auto b = projInfo.getDouble("b");
+
+  bool newbaseDatum = ((datum && (*datum == "WGS84")) || (ellps && (*ellps == "sphere")) ||
+                       (r && (*r > 0)) || (a && (*a > 0) && ((!b) || (*a == *b))));
+
+  auto x0 = projInfo.getDouble("x_0");
+  auto y0 = projInfo.getDouble("y_0");
+  auto k0 = projInfo.getDouble("k") ? projInfo.getDouble("k") : projInfo.getDouble("k_0");
+
+  if ((x0 && (*x0 != 0)) || (y0 && (*y0 != 0)) || (k0 && (*k0 != 1)))
+    return false;
+
+  return newbaseDatum;
+}
+
+// The newbase projection string equivalent to the projection, if there is one
+std::optional<string> newbaseProjection(const Fmi::ProjInfo &projInfo, const string &name)
+{
+  auto getDouble = [&projInfo](const string &param, double defaultValue)
+  {
+    auto value = projInfo.getDouble(param);
+    return (value ? *value : defaultValue);
+  };
+
+  double lon0 = getDouble("lon_0", 0);
+  double lat0 = getDouble("lat_0", 0);
+  double latts = getDouble("lat_ts", lat0);
+
+  if ((name == "eqc") && (lon0 == 0) && (latts == 0))
+    return "latlon";
+  if ((name == "merc") && (lon0 == 0) && (latts == 0))
+    return "mercator";
+  if (name == "stere")
+    return "stereographic," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0) + "," +
+           Fmi::to_string(latts);
+  if (name == "aeqd")
+    return "equidist," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0);
+  if (name == "lcc")
+  {
+    double lat1 = getDouble("lat_1", lat0);
+    double lat2 = getDouble("lat_2", lat1);
+    return "lcc," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0) + "," +
+           Fmi::to_string(lat1) + "," + Fmi::to_string(lat2);
+  }
+
+  return std::nullopt;
+}
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Translate an OGC crs parameter to a download projection string
@@ -441,52 +500,15 @@ string crsToProjection(const string &crs)
   // Newbase projections assume the WGS84 datum or a spherical earth, and
   // no false easting/northing or scaling
 
-  auto datum = projInfo.getString("datum");
-  auto ellps = projInfo.getString("ellps");
-  auto r = projInfo.getDouble("R");
-  auto a = projInfo.getDouble("a");
-  auto b = projInfo.getDouble("b");
-
-  bool newbaseDatum = ((datum && (*datum == "WGS84")) || (ellps && (*ellps == "sphere")) ||
-                       (r && (*r > 0)) || (a && (*a > 0) && ((!b) || (*a == *b))));
-
-  auto x0 = projInfo.getDouble("x_0");
-  auto y0 = projInfo.getDouble("y_0");
-  auto k0 = projInfo.getDouble("k") ? projInfo.getDouble("k") : projInfo.getDouble("k_0");
-
-  if ((x0 && (*x0 != 0)) || (y0 && (*y0 != 0)) || (k0 && (*k0 != 1)))
-    newbaseDatum = false;
+  bool newbaseDatum = isNewbaseDatum(projInfo);
 
   auto name = projInfo.getString("proj");
 
   if (newbaseDatum && name)
   {
-    auto getDouble = [&projInfo](const string &param, double defaultValue)
-    {
-      auto value = projInfo.getDouble(param);
-      return (value ? *value : defaultValue);
-    };
-
-    double lon0 = getDouble("lon_0", 0);
-    double lat0 = getDouble("lat_0", 0);
-    double latts = getDouble("lat_ts", lat0);
-
-    if ((*name == "eqc") && (lon0 == 0) && (latts == 0))
-      return "latlon";
-    if ((*name == "merc") && (lon0 == 0) && (latts == 0))
-      return "mercator";
-    if (*name == "stere")
-      return "stereographic," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0) + "," +
-             Fmi::to_string(latts);
-    if (*name == "aeqd")
-      return "equidist," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0);
-    if (*name == "lcc")
-    {
-      double lat1 = getDouble("lat_1", lat0);
-      double lat2 = getDouble("lat_2", lat1);
-      return "lcc," + Fmi::to_string(lon0) + "," + Fmi::to_string(lat0) + "," +
-             Fmi::to_string(lat1) + "," + Fmi::to_string(lat2);
-    }
+    auto projection = newbaseProjection(projInfo, *name);
+    if (projection)
+      return *projection;
   }
 
   // No newbase equivalent; pass the GDAL description through as such
