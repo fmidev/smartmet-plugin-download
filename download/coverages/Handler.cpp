@@ -903,6 +903,7 @@ void CoveragesHandler::init(Config &config,
   {
     itsApi = std::make_unique<Spine::OpenAPI::Publisher>(std::move(settings));
     itsApi->publish(Coverages::apiDefinition(config, itsApi->settings()));
+    itsApi->addToCatalog(COVERAGES_ROOT, Coverages::API_TITLE, Coverages::API_DESCRIPTION);
   }
 }
 

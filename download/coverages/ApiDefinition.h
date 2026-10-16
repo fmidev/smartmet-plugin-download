@@ -27,6 +27,10 @@ const std::vector<std::pair<std::string, std::string>>& outputFormats();
 std::vector<std::string> conformanceClasses();
 
 // The definition of /coverages. Paths are relative to the coverages root URL.
+// The title and description of the API, also used in the API catalog
+extern const char* const API_TITLE;
+extern const char* const API_DESCRIPTION;
+
 Spine::OpenAPI::Document apiDefinition(const Config& config,
                                        const Spine::OpenAPI::Settings& settings);
 

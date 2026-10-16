@@ -12,6 +12,11 @@ namespace Download
 {
 namespace Coverages
 {
+const char* const API_TITLE = "SmartMet OGC API - Coverages";
+const char* const API_DESCRIPTION =
+    "Gridded forecast data as GRIB, NetCDF, GeoTIFF or querydata following OGC API - Coverages, "
+    "with subsetting, field selection, scaling and reprojection.";
+
 namespace
 {
 namespace OA = Spine::OpenAPI;
@@ -323,12 +328,7 @@ Spine::OpenAPI::Document apiDefinition(const Config& config,
   {
     const auto max_enum = settings.max_enum;
 
-    OA::Document doc("SmartMet OGC API - Coverages",
-                     "Gridded forecast data as GRIB, NetCDF, GeoTIFF or querydata following OGC "
-                     "API - Coverages, with subsetting, field selection, scaling and "
-                     "reprojection.",
-                     "1.0",
-                     settings);
+    OA::Document doc(API_TITLE, API_DESCRIPTION, "1.0", settings);
     doc.addTag(TAG_CAPABILITIES, "The landing page, conformance declaration and API definition");
     doc.addTag(TAG_COLLECTIONS, "Collections (producers)");
     doc.addTag(TAG_COVERAGE, "Coverage data");
