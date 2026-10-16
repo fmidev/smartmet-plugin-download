@@ -962,6 +962,27 @@ NcDim NetCdfStreamer::getLevelDimAndIndex(
   }
 }
 
+namespace
+{
+// Use the same level dimension for the remaining parameters which have the same levels, and
+// clear their levels so that no new dimension is created for them
+template <typename ParamLevels, typename LevelDimensions>
+void shareLevelDimension(ParamLevels &paramLevels,
+                         typename ParamLevels::iterator itp,
+                         const std::string &varName,
+                         LevelDimensions &levelDimensions)
+{
+  for (auto itp2 = next(itp); (itp2 != paramLevels.end()); itp2++)
+  {
+    if (itp2->second == itp->second)
+    {
+      levelDimensions.insert(make_pair(itp2->first, varName));
+      itp2->second.clear();
+    }
+  }
+}
+}  // namespace
+
 // ----------------------------------------------------------------------
 /*!
  * \brief Add level dimensions
@@ -1036,14 +1057,7 @@ void NetCdfStreamer::addLevelDimensions()
         dimensionAttributes.insert(make_pair(varName, make_pair(levelDirectionPositive, unit)));
         itsLevelDimensions.insert(make_pair(itp->first, varName));
 
-        for (auto itp2 = next(itp); (itp2 != itlt->second.end()); itp2++)
-        {
-          if (itp2->second == itp->second)
-          {
-            itsLevelDimensions.insert(make_pair(itp2->first, varName));
-            itp2->second.clear();
-          }
-        }
+        shareLevelDimension(itlt->second, itp, varName, itsLevelDimensions);
       }
     }
 
