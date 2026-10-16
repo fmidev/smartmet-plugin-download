@@ -255,6 +255,52 @@ void checkGribParamIdentification(const GribParamId &gribParam,
 
 // ======================================================================
 /*!
+ * \brief Load grib1 or grib2 parameter identification
+ */
+// ======================================================================
+
+bool readGribParamIdentification(const std::string& name,
+                                 const Json::Value& json,
+                                 ParamChangeItem& p,
+                                 unsigned int arrayIndex,
+                                 std::string& pathName)
+{
+  const auto members = json.getMemberNames();
+
+  if (members.empty())
+    return true;
+
+  bool grib1 = (name == "grib1");
+  auto &gribParam = (grib1 ? p.itsGrib1Param : p.itsGrib2Param);
+  gribParam = GribParamIdentification();
+
+  for (const auto& nm : members)
+  {
+    if (
+        ((nm == "templatenumber") && p.itsTemplateNumber) ||
+        ((nm == "typeofstatisticalprocessing") && (!p.itsStepType.empty()))
+       )
+      throw Fmi::Exception(
+          BCP, nm + ": value is already set at array index " + Fmi::to_string(arrayIndex));
+
+    const Json::Value& js = json[nm];
+
+    pathName = name + "." + nm;
+
+    if (!setGribParamConfigField(grib1, gribParam, nm, asUInt(pathName, js, arrayIndex)))
+      return false;
+
+    if (nm == "templatenumber")
+      p.itsTemplateNumber = gribParam->itsTemplateNumber;
+  }
+
+  checkGribParamIdentification(gribParam, name, arrayIndex);
+
+  return true;
+}
+
+// ======================================================================
+/*!
  * \brief Load grib format specific configuration fields.
  */
 // ======================================================================
@@ -297,36 +343,7 @@ bool readGribParamConfigField(const std::string& name,
     }
     else if ((name == "grib1") || (name == "grib2"))
     {
-      const auto members = json.getMemberNames();
-
-      if (!members.empty())
-      {
-        bool grib1 = (name == "grib1");
-        auto &gribParam = (grib1 ? p.itsGrib1Param : p.itsGrib2Param);
-        gribParam = GribParamIdentification();
-
-        for (const auto& nm : members)
-        {
-          if (
-              ((nm == "templatenumber") && p.itsTemplateNumber) ||
-              ((nm == "typeofstatisticalprocessing") && (!p.itsStepType.empty()))
-             )
-            throw Fmi::Exception(
-                BCP, nm + ": value is already set at array index " + Fmi::to_string(arrayIndex));
-
-          const Json::Value& js = json[nm];
-
-          pathName = name + "." + nm;
-
-          if (!setGribParamConfigField(grib1, gribParam, nm, asUInt(pathName, js, arrayIndex)))
-            return false;
-
-          if (nm == "templatenumber")
-            p.itsTemplateNumber = gribParam->itsTemplateNumber;
-        }
-
-        checkGribParamIdentification(gribParam, name, arrayIndex);
-      }
+      return readGribParamIdentification(name, json, p, arrayIndex, pathName);
     }
     else
     {
@@ -382,6 +399,154 @@ bool readNetCdfParamConfigField(const std::string& name,
     throw Fmi::Exception::Trace(BCP, "Operation failed!");
   }
 }
+
+// ======================================================================
+/*!
+ * \brief Read and parse a JSON file
+ */
+// ======================================================================
+
+Json::Value readJsonFile(const std::filesystem::path& configFilePath)
+{
+  Json::CharReaderBuilder charReaderBuilder;
+  std::unique_ptr<Json::CharReader> reader(charReaderBuilder.newCharReader());
+  Json::Value theJson;
+
+  std::ifstream in(configFilePath.c_str());
+  if (!in)
+    throw Fmi::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
+
+  std::string content;
+  std::string errors;
+  content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+
+  if (!reader->parse(content.c_str(), content.c_str() + content.size(), &theJson, &errors))
+    throw Fmi::Exception(BCP, "Failed to parse '" + configFilePath.string() + "': " + errors);
+
+  return theJson;
+}
+
+// ======================================================================
+/*!
+ * \brief Check the type of a parameter configuration member value
+ */
+// ======================================================================
+
+void checkMemberValueType(const std::string& name,
+                          const Json::Value& json,
+                          bool grib,
+                          unsigned int i)
+{
+  if (grib && ((name == "grib1") || (name == "grib2")))
+  {
+    if (!json.isObject())
+      throw Fmi::Exception(
+          BCP, name + ": value is not an object at array index " + Fmi::to_string(i));
+  }
+  else if (json.isArray() || json.isObject())
+    throw Fmi::Exception(
+        BCP, name + ": value is neither a string nor a number at array index " +
+        Fmi::to_string(i));
+}
+
+// ======================================================================
+/*!
+ * \brief Load common configuration fields. Returns false for other fields.
+ */
+// ======================================================================
+
+bool readCommonParamConfigField(const std::string& name,
+                                const Json::Value& json,
+                                ParamChangeItem& p,
+                                unsigned int i,
+                                uint& paramId,
+                                std::string& paramName)
+{
+  if (name == "newbaseid")
+    paramId = asUInt(name, json, i);
+  else if (name == "name")
+    paramName = asString(name, json, i);
+  else if (name == "radonproducer")
+    p.itsRadonProducer =  boost::algorithm::to_upper_copy(asString(name, json, i));
+  else if (name == "radonname")
+    p.itsRadonName = boost::algorithm::to_upper_copy(asString(name, json, i));
+  else if (name == "offset")
+    p.itsConversionBase = asFloat(name, json, i);
+  else if (name == "divisor")
+    p.itsConversionScale = asFloat(name, json, i);
+  else if (name == "aggregatetype")
+    p.itsStepType = asString(name, json, i);
+  else if (name == "aggregatelength")
+    p.itsPeriodLengthMinutes = asUInt(name, json, i);
+  else
+    return false;
+  return true;
+}
+
+using ParamConfigFieldReader = bool (&)(const std::string&,
+                                        const Json::Value&,
+                                        ParamChangeItem&,
+                                        unsigned int,
+                                        std::string&);
+
+// ======================================================================
+/*!
+ * \brief Load one parameter configuration object
+ */
+// ======================================================================
+
+ParamChangeItem readParamChangeItem(const Json::Value& paramJson,
+                                    unsigned int i,
+                                    bool grib,
+                                    ParamConfigFieldReader fmtConfigFunc)
+{
+  ParamChangeItem p;
+  std::string paramName;
+  std::string radonName;
+  std::string pathName;
+  uint paramId = 0;
+
+  const auto members = paramJson.getMemberNames();
+  for (const auto& name : members)
+  {
+    const Json::Value& json = paramJson[name];
+
+    checkMemberValueType(name, json, grib, i);
+
+    // Ignore null values
+
+    if (json.isNull())
+      continue;
+    //
+    // Handle common settings
+    //
+    if (readCommonParamConfigField(name, json, p, i, paramId, paramName))
+      continue;
+    //
+    // Handle format specific settings
+    //
+    if (!fmtConfigFunc(name, json, p, i, pathName))
+      throw Fmi::Exception(BCP,
+                             std::string(grib ? "Grib" : "Netcdf") +
+                                 " parameter configuration does not have a setting named '" +
+                                 pathName + "'!");
+  }
+
+  // Set parameter id and name
+
+  if (paramName.empty())
+    paramName = p.itsRadonName;
+
+  p.itsWantedParam.SetIdent(paramId);
+  p.itsWantedParam.SetName(paramName);
+
+  // Create level object if level data was given
+
+  if (p.itsLevelValue || (!p.itsLevelType.empty()))
+    p.itsLevel = new NFmiLevel(0, p.itsLevelType, p.itsLevelValue ? *(p.itsLevelValue) : 0);
+
+  return p;
+}
 }  // namespace
 
 // ======================================================================
@@ -396,21 +561,8 @@ ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bo
   {
     // Read and parse the JSON formatted configuration
 
-    Json::CharReaderBuilder charReaderBuilder;
-    std::unique_ptr<Json::CharReader> reader(charReaderBuilder.newCharReader());
-    Json::Value theJson;
+    Json::Value theJson = readJsonFile(configFilePath);
     std::vector<ParamChangeItem> paramChangeTable;
-
-    std::ifstream in(configFilePath.c_str());
-    if (!in)
-      throw Fmi::Exception(BCP, "Failed to open '" + configFilePath.string() + "' for reading");
-
-    std::string content;
-    std::string errors;
-    content.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
-
-    if (!reader->parse(content.c_str(), content.c_str() + content.size(), &theJson, &errors))
-      throw Fmi::Exception(BCP, "Failed to parse '" + configFilePath.string() + "': " + errors);
 
     if (!theJson.isArray())
       throw Fmi::Exception(BCP, "Parameter configuration must contain an array of JSON objects");
@@ -425,73 +577,7 @@ ParamChangeTable readParamConfig(const std::filesystem::path& configFilePath, bo
       if (!paramJson.isObject())
         throw Fmi::Exception(BCP, "JSON object expected at array index " + Fmi::to_string(i));
 
-      ParamChangeItem p;
-      std::string paramName;
-      std::string radonName;
-      std::string pathName;
-      uint paramId = 0;
-
-      const auto members = paramJson.getMemberNames();
-      for (const auto& name : members)
-      {
-        const Json::Value& json = paramJson[name];
-
-        if (grib && ((name == "grib1") || (name == "grib2")))
-        {
-          if (!json.isObject())
-            throw Fmi::Exception(
-                BCP, name + ": value is not an object at array index " + Fmi::to_string(i));
-        }
-        else if (json.isArray() || json.isObject())
-          throw Fmi::Exception(
-              BCP, name + ": value is neither a string nor a number at array index " +
-              Fmi::to_string(i));
-
-        // Ignore null values
-
-        if (json.isNull())
-          continue;
-        //
-        // Handle common settings
-        //
-        if (name == "newbaseid")
-          paramId = asUInt(name, json, i);
-        else if (name == "name")
-          paramName = asString(name, json, i);
-        else if (name == "radonproducer")
-          p.itsRadonProducer =  boost::algorithm::to_upper_copy(asString(name, json, i));
-        else if (name == "radonname")
-          p.itsRadonName = boost::algorithm::to_upper_copy(asString(name, json, i));
-        else if (name == "offset")
-          p.itsConversionBase = asFloat(name, json, i);
-        else if (name == "divisor")
-          p.itsConversionScale = asFloat(name, json, i);
-        else if (name == "aggregatetype")
-          p.itsStepType = asString(name, json, i);
-        else if (name == "aggregatelength")
-          p.itsPeriodLengthMinutes = asUInt(name, json, i);
-        //
-        // Handle format specific settings
-        //
-        else if (!fmtConfigFunc(name, json, p, i, pathName))
-          throw Fmi::Exception(BCP,
-                                 std::string(grib ? "Grib" : "Netcdf") +
-                                     " parameter configuration does not have a setting named '" +
-                                     pathName + "'!");
-      }
-
-      // Set parameter id and name
-
-      if (paramName.empty())
-        paramName = p.itsRadonName;
-
-      p.itsWantedParam.SetIdent(paramId);
-      p.itsWantedParam.SetName(paramName);
-
-      // Create level object if level data was given
-
-      if (p.itsLevelValue || (!p.itsLevelType.empty()))
-        p.itsLevel = new NFmiLevel(0, p.itsLevelType, p.itsLevelValue ? *(p.itsLevelValue) : 0);
+      ParamChangeItem p = readParamChangeItem(paramJson, i, grib, fmtConfigFunc);
 
       paramChangeTable.push_back(p);
     }
