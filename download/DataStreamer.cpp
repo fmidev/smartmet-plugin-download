@@ -5282,6 +5282,93 @@ bool DataStreamer::setDataTimes(const QueryServer::Query& gridQuery)
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Get query result bounding box
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getGridQueryBBox(const QueryServer::Query& gridQuery)
+{
+  // Note: grid.crop.llbox is assumed to reflect source grid y -axis direction and
+  //       grib.llbox corners are assumed to have increasing latitude order regardless
+  //       of source grid y -axis direction
+
+  string bboxStr;
+
+  const char* attr = nullptr;
+
+  if (itsReqParams.projection.empty() && (itsCropping.crop || (!itsReqParams.gridSizeXY)) &&
+      (!itsReqParams.gridResolutionXY) &&
+      ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty())))
+  {
+    itsCropping.crop = true;
+    attr = "grid.crop.llbox";
+  }
+  else
+    attr = "grid.llbox";
+
+  auto* bboxAttr = gridQuery.mAttributeList.getAttribute(attr);
+
+  if (bboxAttr)
+    bboxStr = bboxAttr->mValue;
+  else if (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
+    bboxStr = getGridLLBBoxStr();
+
+  auto bbox = nPairsOfValues<double>(bboxStr, attr, 2);
+
+  if (!bbox)
+    throw Fmi::Exception(BCP, string(attr) + " is empty in query result");
+
+  // Take y -axis direction into account when setting bbox (reverse x -axis is not supported)
+
+  auto BL = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? BOTTOMLEFT : TOPRIGHT);
+  auto TR = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? TOPRIGHT : BOTTOMLEFT);
+  auto bb = BBoxCorners(NFmiPoint((*bbox)[BL].first, (*bbox)[BL].second),
+                        NFmiPoint((*bbox)[TR].first, (*bbox)[TR].second));
+
+  if (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon)
+    itsBoundingBox = bb;
+  else
+    itsGridMetaData.targetBBox = bb;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Get and check query result grid size
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::getGridQuerySize(const QueryServer::Query& gridQuery, std::size_t numValues)
+{
+  auto* widthAttr = gridQuery.mAttributeList.getAttribute("grid.width");
+  auto* heightAttr = gridQuery.mAttributeList.getAttribute("grid.height");
+
+  if ((!widthAttr) || (!heightAttr))
+    throw Fmi::Exception(BCP, "Grid width/height not set in query result");
+
+  auto gridSizeX = Fmi::stoul(widthAttr->mValue);
+  auto gridSizeY = Fmi::stoul(heightAttr->mValue);
+
+  if (numValues != (gridSizeX * gridSizeY))
+    throw Fmi::Exception(BCP,
+                         "Grid size " + Fmi::to_string(numValues) + " and width/height " +
+                             Fmi::to_string(gridSizeX) + "/" + Fmi::to_string(gridSizeY) +
+                             " mismatch");
+  if (itsReqParams.gridSizeXY &&
+      ((gridSizeX != itsReqGridSizeX) || (gridSizeY != itsReqGridSizeY)))
+    throw Fmi::Exception(BCP,
+                         "Invalid grid width/height " + Fmi::to_string(gridSizeX) + "/" +
+                             Fmi::to_string(gridSizeY) + ", expecting " +
+                             Fmi::to_string(itsReqGridSizeX) + "/" +
+                             Fmi::to_string(itsReqGridSizeY));
+
+  // Set/use constant grid size if size/resolution was not set
+
+  itsReqGridSizeX = gridSizeX;
+  itsReqGridSizeY = gridSizeY;
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Get query result grid infomation (projection, grid size etc).
  *        Return false on empty result (missing data assumed),
  *        throw on errors
@@ -5325,76 +5412,11 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
 
     getGridOrigo(gridQuery);
 
-    // Note: grid.crop.llbox is assumed to reflect source grid y -axis direction and
-    //       grib.llbox corners are assumed to have increasing latitude order regardless
-    //       of source grid y -axis direction
-
-    string bboxStr;
-
-    const char* attr = nullptr;
-
-    if (itsReqParams.projection.empty() && (itsCropping.crop || (!itsReqParams.gridSizeXY)) &&
-        (!itsReqParams.gridResolutionXY) &&
-        ((!itsReqParams.bbox.empty()) || (!itsReqParams.gridCenter.empty())))
-    {
-      itsCropping.crop = true;
-      attr = "grid.crop.llbox";
-    }
-    else
-      attr = "grid.llbox";
-
-    auto* bboxAttr = gridQuery.mAttributeList.getAttribute(attr);
-
-    if (bboxAttr)
-      bboxStr = bboxAttr->mValue;
-    else if (itsGridMetaData.projType == T::GridProjectionValue::LatLon)
-      bboxStr = getGridLLBBoxStr();
-
-    auto bbox = nPairsOfValues<double>(bboxStr, attr, 2);
-
-    if (!bbox)
-      throw Fmi::Exception(BCP, string(attr) + " is empty in query result");
-
-    // Take y -axis direction into account when setting bbox (reverse x -axis is not supported)
-
-    auto BL = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? BOTTOMLEFT : TOPRIGHT);
-    auto TR = (((itsGridOrigo != kTopLeft) || itsCropping.crop) ? TOPRIGHT : BOTTOMLEFT);
-    auto bb = BBoxCorners(NFmiPoint((*bbox)[BL].first, (*bbox)[BL].second),
-                          NFmiPoint((*bbox)[TR].first, (*bbox)[TR].second));
-
-    if (itsGridMetaData.projType != T::GridProjectionValue::RotatedLatLon)
-      itsBoundingBox = bb;
-    else
-      itsGridMetaData.targetBBox = bb;
+    getGridQueryBBox(gridQuery);
 
     // Grid size
 
-    auto* widthAttr = gridQuery.mAttributeList.getAttribute("grid.width");
-    auto* heightAttr = gridQuery.mAttributeList.getAttribute("grid.height");
-
-    if ((!widthAttr) || (!heightAttr))
-      throw Fmi::Exception(BCP, "Grid width/height not set in query result");
-
-    auto gridSizeX = Fmi::stoul(widthAttr->mValue);
-    auto gridSizeY = Fmi::stoul(heightAttr->mValue);
-
-    if (vVec->size() != (gridSizeX * gridSizeY))
-      throw Fmi::Exception(BCP,
-                           "Grid size " + Fmi::to_string(vVec->size()) + " and width/height " +
-                               Fmi::to_string(gridSizeX) + "/" + Fmi::to_string(gridSizeY) +
-                               " mismatch");
-    if (itsReqParams.gridSizeXY &&
-        ((gridSizeX != itsReqGridSizeX) || (gridSizeY != itsReqGridSizeY)))
-      throw Fmi::Exception(BCP,
-                           "Invalid grid width/height " + Fmi::to_string(gridSizeX) + "/" +
-                               Fmi::to_string(gridSizeY) + ", expecting " +
-                               Fmi::to_string(itsReqGridSizeX) + "/" +
-                               Fmi::to_string(itsReqGridSizeY));
-
-    // Set/use constant grid size if size/resolution was not set
-
-    itsReqGridSizeX = gridSizeX;
-    itsReqGridSizeY = gridSizeY;
+    getGridQuerySize(gridQuery, vVec->size());
 
     setGridSize(itsReqGridSizeX, itsReqGridSizeY);
 

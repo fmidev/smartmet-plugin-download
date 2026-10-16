@@ -379,6 +379,8 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void getGridOrigo(const QueryServer::Query &gridQuery);
   bool setDataTimes(const QueryServer::Query &gridQuery);
   bool getGridQueryInfo(const QueryServer::Query &gridQuery);
+  void getGridQueryBBox(const QueryServer::Query &gridQuery);
+  void getGridQuerySize(const QueryServer::Query &gridQuery, std::size_t numValues);
   std::size_t bufferIndex() const;
   void extractGridData(std::string &chunk);
 
