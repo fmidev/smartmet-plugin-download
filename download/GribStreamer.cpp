@@ -1083,6 +1083,139 @@ string GribStreamer::gribLevelTypeAndLevel(bool gridContent, FmiLevelType levelT
   return gribOtherLevelType(gridContent, levelType, level);
 }
 
+namespace
+{
+// Find the parameter configuration index for querydata parameter. Preferring entry with level
+// for surface data and without level for pressure and hybrid data. If preferred entry does not
+// exist, taking the first entry for the parameter. Returns the table size if there is no entry.
+std::size_t findParamConfig(const ParamChangeTable &pTable,
+                            signed long usedParId,
+                            FmiLevelType levelType)
+{
+  std::size_t j = pTable.size();
+
+  for (std::size_t i = 0; i < pTable.size(); ++i)
+  {
+    if (usedParId != pTable[i].itsWantedParam.GetIdent())
+      continue;
+
+    const NFmiLevel *cfgLevel = pTable[i].itsLevel;
+
+    if ((isSurfaceLevel(levelType) && cfgLevel) || (!(isSurfaceLevel(levelType) || cfgLevel)))
+      return i;
+
+    if (j == pTable.size())
+      j = i;
+  }
+
+  return j;
+}
+
+// Find the parameter configuration index for radon parameter. Preferring entry for the
+// producer, otherwise taking the first entry without producer. Returns the table size if there
+// is no entry.
+std::size_t findRadonParamConfig(const ParamChangeTable &pTable,
+                                 bool grib1,
+                                 const std::string &radonParam,
+                                 const std::string &radonProducer)
+{
+  std::size_t j = pTable.size();
+
+  for (std::size_t i = 0; i < pTable.size(); ++i)
+  {
+    if (pTable[i].itsRadonName != radonParam)
+      continue;
+
+    if (!((grib1 && pTable[i].itsGrib1Param) || ((!grib1) && pTable[i].itsGrib2Param)))
+      continue;
+
+    if (pTable[i].itsRadonProducer == radonProducer)
+      return i;
+
+    if ((j == pTable.size()) && pTable[i].itsRadonProducer.empty())
+      j = i;
+  }
+
+  return j;
+}
+
+// Set grib2 product definition template number and ensemble perturbation number.
+//
+// Since productDefinitionTemplateNumber is currently not available in radon (to dump
+// into plugin's grib parameter configuration), if template number is not set in configuration,
+// using templateNumber 0 (NormalProduct) for deterministic forecast data and 1
+// (EnsembleForecast) for ensemble forecasts when storing data fetched with radon names. The
+// logic does not work for all parameters though; the correct template number must be set to
+// configuration when needed.
+void setGrib2TemplateNumber(grib_handle *gribHandle,
+                            bool gridContent,
+                            T::ForecastType forecastType,
+                            T::ForecastNumber forecastNumber,
+                            std::optional<long> templateNumber)
+{
+  bool ensemble = isEnsembleForecast(forecastType);
+
+  if (gridContent && (!templateNumber))
+    templateNumber = (ensemble ? 1 : 0);
+
+  if (templateNumber && (gridContent || (*templateNumber != 0)))
+    gset(gribHandle, "productDefinitionTemplateNumber", *templateNumber);
+
+  if (ensemble)
+    gset(gribHandle, "perturbationNumber", forecastNumber);
+}
+
+// Set the parameter identification into grib buffer
+void setGribParameter(grib_handle *gribHandle,
+                      bool grib1,
+                      const ParamChangeItem *config,
+                      signed long usedParId)
+{
+  const GribParamId *gribParam = nullptr;
+  if (config)
+    gribParam = (grib1 ? &config->itsGrib1Param : &config->itsGrib2Param);
+
+  if (!gribParam || !(*gribParam))
+  {
+    gset(gribHandle, "paramId", usedParId);
+    return;
+  }
+
+  if (grib1)
+  {
+    if ((*gribParam)->itsTable2Version)
+      gset(gribHandle, "table2Version", *((*gribParam)->itsTable2Version));
+
+    gset(gribHandle, "indicatorOfParameter", *((*gribParam)->itsParamNumber));
+  }
+  else
+  {
+    gset(gribHandle, "discipline", *((*gribParam)->itsDiscipline));
+    gset(gribHandle, "parameterCategory", *((*gribParam)->itsCategory));
+    gset(gribHandle, "parameterNumber", *((*gribParam)->itsParamNumber));
+  }
+}
+}  // namespace
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Store the parameter configuration index of radon parameter and producer
+ */
+// ----------------------------------------------------------------------
+
+void GribStreamer::cacheParamConfigIndex(const string &radonParam,
+                                         const string &radonProducer,
+                                         std::size_t paramIdx)
+{
+  auto paramIndexIter = paramConfigIndexes.find(radonParam);
+
+  if (paramIndexIter == paramConfigIndexes.end())
+    paramIndexIter =
+        paramConfigIndexes.insert(make_pair(radonParam, ParamConfigProducerIndexes())).first;
+
+  paramIndexIter->second.insert(make_pair(radonProducer, paramIdx));
+}
+
 void GribStreamer::setLevelAndParameterToGrib(int level,
                                               const NFmiParam &theParam,
                                               const string &paramName,
@@ -1102,15 +1235,12 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     string radonParam;
     signed long usedParId = theParam.GetIdent();
     NFmiLevel *cfgLevel = nullptr;
-    FmiLevelType levelType;
+    FmiLevelType levelType = itsLevelType;
     T::ForecastType forecastType = 0;
     T::ForecastNumber forecastNumber = 0;
     std::optional<long> templateNumber;
     bool gridContent = (itsReqParams.dataSource == GridContent);
     bool foundParam = false;
-    std::size_t i = 0;
-    std::size_t j = pTable.size();
-    auto paramIndexIter = paramConfigIndexes.end();
 
     paramIdx = pTable.size();
 
@@ -1132,7 +1262,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
       //
       // TODO: Use parameter config index map for querydata and gridmapping queries too ?
 
-      paramIndexIter = paramConfigIndexes.find(radonParam);
+      auto paramIndexIter = paramConfigIndexes.find(radonParam);
 
       if (paramIndexIter != paramConfigIndexes.end())
       {
@@ -1150,56 +1280,16 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
 
       itsPreviousParam = paramName;
     }
-    else
-      levelType = itsLevelType;
+
+    std::size_t i = paramIdx;
 
     if (!foundParam)
     {
-      for (i = 0; i < pTable.size(); ++i)
-        if (! gridContent)
-        {
-          if (usedParId == pTable[i].itsWantedParam.GetIdent())
-          {
-            // Preferring entry with level for surface data and without level for pressure and
-            // hybrid data.
-            // If preferred entry does not exist, taking the parameter id from the first entry
-            // for the parameter.
-            //
-            cfgLevel = pTable[i].itsLevel;
+      i = (gridContent ? findRadonParamConfig(pTable, itsGrib1Flag, radonParam, radonProducer)
+                       : findParamConfig(pTable, usedParId, levelType));
 
-            if ((isSurfaceLevel(levelType) && cfgLevel) || (!(isSurfaceLevel(levelType) || cfgLevel)))
-              break;
-
-            if (j == pTable.size())
-              j = i;
-          }
-        }
-        else if (pTable[i].itsRadonName == radonParam)
-        {
-          if (!
-              (
-               (itsGrib1Flag && pTable[i].itsGrib1Param) ||
-               ((!itsGrib1Flag) && pTable[i].itsGrib2Param)
-              )
-             )
-            continue;
-
-          if (pTable[i].itsRadonProducer == radonProducer)
-            break;
-
-          if ((j == pTable.size()) && pTable[i].itsRadonProducer.empty())
-            j = i;
-        }
-    }
-    else
-      i = paramIdx;
-
-    if (i >= pTable.size())
-    {
-      if (gridContent && (j >= pTable.size()))
+      if (gridContent && (i >= pTable.size()))
         throw Fmi::Exception(BCP, "No grib configuration for parameter " + radonParam);
-
-      i = j;
     }
 
     paramIdx = i;
@@ -1209,13 +1299,7 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
       if (! gridContent)
         cfgLevel = pTable[i].itsLevel;
       else if (!foundParam)
-      {
-        if (paramIndexIter == paramConfigIndexes.end())
-          paramIndexIter = paramConfigIndexes.insert(
-              make_pair(radonParam, ParamConfigProducerIndexes())).first;
-
-        paramIndexIter->second.insert(make_pair(radonProducer, paramIdx));
-      }
+        cacheParamConfigIndex(radonParam, radonProducer, paramIdx);
 
       usedParId = pTable[i].itsOriginalParamId;
       centre = pTable[i].itsCentre;
@@ -1230,50 +1314,15 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     // Cannot set template number 0 unless stepType has been set
     //
     // Note: Comment above is weird because templateNumber is tested to be nonzero ?
-    //
-    // Since productDefinitionTemplateNumber is currently not available in radon (to dump
-    // into plugin's grib parameter configuration), if template number is not set in configuration,
-    // using templateNumber 0 (NormalProduct) for deterministic forecast data and 1
-    // (EnsembleForecast) for ensemble forecasts when storing data fetched with radon names. The
-    // logic does not work for all parameters though; the correct template number must be set to
-    // configuration when needed.
 
     gset(itsGribHandle, "stepType", "instant");
 
     if (!itsGrib1Flag)
-    {
-      bool ensemble = isEnsembleForecast(forecastType);
+      setGrib2TemplateNumber(
+          itsGribHandle, gridContent, forecastType, forecastNumber, templateNumber);
 
-      if (gridContent && (!templateNumber))
-        templateNumber = (ensemble ? 1 : 0);
-
-      if (templateNumber && (gridContent || (*templateNumber != 0)))
-        gset(itsGribHandle, "productDefinitionTemplateNumber", *templateNumber);
-
-      if (ensemble)
-        gset(itsGribHandle, "perturbationNumber", forecastNumber);
-    }
-
-    auto const &gribParam = (itsGrib1Flag ? pTable[i].itsGrib1Param : pTable[i].itsGrib2Param);
-
-    if (gribParam)
-    {
-      if (itsGrib1Flag)
-      {
-        if (gribParam->itsTable2Version)
-          gset(itsGribHandle, "table2Version", *(gribParam->itsTable2Version));
-
-        gset(itsGribHandle, "indicatorOfParameter", *(gribParam->itsParamNumber));
-      }
-      else
-      {
-        gset(itsGribHandle, "discipline", *(gribParam->itsDiscipline));
-        gset(itsGribHandle, "parameterCategory", *(gribParam->itsCategory));
-        gset(itsGribHandle, "parameterNumber", *(gribParam->itsParamNumber));
-      }
-    }
-    else
-      gset(itsGribHandle, "paramId", usedParId);
+    setGribParameter(
+        itsGribHandle, itsGrib1Flag, ((i < pTable.size()) ? &pTable[i] : nullptr), usedParId);
 
     gset(itsGribHandle, "typeOfLevel", levelTypeStr);
     gset(itsGribHandle, "level", boost::numeric_cast<long>(abs(level)));

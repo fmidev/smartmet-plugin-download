@@ -75,6 +75,9 @@ class GribStreamer : public DataStreamer
                                   const std::string& paramName,
                                   const ParamChangeTable& pTable,
                                   std::size_t& paramIdx);
+  void cacheParamConfigIndex(const std::string& radonParam,
+                             const std::string& radonProducer,
+                             std::size_t paramIdx);
   void setStepToGrib(const ParamChangeTable& pTable,
                      std::size_t paramIdx,
                      bool setOriginTime,
