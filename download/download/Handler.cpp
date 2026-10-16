@@ -224,6 +224,294 @@ unsigned long getRequestUInt(const Spine::HTTP::Request &req,
   }
 }
 
+// Parse the data source and check grid data is available if needed
+void parseDataSource(const Spine::HTTP::Request &req,
+                     const Producer &dummyProducer,
+                     ReqParams &reqParams,
+                     const Engine::Grid::Engine *gridEngine)
+{
+  reqParams.source = getRequestParam(req, dummyProducer, "source", "querydata");
+
+  if (reqParams.source == "querydata")
+    reqParams.dataSource = QueryData;
+  else if (reqParams.source == "gridmapping")
+    reqParams.dataSource = GridMapping;
+  else if ((reqParams.source == "grid") || (reqParams.source == "gridcontent"))
+  {
+    reqParams.source = "gridcontent";
+    reqParams.dataSource = GridContent;
+  }
+  else
+    throw Fmi::Exception(BCP,
+                         "Unknown source '" + reqParams.source +
+                             "', 'querydata', 'gridmapping' or 'gridcontent' expected");
+
+  if (reqParams.dataSource != QueryData)
+  {
+    if (!gridEngine)
+      throw Fmi::Exception(BCP, "Grid data is not available");
+    if (!(gridEngine->isEnabled()))
+      throw Fmi::Exception(BCP, "Grid data is disabled");
+  }
+}
+
+// Parse the producer. Producer is speficied using 'model' or 'producer' keyword.
+void parseProducer(const Spine::HTTP::Request &req,
+                   ReqParams &reqParams,
+                   const Config &config)
+{
+  string model = getRequestParam(req, config.defaultProducer(), "model", "");
+  reqParams.producer = getRequestParam(req, config.defaultProducer(), "producer", "");
+
+  auto gId = getRequestInt(req, config.defaultProducer(), "geometryid", -1);
+  (void) gId;
+  reqParams.geometryId = getRequestParam(req, config.defaultProducer(), "geometryid", "");
+
+  if (reqParams.dataSource == GridContent)
+  {
+    // Common producer name is not used by data query, just setting some nonempty value.
+    // Name is later taken from 1'st radon parameter name to be used in output file name
+
+    if ((!model.empty()) || (!reqParams.producer.empty()))
+      throw Fmi::Exception(BCP, "Cannot specify producer option with grid content data");
+
+    reqParams.producer = "gridcontent";
+  }
+  else if (!reqParams.geometryId.empty())
+    throw Fmi::Exception(BCP, "Cannot specify geometryid option with non grid content data");
+  else if (!reqParams.producer.empty())
+  {
+    if ((!model.empty()) && (model != reqParams.producer))
+      throw Fmi::Exception(BCP, "Cannot specify model and producer simultaneously");
+  }
+  else
+    reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
+}
+
+// Parse time related parameters. Detect special value 'data'.
+void parseTimeParams(const Spine::HTTP::Request &req,
+                     const Producer &producer,
+                     ReqParams &reqParams)
+{
+  reqParams.startTime = getRequestParam(req, producer, "starttime", "");
+  reqParams.endTime = getRequestParam(req, producer, "endtime", "");
+  reqParams.originTime = getRequestParam(req, producer, "origintime", "");
+  reqParams.timeSteps = getRequestUInt(req, producer, "timesteps", 0);
+  reqParams.maxTimeSteps = getRequestUInt(req, producer, "maxtimesteps", 0);
+
+  string timeStepStr = getRequestParam(req, producer, "timestep", "");
+  reqParams.timeStep =
+      ((timeStepStr != "data") ? getRequestUInt(req, producer, "timestep", 0) : 0);
+
+  if (reqParams.startTime == "data")
+    reqParams.startTime.clear();
+  if (reqParams.endTime == "data")
+    reqParams.endTime.clear();
+  if (reqParams.originTime == "data")
+    reqParams.originTime.clear();
+}
+
+// Parse projection, bounding and grid size/step
+void parseProjectionAndGrid(const Spine::HTTP::Request &req,
+                            const Producer &producer,
+                            ReqParams &reqParams,
+                            const Config &config)
+{
+  reqParams.projection = getRequestParam(req, producer, "projection", "");
+  if ((! reqParams.projection.empty()) && (! reqParams.geometryId.empty()))
+    throw Fmi::Exception(BCP, "Cannot specify projection and geometryid simultaneously");
+
+  if (reqParams.dataSource == QueryData)
+    reqParams.projType = getProjectionType(reqParams, config.getLegacyMode());
+
+  if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::DatumShift::None))
+    // gdal/proj4 needed for projection
+    //
+    reqParams.datumShift = Datum::DatumShift::Fmi;
+
+  reqParams.bbox = reqParams.origBBox = getRequestParam(req, producer, "bbox", "");
+  reqParams.gridCenter = getRequestParam(req, producer, "gridcenter", "");
+  reqParams.gridSize = getRequestParam(req, producer, "gridsize", "");
+  reqParams.gridResolution = getRequestParam(req, producer, "gridresolution", "");
+  reqParams.gridStep = getRequestParam(req, producer, "gridstep", "");
+
+  if (
+      (! reqParams.geometryId.empty()) &&
+      (!
+       (
+        reqParams.bbox.empty() &&
+        reqParams.gridCenter.empty() &&
+        reqParams.gridSize.empty() &&
+        reqParams.gridResolution.empty()
+       )
+      )
+     )
+    throw Fmi::Exception(BCP, "Cannot specify grid bounding or resolution with geometryid");
+
+  if (!reqParams.bbox.empty())
+    // Bottom left lon,lat and top right lon,lat; bllon,bllat,trlon,trlat
+    //
+    reqParams.bboxRect = nPairsOfValues<double>(reqParams.bbox, "bbox", 2);
+
+  if (!reqParams.gridCenter.empty())
+  {
+    // Grid center lon,lat and width and height in km; lon,lat,width,height
+    //
+    if (reqParams.bboxRect)
+      throw Fmi::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
+
+    reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
+  }
+
+  if (!reqParams.gridSize.empty())
+    // Absolute grid size; nx,ny
+    //
+    reqParams.gridSizeXY = nPairsOfValues<unsigned int>(reqParams.gridSize, "gridsize", 1);
+
+  if (!reqParams.gridResolution.empty())
+  {
+    // Grid cell size; width,height in km
+    //
+    if (reqParams.gridSizeXY)
+      throw Fmi::Exception(BCP, "Cannot specify gridsize and gridresolution simultaneously");
+
+    reqParams.gridResolutionXY =
+        nPairsOfValues<double>(reqParams.gridResolution, "gridresolution", 1);
+  }
+
+  if (!reqParams.gridStep.empty())
+    // Grid step to extract every dx'th/dy'th value; dx,dy
+    //
+    reqParams.gridStepXY = nPairsOfValues<unsigned int>(reqParams.gridStep, "gridstep", 1);
+}
+
+// Parse output format
+void parseOutputFormat(const Spine::HTTP::Request &req,
+                       const Producer &producer,
+                       ReqParams &reqParams)
+{
+  reqParams.format = getRequestParam(req, producer, "format", "");
+  Fmi::ascii_toupper(reqParams.format);
+
+  if (reqParams.format == "GRIB1")
+    reqParams.outputFormat = Grib1;
+  else if (reqParams.format == "GRIB2")
+    reqParams.outputFormat = Grib2;
+  else if (reqParams.format == "NETCDF")
+    reqParams.outputFormat = NetCdf;
+  else if ((reqParams.format == "GEOTIFF") || (reqParams.format == "GTIFF") ||
+           (reqParams.format == "TIFF"))
+    reqParams.outputFormat = GeoTiff;
+  else if (reqParams.format == "QD")
+  {
+    if (reqParams.dataSource != QueryData)
+      throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
+
+    reqParams.outputFormat = QD;
+  }
+  else if (reqParams.format.empty())
+    throw Fmi::Exception(BCP, "No format selected");
+  else
+    throw Fmi::Exception(BCP, "Invalid format selected");
+
+  if ((reqParams.outputFormat == QD) && (!reqParams.gridStep.empty()))
+    throw Fmi::Exception(BCP, "Cannot specify gridstep when using qd format");
+}
+
+// Parse packing type and bitspervalue for grib. Packing type is set to grib as given
+// (converted to lowercase only)
+void parsePacking(const Spine::HTTP::Request &req,
+                  const Producer &producer,
+                  ReqParams &reqParams,
+                  const Config &config)
+{
+  reqParams.packing = getRequestParam(req, producer, "packing", "");
+  Fmi::ascii_tolower(reqParams.packing);
+
+  // Packing bitspervalue for grib
+
+  auto bitsPerValue = getRequestParam(req, producer, "bitspervalue", "");
+
+  if (reqParams.packing.empty() != bitsPerValue.empty())
+    throw Fmi::Exception(BCP, "Both packing and bitspervalue must be given");
+
+  if (!reqParams.packing.empty())
+  {
+    if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
+      throw Fmi::Exception(BCP, "Packing can be specified with grib format only")
+          .addParameter("packing", reqParams.packing);
+
+    auto msg = config.packingErrorMessage(reqParams.packing);
+    if (!msg.empty())
+      throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
+  }
+
+  try
+  {
+    if (!bitsPerValue.empty())
+    {
+      auto bpv = Fmi::stoi(bitsPerValue);
+
+      if ((bpv < 0) || (bpv > 32))
+        throw Fmi::Exception(BCP, "");
+
+      reqParams.bitsPerValue = bpv;
+    }
+  }
+  catch (...)
+  {
+    throw Fmi::Exception(BCP, "Invalid packing bitspervalue, must be in range 0-32");
+  }
+}
+
+// Check grib2 tables version against valid range
+void checkGrib2TablesVersion(const ReqParams &reqParams,
+                             const Config &config)
+{
+  if (reqParams.grib2TablesVersion > 0)
+  {
+    // Check against valid range. The default range is [0-0] letting all values thru
+    //
+    auto range = config.getGrib2TablesVersionRange();
+    auto grib2TablesVersionMin = range.first;
+    auto grib2TablesVersionMax = range.second;
+
+    if ((grib2TablesVersionMax > 0) && ((reqParams.grib2TablesVersion < grib2TablesVersionMin) ||
+                                        (reqParams.grib2TablesVersion > grib2TablesVersionMax)))
+      throw Fmi::Exception(BCP,
+                           "'tablesversion' must be between " +
+                               Fmi::to_string(grib2TablesVersionMin) + " and " +
+                               Fmi::to_string(grib2TablesVersionMax));
+  }
+}
+
+// Parse block sizes and chunk size
+void parseBlockSizes(const Spine::HTTP::Request &req,
+                     const Producer &producer,
+                     ReqParams &reqParams)
+{
+  reqParams.gridParamBlockSize = getRequestUInt(req, producer, "gridparamblocksize", 0);
+  reqParams.gridTimeBlockSize = getRequestUInt(req, producer, "gridtimeblocksize", 0);
+  reqParams.chunkSize = getRequestUInt(req, producer, "chunksize", 0);
+
+  if ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 0))
+  {
+    if (reqParams.dataSource != GridContent)
+      throw Fmi::Exception(
+          BCP, "Cannot specify gridparamblocksize or gridtimeblocksize unless source=grid");
+
+    if ((reqParams.gridParamBlockSize > 0) && (reqParams.gridTimeBlockSize > 0))
+      throw Fmi::Exception(
+          BCP, "Cannot specify gridparamblocksize and gridtimeblocksize simultaneously");
+
+    if ((reqParams.outputFormat == NetCdf) &&
+        ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 1)))
+      throw Fmi::Exception(
+          BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
+  }
+}
+
+
 const Producer &getRequestParams(const Spine::HTTP::Request &req,
                                         ReqParams &reqParams,
                                         Config &config,
@@ -235,58 +523,11 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
     // Data source
 
     static Producer dummyProducer;
-    reqParams.source = getRequestParam(req, dummyProducer, "source", "querydata");
-
-    if (reqParams.source == "querydata")
-      reqParams.dataSource = QueryData;
-    else if (reqParams.source == "gridmapping")
-      reqParams.dataSource = GridMapping;
-    else if ((reqParams.source == "grid") || (reqParams.source == "gridcontent"))
-    {
-      reqParams.source = "gridcontent";
-      reqParams.dataSource = GridContent;
-    }
-    else
-      throw Fmi::Exception(BCP,
-                           "Unknown source '" + reqParams.source +
-                               "', 'querydata', 'gridmapping' or 'gridcontent' expected");
-
-    if (reqParams.dataSource != QueryData)
-    {
-      if (!gridEngine)
-        throw Fmi::Exception(BCP, "Grid data is not available");
-      if (!(gridEngine->isEnabled()))
-        throw Fmi::Exception(BCP, "Grid data is disabled");
-    }
+    parseDataSource(req, dummyProducer, reqParams, gridEngine);
 
     // Producer is speficied using 'model' or 'producer' keyword.
 
-    string model = getRequestParam(req, config.defaultProducer(), "model", "");
-    reqParams.producer = getRequestParam(req, config.defaultProducer(), "producer", "");
-
-    auto gId = getRequestInt(req, config.defaultProducer(), "geometryid", -1);
-    (void) gId;
-    reqParams.geometryId = getRequestParam(req, config.defaultProducer(), "geometryid", "");
-
-    if (reqParams.dataSource == GridContent)
-    {
-      // Common producer name is not used by data query, just setting some nonempty value.
-      // Name is later taken from 1'st radon parameter name to be used in output file name
-
-      if ((!model.empty()) || (!reqParams.producer.empty()))
-        throw Fmi::Exception(BCP, "Cannot specify producer option with grid content data");
-
-      reqParams.producer = "gridcontent";
-    }
-    else if (!reqParams.geometryId.empty())
-      throw Fmi::Exception(BCP, "Cannot specify geometryid option with non grid content data");
-    else if (!reqParams.producer.empty())
-    {
-      if ((!model.empty()) && (model != reqParams.producer))
-        throw Fmi::Exception(BCP, "Cannot specify model and producer simultaneously");
-    }
-    else
-      reqParams.producer = (model.empty() ? config.defaultProducerName() : model);
+    parseProducer(req, reqParams, config);
 
     const Producer &producer = (reqParams.dataSource == QueryData)
                                    ? config.getProducer(reqParams.producer, qEngine)
@@ -301,22 +542,7 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
     // Time related parameters. Detect special value 'data'.
 
-    reqParams.startTime = getRequestParam(req, producer, "starttime", "");
-    reqParams.endTime = getRequestParam(req, producer, "endtime", "");
-    reqParams.originTime = getRequestParam(req, producer, "origintime", "");
-    reqParams.timeSteps = getRequestUInt(req, producer, "timesteps", 0);
-    reqParams.maxTimeSteps = getRequestUInt(req, producer, "maxtimesteps", 0);
-
-    string timeStepStr = getRequestParam(req, producer, "timestep", "");
-    reqParams.timeStep =
-        ((timeStepStr != "data") ? getRequestUInt(req, producer, "timestep", 0) : 0);
-
-    if (reqParams.startTime == "data")
-      reqParams.startTime.clear();
-    if (reqParams.endTime == "data")
-      reqParams.endTime.clear();
-    if (reqParams.originTime == "data")
-      reqParams.originTime.clear();
+    parseTimeParams(req, producer, reqParams);
 
     // Level (pressure/hPa or hybrid or height level) and height (meters) ranges/limits
     //
@@ -336,141 +562,15 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
 
     // Projection, bounding and grid size/step
 
-    reqParams.projection = getRequestParam(req, producer, "projection", "");
-    if ((! reqParams.projection.empty()) && (! reqParams.geometryId.empty()))
-      throw Fmi::Exception(BCP, "Cannot specify projection and geometryid simultaneously");
-
-    if (reqParams.dataSource == QueryData)
-      reqParams.projType = getProjectionType(reqParams, config.getLegacyMode());
-
-    if ((reqParams.projType == P_Epsg) && (reqParams.datumShift == Datum::DatumShift::None))
-      // gdal/proj4 needed for projection
-      //
-      reqParams.datumShift = Datum::DatumShift::Fmi;
-
-    reqParams.bbox = reqParams.origBBox = getRequestParam(req, producer, "bbox", "");
-    reqParams.gridCenter = getRequestParam(req, producer, "gridcenter", "");
-    reqParams.gridSize = getRequestParam(req, producer, "gridsize", "");
-    reqParams.gridResolution = getRequestParam(req, producer, "gridresolution", "");
-    reqParams.gridStep = getRequestParam(req, producer, "gridstep", "");
-
-    if (
-        (! reqParams.geometryId.empty()) &&
-        (!
-         (
-          reqParams.bbox.empty() &&
-          reqParams.gridCenter.empty() &&
-          reqParams.gridSize.empty() &&
-          reqParams.gridResolution.empty()
-         )
-        )
-       )
-      throw Fmi::Exception(BCP, "Cannot specify grid bounding or resolution with geometryid");
-
-    if (!reqParams.bbox.empty())
-      // Bottom left lon,lat and top right lon,lat; bllon,bllat,trlon,trlat
-      //
-      reqParams.bboxRect = nPairsOfValues<double>(reqParams.bbox, "bbox", 2);
-
-    if (!reqParams.gridCenter.empty())
-    {
-      // Grid center lon,lat and width and height in km; lon,lat,width,height
-      //
-      if (reqParams.bboxRect)
-        throw Fmi::Exception(BCP, "Cannot specify gridcenter and bbox simultaneously");
-
-      reqParams.gridCenterLL = nPairsOfValues<double>(reqParams.gridCenter, "gridcenter", 2);
-    }
-
-    if (!reqParams.gridSize.empty())
-      // Absolute grid size; nx,ny
-      //
-      reqParams.gridSizeXY = nPairsOfValues<unsigned int>(reqParams.gridSize, "gridsize", 1);
-
-    if (!reqParams.gridResolution.empty())
-    {
-      // Grid cell size; width,height in km
-      //
-      if (reqParams.gridSizeXY)
-        throw Fmi::Exception(BCP, "Cannot specify gridsize and gridresolution simultaneously");
-
-      reqParams.gridResolutionXY =
-          nPairsOfValues<double>(reqParams.gridResolution, "gridresolution", 1);
-    }
-
-    if (!reqParams.gridStep.empty())
-      // Grid step to extract every dx'th/dy'th value; dx,dy
-      //
-      reqParams.gridStepXY = nPairsOfValues<unsigned int>(reqParams.gridStep, "gridstep", 1);
+    parseProjectionAndGrid(req, producer, reqParams, config);
 
     // Output format
 
-    reqParams.format = getRequestParam(req, producer, "format", "");
-    Fmi::ascii_toupper(reqParams.format);
-
-    if (reqParams.format == "GRIB1")
-      reqParams.outputFormat = Grib1;
-    else if (reqParams.format == "GRIB2")
-      reqParams.outputFormat = Grib2;
-    else if (reqParams.format == "NETCDF")
-      reqParams.outputFormat = NetCdf;
-    else if ((reqParams.format == "GEOTIFF") || (reqParams.format == "GTIFF") ||
-             (reqParams.format == "TIFF"))
-      reqParams.outputFormat = GeoTiff;
-    else if (reqParams.format == "QD")
-    {
-      if (reqParams.dataSource != QueryData)
-        throw Fmi::Exception(BCP, "Querydata format not supported with grid data");
-
-      reqParams.outputFormat = QD;
-    }
-    else if (reqParams.format.empty())
-      throw Fmi::Exception(BCP, "No format selected");
-    else
-      throw Fmi::Exception(BCP, "Invalid format selected");
-
-    if ((reqParams.outputFormat == QD) && (!reqParams.gridStep.empty()))
-      throw Fmi::Exception(BCP, "Cannot specify gridstep when using qd format");
+    parseOutputFormat(req, producer, reqParams);
 
     // Packing type for grib. Set to grib as given (converted to lowercase only)
 
-    reqParams.packing = getRequestParam(req, producer, "packing", "");
-    Fmi::ascii_tolower(reqParams.packing);
-
-    // Packing bitspervalue for grib
-
-    auto bitsPerValue = getRequestParam(req, producer, "bitspervalue", "");
-
-    if (reqParams.packing.empty() != bitsPerValue.empty())
-      throw Fmi::Exception(BCP, "Both packing and bitspervalue must be given");
-
-    if (!reqParams.packing.empty())
-    {
-      if ((reqParams.outputFormat != Grib1) && (reqParams.outputFormat != Grib2))
-        throw Fmi::Exception(BCP, "Packing can be specified with grib format only")
-            .addParameter("packing", reqParams.packing);
-
-      auto msg = config.packingErrorMessage(reqParams.packing);
-      if (!msg.empty())
-        throw Fmi::Exception(BCP, msg).addParameter("packing", reqParams.packing);
-    }
-
-    try
-    {
-      if (!bitsPerValue.empty())
-      {
-        auto bpv = Fmi::stoi(bitsPerValue);
-
-        if ((bpv < 0) || (bpv > 32))
-          throw Fmi::Exception(BCP, "");
-
-        reqParams.bitsPerValue = bpv;
-      }
-    }
-    catch (...)
-    {
-      throw Fmi::Exception(BCP, "Invalid packing bitspervalue, must be in range 0-32");
-    }
+    parsePacking(req, producer, reqParams, config);
 
     // Tables version for grib2
 
@@ -479,44 +579,12 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
              ? getRequestUInt(req, producer, "tablesversion", config.getGrib2TablesVersionDefault())
              : 0);
 
-    if (reqParams.grib2TablesVersion > 0)
-    {
-      // Check against valid range. The default range is [0-0] letting all values thru
-      //
-      auto range = config.getGrib2TablesVersionRange();
-      auto grib2TablesVersionMin = range.first;
-      auto grib2TablesVersionMax = range.second;
-
-      if ((grib2TablesVersionMax > 0) && ((reqParams.grib2TablesVersion < grib2TablesVersionMin) ||
-                                          (reqParams.grib2TablesVersion > grib2TablesVersionMax)))
-        throw Fmi::Exception(BCP,
-                             "'tablesversion' must be between " +
-                                 Fmi::to_string(grib2TablesVersionMin) + " and " +
-                                 Fmi::to_string(grib2TablesVersionMax));
-    }
+    checkGrib2TablesVersion(reqParams, config);
 
     // Number of grid data parameters for given time instant or timesteps for given parameter
     // fetched as a block, and minimum chunk length returned
 
-    reqParams.gridParamBlockSize = getRequestUInt(req, producer, "gridparamblocksize", 0);
-    reqParams.gridTimeBlockSize = getRequestUInt(req, producer, "gridtimeblocksize", 0);
-    reqParams.chunkSize = getRequestUInt(req, producer, "chunksize", 0);
-
-    if ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 0))
-    {
-      if (reqParams.dataSource != GridContent)
-        throw Fmi::Exception(
-            BCP, "Cannot specify gridparamblocksize or gridtimeblocksize unless source=grid");
-
-      if ((reqParams.gridParamBlockSize > 0) && (reqParams.gridTimeBlockSize > 0))
-        throw Fmi::Exception(
-            BCP, "Cannot specify gridparamblocksize and gridtimeblocksize simultaneously");
-
-      if ((reqParams.outputFormat == NetCdf) &&
-          ((reqParams.gridParamBlockSize > 0) || (reqParams.gridTimeBlockSize > 1)))
-        throw Fmi::Exception(
-            BCP, "Cannot specify gridparamblocksize or gridtimeblocksize with netcdf output");
-    }
+    parseBlockSizes(req, producer, reqParams);
 
     return producer;
   }
