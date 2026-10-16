@@ -4603,20 +4603,12 @@ void DataStreamer::getGridSizeByResolution(size_t& gridSizeX, size_t& gridSizeY)
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Build grid query object for querying data for
- *        current parameter, level and validtime
- *
+ * \brief Set the grid query target bounding box
  */
 // ----------------------------------------------------------------------
 
-void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
-                                  T::ParamLevelId gridLevelType,
-                                  int level)
+void DataStreamer::setGridQueryBBox(QueryServer::Query& gridQuery, bool nativeArea)
 {
-  // If reprojecting and bbox/area is not given, get target bbox
-
-  bool nativeArea = (!(itsReqParams.bboxRect || itsReqParams.gridCenterLL));
-
   if ((!itsReqParams.projection.empty()) && nativeArea)
     getGridBBox();
 
@@ -4666,9 +4658,16 @@ void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
     gridQuery.mAttributeList.addAttribute("grid.metricWidth", gridMetricWidth);
     gridQuery.mAttributeList.addAttribute("grid.metricHeight", gridMetricHeight);
   }
+}
 
-  bool nativeResolution = (itsReqParams.gridSize.empty() && (!itsReqParams.gridResolutionXY));
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set the grid query grid size
+ */
+// ----------------------------------------------------------------------
 
+void DataStreamer::setGridQuerySize(QueryServer::Query& gridQuery)
+{
   if (itsReqParams.gridSizeXY)
   {
     itsReqGridSizeX = (*itsReqParams.gridSizeXY)[0].first;
@@ -4727,50 +4726,63 @@ void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
       gridQuery.mAttributeList.addAttribute("grid.height", Fmi::to_string(itsReqGridSizeY));
     }
   }
+}
 
-  // Bound the requested grid cell count. The querydata source enforces
-  // maxrequestdatavalues, but the grid source path did not, so a request such as
-  // gridsize=100000,100000 (or a tiny gridresolution resolved to a huge grid) would
-  // generate an effectively unbounded grid. Reject an explicit grid size whose cell
-  // count exceeds the configured maximum (overflow-safe multiply).
-  if (itsReqGridSizeX > 0 && itsReqGridSizeY > 0)
+// ----------------------------------------------------------------------
+/*!
+ * \brief Check the requested grid cell count and the total number of values
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::checkGridQueryDataSize() const
+{
+  if ((itsReqGridSizeX == 0) || (itsReqGridSizeY == 0))
+    return;
+
+  const unsigned long maxValues = itsCfg.getMaxRequestDataValues();
+  if (maxValues > 0 &&
+      (itsReqGridSizeX > maxValues / itsReqGridSizeY ||
+       static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY > maxValues))
   {
-    const unsigned long maxValues = itsCfg.getMaxRequestDataValues();
-    if (maxValues > 0 &&
-        (itsReqGridSizeX > maxValues / itsReqGridSizeY ||
-         static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY > maxValues))
-    {
-      throw Fmi::Exception(BCP,
-                           "Requested grid size (" + Fmi::to_string(itsReqGridSizeX) + "x" +
-                               Fmi::to_string(itsReqGridSizeY) +
-                               ") exceeds the maximum number of data values (" +
-                               Fmi::to_string(maxValues) + "); adjust gridsize/gridresolution");
-    }
-
-    // Bound the total number of values like the querydata source does: the grid
-    // is repeated for every parameter, level and time
-    if (maxValues > 0)
-    {
-      const unsigned long cells = static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY;
-      const unsigned long params = std::max<unsigned long>(1, itsDataParams.size());
-      const unsigned long levels = std::max<unsigned long>(1, itsDataLevels.size());
-      const unsigned long times = std::max<unsigned long>(1, itsDataTimes.size());
-
-      // Overflow-safe check of params * levels * times * cells > maxValues
-      if (params > maxValues / levels || params * levels > maxValues / times ||
-          params * levels * times > maxValues / cells)
-      {
-        throw Fmi::Exception(BCP,
-                             "Too much data requested (" + Fmi::to_string(params) +
-                                 " parameters, " + Fmi::to_string(levels) + " levels, " +
-                                 Fmi::to_string(times) + " times, " + Fmi::to_string(cells) +
-                                 " grid cells, max " + Fmi::to_string(maxValues) +
-                                 " values); adjust area/grid and/or number of parameters, "
-                                 "levels and times");
-      }
-    }
+    throw Fmi::Exception(BCP,
+                         "Requested grid size (" + Fmi::to_string(itsReqGridSizeX) + "x" +
+                             Fmi::to_string(itsReqGridSizeY) +
+                             ") exceeds the maximum number of data values (" +
+                             Fmi::to_string(maxValues) + "); adjust gridsize/gridresolution");
   }
 
+  // Bound the total number of values like the querydata source does: the grid
+  // is repeated for every parameter, level and time
+  if (maxValues > 0)
+  {
+    const unsigned long cells = static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY;
+    const unsigned long params = std::max<unsigned long>(1, itsDataParams.size());
+    const unsigned long levels = std::max<unsigned long>(1, itsDataLevels.size());
+    const unsigned long times = std::max<unsigned long>(1, itsDataTimes.size());
+
+    // Overflow-safe check of params * levels * times * cells > maxValues
+    if (params > maxValues / levels || params * levels > maxValues / times ||
+        params * levels * times > maxValues / cells)
+    {
+      throw Fmi::Exception(BCP,
+                           "Too much data requested (" + Fmi::to_string(params) +
+                               " parameters, " + Fmi::to_string(levels) + " levels, " +
+                               Fmi::to_string(times) + " times, " + Fmi::to_string(cells) +
+                               " grid cells, max " + Fmi::to_string(maxValues) +
+                               " values); adjust area/grid and/or number of parameters, "
+                               "levels and times");
+    }
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set the grid query analysis time, flags and forecast times
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::setGridQueryTimes(QueryServer::Query& gridQuery) const
+{
   if (itsGridMetaData.gridOriginTime.is_not_a_date_time())
   {
     // Function parameter
@@ -4833,9 +4845,18 @@ void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
       gridQuery.mEndTime = toTimeT(Fmi::DateTime::from_iso_string("99991231T235959"));
     }
   }
+}
 
-  gridQuery.mTimezone = "UTC";
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set the grid query crs
+ */
+// ----------------------------------------------------------------------
 
+void DataStreamer::setGridQueryCrs(QueryServer::Query& gridQuery,
+                                   bool nativeArea,
+                                   bool nativeResolution) const
+{
   if (itsReqParams.projection.empty())
   {
     if (itsReqParams.geometryId.empty())
@@ -4851,62 +4872,112 @@ void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
   }
   else
     gridQuery.mAttributeList.addAttribute("grid.crs", itsReqParams.projection);
+}
 
-  for (auto paramIter = itsParamIterator; (paramIter != itsDataParams.end()); paramIter++)
+// ----------------------------------------------------------------------
+/*!
+ * \brief Make the grid query parameter for given parameter
+ */
+// ----------------------------------------------------------------------
+
+QueryServer::QueryParameter DataStreamer::makeGridQueryParameter(const string& paramName,
+                                                                 T::ParamLevelId gridLevelType,
+                                                                 int& level) const
+{
+  QueryServer::QueryParameter queryParam;
+
+  queryParam.mType = QueryServer::QueryParameter::Type::Vector;
+  queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
+  queryParam.mFlags = 0;
+
+  if (itsQuery.isFunctionParameter(paramName, queryParam.mParam))
   {
-    QueryServer::QueryParameter queryParam;
+    queryParam.mOrigParam = queryParam.mParam;
+    queryParam.mSymbolicName = queryParam.mParam;
+    queryParam.mParameterKey = queryParam.mParam;
+  }
+  else
+  {
+    queryParam.mParam = itsGridMetaData.paramKeys.find(paramName)->second;
 
-    queryParam.mType = QueryServer::QueryParameter::Type::Vector;
-    queryParam.mLocationType = QueryServer::QueryParameter::LocationType::Geometry;
-    queryParam.mFlags = 0;
+    queryParam.mParameterLevelId = gridLevelType;
+    if ((itsReqParams.dataSource != GridContent) && (itsLevelType == kFmiPressureLevel))
+      level *= 100;
+    queryParam.mParameterLevel = level;
 
-    if (itsQuery.isFunctionParameter(paramIter->name(), queryParam.mParam))
+    if (itsReqParams.dataSource == GridContent)
     {
-      queryParam.mOrigParam = queryParam.mParam;
-      queryParam.mSymbolicName = queryParam.mParam;
-      queryParam.mParameterKey = queryParam.mParam;
+      vector<string> paramParts;
+      itsQuery.parseRadonParameterName(paramName, paramParts);
+
+      queryParam.mForecastType = getForecastType(paramName, paramParts);
+      queryParam.mForecastNumber = getForecastNumber(paramName, paramParts);
+      queryParam.mGeometryId = getGeometryId(paramName, paramParts);
     }
     else
     {
-      queryParam.mParam = itsGridMetaData.paramKeys.find(paramIter->name())->second;
-
-      queryParam.mParameterLevelId = gridLevelType;
-      if ((itsReqParams.dataSource != GridContent) && (itsLevelType == kFmiPressureLevel))
-        level *= 100;
-      queryParam.mParameterLevel = level;
-
-      if (itsReqParams.dataSource == GridContent)
-      {
-        vector<string> paramParts;
-        itsQuery.parseRadonParameterName(paramIter->name(), paramParts);
-
-        queryParam.mForecastType = getForecastType(paramIter->name(), paramParts);
-        queryParam.mForecastNumber = getForecastNumber(paramIter->name(), paramParts);
-        queryParam.mGeometryId = getGeometryId(paramIter->name(), paramParts);
-      }
-      else
-      {
-        queryParam.mForecastType = itsGridMetaData.forecastType;
-        queryParam.mForecastNumber = itsGridMetaData.forecastNumber;
-        queryParam.mGeometryId = itsGridMetaData.geometryId;
-      }
+      queryParam.mForecastType = itsGridMetaData.forecastType;
+      queryParam.mForecastNumber = itsGridMetaData.forecastNumber;
+      queryParam.mGeometryId = itsGridMetaData.geometryId;
     }
+  }
 
-    queryParam.mParameterKeyType = T::ParamKeyTypeValue::FMI_NAME;
+  queryParam.mParameterKeyType = T::ParamKeyTypeValue::FMI_NAME;
 
-    queryParam.mAreaInterpolationMethod = -1;
-    queryParam.mTimeInterpolationMethod = -1;
-    queryParam.mLevelInterpolationMethod = -1;
+  queryParam.mAreaInterpolationMethod = -1;
+  queryParam.mTimeInterpolationMethod = -1;
+  queryParam.mLevelInterpolationMethod = -1;
 
-    if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
-    {
-      // Get grid coordinates for netcdf and geotiff output
+  if ((itsReqParams.outputFormat == NetCdf) || (itsReqParams.outputFormat == GeoTiff))
+  {
+    // Get grid coordinates for netcdf and geotiff output
 
-      queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates);  // |
-      //                         QueryServer::QueryParameter::Flags::NoReturnValues);
-    }
+    queryParam.mFlags = (QueryServer::QueryParameter::Flags::ReturnCoordinates);  // |
+    //                         QueryServer::QueryParameter::Flags::NoReturnValues);
+  }
 
-    gridQuery.mQueryParameterList.push_back(queryParam);
+  return queryParam;
+}
+
+// ----------------------------------------------------------------------
+/*!
+ * \brief Build grid query object for querying data for
+ *        current parameter, level and validtime
+ *
+ */
+// ----------------------------------------------------------------------
+
+void DataStreamer::buildGridQuery(QueryServer::Query& gridQuery,
+                                  T::ParamLevelId gridLevelType,
+                                  int level)
+{
+  // If reprojecting and bbox/area is not given, get target bbox
+
+  bool nativeArea = (!(itsReqParams.bboxRect || itsReqParams.gridCenterLL));
+
+  setGridQueryBBox(gridQuery, nativeArea);
+
+  bool nativeResolution = (itsReqParams.gridSize.empty() && (!itsReqParams.gridResolutionXY));
+
+  setGridQuerySize(gridQuery);
+
+  // Bound the requested grid cell count. The querydata source enforces
+  // maxrequestdatavalues, but the grid source path did not, so a request such as
+  // gridsize=100000,100000 (or a tiny gridresolution resolved to a huge grid) would
+  // generate an effectively unbounded grid. Reject an explicit grid size whose cell
+  // count exceeds the configured maximum (overflow-safe multiply).
+  checkGridQueryDataSize();
+
+  setGridQueryTimes(gridQuery);
+
+  gridQuery.mTimezone = "UTC";
+
+  setGridQueryCrs(gridQuery, nativeArea, nativeResolution);
+
+  for (auto paramIter = itsParamIterator; (paramIter != itsDataParams.end()); paramIter++)
+  {
+    gridQuery.mQueryParameterList.push_back(
+        makeGridQueryParameter(paramIter->name(), gridLevelType, level));
 
     if ((itsReqParams.dataSource != GridContent) ||
         (gridQuery.mQueryParameterList.size() >= itsReqParams.gridParamBlockSize))

@@ -448,6 +448,16 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   void buildGridQuery(SmartMet::QueryServer::Query& /*gridQuery*/,
                       T::ParamLevelId gridLevelType,
                       int level);
+  void setGridQueryBBox(SmartMet::QueryServer::Query &gridQuery, bool nativeArea);
+  void setGridQuerySize(SmartMet::QueryServer::Query &gridQuery);
+  void checkGridQueryDataSize() const;
+  void setGridQueryTimes(SmartMet::QueryServer::Query &gridQuery) const;
+  void setGridQueryCrs(SmartMet::QueryServer::Query &gridQuery,
+                       bool nativeArea,
+                       bool nativeResolution) const;
+  SmartMet::QueryServer::QueryParameter makeGridQueryParameter(const std::string &paramName,
+                                                               T::ParamLevelId gridLevelType,
+                                                               int &level) const;
   void getGridSizeByResolution(size_t &gridSizeX, size_t &gridSizeY) const;
   void getGridLLBBox();
   std::string getGridLLBBoxStr();
