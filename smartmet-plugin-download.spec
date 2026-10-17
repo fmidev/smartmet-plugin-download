@@ -2,8 +2,8 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.10.16
-Release: 3%{?dist}.fmi
+Version: 26.10.17
+Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
 URL: https://github.com/fmidev/smartmet-plugin-download
@@ -25,7 +25,7 @@ BuildRequires: gdal312-devel
 BuildRequires: eccodes-devel <= 2.31.1
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
-BuildRequires: smartmet-library-spine-devel >= 26.10.16-3
+BuildRequires: smartmet-library-spine-devel >= 26.10.17-1
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
 BuildRequires: smartmet-library-timeseries-devel >= 26.10.16
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
@@ -45,7 +45,7 @@ Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
 Requires: smartmet-library-macgyver >= 26.10.16
 Requires: smartmet-library-timeseries >= 26.10.16
-Requires: smartmet-library-spine >= 26.10.16-3
+Requires: smartmet-library-spine >= 26.10.17-1
 Requires: smartmet-swagger-ui
 Requires: smartmet-library-newbase >= 26.10.16
 Requires: smartmet-engine-querydata >= 26.10.16
@@ -70,12 +70,12 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-engine-grid >= 26.10.16
 #TestRequires: smartmet-engine-querydata >= 26.10.16
 #TestRequires: smartmet-utils-devel >= 26.9.3
-#TestRequires: smartmet-library-spine-plugin-test >= 26.10.16-3
+#TestRequires: smartmet-library-spine-plugin-test >= 26.10.17-1
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: smartmet-qdtools >= 26.10.16
-#TestRequires: smartmet-test-data >= 26.10.17-2
+#TestRequires: smartmet-test-data >= 26.10.17-1
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-library-grid-files-test >= 26.10.17-2
+#TestRequires: smartmet-library-grid-files-test >= 26.10.17-1
 #TestRequires: smartmet-library-grid-files >= 26.10.16
 #TestRequires: wgrib
 #TestRequires: wgrib2
@@ -108,14 +108,12 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
-* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-3.fmi
+* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.17-1.fmi
 - New /coverages/collections/{id}/outline: the area (GeoJSON polygon) and the size of a
   coverage request before it is made, for the data explorer
 - Coverages collection extents (area, times, levels, native grid) from the engine metadata
 - The schema of a collection lists only the parameters of its producer
 - Listed in the API catalog with the kind coverages
-
-* Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-2.fmi
 - OGC API - Coverages is listed in the API catalog of the server (/api)
 
 * Fri Oct 16 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> - 26.10.16-1.fmi
