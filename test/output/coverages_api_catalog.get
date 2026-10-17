@@ -1,0 +1,5 @@
+Status: 200
+Content-Type: application/linkset+json; profile="https://www.rfc-editor.org/info/rfc9727"
+Link: </.well-known/api-catalog>; rel="api-catalog"
+
+{"linkset":[{"anchor":"/.well-known/api-catalog","item":[{"description":"Gridded forecast data as GRIB, NetCDF, GeoTIFF or querydata following OGC API - Coverages, with subsetting, field selection, scaling and reprojection.","href":"/coverages","title":"SmartMet OGC API - Coverages","x-smartmet-kind":"coverages"}]},{"anchor":"/coverages","service-desc":[{"href":"/coverages/api","title":"SmartMet OGC API - Coverages - OpenAPI definition","type":"application/vnd.oai.openapi+json;version=3.1"}],"service-doc":[{"href":"/coverages/api/docs","title":"SmartMet OGC API - Coverages - API documentation","type":"text/html"}]}]}

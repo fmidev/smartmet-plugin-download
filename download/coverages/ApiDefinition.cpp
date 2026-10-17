@@ -12,6 +12,11 @@ namespace Download
 {
 namespace Coverages
 {
+const char* const API_TITLE = "SmartMet OGC API - Coverages";
+const char* const API_DESCRIPTION =
+    "Gridded forecast data as GRIB, NetCDF, GeoTIFF or querydata following OGC API - Coverages, "
+    "with subsetting, field selection, scaling and reprojection.";
+
 namespace
 {
 namespace OA = Spine::OpenAPI;
@@ -323,12 +328,7 @@ Spine::OpenAPI::Document apiDefinition(const Config& config,
   {
     const auto max_enum = settings.max_enum;
 
-    OA::Document doc("SmartMet OGC API - Coverages",
-                     "Gridded forecast data as GRIB, NetCDF, GeoTIFF or querydata following OGC "
-                     "API - Coverages, with subsetting, field selection, scaling and "
-                     "reprojection.",
-                     "1.0",
-                     settings);
+    OA::Document doc(API_TITLE, API_DESCRIPTION, "1.0", settings);
     doc.addTag(TAG_CAPABILITIES, "The landing page, conformance declaration and API definition");
     doc.addTag(TAG_COLLECTIONS, "Collections (producers)");
     doc.addTag(TAG_COVERAGE, "Coverage data");
@@ -362,6 +362,31 @@ Spine::OpenAPI::Document apiDefinition(const Config& config,
                        "fieldSchema");
     add_coverage_operation(
         doc, "/collections/{collectionId}", "getCoverage", collection, OA::ref("parameters", "f"));
+
+    // The area and the size of a coverage before it is downloaded (a SmartMet extension)
+    {
+      auto& op = doc.operation("/collections/{collectionId}/outline", "get");
+      op["tags"].append(TAG_COLLECTIONS);
+      op["summary"] = "The area and the size of a coverage";
+      op["description"] =
+          "The polygon (longitude and latitude) the coverage of the same bbox, crs and "
+          "scale-size options would cover, the rectangle in the output crs, the grid size and "
+          "the number of values. Sizes not given by scale-size are estimated from the native "
+          "resolution. A SmartMet extension for clients choosing an area.";
+      op["operationId"] = "getOutline";
+      op["x-fmi-extension"] = true;
+      Json::Value params(Json::arrayValue);
+      params.append(OA::ref("parameters", "collectionId"));
+      for (const char* name : {"bbox", "crs", "scale-size", "datetime", "properties", "x.levels"})
+        params.append(OA::ref("parameters", name));
+      op["parameters"] = params;
+      auto& ok = op["responses"]["200"];
+      ok["description"] = "A GeoJSON Feature";
+      Json::Value schema;
+      schema["type"] = "object";
+      ok["content"]["application/geo+json"]["schema"] = schema;
+      OA::Document::addErrorResponses(op);
+    }
 
     // Collection specific coverage paths, with the formats the producer allows
     if (settings.expand_collections && config.getProducers().size() <= max_enum)

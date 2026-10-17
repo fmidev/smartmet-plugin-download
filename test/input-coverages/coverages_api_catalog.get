@@ -1,0 +1,3 @@
+GET /.well-known/api-catalog HTTP/1.0
+X-Test-Headers: Content-Type,Link
+

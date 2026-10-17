@@ -1,0 +1,3175 @@
+Status: 200
+Content-Type: application/json
+
+{
+  "collections" : 
+  [
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer CLIMATE_TMAX",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              15.487520149340826,
+              59.610500000000002,
+              33.185546172834073,
+              70.040750146213753
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 365,
+            "resolution" : "P1D"
+          },
+          "interval" : 
+          [
+            [
+              "2001-01-01T12:00:00Z",
+              "2001-12-31T12:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2001-01-01T12:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                19.461600000000001,
+                59.610500000000002
+              ],
+              "bottomright" : 
+              [
+                31.027909912277721,
+                59.789934731987728
+              ],
+              "topleft" : 
+              [
+                15.487520149340826,
+                69.755515260751153
+              ],
+              "topright" : 
+              [
+                33.185546172834073,
+                70.040750146213753
+              ]
+            },
+            "geometry" : 5909,
+            "height" : 116,
+            "projection" : "PolarStereographic",
+            "width" : 67,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",27],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "CLIMATE_TMAX",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/CLIMATE_TMAX",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/CLIMATE_TMAX/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/CLIMATE_TMAX/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "CLIMATE_TMAX"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ECGMTA",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -180.0,
+              -90.0,
+              180.0,
+              90.0
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2026-06-16T00:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2026-06-16T00:00:00Z",
+              "2026-06-16T00:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-06-15T12:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                0.0,
+                -90.0
+              ],
+              "bottomright" : 
+              [
+                -0.099999999999909051,
+                -90.0
+              ],
+              "topleft" : 
+              [
+                0.0,
+                90.0
+              ],
+              "topright" : 
+              [
+                -0.099999999999909051,
+                90.0
+              ]
+            },
+            "geometry" : 5204,
+            "height" : 1801,
+            "projection" : "LatLon",
+            "width" : 3600,
+            "wkt" : "GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST]]"
+          }
+        ]
+      },
+      "id" : "ECGMTA",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ECGMTA",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ECGMTA/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ECGMTA/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ECGMTA"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ECMWF_EUROOPPA_PINTA",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -61.758418942696963,
+              25.0,
+              79.771636697348356,
+              56.975471034112864
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 61,
+            "coordinates" : 
+            [
+              "2008-08-04T12:00:00Z",
+              "2008-08-04T15:00:00Z",
+              "2008-08-04T18:00:00Z",
+              "2008-08-04T21:00:00Z",
+              "2008-08-05T00:00:00Z",
+              "2008-08-05T03:00:00Z",
+              "2008-08-05T06:00:00Z",
+              "2008-08-05T09:00:00Z",
+              "2008-08-05T12:00:00Z",
+              "2008-08-05T15:00:00Z",
+              "2008-08-05T18:00:00Z",
+              "2008-08-05T21:00:00Z",
+              "2008-08-06T00:00:00Z",
+              "2008-08-06T03:00:00Z",
+              "2008-08-06T06:00:00Z",
+              "2008-08-06T09:00:00Z",
+              "2008-08-06T12:00:00Z",
+              "2008-08-06T15:00:00Z",
+              "2008-08-06T18:00:00Z",
+              "2008-08-06T21:00:00Z",
+              "2008-08-07T00:00:00Z",
+              "2008-08-07T03:00:00Z",
+              "2008-08-07T06:00:00Z",
+              "2008-08-07T09:00:00Z",
+              "2008-08-07T12:00:00Z",
+              "2008-08-07T15:00:00Z",
+              "2008-08-07T18:00:00Z",
+              "2008-08-07T21:00:00Z",
+              "2008-08-08T00:00:00Z",
+              "2008-08-08T03:00:00Z",
+              "2008-08-08T06:00:00Z",
+              "2008-08-08T09:00:00Z",
+              "2008-08-08T12:00:00Z",
+              "2008-08-08T15:00:00Z",
+              "2008-08-08T18:00:00Z",
+              "2008-08-08T21:00:00Z",
+              "2008-08-09T00:00:00Z",
+              "2008-08-09T03:00:00Z",
+              "2008-08-09T06:00:00Z",
+              "2008-08-09T09:00:00Z",
+              "2008-08-09T12:00:00Z",
+              "2008-08-09T18:00:00Z",
+              "2008-08-10T00:00:00Z",
+              "2008-08-10T06:00:00Z",
+              "2008-08-10T12:00:00Z",
+              "2008-08-10T18:00:00Z",
+              "2008-08-11T00:00:00Z",
+              "2008-08-11T06:00:00Z",
+              "2008-08-11T12:00:00Z",
+              "2008-08-11T18:00:00Z",
+              "2008-08-12T00:00:00Z",
+              "2008-08-12T06:00:00Z",
+              "2008-08-12T12:00:00Z",
+              "2008-08-12T18:00:00Z",
+              "2008-08-13T00:00:00Z",
+              "2008-08-13T06:00:00Z",
+              "2008-08-13T12:00:00Z",
+              "2008-08-13T18:00:00Z",
+              "2008-08-14T00:00:00Z",
+              "2008-08-14T06:00:00Z",
+              "2008-08-14T12:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2008-08-04T12:00:00Z",
+              "2008-08-14T12:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-08-04T12:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                -19.22000000000002,
+                25.0
+              ],
+              "bottomright" : 
+              [
+                36.578242900349515,
+                26.261306411328437
+              ],
+              "topleft" : 
+              [
+                -61.758418942696963,
+                53.737829581389846
+              ],
+              "topright" : 
+              [
+                79.771636697348356,
+                56.975471034112864
+              ]
+            },
+            "geometry" : 5903,
+            "height" : 195,
+            "projection" : "PolarStereographic",
+            "width" : 255,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",10],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "ECMWF_EUROOPPA_PINTA",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ECMWF_EUROOPPA_PINTA",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ECMWF_EUROOPPA_PINTA/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ECMWF_EUROOPPA_PINTA/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ECMWF_EUROOPPA_PINTA"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ECMWF_MAAILMA_PINTA.GRIB",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -180.0,
+              -90.0,
+              180.0,
+              90.0
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2015-03-13T12:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2015-03-13T12:00:00Z",
+              "2015-03-13T12:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2015-03-13T12:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                180.0,
+                -90.0
+              ],
+              "bottomright" : 
+              [
+                179.99879699999997,
+                -90.0
+              ],
+              "topleft" : 
+              [
+                180.0,
+                90.0
+              ],
+              "topright" : 
+              [
+                179.99879699999997,
+                90.0
+              ]
+            },
+            "geometry" : 5100,
+            "height" : 1441,
+            "projection" : "LatLon",
+            "width" : 2880,
+            "wkt" : "GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST]]"
+          }
+        ]
+      },
+      "id" : "ECMWF_MAAILMA_PINTA.GRIB",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ECMWF_MAAILMA_PINTA.GRIB",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ECMWF_MAAILMA_PINTA.GRIB/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ECMWF_MAAILMA_PINTA.GRIB/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ECMWF_MAAILMA_PINTA.GRIB"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ECMWF_SKANDINAVIA_PAINEPINTA",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.1163849214450465,
+              51.299999999999997,
+              49.046317958153935,
+              70.205383946081497
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 61,
+            "coordinates" : 
+            [
+              "2008-09-09T00:00:00Z",
+              "2008-09-09T03:00:00Z",
+              "2008-09-09T06:00:00Z",
+              "2008-09-09T09:00:00Z",
+              "2008-09-09T12:00:00Z",
+              "2008-09-09T15:00:00Z",
+              "2008-09-09T18:00:00Z",
+              "2008-09-09T21:00:00Z",
+              "2008-09-10T00:00:00Z",
+              "2008-09-10T03:00:00Z",
+              "2008-09-10T06:00:00Z",
+              "2008-09-10T09:00:00Z",
+              "2008-09-10T12:00:00Z",
+              "2008-09-10T15:00:00Z",
+              "2008-09-10T18:00:00Z",
+              "2008-09-10T21:00:00Z",
+              "2008-09-11T00:00:00Z",
+              "2008-09-11T03:00:00Z",
+              "2008-09-11T06:00:00Z",
+              "2008-09-11T09:00:00Z",
+              "2008-09-11T12:00:00Z",
+              "2008-09-11T15:00:00Z",
+              "2008-09-11T18:00:00Z",
+              "2008-09-11T21:00:00Z",
+              "2008-09-12T00:00:00Z",
+              "2008-09-12T03:00:00Z",
+              "2008-09-12T06:00:00Z",
+              "2008-09-12T09:00:00Z",
+              "2008-09-12T12:00:00Z",
+              "2008-09-12T15:00:00Z",
+              "2008-09-12T18:00:00Z",
+              "2008-09-12T21:00:00Z",
+              "2008-09-13T00:00:00Z",
+              "2008-09-13T03:00:00Z",
+              "2008-09-13T06:00:00Z",
+              "2008-09-13T09:00:00Z",
+              "2008-09-13T12:00:00Z",
+              "2008-09-13T15:00:00Z",
+              "2008-09-13T18:00:00Z",
+              "2008-09-13T21:00:00Z",
+              "2008-09-14T00:00:00Z",
+              "2008-09-14T06:00:00Z",
+              "2008-09-14T12:00:00Z",
+              "2008-09-14T18:00:00Z",
+              "2008-09-15T00:00:00Z",
+              "2008-09-15T06:00:00Z",
+              "2008-09-15T12:00:00Z",
+              "2008-09-15T18:00:00Z",
+              "2008-09-16T00:00:00Z",
+              "2008-09-16T06:00:00Z",
+              "2008-09-16T12:00:00Z",
+              "2008-09-16T18:00:00Z",
+              "2008-09-17T00:00:00Z",
+              "2008-09-17T06:00:00Z",
+              "2008-09-17T12:00:00Z",
+              "2008-09-17T18:00:00Z",
+              "2008-09-18T00:00:00Z",
+              "2008-09-18T06:00:00Z",
+              "2008-09-18T12:00:00Z",
+              "2008-09-18T18:00:00Z",
+              "2008-09-19T00:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2008-09-09T00:00:00Z",
+              "2008-09-19T00:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-09-09T00:00:00Z"
+        },
+        "vertical" : 
+        {
+          "grid" : 
+          {
+            "coordinates" : 
+            [
+              30000,
+              50000,
+              70000,
+              85000,
+              92500,
+              100000
+            ]
+          },
+          "interval" : 
+          [
+            [
+              30000,
+              100000
+            ]
+          ],
+          "x-smartmet-leveltype" : "PRESSURE"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                6.0000000000000009,
+                51.299999999999997
+              ],
+              "bottomright" : 
+              [
+                33.961329293762859,
+                51.306019335434776
+              ],
+              "topleft" : 
+              [
+                -9.1163849214450465,
+                70.192182919523873
+              ],
+              "topright" : 
+              [
+                49.046317958153935,
+                70.205383946081497
+              ]
+            },
+            "geometry" : 5901,
+            "height" : 57,
+            "projection" : "PolarStereographic",
+            "width" : 53,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "ECMWF_SKANDINAVIA_PAINEPINTA",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ECMWF_SKANDINAVIA_PAINEPINTA",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ECMWF_SKANDINAVIA_PAINEPINTA/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ECMWF_SKANDINAVIA_PAINEPINTA/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ECMWF_SKANDINAVIA_PAINEPINTA"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer HIRLAM",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              17.964507193439779,
+              55.411452702643018,
+              45.011918711691081,
+              72.644934639672087
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 55,
+            "resolution" : "PT1H"
+          },
+          "interval" : 
+          [
+            [
+              "2013-03-18T00:00:00Z",
+              "2013-03-20T06:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2013-03-18T00:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                17.964507193439779,
+                56.984799798962023
+              ],
+              "bottomright" : 
+              [
+                26.171715798178912,
+                55.411452702643018
+              ],
+              "topleft" : 
+              [
+                32.967381225827943,
+                72.644934639672087
+              ],
+              "topright" : 
+              [
+                45.011918711691081,
+                70.004478297532856
+              ]
+            },
+            "geometry" : 5201,
+            "height" : 248,
+            "projection" : "RotatedLatLon",
+            "width" : 72,
+            "wkt" : "GEOGCRS[\"RotatedLatlon\",BASEGEOGCRS[\"UNKNOWN\",DATUM[\"UNKNOWN\",ELLIPSOID[\"UNKNOWN\",6367470,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]]],DERIVINGCONVERSION[\"Pole rotation (GRIB convention)\",METHOD[\"Pole rotation (GRIB convention)\"],PARAMETER[\"Latitude of the southern pole (GRIB convention)\",-30,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],PARAMETER[\"Longitude of the southern pole (GRIB convention)\",0,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],PARAMETER[\"Axis rotation (GRIB convention)\",0,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]]],CS[ellipsoidal,2],AXIS[\"latitude\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],AXIS[\"longitude\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]]]"
+          }
+        ]
+      },
+      "id" : "HIRLAM",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/HIRLAM",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/HIRLAM/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/HIRLAM/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "HIRLAM"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer MEPS_ML",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              24.031427000000001,
+              59.632276473715422,
+              26.042075817623957,
+              60.633374965518541
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 5,
+            "resolution" : "PT3H"
+          },
+          "interval" : 
+          [
+            [
+              "2026-10-15T00:00:00Z",
+              "2026-10-15T12:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-10-15T00:00:00Z"
+        },
+        "vertical" : 
+        {
+          "grid" : 
+          {
+            "coordinates" : 
+            [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65
+            ]
+          },
+          "interval" : 
+          [
+            [
+              1,
+              65
+            ]
+          ],
+          "x-smartmet-leveltype" : "HYBRID"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                24.031427000000001,
+                59.766691999999999
+              ],
+              "bottomright" : 
+              [
+                25.745513837014773,
+                59.632276473715422
+              ],
+              "topleft" : 
+              [
+                24.282122292952124,
+                60.633374965518541
+              ],
+              "topright" : 
+              [
+                26.042075817623957,
+                60.49516038214329
+              ]
+            },
+            "geometry" : 5910,
+            "height" : 40,
+            "projection" : "LambertConformal",
+            "width" : 40,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6371000,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Lambert_Conformal_Conic_2SP\"],PARAMETER[\"latitude_of_origin\",63.3],PARAMETER[\"central_meridian\",15],PARAMETER[\"standard_parallel_1\",63.3],PARAMETER[\"standard_parallel_2\",63.3],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+          }
+        ]
+      },
+      "id" : "MEPS_ML",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/MEPS_ML",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/MEPS_ML/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/MEPS_ML/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "MEPS_ML"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer PAL_SKANDINAVIA",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.1163845586004602,
+              51.299999999999997,
+              49.046318417340181,
+              70.205383570663528
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 24,
+            "resolution" : "PT1H"
+          },
+          "interval" : 
+          [
+            [
+              "2008-08-05T05:00:00Z",
+              "2008-08-06T04:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-08-05T05:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                6.0000000000000009,
+                51.299999999999997
+              ],
+              "bottomright" : 
+              [
+                33.961329746914544,
+                51.306019265005048
+              ],
+              "topleft" : 
+              [
+                -9.1163845586004602,
+                70.192182698764498
+              ],
+              "topright" : 
+              [
+                49.046318417340181,
+                70.205383570663528
+              ]
+            },
+            "geometry" : 5900,
+            "height" : 150,
+            "projection" : "PolarStereographic",
+            "width" : 135,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "PAL_SKANDINAVIA",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/PAL_SKANDINAVIA",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/PAL_SKANDINAVIA/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/PAL_SKANDINAVIA/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "PAL_SKANDINAVIA"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer PAL_SKANDINAVIA2",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              22.835000000000001,
+              58.834891422618156,
+              26.095443540401796,
+              62.176793668180409
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 70,
+            "coordinates" : 
+            [
+              "2013-03-17T22:00:00Z",
+              "2013-03-17T23:00:00Z",
+              "2013-03-18T00:00:00Z",
+              "2013-03-18T01:00:00Z",
+              "2013-03-18T02:00:00Z",
+              "2013-03-18T03:00:00Z",
+              "2013-03-18T04:00:00Z",
+              "2013-03-18T05:00:00Z",
+              "2013-03-18T06:00:00Z",
+              "2013-03-18T07:00:00Z",
+              "2013-03-18T08:00:00Z",
+              "2013-03-18T09:00:00Z",
+              "2013-03-18T10:00:00Z",
+              "2013-03-18T11:00:00Z",
+              "2013-03-18T12:00:00Z",
+              "2013-03-18T13:00:00Z",
+              "2013-03-18T14:00:00Z",
+              "2013-03-18T15:00:00Z",
+              "2013-03-18T16:00:00Z",
+              "2013-03-18T17:00:00Z",
+              "2013-03-18T18:00:00Z",
+              "2013-03-18T19:00:00Z",
+              "2013-03-18T20:00:00Z",
+              "2013-03-18T21:00:00Z",
+              "2013-03-18T22:00:00Z",
+              "2013-03-18T23:00:00Z",
+              "2013-03-19T00:00:00Z",
+              "2013-03-19T03:00:00Z",
+              "2013-03-19T06:00:00Z",
+              "2013-03-19T09:00:00Z",
+              "2013-03-19T12:00:00Z",
+              "2013-03-19T15:00:00Z",
+              "2013-03-19T18:00:00Z",
+              "2013-03-19T21:00:00Z",
+              "2013-03-20T00:00:00Z",
+              "2013-03-20T03:00:00Z",
+              "2013-03-20T06:00:00Z",
+              "2013-03-20T09:00:00Z",
+              "2013-03-20T12:00:00Z",
+              "2013-03-20T15:00:00Z",
+              "2013-03-20T18:00:00Z",
+              "2013-03-20T21:00:00Z",
+              "2013-03-21T00:00:00Z",
+              "2013-03-21T03:00:00Z",
+              "2013-03-21T06:00:00Z",
+              "2013-03-21T09:00:00Z",
+              "2013-03-21T12:00:00Z",
+              "2013-03-21T18:00:00Z",
+              "2013-03-22T00:00:00Z",
+              "2013-03-22T06:00:00Z",
+              "2013-03-22T12:00:00Z",
+              "2013-03-22T18:00:00Z",
+              "2013-03-23T00:00:00Z",
+              "2013-03-23T06:00:00Z",
+              "2013-03-23T12:00:00Z",
+              "2013-03-23T18:00:00Z",
+              "2013-03-24T00:00:00Z",
+              "2013-03-24T06:00:00Z",
+              "2013-03-24T12:00:00Z",
+              "2013-03-24T18:00:00Z",
+              "2013-03-25T00:00:00Z",
+              "2013-03-25T06:00:00Z",
+              "2013-03-25T12:00:00Z",
+              "2013-03-25T18:00:00Z",
+              "2013-03-26T00:00:00Z",
+              "2013-03-26T06:00:00Z",
+              "2013-03-26T12:00:00Z",
+              "2013-03-26T18:00:00Z",
+              "2013-03-27T00:00:00Z",
+              "2013-03-27T06:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2013-03-17T22:00:00Z",
+              "2013-03-27T06:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2013-03-17T22:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                22.835000000000001,
+                58.932000000000009
+              ],
+              "bottomright" : 
+              [
+                25.434070036557362,
+                58.834891422618156
+              ],
+              "topleft" : 
+              [
+                23.181843819763699,
+                62.176793668180409
+              ],
+              "topright" : 
+              [
+                26.095443540401796,
+                62.066229382021888
+              ]
+            },
+            "geometry" : 5908,
+            "height" : 25,
+            "projection" : "PolarStereographic",
+            "width" : 11,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "PAL_SKANDINAVIA2",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/PAL_SKANDINAVIA2",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/PAL_SKANDINAVIA2/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/PAL_SKANDINAVIA2/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "PAL_SKANDINAVIA2"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer QDTOOLS_LL",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -180.0,
+              -90.0,
+              180.0,
+              90.0
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2019-06-06T18:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2019-06-06T18:00:00Z",
+              "2019-06-06T18:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2019-06-06T18:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                0.0,
+                -90.0
+              ],
+              "bottomright" : 
+              [
+                -0.099999999999909051,
+                -90.0
+              ],
+              "topleft" : 
+              [
+                0.0,
+                90.0
+              ],
+              "topright" : 
+              [
+                -0.099999999999909051,
+                90.0
+              ]
+            },
+            "geometry" : 5204,
+            "height" : 1801,
+            "projection" : "LatLon",
+            "width" : 3600,
+            "wkt" : "GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST]]"
+          }
+        ]
+      },
+      "id" : "QDTOOLS_LL",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/QDTOOLS_LL",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/QDTOOLS_LL/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/QDTOOLS_LL/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "QDTOOLS_LL"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer TOSUMMERTIME",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.1163845586004602,
+              51.299999999999997,
+              49.046318417340181,
+              70.205383570663528
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 70,
+            "coordinates" : 
+            [
+              "2012-03-23T22:00:00Z",
+              "2012-03-23T23:00:00Z",
+              "2012-03-24T00:00:00Z",
+              "2012-03-24T01:00:00Z",
+              "2012-03-24T02:00:00Z",
+              "2012-03-24T03:00:00Z",
+              "2012-03-24T04:00:00Z",
+              "2012-03-24T05:00:00Z",
+              "2012-03-24T06:00:00Z",
+              "2012-03-24T07:00:00Z",
+              "2012-03-24T08:00:00Z",
+              "2012-03-24T09:00:00Z",
+              "2012-03-24T10:00:00Z",
+              "2012-03-24T11:00:00Z",
+              "2012-03-24T12:00:00Z",
+              "2012-03-24T13:00:00Z",
+              "2012-03-24T14:00:00Z",
+              "2012-03-24T15:00:00Z",
+              "2012-03-24T16:00:00Z",
+              "2012-03-24T17:00:00Z",
+              "2012-03-24T18:00:00Z",
+              "2012-03-24T19:00:00Z",
+              "2012-03-24T20:00:00Z",
+              "2012-03-24T21:00:00Z",
+              "2012-03-24T22:00:00Z",
+              "2012-03-24T23:00:00Z",
+              "2012-03-25T00:00:00Z",
+              "2012-03-25T03:00:00Z",
+              "2012-03-25T06:00:00Z",
+              "2012-03-25T09:00:00Z",
+              "2012-03-25T12:00:00Z",
+              "2012-03-25T15:00:00Z",
+              "2012-03-25T18:00:00Z",
+              "2012-03-25T21:00:00Z",
+              "2012-03-26T00:00:00Z",
+              "2012-03-26T03:00:00Z",
+              "2012-03-26T06:00:00Z",
+              "2012-03-26T09:00:00Z",
+              "2012-03-26T12:00:00Z",
+              "2012-03-26T15:00:00Z",
+              "2012-03-26T18:00:00Z",
+              "2012-03-26T21:00:00Z",
+              "2012-03-27T00:00:00Z",
+              "2012-03-27T03:00:00Z",
+              "2012-03-27T06:00:00Z",
+              "2012-03-27T09:00:00Z",
+              "2012-03-27T12:00:00Z",
+              "2012-03-27T18:00:00Z",
+              "2012-03-28T00:00:00Z",
+              "2012-03-28T06:00:00Z",
+              "2012-03-28T12:00:00Z",
+              "2012-03-28T18:00:00Z",
+              "2012-03-29T00:00:00Z",
+              "2012-03-29T06:00:00Z",
+              "2012-03-29T12:00:00Z",
+              "2012-03-29T18:00:00Z",
+              "2012-03-30T00:00:00Z",
+              "2012-03-30T06:00:00Z",
+              "2012-03-30T12:00:00Z",
+              "2012-03-30T18:00:00Z",
+              "2012-03-31T00:00:00Z",
+              "2012-03-31T06:00:00Z",
+              "2012-03-31T12:00:00Z",
+              "2012-03-31T18:00:00Z",
+              "2012-04-01T00:00:00Z",
+              "2012-04-01T06:00:00Z",
+              "2012-04-01T12:00:00Z",
+              "2012-04-01T18:00:00Z",
+              "2012-04-02T00:00:00Z",
+              "2012-04-02T06:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2012-03-23T22:00:00Z",
+              "2012-04-02T06:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2012-03-23T22:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                6.0000000000000009,
+                51.299999999999997
+              ],
+              "bottomright" : 
+              [
+                33.961329746914544,
+                51.306019265005048
+              ],
+              "topleft" : 
+              [
+                -9.1163845586004602,
+                70.192182698764498
+              ],
+              "topright" : 
+              [
+                49.046318417340181,
+                70.205383570663528
+              ]
+            },
+            "geometry" : 5900,
+            "height" : 150,
+            "projection" : "PolarStereographic",
+            "width" : 135,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "TOSUMMERTIME",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/TOSUMMERTIME",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/TOSUMMERTIME/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/TOSUMMERTIME/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "TOSUMMERTIME"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer TOWINTERTIME",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.1163845586004602,
+              51.299999999999997,
+              49.046318417340181,
+              70.205383570663528
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 70,
+            "coordinates" : 
+            [
+              "2012-10-26T22:00:00Z",
+              "2012-10-26T23:00:00Z",
+              "2012-10-27T00:00:00Z",
+              "2012-10-27T01:00:00Z",
+              "2012-10-27T02:00:00Z",
+              "2012-10-27T03:00:00Z",
+              "2012-10-27T04:00:00Z",
+              "2012-10-27T05:00:00Z",
+              "2012-10-27T06:00:00Z",
+              "2012-10-27T07:00:00Z",
+              "2012-10-27T08:00:00Z",
+              "2012-10-27T09:00:00Z",
+              "2012-10-27T10:00:00Z",
+              "2012-10-27T11:00:00Z",
+              "2012-10-27T12:00:00Z",
+              "2012-10-27T13:00:00Z",
+              "2012-10-27T14:00:00Z",
+              "2012-10-27T15:00:00Z",
+              "2012-10-27T16:00:00Z",
+              "2012-10-27T17:00:00Z",
+              "2012-10-27T18:00:00Z",
+              "2012-10-27T19:00:00Z",
+              "2012-10-27T20:00:00Z",
+              "2012-10-27T21:00:00Z",
+              "2012-10-27T22:00:00Z",
+              "2012-10-27T23:00:00Z",
+              "2012-10-28T00:00:00Z",
+              "2012-10-28T03:00:00Z",
+              "2012-10-28T06:00:00Z",
+              "2012-10-28T09:00:00Z",
+              "2012-10-28T12:00:00Z",
+              "2012-10-28T15:00:00Z",
+              "2012-10-28T18:00:00Z",
+              "2012-10-28T21:00:00Z",
+              "2012-10-29T00:00:00Z",
+              "2012-10-29T03:00:00Z",
+              "2012-10-29T06:00:00Z",
+              "2012-10-29T09:00:00Z",
+              "2012-10-29T12:00:00Z",
+              "2012-10-29T15:00:00Z",
+              "2012-10-29T18:00:00Z",
+              "2012-10-29T21:00:00Z",
+              "2012-10-30T00:00:00Z",
+              "2012-10-30T03:00:00Z",
+              "2012-10-30T06:00:00Z",
+              "2012-10-30T09:00:00Z",
+              "2012-10-30T12:00:00Z",
+              "2012-10-30T18:00:00Z",
+              "2012-10-31T00:00:00Z",
+              "2012-10-31T06:00:00Z",
+              "2012-10-31T12:00:00Z",
+              "2012-10-31T18:00:00Z",
+              "2012-11-01T00:00:00Z",
+              "2012-11-01T06:00:00Z",
+              "2012-11-01T12:00:00Z",
+              "2012-11-01T18:00:00Z",
+              "2012-11-02T00:00:00Z",
+              "2012-11-02T06:00:00Z",
+              "2012-11-02T12:00:00Z",
+              "2012-11-02T18:00:00Z",
+              "2012-11-03T00:00:00Z",
+              "2012-11-03T06:00:00Z",
+              "2012-11-03T12:00:00Z",
+              "2012-11-03T18:00:00Z",
+              "2012-11-04T00:00:00Z",
+              "2012-11-04T06:00:00Z",
+              "2012-11-04T12:00:00Z",
+              "2012-11-04T18:00:00Z",
+              "2012-11-05T00:00:00Z",
+              "2012-11-05T06:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2012-10-26T22:00:00Z",
+              "2012-11-05T06:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2012-10-26T22:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                6.0000000000000009,
+                51.299999999999997
+              ],
+              "bottomright" : 
+              [
+                33.961329746914544,
+                51.306019265005048
+              ],
+              "topleft" : 
+              [
+                -9.1163845586004602,
+                70.192182698764498
+              ],
+              "topright" : 
+              [
+                49.046318417340181,
+                70.205383570663528
+              ]
+            },
+            "geometry" : 5900,
+            "height" : 150,
+            "projection" : "PolarStereographic",
+            "width" : 135,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "TOWINTERTIME",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/TOWINTERTIME",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/TOWINTERTIME/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/TOWINTERTIME/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "TOWINTERTIME"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer TUTKA_SUOMI_RR",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              15.044468705551003,
+              57.930000000000007,
+              34.914683146971619,
+              69.005902595395412
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 8,
+            "resolution" : "PT5M"
+          },
+          "interval" : 
+          [
+            [
+              "2013-09-10T10:00:00Z",
+              "2013-09-10T10:35:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2013-09-10T10:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                18.600000000000001,
+                57.930000000000007
+              ],
+              "bottomright" : 
+              [
+                31.373428600273517,
+                57.93157914283681
+              ],
+              "topleft" : 
+              [
+                15.044468705551003,
+                69.003339033796806
+              ],
+              "topright" : 
+              [
+                34.914683146971619,
+                69.005902595395412
+              ]
+            },
+            "geometry" : 5907,
+            "height" : 1226,
+            "projection" : "PolarStereographic",
+            "width" : 760,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",25],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "TUTKA_SUOMI_RR",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/TUTKA_SUOMI_RR",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/TUTKA_SUOMI_RR/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/TUTKA_SUOMI_RR/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "TUTKA_SUOMI_RR"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer WEEKLYCLIMATOLOGY",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -85.429282868832303,
+              24.660448174131798,
+              92.685097762210603,
+              74.039420990682927
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 4,
+            "resolution" : "P7D"
+          },
+          "interval" : 
+          [
+            [
+              "2016-06-27T00:00:00Z",
+              "2016-07-18T00:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2016-06-27T00:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                -18.27041309195814,
+                29.50466236505882
+              ],
+              "bottomright" : 
+              [
+                30.506571174620607,
+                24.660448174131798
+              ],
+              "topleft" : 
+              [
+                -85.429282868832303,
+                74.039420990682927
+              ],
+              "topright" : 
+              [
+                92.685097762210603,
+                62.356334357911948
+              ]
+            },
+            "geometry" : 5202,
+            "height" : 38,
+            "projection" : "RotatedLatLon",
+            "width" : 34,
+            "wkt" : "GEOGCRS[\"RotatedLatlon\",BASEGEOGCRS[\"UNKNOWN\",DATUM[\"UNKNOWN\",ELLIPSOID[\"UNKNOWN\",6367470,0,LENGTHUNIT[\"metre\",1,ID[\"EPSG\",9001]]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]]],DERIVINGCONVERSION[\"Pole rotation (GRIB convention)\",METHOD[\"Pole rotation (GRIB convention)\"],PARAMETER[\"Latitude of the southern pole (GRIB convention)\",-30,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],PARAMETER[\"Longitude of the southern pole (GRIB convention)\",0,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],PARAMETER[\"Axis rotation (GRIB convention)\",0,ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]]],CS[ellipsoidal,2],AXIS[\"latitude\",north,ORDER[1],ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]],AXIS[\"longitude\",east,ORDER[2],ANGLEUNIT[\"degree\",0.0174532925199433,ID[\"EPSG\",9122]]]]"
+          }
+        ]
+      },
+      "id" : "WEEKLYCLIMATOLOGY",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/WEEKLYCLIMATOLOGY",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/WEEKLYCLIMATOLOGY/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/WEEKLYCLIMATOLOGY/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "WEEKLYCLIMATOLOGY"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ecmwf_eurooppa_pinta",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -61.714073003393167,
+              25.000000000000011,
+              79.700000000000003,
+              78.264889923208827
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 61,
+            "coordinates" : 
+            [
+              "2008-08-04T12:00:00Z",
+              "2008-08-04T15:00:00Z",
+              "2008-08-04T18:00:00Z",
+              "2008-08-04T21:00:00Z",
+              "2008-08-05T00:00:00Z",
+              "2008-08-05T03:00:00Z",
+              "2008-08-05T06:00:00Z",
+              "2008-08-05T09:00:00Z",
+              "2008-08-05T12:00:00Z",
+              "2008-08-05T15:00:00Z",
+              "2008-08-05T18:00:00Z",
+              "2008-08-05T21:00:00Z",
+              "2008-08-06T00:00:00Z",
+              "2008-08-06T03:00:00Z",
+              "2008-08-06T06:00:00Z",
+              "2008-08-06T09:00:00Z",
+              "2008-08-06T12:00:00Z",
+              "2008-08-06T15:00:00Z",
+              "2008-08-06T18:00:00Z",
+              "2008-08-06T21:00:00Z",
+              "2008-08-07T00:00:00Z",
+              "2008-08-07T03:00:00Z",
+              "2008-08-07T06:00:00Z",
+              "2008-08-07T09:00:00Z",
+              "2008-08-07T12:00:00Z",
+              "2008-08-07T15:00:00Z",
+              "2008-08-07T18:00:00Z",
+              "2008-08-07T21:00:00Z",
+              "2008-08-08T00:00:00Z",
+              "2008-08-08T03:00:00Z",
+              "2008-08-08T06:00:00Z",
+              "2008-08-08T09:00:00Z",
+              "2008-08-08T12:00:00Z",
+              "2008-08-08T15:00:00Z",
+              "2008-08-08T18:00:00Z",
+              "2008-08-08T21:00:00Z",
+              "2008-08-09T00:00:00Z",
+              "2008-08-09T03:00:00Z",
+              "2008-08-09T06:00:00Z",
+              "2008-08-09T09:00:00Z",
+              "2008-08-09T12:00:00Z",
+              "2008-08-09T18:00:00Z",
+              "2008-08-10T00:00:00Z",
+              "2008-08-10T06:00:00Z",
+              "2008-08-10T12:00:00Z",
+              "2008-08-10T18:00:00Z",
+              "2008-08-11T00:00:00Z",
+              "2008-08-11T06:00:00Z",
+              "2008-08-11T12:00:00Z",
+              "2008-08-11T18:00:00Z",
+              "2008-08-12T00:00:00Z",
+              "2008-08-12T06:00:00Z",
+              "2008-08-12T12:00:00Z",
+              "2008-08-12T18:00:00Z",
+              "2008-08-13T00:00:00Z",
+              "2008-08-13T06:00:00Z",
+              "2008-08-13T12:00:00Z",
+              "2008-08-13T18:00:00Z",
+              "2008-08-14T00:00:00Z",
+              "2008-08-14T06:00:00Z",
+              "2008-08-14T12:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2008-08-04T12:00:00Z",
+              "2008-08-14T12:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-08-04T12:00:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              -19.220000000000002,
+              25.000000000000011
+            ],
+            "bottomright" : 
+            [
+              36.549655490858683,
+              26.274123474218921
+            ],
+            "topleft" : 
+            [
+              -61.714073003393167,
+              53.729172424200641
+            ],
+            "topright" : 
+            [
+              79.700000000000003,
+              56.999999999999986
+            ]
+          },
+          "height" : 195,
+          "resolution_km" : 
+          [
+            27.560168294783931,
+            27.775630320656909
+          ],
+          "width" : 255,
+          "wkt" : "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",10],UNIT[\"Metre\",1.0]]"
+        }
+      },
+      "id" : "ecmwf_eurooppa_pinta",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ecmwf_eurooppa_pinta",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_eurooppa_pinta/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_eurooppa_pinta/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ecmwf_eurooppa_pinta"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ecmwf_maailma_piste",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -157.87,
+              -66.599999999999994,
+              178.40000000000001,
+              73.5
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 43,
+            "resolution" : "PT6H"
+          },
+          "interval" : 
+          [
+            [
+              "2008-08-04T12:00:00Z",
+              "2008-08-15T00:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-08-04T12:00:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              0.0,
+              0.0
+            ],
+            "bottomright" : 
+            [
+              0.0,
+              0.0
+            ],
+            "topleft" : 
+            [
+              0.0,
+              0.0
+            ],
+            "topright" : 
+            [
+              0.0,
+              0.0
+            ]
+          },
+          "height" : 0,
+          "resolution_km" : 
+          [
+            0.0,
+            0.0
+          ],
+          "width" : 0,
+          "wkt" : "nan"
+        }
+      },
+      "id" : "ecmwf_maailma_piste",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ecmwf_maailma_piste",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_maailma_piste/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_maailma_piste/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ecmwf_maailma_piste"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer ecmwf_skandinavia_painepinta",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.0987063271781388,
+              51.299999999999997,
+              49.0,
+              72.642084080345256
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 61,
+            "coordinates" : 
+            [
+              "2008-09-09T00:00:00Z",
+              "2008-09-09T03:00:00Z",
+              "2008-09-09T06:00:00Z",
+              "2008-09-09T09:00:00Z",
+              "2008-09-09T12:00:00Z",
+              "2008-09-09T15:00:00Z",
+              "2008-09-09T18:00:00Z",
+              "2008-09-09T21:00:00Z",
+              "2008-09-10T00:00:00Z",
+              "2008-09-10T03:00:00Z",
+              "2008-09-10T06:00:00Z",
+              "2008-09-10T09:00:00Z",
+              "2008-09-10T12:00:00Z",
+              "2008-09-10T15:00:00Z",
+              "2008-09-10T18:00:00Z",
+              "2008-09-10T21:00:00Z",
+              "2008-09-11T00:00:00Z",
+              "2008-09-11T03:00:00Z",
+              "2008-09-11T06:00:00Z",
+              "2008-09-11T09:00:00Z",
+              "2008-09-11T12:00:00Z",
+              "2008-09-11T15:00:00Z",
+              "2008-09-11T18:00:00Z",
+              "2008-09-11T21:00:00Z",
+              "2008-09-12T00:00:00Z",
+              "2008-09-12T03:00:00Z",
+              "2008-09-12T06:00:00Z",
+              "2008-09-12T09:00:00Z",
+              "2008-09-12T12:00:00Z",
+              "2008-09-12T15:00:00Z",
+              "2008-09-12T18:00:00Z",
+              "2008-09-12T21:00:00Z",
+              "2008-09-13T00:00:00Z",
+              "2008-09-13T03:00:00Z",
+              "2008-09-13T06:00:00Z",
+              "2008-09-13T09:00:00Z",
+              "2008-09-13T12:00:00Z",
+              "2008-09-13T15:00:00Z",
+              "2008-09-13T18:00:00Z",
+              "2008-09-13T21:00:00Z",
+              "2008-09-14T00:00:00Z",
+              "2008-09-14T06:00:00Z",
+              "2008-09-14T12:00:00Z",
+              "2008-09-14T18:00:00Z",
+              "2008-09-15T00:00:00Z",
+              "2008-09-15T06:00:00Z",
+              "2008-09-15T12:00:00Z",
+              "2008-09-15T18:00:00Z",
+              "2008-09-16T00:00:00Z",
+              "2008-09-16T06:00:00Z",
+              "2008-09-16T12:00:00Z",
+              "2008-09-16T18:00:00Z",
+              "2008-09-17T00:00:00Z",
+              "2008-09-17T06:00:00Z",
+              "2008-09-17T12:00:00Z",
+              "2008-09-17T18:00:00Z",
+              "2008-09-18T00:00:00Z",
+              "2008-09-18T06:00:00Z",
+              "2008-09-18T12:00:00Z",
+              "2008-09-18T18:00:00Z",
+              "2008-09-19T00:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2008-09-09T00:00:00Z",
+              "2008-09-19T00:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-09-09T00:00:00Z"
+        },
+        "vertical" : 
+        {
+          "grid" : 
+          {
+            "coordinates" : 
+            [
+              1000.0,
+              925.0,
+              850.0,
+              700.0,
+              500.0,
+              300.0
+            ]
+          },
+          "interval" : 
+          [
+            [
+              300.0,
+              1000.0
+            ]
+          ],
+          "x-smartmet-leveltype" : "PressureLevel"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              5.9999999999999982,
+              51.299999999999997
+            ],
+            "bottomright" : 
+            [
+              33.945513439134608,
+              51.308475951942697
+            ],
+            "topleft" : 
+            [
+              -9.0987063271781388,
+              70.181420321658095
+            ],
+            "topright" : 
+            [
+              49.0,
+              70.200000000000003
+            ]
+          },
+          "height" : 57,
+          "resolution_km" : 
+          [
+            38.769051945797784,
+            39.933408103912384
+          ],
+          "width" : 53,
+          "wkt" : "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],UNIT[\"Metre\",1.0]]"
+        }
+      },
+      "id" : "ecmwf_skandinavia_painepinta",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/ecmwf_skandinavia_painepinta",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_skandinavia_painepinta/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/ecmwf_skandinavia_painepinta/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "ecmwf_skandinavia_painepinta"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer metcoop",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -18.118179851153673,
+              49.765786639371377,
+              54.237000000000002,
+              75.227120106735171
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2020-05-27T12:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2020-05-27T12:00:00Z",
+              "2020-05-27T12:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2020-05-27T06:00:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              0.27899999999999475,
+              50.32
+            ],
+            "bottomright" : 
+            [
+              33.026667716785163,
+              49.765786639371377
+            ],
+            "topleft" : 
+            [
+              -18.118179851153673,
+              72.761272306093758
+            ],
+            "topright" : 
+            [
+              54.237000000000002,
+              71.575000000000003
+            ]
+          },
+          "height" : 1069,
+          "resolution_km" : 
+          [
+            2.4999600880162309,
+            2.4998891568256174
+          ],
+          "width" : 949,
+          "wkt" : "PROJCS[\"FMI_LambertConic\",GEOGCS[\"Unknown\",DATUM[\"Unknown\",SPHEROID[\"Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Lambert_Conformal_Conic_2SP\"],PARAMETER[\"latitude_of_origin\",63.3],PARAMETER[\"central_meridian\",15],PARAMETER[\"standard_parallel_1\",63.3],PARAMETER[\"standard_parallel_2\",63.3],UNIT[\"Metre\",1.0]]"
+        }
+      },
+      "id" : "metcoop",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/metcoop",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/metcoop/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/metcoop/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "metcoop"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer pal_skandinavia",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.0987063271781388,
+              51.299999999999997,
+              49.0,
+              72.642084080345256
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 100,
+            "resolution" : "PT1H"
+          },
+          "interval" : 
+          [
+            [
+              "2008-08-05T03:00:00Z",
+              "2008-08-09T06:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-08-05T06:31:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              5.9999999999999982,
+              51.299999999999997
+            ],
+            "bottomright" : 
+            [
+              33.945513439134608,
+              51.308475951942697
+            ],
+            "topleft" : 
+            [
+              -9.0987063271781388,
+              70.181420321658095
+            ],
+            "topright" : 
+            [
+              49.0,
+              70.200000000000003
+            ]
+          },
+          "height" : 150,
+          "resolution_km" : 
+          [
+            15.044706725234962,
+            15.008529220262373
+          ],
+          "width" : 135,
+          "wkt" : "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],UNIT[\"Metre\",1.0]]"
+        }
+      },
+      "id" : "pal_skandinavia",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/pal_skandinavia",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/pal_skandinavia/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/pal_skandinavia/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "pal_skandinavia"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer pal_skandinavia_dl",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.0987063271781388,
+              51.299999999999997,
+              49.0,
+              72.642084080345256
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 295,
+            "resolution" : "PT1H"
+          },
+          "interval" : 
+          [
+            [
+              "2013-09-17T12:00:00Z",
+              "2013-09-29T18:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2013-09-20T12:37:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              5.9999999999999982,
+              51.299999999999997
+            ],
+            "bottomright" : 
+            [
+              33.945513439134608,
+              51.308475951942697
+            ],
+            "topleft" : 
+            [
+              -9.0987063271781388,
+              70.181420321658095
+            ],
+            "topright" : 
+            [
+              49.0,
+              70.200000000000003
+            ]
+          },
+          "height" : 150,
+          "resolution_km" : 
+          [
+            15.044706725234962,
+            15.008529220262373
+          ],
+          "width" : 135,
+          "wkt" : "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],UNIT[\"Metre\",1.0]]"
+        }
+      },
+      "id" : "pal_skandinavia_dl",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/pal_skandinavia_dl",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/pal_skandinavia_dl/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/pal_skandinavia_dl/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "pal_skandinavia_dl"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer radar_accrate",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              7.7882884615706729,
+              57.103030198994894,
+              42.712869026593978,
+              71.435776412893617
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2026-07-18T18:15:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2026-07-18T18:15:00Z",
+              "2026-07-18T18:15:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-07-18T18:15:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              15.278998722472418,
+              57.103030198994894
+            ],
+            "bottomright" : 
+            [
+              36.508782209029313,
+              57.292223406413498
+            ],
+            "topleft" : 
+            [
+              7.7882884615706729,
+              70.421393242554998
+            ],
+            "topright" : 
+            [
+              42.712869026593978,
+              70.766686700768204
+            ]
+          },
+          "height" : 1536,
+          "resolution_km" : 
+          [
+            1.0007818608286578,
+            1.0006514657978873
+          ],
+          "width" : 1280,
+          "wkt" : "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on WGS 84 ellipsoid\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+        }
+      },
+      "id" : "radar_accrate",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_accrate",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_accrate/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/radar_accrate/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "radar_accrate"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer radar_anjalankoski_dbzh",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              23.212835050341667,
+              59.059110999690404,
+              31.015322354193557,
+              62.698564286106674
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2026-07-18T18:15:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2026-07-18T18:15:00Z",
+              "2026-07-18T18:15:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-07-18T18:15:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              23.615010337185065,
+              59.064603920727933
+            ],
+            "bottomright" : 
+            [
+              30.589048690825468,
+              59.059110999690404
+            ],
+            "topleft" : 
+            [
+              23.212835050341667,
+              62.647408436689169
+            ],
+            "topright" : 
+            [
+              31.015322354193557,
+              62.641049258654967
+            ]
+          },
+          "height" : 2000,
+          "resolution_km" : 
+          [
+            0.20001999970711812,
+            0.20002000013433011
+          ],
+          "width" : 2000,
+          "wkt" : "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on WGS 84 ellipsoid\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+        }
+      },
+      "id" : "radar_anjalankoski_dbzh",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_dbzh",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_dbzh/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_dbzh/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "radar_anjalankoski_dbzh"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer radar_anjalankoski_etop",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              22.171230393330021,
+              58.586010677922232,
+              32.059844240276874,
+              63.145805536313922
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2026-07-18T18:20:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2026-07-18T18:20:00Z",
+              "2026-07-18T18:20:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-07-18T18:20:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              22.802675953464639,
+              58.592745549555239
+            ],
+            "bottomright" : 
+            [
+              31.398431641226907,
+              58.586010677922232
+            ],
+            "topleft" : 
+            [
+              22.171230393330021,
+              63.063504718089298
+            ],
+            "topright" : 
+            [
+              32.059844240276874,
+              63.055419566735665
+            ]
+          },
+          "height" : 999,
+          "resolution_km" : 
+          [
+            0.5005004994774257,
+            0.50050050055008299
+          ],
+          "width" : 999,
+          "wkt" : "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on WGS 84 ellipsoid\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+        }
+      },
+      "id" : "radar_anjalankoski_etop",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_etop",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_etop/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/radar_anjalankoski_etop/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "radar_anjalankoski_etop"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer radar_finland_dbz",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              6.6872835868441776,
+              55.935452622606903,
+              43.115804455152741,
+              72.855020188536514
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2026-07-18T18:20:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2026-07-18T18:20:00Z",
+              "2026-07-18T18:20:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-07-18T18:20:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              15.824723496833615,
+              55.935452622606903
+            ],
+            "bottomright" : 
+            [
+              35.76622328985269,
+              56.132142337653008
+            ],
+            "topleft" : 
+            [
+              6.6872835868441776,
+              71.790339028628935
+            ],
+            "topright" : 
+            [
+              43.115804455152741,
+              72.196788753449724
+            ]
+          },
+          "height" : 7316,
+          "resolution_km" : 
+          [
+            0.25000401887358348,
+            0.2500139839308651
+          ],
+          "width" : 4963,
+          "wkt" : "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on WGS 84 ellipsoid\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+        }
+      },
+      "id" : "radar_finland_dbz",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_finland_dbz",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_finland_dbz/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/radar_finland_dbz/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "radar_finland_dbz"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer radar_finland_rr1h",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              10.234734292014149,
+              56.757261097375292,
+              37.353115408810162,
+              71.266923128018604
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 1,
+            "coordinates" : 
+            [
+              "2026-07-18T18:00:00Z"
+            ]
+          },
+          "interval" : 
+          [
+            [
+              "2026-07-18T18:00:00Z",
+              "2026-07-18T18:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2026-07-18T18:00:00Z"
+        },
+        "x-smartmet-grid" : 
+        {
+          "corners" : 
+          {
+            "bottomleft" : 
+            [
+              16.875436423477616,
+              56.757261097375292
+            ],
+            "bottomright" : 
+            [
+              33.180392045578529,
+              57.016427495239249
+            ],
+            "topleft" : 
+            [
+              10.234734292014149,
+              70.496332011849958
+            ],
+            "topright" : 
+            [
+              37.353115408810162,
+              70.97879673057345
+            ]
+          },
+          "height" : 1345,
+          "resolution_km" : 
+          [
+            1.1692930568409372,
+            1.1688701637539542
+          ],
+          "width" : 850,
+          "wkt" : "PROJCS[\"unknown\",GEOGCS[\"unknown\",DATUM[\"Unknown based on WGS 84 ellipsoid\",SPHEROID[\"WGS 84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",27],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+        }
+      },
+      "id" : "radar_finland_rr1h",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/radar_finland_rr1h",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/radar_finland_rr1h/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/radar_finland_rr1h/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "radar_finland_rr1h"
+    }
+  ],
+  "links" : 
+  [
+    {
+      "href" : "/coverages/collections",
+      "rel" : "self",
+      "type" : "application/json"
+    }
+  ]
+}

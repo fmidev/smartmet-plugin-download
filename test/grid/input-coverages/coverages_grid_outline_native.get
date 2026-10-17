@@ -1,0 +1,3 @@
+GET /coverages/collections/PAL_SKANDINAVIA/outline HTTP/1.0
+X-Test-Headers: Content-Type
+

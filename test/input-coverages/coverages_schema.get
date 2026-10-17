@@ -1,0 +1,3 @@
+GET /coverages/collections/pal_skandinavia/schema HTTP/1.0
+X-Test-Headers: Content-Type
+

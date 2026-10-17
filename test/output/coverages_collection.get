@@ -7,7 +7,73 @@ Content-Type: application/json
     "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
   ],
   "description" : "Coverage collection for producer pal_skandinavia_dl",
-  "extent" : {},
+  "extent" : 
+  {
+    "spatial" : 
+    {
+      "bbox" : 
+      [
+        [
+          -9.0987063271781388,
+          51.299999999999997,
+          49.0,
+          72.642084080345256
+        ]
+      ],
+      "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+    },
+    "temporal" : 
+    {
+      "grid" : 
+      {
+        "cellsCount" : 295,
+        "resolution" : "PT1H"
+      },
+      "interval" : 
+      [
+        [
+          "2013-09-17T12:00:00Z",
+          "2013-09-29T18:00:00Z"
+        ]
+      ],
+      "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+      "x-smartmet-origintime" : "2013-09-20T12:37:00Z"
+    },
+    "x-smartmet-grid" : 
+    {
+      "corners" : 
+      {
+        "bottomleft" : 
+        [
+          5.9999999999999982,
+          51.299999999999997
+        ],
+        "bottomright" : 
+        [
+          33.945513439134608,
+          51.308475951942697
+        ],
+        "topleft" : 
+        [
+          -9.0987063271781388,
+          70.181420321658095
+        ],
+        "topright" : 
+        [
+          49.0,
+          70.200000000000003
+        ]
+      },
+      "height" : 150,
+      "resolution_km" : 
+      [
+        15.044706725234962,
+        15.008529220262373
+      ],
+      "width" : 135,
+      "wkt" : "PROJCS[\"FMI_Polar_Stereographic\",GEOGCS[\"FMI_Sphere\",DATUM[\"FMI_2007\",SPHEROID[\"FMI_Sphere\",6371220,0]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],UNIT[\"Metre\",1.0]]"
+    }
+  },
   "id" : "pal_skandinavia_dl",
   "links" : 
   [

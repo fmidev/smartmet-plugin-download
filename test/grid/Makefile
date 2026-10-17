@@ -36,12 +36,28 @@ test-impl:
 	@echo "*** coverages suites; these are separate grid-source tests      ***"
 	@echo "*******************************************************************"
 	@echo ""
+	@ok=true; \
 	$(TEST_RUNNER) smartmet-plugin-test \
 		--handler /download \
 		--reactor-config cnf/reactor.conf \
-		--timeout $(TEST_TIMEOUT)
+		--timeout $(TEST_TIMEOUT) || ok=false; \
+	echo ""; \
+	echo "*** OGC API Coverages metadata of grid-engine producers         ***"; \
+	echo "*** (requests: test/grid/input-coverages)                       ***"; \
+	echo ""; \
+	$(TEST_RUNNER) smartmet-plugin-test \
+		--handler /coverages \
+		--reactor-config cnf/reactor.conf \
+		--input-dir input-coverages \
+		--timeout $(TEST_TIMEOUT) || ok=false; \
+	$$ok
 
 start-redis-db:
+	@port=$$(sed -n 's/^REDIS_CONTENT_SERVER_PORT *= *//p' cnf/environment.conf); \
+	if bash -c "exec 3<>/dev/tcp/127.0.0.1/$$port" 2>/dev/null; then \
+		echo "*** Port $$port is already in use: the tests would read another Redis database"; \
+		exit 1; \
+	fi
 	rm -rf cnf/grid
 	cp -pr $(datadir)/smartmet/test/grid cnf/
 	@echo "*** Creating the Redis configuration file."
