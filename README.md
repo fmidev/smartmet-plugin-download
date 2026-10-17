@@ -22,13 +22,19 @@ level/levels and model(producer) options are not used when fetching grid data; s
 * levels=level,level,... (hybrid or hPa pressure level; e.g. levels=1000,925,850,700,500,400,300,250,200,100,50)
 * param=param,param,... (e.g. param=Temperature,DewPoint,Humidity,WindSpeedMS,WindDirection,WindUMS,WindVMS,Pressure,Precipitation1h,TotalCloudCover,GeopHeight)
 * projection=projdef (newbase projection string or epsg code (e.g. epsg:4326) for QueryData, or epsg code, proj4 projection string or wkt for grid data
-* format=GRIB1|GRIB2|netcfd|qd (grid data output in qd (QueryData) format is not supported)
+* format=GRIB1|GRIB2|NetCDF|GeoTIFF|QD (case insensitive; GeoTIFF also as GTIFF or TIFF; grid data output in QD (QueryData) format is not supported)
 * model (or producer) (e.g. model=harmonie_scandinavia_surface)
+* source=querydata|grid (see [Data sources](#data-sources))
+* origintime=t (see [Origintime](#origintime))
+* minlevel=X, maxlevel=X (level range)
+* datum=X (datum shift of QueryData output)
+* packing=type, bitspervalue=N (see [Packing](#packing))
+* tablesversion=N (GRIB2 tables version, within the configured range)
 * gridstep=x,y (select every Nth cell on the x and the y axis)
 * gridsize=x,y (number of cells on the x and the y axis)
 * gridresolution=x,y (grid cell width/height in kilometers). Similar to gridsize option, but in geographical units.
 * bbox=left,bottom,right,top (bounding box edges as lon and lat coordinates, e.g. bbox=22,64,24,68. Data is cropped from source grid if no reprojecting)
-* gridcenter=centerx,centery,offsetx,offsety (an alternative way to define bbox using grid center's lon/lat coordinates and offsets to grid edges as kilometers)
+* gridcenter=centerx,centery,width,height (an alternative way to define bbox using grid center's lon/lat coordinates and the width and height of the grid in kilometers; cannot be used with bbox)
 
 ## Levels
 By default all levels are returned. This can be limited with the options. Option is not used when fetching grid data; see [Data sources](#data-sources).
@@ -131,7 +137,11 @@ If the value is nonpositive, an error message is returned.
 
 Option syntax: 
 <pre><code>packing=type </code></pre>
-This option is used to select the packing type for the GRIB format output. The given type is used as it is. The default type is GRIB_simple.
+This option is used to select the packing type for the GRIB format output. The type is passed to eccodes as given (converted to lowercase), and it must be given together with the number of bits per value:
+
+<pre><code>packing=type&bitspervalue=N</code></pre>
+
+where N is 0-32. Without the options the packing of the eccodes sample is used. The `packing` settings of the configuration file can disable packing types or reject them with a message.
 
 Note: some packing types can cause overhead at the server and these types should not be applied unless there are special reasons such as it is necessary to transfer less data due to the slow communication link etc.
 
@@ -258,13 +268,13 @@ netcdfconfig = <filename>;
 #### Producers
 The Default producer at FMI is "pal_skandinavia". All available QueryData producers can be used or only a subset of producers can be enabled by configuration.
 
-#### Path for temporary NetCDF files.
+#### Path for temporary NetCDF and GeoTIFF files.
 <pre><code> 
 tempdirectory = <pathname>;
 </code></pre>
 
-* default: /dev/shm. 
-* Note: for better performance memory mapped file system should be used. Complete NetCDF files (multiple files when  processing simultaneous download requests) are written to this  location; disk space availability could become an issue.
+* default: /var/tmp. 
+* Note: for better performance a memory based file system such as /dev/shm should be used. Complete NetCDF files (multiple files when  processing simultaneous download requests) are written to this  location; disk space availability could become an issue.
 
 ### GRIB_API to QueryData parameter mapping
 

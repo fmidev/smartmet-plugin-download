@@ -28,12 +28,11 @@ same encoders and streaming pipeline.
 
 ## 2. Output formats
 
-- **GRIB edition 1** — `format=grib1` (alias `grb`). Encoded via
-  eccodes.
-- **GRIB edition 2** — `format=grib2` (alias `grb2`). Encoded via
-  eccodes.
-- **NetCDF 4** — `format=netcdf` (alias `nc`). Encoded via
+- **GRIB edition 1** — `format=grib1`. Encoded via eccodes.
+- **GRIB edition 2** — `format=grib2`. Encoded via eccodes.
+- **NetCDF 4** — `format=netcdf`. Encoded via
   `libnetcdf_c++4`; written to a temp file then streamed.
+- **GeoTIFF** — `format=geotiff` (aliases `gtiff`, `tiff`).
 - **QueryData (FMI native)** — `format=qd`. Encoded via newbase.
   Available for the QueryData data source only.
 - **Streamed delivery** — all responses use Spine's chunked HTTP
@@ -55,8 +54,8 @@ A single `source=` parameter picks the backend.
 
 - **Bounding box** — `bbox=left,bottom,right,top` (lon/lat). Crops
   from the source grid when no reprojection is requested.
-- **Centre + offset** — `gridcenter=cx,cy,offx,offy` defines the box
-  by centre lon/lat plus offsets in kilometres.
+- **Centre + size** — `gridcenter=cx,cy,width,height` defines the box
+  by centre lon/lat plus its width and height in kilometres.
 - **CRS / projection** —
   - newbase projection strings or EPSG code for QueryData output,
   - EPSG code, proj4 string or WKT for grid output.
