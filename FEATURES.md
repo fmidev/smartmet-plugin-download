@@ -188,7 +188,17 @@ internal `ReqParams` so that:
 - **CRS** maps to the projection string.
 - **`f=...`** picks the output format (`grib2`, `netcdf`, ...).
 - **Collection metadata endpoints** — listing collections and their
-  domains follow the OGC API – Coverages REST shape.
+  domains follow the OGC API – Coverages REST shape. The extents come
+  from the engine metadata, with the native grid (`x-smartmet-grid`,
+  querydata) or the geometries of the latest model run
+  (`x-smartmet-grids`, grid data), and each collection has a schema of
+  its own parameters.
+- **Outline endpoint** — `/coverages/collections/{id}/outline` gives the
+  area a coverage request would cover as a GeoJSON polygon in longitude
+  and latitude, with the grid size, the numbers of times, parameters and
+  levels and an estimate of the size of the download.
+- **API catalog** — `/coverages` is listed with the kind `coverages` in
+  the API catalog of the server (`/api`), used by the data explorer.
 
 ## 15. Testing
 
@@ -233,4 +243,4 @@ Integration-test suite under `test/`:
 
 ---
 
-*Last updated: 2026-06-01.*
+*Last updated: 2026-10-17.*
