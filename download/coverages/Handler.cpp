@@ -80,7 +80,7 @@ static const string COVERAGES_ROOT = "/coverages";
 
 namespace
 {
-#if JSONCPP_VERSION_HEXA < 0x010903
+#if JSONCPP_VERSION_HEXA < 0x01090300
 // jsoncpp before 1.9.3 (RHEL8) has no emitUTF8 and writes characters outside ASCII as \uXXXX:
 // they are written as UTF-8 again, so that the responses are the same on every platform.
 // Control characters stay escaped.
@@ -144,7 +144,7 @@ void setJsonResponse(Spine::HTTP::Response &theResponse, const Json::Value &doc)
   Json::StreamWriterBuilder builder;
   builder["indentation"] = "  ";
   builder["emitUTF8"] = true;
-#if JSONCPP_VERSION_HEXA < 0x010903
+#if JSONCPP_VERSION_HEXA < 0x01090300
   theResponse.setContent(unescapeUnicode(Json::writeString(builder, doc)) + "\n");
 #else
   theResponse.setContent(Json::writeString(builder, doc) + "\n");
