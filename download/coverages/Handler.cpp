@@ -1849,7 +1849,9 @@ void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
     if (!scaleSize.empty())
     {
       vector<string> sizes;
-      boost::split(sizes, parseScaleSize(scaleSize), boost::is_any_of(","));
+      // A named string: boost::split of Boost 1.69 takes no temporaries
+      const string parsed = parseScaleSize(scaleSize);
+      boost::split(sizes, parsed, boost::is_any_of(","));
       if (sizes.size() == 2)
       {
         grid["width"] = Fmi::stoi(sizes[0]);
