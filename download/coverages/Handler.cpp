@@ -18,6 +18,7 @@
 #include <boost/lexical_cast.hpp>
 #include <engines/querydata/MetaQueryOptions.h>
 #include <gis/ProjInfo.h>
+#include <json/version.h>
 #include <json/writer.h>
 #include <macgyver/CharsetTools.h>
 #include <macgyver/DateTime.h>
@@ -29,6 +30,7 @@
 #include <spine/FmiApiKey.h>
 #include <spine/HostInfo.h>
 #include <algorithm>
+#include <cmath>
 #include <cpl_conv.h>
 #include <limits>
 #include <memory>
@@ -78,12 +80,75 @@ static const string COVERAGES_ROOT = "/coverages";
 
 namespace
 {
+#if JSONCPP_VERSION_HEXA < 0x010903
+// jsoncpp before 1.9.3 (RHEL8) has no emitUTF8 and writes characters outside ASCII as \uXXXX:
+// they are written as UTF-8 again, so that the responses are the same on every platform.
+// Control characters stay escaped.
+std::string unescapeUnicode(const std::string &json)
+{
+  std::string out;
+  out.reserve(json.size());
+  const auto hex = [&json](std::size_t pos) { return std::stoul(json.substr(pos, 4), nullptr, 16); };
+  for (std::size_t i = 0; i < json.size(); i++)
+  {
+    if (json[i] != '\\' || i + 1 >= json.size())
+    {
+      out += json[i];
+      continue;
+    }
+    if (json[i + 1] != 'u' || i + 5 >= json.size())
+    {
+      // An escape of another character, such as \\ or \"
+      out += json[i];
+      out += json[++i];
+      continue;
+    }
+    unsigned long cp = hex(i + 2);
+    std::size_t length = 6;
+    if (cp >= 0xD800 && cp < 0xDC00 && i + 11 < json.size() && json[i + 6] == '\\' &&
+        json[i + 7] == 'u')
+    {
+      cp = 0x10000 + ((cp - 0xD800) << 10) + (hex(i + 8) - 0xDC00);
+      length = 12;
+    }
+    if (cp < 0x80)
+    {
+      out.append(json, i, length);
+    }
+    else if (cp < 0x800)
+    {
+      out += static_cast<char>(0xC0 | (cp >> 6));
+      out += static_cast<char>(0x80 | (cp & 0x3F));
+    }
+    else if (cp < 0x10000)
+    {
+      out += static_cast<char>(0xE0 | (cp >> 12));
+      out += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+      out += static_cast<char>(0x80 | (cp & 0x3F));
+    }
+    else
+    {
+      out += static_cast<char>(0xF0 | (cp >> 18));
+      out += static_cast<char>(0x80 | ((cp >> 12) & 0x3F));
+      out += static_cast<char>(0x80 | ((cp >> 6) & 0x3F));
+      out += static_cast<char>(0x80 | (cp & 0x3F));
+    }
+    i += length - 1;
+  }
+  return out;
+}
+#endif
+
 void setJsonResponse(Spine::HTTP::Response &theResponse, const Json::Value &doc)
 {
   Json::StreamWriterBuilder builder;
   builder["indentation"] = "  ";
   builder["emitUTF8"] = true;
+#if JSONCPP_VERSION_HEXA < 0x010903
+  theResponse.setContent(unescapeUnicode(Json::writeString(builder, doc)) + "\n");
+#else
   theResponse.setContent(Json::writeString(builder, doc) + "\n");
+#endif
   theResponse.setStatus(Spine::HTTP::Status::ok);
   theResponse.setHeader("Content-Type", "application/json");
   theResponse.setHeader("Access-Control-Allow-Origin", "*");
@@ -1835,9 +1900,10 @@ void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
                                 : y2 - f * (y2 - y1));
         if (!inverse.apply(x, y))
           continue;
+        // Rounded to 1e-7: the last digits differ between PROJ versions
         Json::Value point(Json::arrayValue);
-        point.append(x);
-        point.append(y);
+        point.append(std::round(x * 1e7) / 1e7);
+        point.append(std::round(y * 1e7) / 1e7);
         ring.append(point);
       }
     if (ring.size() > 0)
@@ -1928,7 +1994,7 @@ void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
     auto& props = doc["properties"];
     props["crs"] = (crs.empty() ? (native.isMember("wkt") ? "native" : "EPSG:4326") : crs);
     for (double v : {x1, y1, x2, y2})
-      props["bbox"].append(v);
+      props["bbox"].append(std::round(v * 1e7) / 1e7);
     props["times"] = static_cast<Json::UInt64>(times);
     props["parameters"] = static_cast<Json::UInt64>(params);
     props["levels"] = static_cast<Json::UInt64>(levels);
