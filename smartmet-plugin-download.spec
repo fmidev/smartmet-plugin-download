@@ -85,6 +85,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: gdal312-devel
 #TestRequires: jsoncpp-devel
 #TestRequires: ctpp2-devel
+#TestRequires: python3-jsonschema
 
 %description
 SmartMet Download Plugin
