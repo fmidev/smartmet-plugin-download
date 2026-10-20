@@ -12,18 +12,18 @@ QDTOOLS_GRIB := $(datadir)/smartmet/test/data/qdtools/input/grib/LC-0TO1_ground_
 # fast native data fetching (direct copy) of a global grid. Reuses geometry 5204.
 
 ECGMTA_GRIB := $(datadir)/smartmet/test/data/grib/ecgmta/ecgmta_pot_prcnt.grib
-REDIS_PORT = $(shell awk -F= '/^REDIS_CONTENT_SERVER_PORT/{gsub(/[ \t]/,"",$$2); print $$2}' cnf/environment.conf)
+
+# Starts the Redis test database listening only on a Unix socket below /tmp
+GRID_TEST_REDIS ?= smartmet-grid-test-redis
 
 all:
-
-# Stop the Redis server afterwards, otherwise the next run would silently use the
-# old server (and its old data) since the new one cannot bind to the same port
 
 test test-grid:	start-redis-db
 	if $(MAKE) test-impl; then ok=true; else ok=false; fi; $(MAKE) stop-redis-db; $$ok
 
 clean:
 	rm -rf failures
+	-$(GRID_TEST_REDIS) stop
 	rm -rf cnf/grid
 
 test-impl:
@@ -53,17 +53,7 @@ test-impl:
 	$$ok
 
 start-redis-db:
-	@port=$$(sed -n 's/^REDIS_CONTENT_SERVER_PORT *= *//p' cnf/environment.conf); \
-	if bash -c "exec 3<>/dev/tcp/127.0.0.1/$$port" 2>/dev/null; then \
-		echo "*** Port $$port is already in use: the tests would read another Redis database"; \
-		exit 1; \
-	fi
-	rm -rf cnf/grid
-	cp -pr $(datadir)/smartmet/test/grid cnf/
-	@echo "*** Creating the Redis configuration file."
-	smartmet-grid-test-config-creator cnf/environment.conf cnf/grid/redis/redis-template.conf cnf/grid/redis/redis.conf
-	@echo "*** Starting the Redis database."
-	@redis-server cnf/grid/redis/redis.conf
+	$(GRID_TEST_REDIS) start
 	$(MAKE) register-qdtools-data
 	$(MAKE) register-ecgmta-data
 
@@ -91,13 +81,13 @@ register-qdtools-data:
 	cat extra/fmi_geometries_qdtools.csv >> cnf/grid/library/test/fmi_geometries.csv
 	echo "qdtools_ll:5204" >> cnf/grid/engine/producers_test.csv
 	echo "qdtools_ll;LC-0TO1;2;LC-0TO1;5204;1;1;00000;1;1;1;0;E;;;;" >> cnf/grid/engine/mapping_fmi_test.csv
-	@redis-cli -p $(REDIS_PORT) zadd test.producers 0 "12;qdtools_ll;qdtools_ll;;0;0" > /dev/null
-	@redis-cli -p $(REDIS_PORT) zadd test.generations 0 "13;0;12;qdtools_ll:20190606T180000;;20190606T180000;1;0;0" > /dev/null
-	@redis-cli -p $(REDIS_PORT) zadd test.files 0 "20;2;/qdtools/input/grib/LC-0TO1_ground_0_ll_3600_1801_0_000.grib;12;13;0;1;0;;" > /dev/null
-	@redis-cli -p $(REDIS_PORT) zadd test.content 0 "20;0;2;0;6483708;12;13;0;20190606T180000;143;LC-0TO1;0;0;0;0;0;1;1;1;0;0to1;;1;-1;0;0;0;5204;;" > /dev/null
-	@redis-cli -p $(REDIS_PORT) set test.producerCounter 12 > /dev/null
-	@redis-cli -p $(REDIS_PORT) set test.generationCounter 13 > /dev/null
-	@redis-cli -p $(REDIS_PORT) set test.fileCounter 20 > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.producers 0 "12;qdtools_ll;qdtools_ll;;0;0" > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.generations 0 "13;0;12;qdtools_ll:20190606T180000;;20190606T180000;1;0;0" > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.files 0 "20;2;/qdtools/input/grib/LC-0TO1_ground_0_ll_3600_1801_0_000.grib;12;13;0;1;0;;" > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.content 0 "20;0;2;0;6483708;12;13;0;20190606T180000;143;LC-0TO1;0;0;0;0;0;1;1;1;0;0to1;;1;-1;0;0;0;5204;;" > /dev/null
+	@$(GRID_TEST_REDIS) cli set test.producerCounter 12 > /dev/null
+	@$(GRID_TEST_REDIS) cli set test.generationCounter 13 > /dev/null
+	@$(GRID_TEST_REDIS) cli set test.fileCounter 20 > /dev/null
 
 # Register the global thunderstorm probability grid (reuses geometry 5204).
 register-ecgmta-data:
@@ -106,16 +96,13 @@ register-ecgmta-data:
 	@echo "*** Registering ecgmta test data into the Redis database."
 	echo "ecgmta:5204" >> cnf/grid/engine/producers_test.csv
 	echo "ecgmta;POT-PRCNT;2;POT-PRCNT;5204;1;1;00000;1;1;1;0;E;;;;" >> cnf/grid/engine/mapping_fmi_test.csv
-	@redis-cli -p $(REDIS_PORT) zadd test.producers 0 "13;ecgmta;ecgmta;;0;0" > /dev/null
-	@redis-cli -p $(REDIS_PORT) zadd test.generations 0 "14;0;13;ecgmta:20260615T120000;;20260615T120000;1;0;0" > /dev/null
-	@redis-cli -p $(REDIS_PORT) zadd test.files 0 "21;2;/grib/ecgmta/ecgmta_pot_prcnt.grib;13;14;0;1;0;;" > /dev/null
-	@redis-cli -p $(REDIS_PORT) zadd test.content 0 "21;0;2;0;5673333;13;14;0;20260616T000000;701;POT-PRCNT;0;0;0;0;0;1;1;1;0;%;;1;-1;0;0;0;5204;;" > /dev/null
-	@redis-cli -p $(REDIS_PORT) set test.producerCounter 13 > /dev/null
-	@redis-cli -p $(REDIS_PORT) set test.generationCounter 14 > /dev/null
-	@redis-cli -p $(REDIS_PORT) set test.fileCounter 21 > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.producers 0 "13;ecgmta;ecgmta;;0;0" > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.generations 0 "14;0;13;ecgmta:20260615T120000;;20260615T120000;1;0;0" > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.files 0 "21;2;/grib/ecgmta/ecgmta_pot_prcnt.grib;13;14;0;1;0;;" > /dev/null
+	@$(GRID_TEST_REDIS) cli zadd test.content 0 "21;0;2;0;5673333;13;14;0;20260616T000000;701;POT-PRCNT;0;0;0;0;0;1;1;1;0;%;;1;-1;0;0;0;5204;;" > /dev/null
+	@$(GRID_TEST_REDIS) cli set test.producerCounter 13 > /dev/null
+	@$(GRID_TEST_REDIS) cli set test.generationCounter 14 > /dev/null
+	@$(GRID_TEST_REDIS) cli set test.fileCounter 21 > /dev/null
 
 stop-redis-db:
-	@if [ -f cnf/grid/redis/redis-server.pid ] ; then \
-		cat cnf/grid/redis/redis-server.pid | xargs kill -9; \
-		rm -f cnf/grid/redis/redis-server.pid; \
-	fi
+	$(GRID_TEST_REDIS) stop
