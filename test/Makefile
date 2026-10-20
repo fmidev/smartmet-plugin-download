@@ -37,6 +37,9 @@ clean:
 
 TEST_DB_DIR := $(shell pwd)/tmp-geonames-db
 
+# Starts the Redis test database listening only on a Unix socket below /tmp
+GRID_TEST_REDIS ?= smartmet-grid-test-redis
+
 TEST_PREPARE_TARGETS := cnf/geonames.conf start-redis-db
 TEST_FINISH_TARGETS := .dummy stop-redis-db
 ifdef CI
@@ -123,18 +126,10 @@ stop-geonames-db:
 	-/usr/share/smartmet/test/db/test-db-ctl.sh $(TEST_DB_DIR) stop -w
 
 start-redis-db:
-	rm -rf cnf/grid
-	cp -pr $(datadir)/smartmet/test/grid cnf/
-	@echo "*** Creating the Redis configuration file."
-	smartmet-grid-test-config-creator cnf/environment.conf cnf/grid/redis/redis-template.conf cnf/grid/redis/redis.conf
-	@echo "*** Starting the Redis database."
-	@redis-server cnf/grid/redis/redis.conf
+	$(GRID_TEST_REDIS) start
 
 stop-redis-db:
-	@if [ -f cnf/grid/redis/redis-server.pid ] ; then \
-		cat cnf/grid/redis/redis-server.pid | xargs kill -9; \
-		rm -f cnf/grid/redis/redis-server.pid; \
-	fi
+	$(GRID_TEST_REDIS) stop
 
 .dummy:
 	true

@@ -29,8 +29,8 @@ BuildRequires: smartmet-library-spine-devel >= 26.10.17-1
 BuildRequires: smartmet-library-macgyver-devel >= 26.10.16
 BuildRequires: smartmet-library-timeseries-devel >= 26.10.16
 BuildRequires: smartmet-library-newbase-devel >= 26.10.16
-BuildRequires: smartmet-library-grid-content-devel >= 26.10.16
-BuildRequires: smartmet-library-grid-files-devel >= 26.10.16
+BuildRequires: smartmet-library-grid-content-devel >= 26.10.20
+BuildRequires: smartmet-library-grid-files-devel >= 26.10.20
 BuildRequires: netcdf-devel
 BuildRequires: smartmet-engine-querydata-devel >= 26.10.16
 BuildRequires: smartmet-engine-geonames-devel >= 26.10.16
@@ -49,8 +49,8 @@ Requires: smartmet-library-spine >= 26.10.17-1
 Requires: smartmet-swagger-ui
 Requires: smartmet-library-newbase >= 26.10.17
 Requires: smartmet-engine-querydata >= 26.10.17
-Requires: smartmet-library-grid-content >= 26.10.17
-Requires: smartmet-library-grid-files >= 26.10.17
+Requires: smartmet-library-grid-content >= 26.10.20
+Requires: smartmet-library-grid-files >= 26.10.20
 Requires: smartmet-engine-grid >= 26.10.17
 Requires: smartmet-server >= 26.10.17
 Requires: %{smartmet_boost}-iostreams
@@ -75,8 +75,8 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-qdtools >= 26.10.17
 #TestRequires: smartmet-test-data >= 26.10.17-1
 #TestRequires: smartmet-test-db >= 26.5.8
-#TestRequires: smartmet-library-grid-files-test >= 26.10.17-1
-#TestRequires: smartmet-library-grid-files >= 26.10.17
+#TestRequires: smartmet-library-grid-files-test >= 26.10.20-1
+#TestRequires: smartmet-library-grid-files >= 26.10.20
 #TestRequires: wgrib
 #TestRequires: wgrib2
 #TestRequires: zlib-devel
