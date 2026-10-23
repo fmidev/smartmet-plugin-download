@@ -1497,7 +1497,8 @@ void NetCdfStreamer::setGdalGeometry(const NcVar &crsVar, const NFmiArea *area)
       std::vector<double> numbers;
       bool numeric = true;
       std::vector<std::string> items;
-      boost::algorithm::split(items, std::string(value), boost::is_any_of(","));
+      const std::string valuestr(value);
+      boost::algorithm::split(items, valuestr, boost::is_any_of(","));
       for (const auto &item : items)
       {
         char *end = nullptr;
