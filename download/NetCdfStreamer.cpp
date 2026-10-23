@@ -11,6 +11,7 @@
 #include <gis/ProjInfo.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
+#include <boost/algorithm/string.hpp>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiMetTime.h>
 #include <newbase/NFmiQueryData.h>
@@ -1445,6 +1446,88 @@ void NetCdfStreamer::setLambertConformalGeometry(const NcVar &crsVar,
 
 // ----------------------------------------------------------------------
 /*!
+ * \brief Set the projection metadata of a PROJ based area
+ *
+ * GDAL knows the CF-1 grid mappings of the projections, for example the
+ * lambert_azimuthal_equal_area of EPSG:3035. The WKT is stored as well
+ * (CF-1.7 crs_wkt) so that readers get the exact definition.
+ */
+// ----------------------------------------------------------------------
+
+void NetCdfStreamer::setGdalGeometry(const NcVar &crsVar, const NFmiArea *area)
+{
+  try
+  {
+    OGRSpatialReference *geometrySRS = itsResources.getGeometrySRS();
+    OGRSpatialReference areaSRS;
+
+    if ((!geometrySRS) && (!area))
+      throw Fmi::Exception(BCP, "Internal error, either SRS or NFmiArea is required");
+
+    if (!geometrySRS)
+    {
+      areaSRS = *Fmi::OGRSpatialReferenceFactory::Create(area->WKT());
+      geometrySRS = &areaSRS;
+    }
+
+    char *mappingName = nullptr;
+    char **keyValues = nullptr;
+    char *units = nullptr;
+    if (geometrySRS->exportToCF1(&mappingName, &keyValues, &units, nullptr) != OGRERR_NONE ||
+        mappingName == nullptr)
+    {
+      CPLFree(mappingName);
+      CSLDestroy(keyValues);
+      CPLFree(units);
+      throw Fmi::Exception(BCP, "Unsupported projection in input data");
+    }
+
+    crsVar.putAtt("grid_mapping_name", mappingName);
+
+    // Values are numbers or comma separated lists of numbers
+    for (char **kv = keyValues; kv != nullptr && *kv != nullptr; ++kv)
+    {
+      char *key = nullptr;
+      const char *value = CPLParseNameValue(*kv, &key);
+      if (key == nullptr || value == nullptr)
+      {
+        CPLFree(key);
+        continue;
+      }
+      std::vector<double> numbers;
+      bool numeric = true;
+      std::vector<std::string> items;
+      boost::algorithm::split(items, std::string(value), boost::is_any_of(","));
+      for (const auto &item : items)
+      {
+        char *end = nullptr;
+        numbers.push_back(std::strtod(item.c_str(), &end));
+        if (end == item.c_str() || *end != '\0')
+          numeric = false;
+      }
+      if (numeric && !numbers.empty())
+        crsVar.putAtt(key, NcType::nc_DOUBLE, numbers.size(), numbers.data());
+      else
+        crsVar.putAtt(key, value);
+      CPLFree(key);
+    }
+    CPLFree(mappingName);
+    CSLDestroy(keyValues);
+    CPLFree(units);
+
+    char *wkt = nullptr;
+    if (geometrySRS->exportToWkt(&wkt) == OGRERR_NONE && wkt != nullptr)
+      crsVar.putAtt("crs_wkt", wkt);
+    CPLFree(wkt);
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
+
+// ----------------------------------------------------------------------
+/*!
  * \brief Store projected y and x coordinate variables
  */
 // ----------------------------------------------------------------------
@@ -1640,6 +1723,9 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
         break;
       case kNFmiLambertConformalConicArea:
         setLambertConformalGeometry(crsVar, area);
+        break;
+      case kNFmiGdalArea:
+        setGdalGeometry(crsVar, area);
         break;
       default:
         throw Fmi::Exception(BCP, "Unsupported projection in input data");

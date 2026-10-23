@@ -2,7 +2,7 @@
 %define SPECNAME smartmet-plugin-%{DIRNAME}
 Summary: SmartMet Download Plugin
 Name: %{SPECNAME}
-Version: 26.10.20
+Version: 26.10.23
 Release: 1%{?dist}.fmi
 License: MIT
 Group: SmartMet/Plugins
@@ -109,6 +109,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/smartmet/plugins/download.so
 
 %changelog
+* Fri Oct 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.10.23-1.fmi
+- NetCDF output supports all PROJ based grids, for example EPSG:3035, using the CF grid mappings known to GDAL and a crs_wkt attribute, instead of failing with 'Unsupported projection'
+
 * Tue Oct 20 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.20-1.fmi
 - Use UNIX socket with Valkey/Redis db for tests
 

@@ -131,6 +131,7 @@ class NetCdfStreamer : public DataStreamer
   void setYKJGeometry(const netCDF::NcVar &crsVar);
   void setLambertConformalGeometry(const netCDF::NcVar &crsVar,
                                    const NFmiArea *area = nullptr);
+  void setGdalGeometry(const netCDF::NcVar &crsVar, const NFmiArea *area);
   void setGeometry(const Engine::Querydata::Q& q, const NFmiArea *area, const NFmiGrid *grid);
 
   // Output grid index range and steps
