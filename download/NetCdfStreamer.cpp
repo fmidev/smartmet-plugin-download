@@ -1719,7 +1719,12 @@ void NetCdfStreamer::setGeometry(const Engine::Querydata::Q& q,
         setStereographicGeometry(crsVar, area);
         break;
       case kNFmiYKJArea:
-        setYKJGeometry(crsVar);
+        // A_TransverseMercator equals kNFmiYKJArea: a requested transverse mercator projection
+        // such as EPSG:3067 has its own parameters, only native YKJ data is EPSG:2393
+        if (itsResources.getGeometrySRS() != nullptr)
+          setTransverseMercatorGeometry(crsVar);
+        else
+          setYKJGeometry(crsVar);
         break;
       case kNFmiLambertConformalConicArea:
         setLambertConformalGeometry(crsVar, area);

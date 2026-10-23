@@ -111,6 +111,7 @@ rm -rf $RPM_BUILD_ROOT
 %changelog
 * Fri Oct 23 2026 Mika Heiskanen <mika.heiskanen@fmi.fi> 26.10.23-1.fmi
 - NetCDF output supports all PROJ based grids, for example EPSG:3035, using the CF grid mappings known to GDAL and a crs_wkt attribute, instead of failing with 'Unsupported projection'
+- NetCDF output of querydata in a requested transverse mercator projection such as EPSG:3067 declared the YKJ (EPSG:2393) grid mapping; the parameters now come from the requested projection
 
 * Tue Oct 20 2026 Andris Pavēnis <andris.pavenis@fmi.fi> 26.10.20-1.fmi
 - Use UNIX socket with Valkey/Redis db for tests
