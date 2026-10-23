@@ -1,0 +1,67 @@
+netcdf nc_laea-europe {
+dimensions:
+	time = 2 ;
+	y = 30 ;
+	x = 40 ;
+variables:
+	int time(time) ;
+		time:long_name = "time" ;
+		time:calendar = "gregorian" ;
+		time:units = "hours since 2013-09-17 10:00:00" ;
+	short crs ;
+		crs:grid_mapping_name = "lambert_azimuthal_equal_area" ;
+		crs:false_easting = 4321000. ;
+		crs:false_northing = 3210000. ;
+		crs:latitude_of_projection_origin = 52. ;
+		crs:longitude_of_projection_origin = 10. ;
+		crs:long_name = "CRS definition" ;
+		crs:longitude_of_prime_meridian = 0. ;
+		crs:semi_major_axis = 6378137. ;
+		crs:inverse_flattening = 298.257222101 ;
+		crs:crs_wkt = "PROJCS[\"ETRS89-extended / LAEA Europe\",GEOGCS[\"ETRS89\",DATUM[\"European_Terrestrial_Reference_System_1989\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6258\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4258\"]],PROJECTION[\"Lambert_Azimuthal_Equal_Area\"],PARAMETER[\"latitude_of_center\",52],PARAMETER[\"longitude_of_center\",10],PARAMETER[\"false_easting\",4321000],PARAMETER[\"false_northing\",3210000],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Northing\",NORTH],AXIS[\"Easting\",EAST],AUTHORITY[\"EPSG\",\"3035\"]]" ;
+		crs:semi_major = 6378137. ;
+	float y(y) ;
+		y:standard_name = "projection_y_coordinate" ;
+		y:units = "m" ;
+		y:axis = "Y" ;
+	float x(x) ;
+		x:standard_name = "projection_x_coordinate" ;
+		x:units = "m" ;
+		x:axis = "X" ;
+	float lat(y, x) ;
+		lat:standard_name = "latitude" ;
+		lat:long_name = "latitude" ;
+		lat:units = "degrees_north" ;
+	float lon(y, x) ;
+		lon:standard_name = "longitude" ;
+		lon:long_name = "longitude" ;
+		lon:units = "degrees_east" ;
+	float air_temperature_4(time, y, x) ;
+		air_temperature_4:units = "K" ;
+		air_temperature_4:_FillValue = 32700.f ;
+		air_temperature_4:missing_value = 32700.f ;
+		air_temperature_4:grid_mapping = "crs" ;
+		air_temperature_4:standard_name = "air_temperature" ;
+		air_temperature_4:long_name = "Air temperature" ;
+		air_temperature_4:coordinates = "lat lon" ;
+
+// global attributes:
+		:Conventions = "CF-1.6" ;
+		:title = "<title>" ;
+		:institution = "fmi.fi" ;
+		:source = "<producer>" ;
+data:
+
+ time = 0, 1 ;
+
+ y = 3554927, 3615757, 3676588, 3737418, 3798249, 3859079, 3919910, 3980740, 
+    4041571, 4102402, 4163232, 4224062, 4284893, 4345724, 4406554, 4467384, 
+    4528215, 4589046, 4649876, 4710706, 4771537, 4832368, 4893198, 4954028, 
+    5014859, 5075690, 5136520, 5197350, 5258181, 5319012 ;
+
+ x = 4001200, 4028897, 4056594, 4084292, 4111990, 4139688, 4167385, 4195082, 
+    4222780, 4250478, 4278176, 4305873, 4333570, 4361268, 4388966, 4416664, 
+    4444361, 4472058, 4499756, 4527454, 4555152, 4582849, 4610546, 4638244, 
+    4665942, 4693640, 4721337, 4749034, 4776732, 4804430, 4832127, 4859825, 
+    4887522, 4915220, 4942918, 4970615, 4998313, 5026010, 5053708, 5081406 ;
+}
