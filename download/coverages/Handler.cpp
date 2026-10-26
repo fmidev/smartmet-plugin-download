@@ -1340,32 +1340,16 @@ Json::Value querydataExtent(const Engine::Querydata::MetaData& md)
   return extent;
 }
 
-// The extent of grid data: the union of the geometries of the latest generation, each
-// described in x-smartmet-grids
-Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
+// The longitude-latitude bounding box of grids
+struct LonLatBox
 {
-  Json::Value extent;
-  if (metadata.empty())
-    return extent;
-
-  // The latest generation
-  std::string latest;
-  for (const auto& md : metadata)
-    latest = std::max(latest, md.analysisTime);
-
   double xmin = 180;
   double ymin = 90;
   double xmax = -180;
   double ymax = -90;
-  std::set<std::string> times;
-  std::set<int> levels;
-  std::set<int> geometries;
-  std::string level_name;
-  Json::Value grids(Json::arrayValue);
-  for (const auto& md : metadata)
+
+  void add(const Engine::Grid::MetaData& md)
   {
-    if (md.analysisTime != latest)
-      continue;
     // The west edge from the left corners and the east edge from the right ones: taking the
     // extremes of all the corners fails for grids crossing the antimeridian, and for global
     // grids whose corners are at 0 and 359.9 (= -0.1) degrees
@@ -1390,41 +1374,35 @@ Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
       ymin = std::min(ymin, c.y());
       ymax = std::max(ymax, c.y());
     }
-    times.insert(md.times.begin(), md.times.end());
-    if (level_name.empty() || level_name == md.levelName)
-    {
-      level_name = md.levelName;
-      levels.insert(md.levels.begin(), md.levels.end());
-    }
-    if (!geometries.insert(md.geometryId).second)
-      continue;
-    Json::Value grid;
-    grid["geometry"] = md.geometryId;
-    grid["projection"] = md.projectionName;
-    grid["wkt"] = md.wkt;
-    grid["width"] = md.xNumber;
-    grid["height"] = md.yNumber;
-    // The corners in longitude and latitude, as for querydata
-    const auto corner = [](const T::Coordinate& c)
-    {
-      Json::Value v(Json::arrayValue);
-      v.append(c.x());
-      v.append(c.y());
-      return v;
-    };
-    grid["corners"]["bottomleft"] = corner(md.latlon_bottomLeft);
-    grid["corners"]["bottomright"] = corner(md.latlon_bottomRight);
-    grid["corners"]["topleft"] = corner(md.latlon_topLeft);
-    grid["corners"]["topright"] = corner(md.latlon_topRight);
-    grids.append(grid);
   }
-  if (ymin > ymax)
-    return extent;
+};
 
-  extent["spatial"]["bbox"].append(bboxValue(xmin, ymin, xmax, ymax));
-  extent["spatial"]["crs"] = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
-  extent["x-smartmet-grids"] = grids;
+// One geometry of grid data, the corners in longitude and latitude as for querydata
+Json::Value gridGeometry(const Engine::Grid::MetaData& md)
+{
+  const auto corner = [](const T::Coordinate& c)
+  {
+    Json::Value v(Json::arrayValue);
+    v.append(c.x());
+    v.append(c.y());
+    return v;
+  };
+  Json::Value grid;
+  grid["geometry"] = md.geometryId;
+  grid["projection"] = md.projectionName;
+  grid["wkt"] = md.wkt;
+  grid["width"] = md.xNumber;
+  grid["height"] = md.yNumber;
+  grid["corners"]["bottomleft"] = corner(md.latlon_bottomLeft);
+  grid["corners"]["bottomright"] = corner(md.latlon_bottomRight);
+  grid["corners"]["topleft"] = corner(md.latlon_topLeft);
+  grid["corners"]["topright"] = corner(md.latlon_topRight);
+  return grid;
+}
 
+// The temporal extent of the times of a generation, invalid times ignored
+Json::Value gridTemporalExtent(const std::set<std::string>& times, const std::string& generation)
+{
   std::list<Fmi::DateTime> parsed;
   for (const auto& t : times)
   {
@@ -1439,24 +1417,69 @@ Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
   Fmi::DateTime origin;
   try
   {
-    origin = Fmi::DateTime::from_iso_string(latest);
+    origin = Fmi::DateTime::from_iso_string(generation);
   }
   catch (...)
   {
   }
-  extent["temporal"] = temporalExtent(parsed, origin);
+  return temporalExtent(parsed, origin);
+}
 
-  if (levels.size() > 1)
+Json::Value gridVerticalExtent(const std::set<int>& levels, const std::string& level_name)
+{
+  Json::Value vertical;
+  Json::Value interval(Json::arrayValue);
+  interval.append(*levels.begin());
+  interval.append(*levels.rbegin());
+  vertical["interval"].append(interval);
+  for (int level : levels)
+    vertical["grid"]["coordinates"].append(level);
+  vertical["x-smartmet-leveltype"] = level_name;
+  return vertical;
+}
+
+// The extent of grid data: the union of the geometries of the latest generation, each
+// described in x-smartmet-grids
+Json::Value gridExtent(const std::list<Engine::Grid::MetaData>& metadata)
+{
+  Json::Value extent;
+  if (metadata.empty())
+    return extent;
+
+  // The latest generation
+  std::string latest;
+  for (const auto& md : metadata)
+    latest = std::max(latest, md.analysisTime);
+
+  LonLatBox box;
+  std::set<std::string> times;
+  std::set<int> levels;
+  std::set<int> geometries;
+  std::string level_name;
+  Json::Value grids(Json::arrayValue);
+  for (const auto& md : metadata)
   {
-    auto& vertical = extent["vertical"];
-    Json::Value interval(Json::arrayValue);
-    interval.append(*levels.begin());
-    interval.append(*levels.rbegin());
-    vertical["interval"].append(interval);
-    for (int level : levels)
-      vertical["grid"]["coordinates"].append(level);
-    vertical["x-smartmet-leveltype"] = level_name;
+    if (md.analysisTime != latest)
+      continue;
+    box.add(md);
+    times.insert(md.times.begin(), md.times.end());
+    if (level_name.empty() || level_name == md.levelName)
+    {
+      level_name = md.levelName;
+      levels.insert(md.levels.begin(), md.levels.end());
+    }
+    if (geometries.insert(md.geometryId).second)
+      grids.append(gridGeometry(md));
   }
+  if (box.ymin > box.ymax)
+    return extent;
+
+  extent["spatial"]["bbox"].append(bboxValue(box.xmin, box.ymin, box.xmax, box.ymax));
+  extent["spatial"]["crs"] = "http://www.opengis.net/def/crs/OGC/1.3/CRS84";
+  extent["x-smartmet-grids"] = grids;
+  extent["temporal"] = gridTemporalExtent(times, latest);
+  if (levels.size() > 1)
+    extent["vertical"] = gridVerticalExtent(levels, level_name);
   return extent;
 }
 
@@ -1623,6 +1646,43 @@ std::map<std::string, CoveragesHandler::ParameterInfo> CoveragesHandler::paramet
   return ret;
 }
 
+namespace
+{
+// The parameters of the GRIB and NetCDF tables by newbase id. The NetCDF table is the
+// primary source since it has CF standard names, long names and units, the GRIB table
+// supplements it with the parameters that only appear there.
+std::map<long, const ParamChangeItem*> schemaParameters(const ParamChangeTable& ncTable,
+                                                        const ParamChangeTable& gribTable)
+{
+  std::map<long, const ParamChangeItem*> params;
+  for (const auto& item : ncTable)
+  {
+    long id = item.itsWantedParam.GetIdent();
+    if (id > 0)
+      params[id] = &item;
+  }
+  for (const auto& item : gribTable)
+  {
+    long id = item.itsWantedParam.GetIdent();
+    if (id > 0)
+      params.emplace(id, &item);  // only if not in the NetCDF table
+  }
+  return params;
+}
+
+void addSchemaProperty(Json::Value& property, long id, const ParamChangeItem& item)
+{
+  property["type"] = "number";
+  property["x-fmi-id"] = static_cast<Json::Int64>(id);
+  if (!item.itsLongName.empty())
+    property["title"] = item.itsLongName;
+  if (!item.itsStdName.empty())
+    property["x-ogc-propertyName"] = item.itsStdName;
+  if (!item.itsUnit.empty())
+    property["x-ogc-unit"] = item.itsUnit;
+}
+}  // namespace
+
 void CoveragesHandler::handleSchema(const Spine::HTTP::Request& /* theRequest */,
                                     Spine::HTTP::Response& theResponse,
                                     const std::string& collectionId)
@@ -1630,32 +1690,8 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request& /* theRequest */
   // The parameters of the producer, all configured parameters if the engines do not know it
   auto available = parameters(collectionId);
 
-  // Build field schema from the parameter configuration tables.
-  // Use the NetCDF table as the primary source since it has CF standard names,
-  // long names and units.  Supplement with GRIB table for parameters that
-  // only appear there.
-
-  const auto &ncTable = itsConfig->getParamChangeTable(false);  // NetCDF
-  const auto &gribTable = itsConfig->getParamChangeTable(true); // GRIB
-
-  // Collect unique parameters by newbase ID to avoid duplicates
-  std::map<long, const ParamChangeItem *> params;
-
-  // NetCDF entries first (richer metadata)
-  for (const auto &item : ncTable)
-  {
-    long id = item.itsWantedParam.GetIdent();
-    if (id > 0)
-      params[id] = &item;
-  }
-
-  // GRIB entries for parameters not already covered
-  for (const auto &item : gribTable)
-  {
-    long id = item.itsWantedParam.GetIdent();
-    if (id > 0 && params.find(id) == params.end())
-      params[id] = &item;
-  }
+  const auto params = schemaParameters(itsConfig->getParamChangeTable(false),  // NetCDF
+                                       itsConfig->getParamChangeTable(true));  // GRIB
 
   Json::Value doc;
   doc["$schema"] = "https://json-schema.org/draft/2020-12/schema";
@@ -1677,16 +1713,7 @@ void CoveragesHandler::handleSchema(const Spine::HTTP::Request& /* theRequest */
         continue;
       available.erase(pos);
     }
-
-    auto &property = properties[name];
-    property["type"] = "number";
-    property["x-fmi-id"] = static_cast<Json::Int64>(entry.first);
-    if (!item.itsLongName.empty())
-      property["title"] = item.itsLongName;
-    if (!item.itsStdName.empty())
-      property["x-ogc-propertyName"] = item.itsStdName;
-    if (!item.itsUnit.empty())
-      property["x-ogc-unit"] = item.itsUnit;
+    addSchemaProperty(properties[name], entry.first, item);
   }
 
   // Parameters of the data without a GRIB or NetCDF mapping
@@ -1776,6 +1803,267 @@ std::size_t countItems(const string& list)
   return std::count_if(
       parts.begin(), parts.end(), [](const string& p) { return !boost::trim_copy(p).empty(); });
 }
+
+// The native grid of the extent, the first one of grid data
+Json::Value nativeGrid(const Json::Value& ext)
+{
+  if (ext.isMember("x-smartmet-grid"))
+    return ext["x-smartmet-grid"];
+  if (ext["x-smartmet-grids"].isArray() && ext["x-smartmet-grids"].size() > 0)
+    return ext["x-smartmet-grids"][0];
+  return {};
+}
+
+// The output CRS: the crs option, the native grid, or longitude-latitude
+std::unique_ptr<OGRSpatialReference> outputSpatialReference(const string& crs,
+                                                            const Json::Value& native)
+{
+  if (!crs.empty())
+    return spatialReference(crs);
+  if (native["wkt"].isString() && !native["wkt"].asString().empty())
+    return spatialReference(native["wkt"].asString());
+  return spatialReference("EPSG:4326");
+}
+
+struct Rectangle
+{
+  double x1 = 0;
+  double y1 = 0;
+  double x2 = 0;
+  double y2 = 0;
+};
+
+// The corners of the bbox option in the output CRS
+Rectangle bboxRectangle(const string& bbox, const Transformation& forward)
+{
+  vector<string> parts;
+  boost::split(parts, bbox, boost::is_any_of(","));
+  if (parts.size() != 4)
+    throw Fmi::Exception(BCP, "bbox must be minlon,minlat,maxlon,maxlat");
+  Rectangle r;
+  r.x1 = Fmi::stod(boost::trim_copy(parts[0]));
+  r.y1 = Fmi::stod(boost::trim_copy(parts[1]));
+  r.x2 = Fmi::stod(boost::trim_copy(parts[2]));
+  r.y2 = Fmi::stod(boost::trim_copy(parts[3]));
+  if (!forward.apply(r.x1, r.y1) || !forward.apply(r.x2, r.y2))
+    throw Fmi::Exception(BCP, "The bbox cannot be expressed in the output crs");
+  return r;
+}
+
+// The corners of the native grid in its own CRS
+Rectangle cornerRectangle(const Json::Value& corners, const Transformation& forward)
+{
+  Rectangle r;
+  r.x1 = corners["bottomleft"][0].asDouble();
+  r.y1 = corners["bottomleft"][1].asDouble();
+  r.x2 = corners["topright"][0].asDouble();
+  r.y2 = corners["topright"][1].asDouble();
+  if (!forward.apply(r.x1, r.y1) || !forward.apply(r.x2, r.y2))
+    throw Fmi::Exception(BCP, "The native grid cannot be expressed in its own crs");
+  return r;
+}
+
+// A point on an edge (0=south, 1=north, 2=west, 3=east) of a longitude-latitude box
+void boxEdgePoint(const Json::Value& b, int edge, double f, double& lon, double& lat)
+{
+  lon = b[0].asDouble() + f * (b[2].asDouble() - b[0].asDouble());
+  lat = b[1].asDouble() + f * (b[3].asDouble() - b[1].asDouble());
+  if (edge == 0)
+    lat = b[1].asDouble();
+  else if (edge == 1)
+    lat = b[3].asDouble();
+  else if (edge == 2)
+    lon = b[0].asDouble();
+  else
+    lon = b[2].asDouble();
+}
+
+// The extent of the native longitude-latitude box in the output CRS
+Rectangle boxRectangle(const Json::Value& b, const Transformation& forward)
+{
+  Rectangle r;
+  r.x1 = r.y1 = std::numeric_limits<double>::max();
+  r.x2 = r.y2 = std::numeric_limits<double>::lowest();
+  const int n = 32;
+  for (int i = 0; i <= n; i++)
+    for (int edge = 0; edge < 4; edge++)
+    {
+      double lon = 0;
+      double lat = 0;
+      boxEdgePoint(b, edge, static_cast<double>(i) / n, lon, lat);
+      if (!forward.apply(lon, lat))
+        continue;
+      r.x1 = std::min(r.x1, lon);
+      r.y1 = std::min(r.y1, lat);
+      r.x2 = std::max(r.x2, lon);
+      r.y2 = std::max(r.y2, lat);
+    }
+  if (r.x1 > r.x2)
+    throw Fmi::Exception(BCP, "The area cannot be expressed in the output crs");
+  return r;
+}
+
+// The rectangle in the output CRS: the bbox, the native grid, or the extent of the native area
+Rectangle outputRectangle(const string& bbox,
+                          const string& crs,
+                          const Json::Value& ext,
+                          const Json::Value& native,
+                          const OGRSpatialReference& target,
+                          const Transformation& forward)
+{
+  Rectangle r;
+  if (!bbox.empty())
+    r = bboxRectangle(bbox, forward);
+  else if (crs.empty() && native["corners"].isObject())
+    r = cornerRectangle(native["corners"], forward);
+  else
+    r = boxRectangle(ext["spatial"]["bbox"][0], forward);
+
+  // A global longitude-latitude grid has its corners at 0 and 359.9 (= -0.1) degrees
+  if (target.IsGeographic() && bbox.empty() && r.x2 <= r.x1)
+    r.x2 += 360;
+  if (r.x1 > r.x2)
+    std::swap(r.x1, r.x2);
+  if (r.y1 > r.y2)
+    std::swap(r.y1, r.y2);
+  return r;
+}
+
+// A point on the boundary of the rectangle, counterclockwise from the bottom left corner
+void rectangleEdgePoint(const Rectangle& r, int edge, double f, double& x, double& y)
+{
+  switch (edge)
+  {
+    case 0:
+      x = r.x1 + f * (r.x2 - r.x1);
+      y = r.y1;
+      break;
+    case 1:
+      x = r.x2;
+      y = r.y1 + f * (r.y2 - r.y1);
+      break;
+    case 2:
+      x = r.x2 - f * (r.x2 - r.x1);
+      y = r.y2;
+      break;
+    default:
+      x = r.x1;
+      y = r.y2 - f * (r.y2 - r.y1);
+  }
+}
+
+// The outline of the rectangle in longitude and latitude
+Json::Value outlineRing(const Rectangle& r, const Transformation& inverse)
+{
+  Json::Value ring(Json::arrayValue);
+  const int n = 32;
+  for (int edge = 0; edge < 4; edge++)
+    for (int i = 0; i < n; i++)
+    {
+      double x = 0;
+      double y = 0;
+      rectangleEdgePoint(r, edge, static_cast<double>(i) / n, x, y);
+      if (!inverse.apply(x, y))
+        continue;
+      // Rounded to 1e-7: the last digits differ between PROJ versions
+      Json::Value point(Json::arrayValue);
+      point.append(std::round(x * 1e7) / 1e7);
+      point.append(std::round(y * 1e7) / 1e7);
+      ring.append(point);
+    }
+  if (ring.size() > 0)
+    ring.append(ring[0]);
+  return ring;
+}
+
+// The size of the grid: given, the native one, or estimated from the native resolution
+Json::Value outputGridSize(const string& scaleSize,
+                           bool nativeArea,
+                           const Json::Value& native,
+                           const OGRSpatialReference& target,
+                           const Rectangle& r)
+{
+  Json::Value grid;
+  if (!scaleSize.empty())
+  {
+    vector<string> sizes;
+    // A named string: boost::split of Boost 1.69 takes no temporaries
+    const string parsed = parseScaleSize(scaleSize);
+    boost::split(sizes, parsed, boost::is_any_of(","));
+    if (sizes.size() == 2)
+    {
+      grid["width"] = Fmi::stoi(sizes[0]);
+      grid["height"] = Fmi::stoi(sizes[1]);
+      grid["estimated"] = false;
+    }
+    return grid;
+  }
+  if (nativeArea && native.isMember("width"))
+  {
+    grid["width"] = native["width"];
+    grid["height"] = native["height"];
+    grid["estimated"] = false;
+    return grid;
+  }
+  if (!native["resolution_km"].isArray())
+    return grid;
+
+  // Kilometres to the units of the output CRS
+  const double km = native["resolution_km"][0].asDouble();
+  const double unit = (target.IsGeographic() ? 111.32 : target.GetLinearUnits() / 1000.0);
+  if (km > 0 && unit > 0)
+  {
+    const double step = km / unit;
+    grid["width"] = std::max(1, static_cast<int>(std::lround((r.x2 - r.x1) / step)) + 1);
+    grid["height"] = std::max(1, static_cast<int>(std::lround((r.y2 - r.y1) / step)) + 1);
+    grid["estimated"] = true;
+  }
+  return grid;
+}
+
+// The number of times in a datetime interval within the temporal extent, none if unknown
+std::optional<std::size_t> intervalTimes(const Json::Value& temporal,
+                                         const string& datetime,
+                                         std::size_t slash,
+                                         long step)
+{
+  try
+  {
+    const auto& interval = temporal["interval"][0];
+    auto t1 = datetime.substr(0, slash);
+    auto t2 = datetime.substr(slash + 1);
+    if (t1 == ".." || t1.empty())
+      t1 = interval[0].asString();
+    if (t2 == ".." || t2.empty())
+      t2 = interval[1].asString();
+    const auto start =
+        std::max(Fmi::TimeParser::parse(t1), Fmi::TimeParser::parse(interval[0].asString()));
+    const auto end =
+        std::min(Fmi::TimeParser::parse(t2), Fmi::TimeParser::parse(interval[1].asString()));
+    const long minutes = (end - start).total_seconds() / 60;
+    return (minutes < 0 ? 0 : static_cast<std::size_t>(minutes / step) + 1);
+  }
+  catch (...)
+  {
+    return {};
+  }
+}
+
+// The number of times the datetime option selects. The count of the whole data stays as
+// an upper limit if it cannot be calculated.
+std::size_t timeCount(const Json::Value& temporal, const string& datetime)
+{
+  const std::size_t all = temporal["grid"]["cellsCount"].asUInt64();
+  if (datetime.empty())
+    return all;
+  const auto slash = datetime.find('/');
+  if (slash == string::npos)
+    return 1;
+  const long step = durationMinutes(temporal["grid"]["resolution"].asString());
+  if (step <= 0)
+    return all;
+  return intervalTimes(temporal, datetime, slash, step).value_or(all);
+}
 }  // namespace
 
 void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
@@ -1794,206 +2082,41 @@ void CoveragesHandler::handleOutline(const Spine::HTTP::Request& theRequest,
       return;
     }
 
-    // The native grid
-    Json::Value native;
-    if (ext.isMember("x-smartmet-grid"))
-      native = ext["x-smartmet-grid"];
-    else if (ext["x-smartmet-grids"].isArray() && ext["x-smartmet-grids"].size() > 0)
-      native = ext["x-smartmet-grids"][0];
-
-    // The output CRS: the crs option, the native grid, or longitude-latitude
+    const auto native = nativeGrid(ext);
     const auto crs = Spine::optional_string(theRequest.getParameter("crs"), "");
-    std::unique_ptr<OGRSpatialReference> target;
-    if (!crs.empty())
-      target = spatialReference(crs);
-    else if (native["wkt"].isString() && !native["wkt"].asString().empty())
-      target = spatialReference(native["wkt"].asString());
-    else
-      target = spatialReference("EPSG:4326");
+    const auto target = outputSpatialReference(crs, native);
     auto lonlat = spatialReference("EPSG:4326");
     const auto forward = transformation(*lonlat, *target);
     const auto inverse = transformation(*target, *lonlat);
 
-    // The rectangle in the output CRS
-    double x1 = 0;
-    double y1 = 0;
-    double x2 = 0;
-    double y2 = 0;
     const auto bbox = Spine::optional_string(theRequest.getParameter("bbox"), "");
-    const auto& corners = native["corners"];
-    if (!bbox.empty())
-    {
-      vector<string> parts;
-      boost::split(parts, bbox, boost::is_any_of(","));
-      if (parts.size() != 4)
-        throw Fmi::Exception(BCP, "bbox must be minlon,minlat,maxlon,maxlat");
-      x1 = Fmi::stod(boost::trim_copy(parts[0]));
-      y1 = Fmi::stod(boost::trim_copy(parts[1]));
-      x2 = Fmi::stod(boost::trim_copy(parts[2]));
-      y2 = Fmi::stod(boost::trim_copy(parts[3]));
-      if (!forward.apply(x1, y1) || !forward.apply(x2, y2))
-        throw Fmi::Exception(BCP, "The bbox cannot be expressed in the output crs");
-    }
-    else if (crs.empty() && corners.isObject())
-    {
-      x1 = corners["bottomleft"][0].asDouble();
-      y1 = corners["bottomleft"][1].asDouble();
-      x2 = corners["topright"][0].asDouble();
-      y2 = corners["topright"][1].asDouble();
-      if (!forward.apply(x1, y1) || !forward.apply(x2, y2))
-        throw Fmi::Exception(BCP, "The native grid cannot be expressed in its own crs");
-    }
-    else
-    {
-      // The extent of the native area in the output CRS
-      const auto& b = ext["spatial"]["bbox"][0];
-      x1 = y1 = std::numeric_limits<double>::max();
-      x2 = y2 = std::numeric_limits<double>::lowest();
-      const int n = 32;
-      for (int i = 0; i <= n; i++)
-        for (int edge = 0; edge < 4; edge++)
-        {
-          const double f = static_cast<double>(i) / n;
-          double lon = b[0].asDouble() + f * (b[2].asDouble() - b[0].asDouble());
-          double lat = b[1].asDouble() + f * (b[3].asDouble() - b[1].asDouble());
-          if (edge == 0)
-            lat = b[1].asDouble();
-          else if (edge == 1)
-            lat = b[3].asDouble();
-          else if (edge == 2)
-            lon = b[0].asDouble();
-          else
-            lon = b[2].asDouble();
-          if (forward.apply(lon, lat))
-          {
-            x1 = std::min(x1, lon);
-            y1 = std::min(y1, lat);
-            x2 = std::max(x2, lon);
-            y2 = std::max(y2, lat);
-          }
-        }
-      if (x1 > x2)
-        throw Fmi::Exception(BCP, "The area cannot be expressed in the output crs");
-    }
-    // A global longitude-latitude grid has its corners at 0 and 359.9 (= -0.1) degrees
-    if (target->IsGeographic() && bbox.empty() && x2 <= x1)
-      x2 += 360;
-    if (x1 > x2)
-      std::swap(x1, x2);
-    if (y1 > y2)
-      std::swap(y1, y2);
+    const auto r = outputRectangle(bbox, crs, ext, native, *target, forward);
 
-    // The outline in longitude and latitude
-    Json::Value ring(Json::arrayValue);
-    const int n = 32;
-    for (int edge = 0; edge < 4; edge++)
-      for (int i = 0; i < n; i++)
-      {
-        const double f = static_cast<double>(i) / n;
-        double x = (edge == 0   ? x1 + f * (x2 - x1)
-                    : edge == 1 ? x2
-                    : edge == 2 ? x2 - f * (x2 - x1)
-                                : x1);
-        double y = (edge == 0   ? y1
-                    : edge == 1 ? y1 + f * (y2 - y1)
-                    : edge == 2 ? y2
-                                : y2 - f * (y2 - y1));
-        if (!inverse.apply(x, y))
-          continue;
-        // Rounded to 1e-7: the last digits differ between PROJ versions
-        Json::Value point(Json::arrayValue);
-        point.append(std::round(x * 1e7) / 1e7);
-        point.append(std::round(y * 1e7) / 1e7);
-        ring.append(point);
-      }
-    if (ring.size() > 0)
-      ring.append(ring[0]);
-
-    // The size of the grid: given, or estimated from the native resolution
-    Json::Value grid;
     const auto scaleSize = Spine::optional_string(theRequest.getParameter("scale-size"), "");
-    if (!scaleSize.empty())
-    {
-      vector<string> sizes;
-      // A named string: boost::split of Boost 1.69 takes no temporaries
-      const string parsed = parseScaleSize(scaleSize);
-      boost::split(sizes, parsed, boost::is_any_of(","));
-      if (sizes.size() == 2)
-      {
-        grid["width"] = Fmi::stoi(sizes[0]);
-        grid["height"] = Fmi::stoi(sizes[1]);
-        grid["estimated"] = false;
-      }
-    }
-    else if (crs.empty() && bbox.empty() && native.isMember("width"))
-    {
-      grid["width"] = native["width"];
-      grid["height"] = native["height"];
-      grid["estimated"] = false;
-    }
-    else if (native["resolution_km"].isArray())
-    {
-      // Kilometres to the units of the output CRS
-      double km = native["resolution_km"][0].asDouble();
-      double unit = (target->IsGeographic() ? 111.32 : target->GetLinearUnits() / 1000.0);
-      if (km > 0 && unit > 0)
-      {
-        const double step = km / unit;
-        grid["width"] = std::max(1, static_cast<int>(std::lround((x2 - x1) / step)) + 1);
-        grid["height"] = std::max(1, static_cast<int>(std::lround((y2 - y1) / step)) + 1);
-        grid["estimated"] = true;
-      }
-    }
+    const auto grid = outputGridSize(scaleSize, crs.empty() && bbox.empty(), native, *target, r);
 
     // The number of times, parameters and levels
-    const auto& temporal = ext["temporal"];
-    std::size_t times = temporal["grid"]["cellsCount"].asUInt64();
     const auto datetime = Spine::optional_string(theRequest.getParameter("datetime"), "");
-    const long step = durationMinutes(temporal["grid"]["resolution"].asString());
-    if (!datetime.empty())
-    {
-      const auto slash = datetime.find('/');
-      if (slash == string::npos)
-        times = 1;
-      else if (step > 0)
-      {
-        try
-        {
-          const auto& interval = temporal["interval"][0];
-          auto t1 = datetime.substr(0, slash);
-          auto t2 = datetime.substr(slash + 1);
-          if (t1 == ".." || t1.empty())
-            t1 = interval[0].asString();
-          if (t2 == ".." || t2.empty())
-            t2 = interval[1].asString();
-          const auto start =
-              std::max(Fmi::TimeParser::parse(t1), Fmi::TimeParser::parse(interval[0].asString()));
-          const auto end =
-              std::min(Fmi::TimeParser::parse(t2), Fmi::TimeParser::parse(interval[1].asString()));
-          const long minutes = (end - start).total_seconds() / 60;
-          times = (minutes < 0 ? 0 : static_cast<std::size_t>(minutes / step) + 1);
-        }
-        catch (...)
-        {
-          // The count of the whole data stays as an upper limit
-        }
-      }
-    }
+    const std::size_t times = timeCount(ext["temporal"], datetime);
     const auto properties = Spine::optional_string(theRequest.getParameter("properties"), "");
     const std::size_t params =
         (properties.empty() ? parameters(collectionId).size() : countItems(properties));
     const auto levelsOption = Spine::optional_string(theRequest.getParameter("levels"), "");
-    std::size_t levels = std::max<std::size_t>(1, ext["vertical"]["grid"]["coordinates"].size());
-    if (!levelsOption.empty())
-      levels = countItems(levelsOption);
+    const std::size_t levels =
+        (levelsOption.empty()
+             ? std::max<std::size_t>(1, ext["vertical"]["grid"]["coordinates"].size())
+             : countItems(levelsOption));
 
     Json::Value doc;
     doc["type"] = "Feature";
     doc["geometry"]["type"] = "Polygon";
-    doc["geometry"]["coordinates"].append(ring);
+    doc["geometry"]["coordinates"].append(outlineRing(r, inverse));
     auto& props = doc["properties"];
-    props["crs"] = (crs.empty() ? (native.isMember("wkt") ? "native" : "EPSG:4326") : crs);
-    for (double v : {x1, y1, x2, y2})
+    if (!crs.empty())
+      props["crs"] = crs;
+    else
+      props["crs"] = (native.isMember("wkt") ? "native" : "EPSG:4326");
+    for (double v : {r.x1, r.y1, r.x2, r.y2})
       props["bbox"].append(std::round(v * 1e7) / 1e7);
     props["times"] = static_cast<Json::UInt64>(times);
     props["parameters"] = static_cast<Json::UInt64>(params);
