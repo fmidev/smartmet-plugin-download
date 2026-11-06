@@ -6,6 +6,7 @@
 
 #include "Query.h"
 #include "Config.h"
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <macgyver/Exception.h>

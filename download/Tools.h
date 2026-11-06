@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <optional>
 #include <engines/querydata/Q.h>

@@ -7,6 +7,7 @@
 #include "DataStreamer.h"
 #include "Datum.h"
 #include "Plugin.h"
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
