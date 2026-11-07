@@ -871,7 +871,13 @@ void parseGridParams(const Spine::HTTP::Request &req, ReqParams &reqParams)
   // Grid step (translated from scale-factor)
   reqParams.gridStep = Spine::optional_string(req.getParameter("gridstep"), "");
   if (!reqParams.gridStep.empty())
+  {
     reqParams.gridStepXY = nPairsOfValues<unsigned int>(reqParams.gridStep, "gridstep", 1);
+
+    for (const auto &xy : *reqParams.gridStepXY)
+      if (xy.first == 0 || xy.second == 0)
+        throw Fmi::Exception(BCP, "gridstep components must be greater than zero");
+  }
 }
 
 // Parse output format

@@ -380,9 +380,15 @@ void parseProjectionAndGrid(const Spine::HTTP::Request &req,
   }
 
   if (!reqParams.gridStep.empty())
+  {
     // Grid step to extract every dx'th/dy'th value; dx,dy
     //
     reqParams.gridStepXY = nPairsOfValues<unsigned int>(reqParams.gridStep, "gridstep", 1);
+
+    for (const auto &xy : *reqParams.gridStepXY)
+      if (xy.first == 0 || xy.second == 0)
+        throw Fmi::Exception(BCP, "gridstep components must be greater than zero");
+  }
 }
 
 // Parse output format

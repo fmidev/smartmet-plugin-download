@@ -2319,6 +2319,9 @@ void DataStreamer::setSteppedGridSize()
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
     size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
 
+    if (xStep == 0 || yStep == 0)
+      throw Fmi::Exception(BCP, "gridstep components must be greater than zero");
+
     itsNX = xCnt / xStep;
     itsNY = yCnt / yStep;
 
