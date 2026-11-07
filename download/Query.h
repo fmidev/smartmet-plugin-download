@@ -58,7 +58,7 @@ struct Producer
 
   bool verticalInterpolation = false;  // Set if vertical interpolation is allowed. Default: false
 
-  Plugin::Download::Datum::DatumShift datumShift;  // Datum handling. Default: native
+  Plugin::Download::Datum::DatumShift datumShift = Plugin::Download::Datum::DatumShift::None;  // Datum handling. Default: native
                                                    // datum (no shift). See Datum.h
 
   bool multiFile = false;  // If set, query can span over multiple grid origintimes
@@ -141,7 +141,7 @@ struct ReqParams
   // Data source
   //
   std::string source;
-  DataSource dataSource;
+  DataSource dataSource = QueryData;
   //
   // Producer name
   //
@@ -181,8 +181,8 @@ struct ReqParams
                             // or epsg projection code, e.g. 'epsg:4326'
   std::string geometryId;   // Target geometry id for grid content data, e.g. 1110 (VIRE)
                             //
-  ProjType projType;        // Derived; projection type based on projection
-  AreaClassId areaClassId;  // Derived; area class id based on projection
+  ProjType projType = P_Native;        // Derived; projection type based on projection
+  AreaClassId areaClassId = A_Native;  // Derived; area class id based on projection
   EpsgCode epsgCode = 0;        // Derived; epsg projection based on projection
   //
   // Bounding. Default: the native area
@@ -221,7 +221,7 @@ struct ReqParams
   //
   std::string format;         // OutputFormat value
                               //
-  OutputFormat outputFormat;  // Derived; set based on format
+  OutputFormat outputFormat = Grib1;  // Derived; set based on format
   //
   // Packing type, bitsPerValue and tables version for grib
   //
@@ -235,7 +235,7 @@ struct ReqParams
   //
   std::string datum;                               // DatumShift value; see Datum.h
                                                    //
-  Plugin::Download::Datum::DatumShift datumShift;  // Derived; datum shift based on datum
+  Plugin::Download::Datum::DatumShift datumShift = Plugin::Download::Datum::DatumShift::None;  // Derived; datum shift based on datum
   //
   // Misc testing
   //

@@ -113,7 +113,7 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   Resources itsResources;
   const Producer &itsProducer;
 
-  FmiDirection itsGridOrigo;
+  FmiDirection itsGridOrigo = kNoDirection;
 
   bool itsDoneFlag = false;
   NFmiDataMatrix<float> itsGridValues;
@@ -121,9 +121,9 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
   unsigned int itsMaxMsgChunks;
 
   bool itsMetaFlag = true;
-  FmiLevelType itsLevelType;  // Data level type; height level data with negative levels is stored
+  FmiLevelType itsLevelType = kFmiNoLevelType;  // Data level type; height level data with negative levels is stored
                               // as kFmiDepth
-  FmiLevelType itsNativeLevelType;  // Native data level type
+  FmiLevelType itsNativeLevelType = kFmiNoLevelType;  // Native data level type
   bool itsPositiveLevels = true;    // true if (depth) levels are positive
   Query::Levels itsDataLevels;
   std::list<int> itsSortedDataLevels;  // Levels in source data order (order needed for qd -output)
