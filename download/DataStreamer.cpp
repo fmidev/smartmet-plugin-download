@@ -1255,7 +1255,7 @@ void DataStreamer::getParameterDetailsFromContentData(
 
         mappingDetails.mMapping.mProducerName = producer;
         mappingDetails.mMapping.mParameterName = param;
-        mappingDetails.mMapping.mParameterKey = contentInfo->mFmiParameterId;
+        mappingDetails.mMapping.mParameterKey = Fmi::to_string(contentInfo->mFmiParameterId);
         mappingDetails.mMapping.mGeometryId = contentInfo->mGeometryId;
         mappingDetails.mMapping.mParameterLevelId = contentInfo->mFmiParameterLevelId;
         mappingDetails.mMapping.mParameterLevel = contentInfo->mParameterLevel;
