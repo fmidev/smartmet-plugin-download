@@ -4051,21 +4051,38 @@ void DataStreamer::createGrid(const NFmiArea& area,
  */
 // ----------------------------------------------------------------------
 
+void DataStreamer::checkRequestDataSize(std::size_t gridCells,
+                                        std::size_t params,
+                                        std::size_t levels,
+                                        std::size_t times) const
+{
+  // Overflow-safe check of params * levels * times * gridCells > maxValues
+  const unsigned long maxValues = itsCfg.getMaxRequestDataValues();
+  unsigned long numValues = gridCells;
+  bool overflow = __builtin_mul_overflow(numValues, params, &numValues);
+  overflow = overflow || __builtin_mul_overflow(numValues, levels, &numValues);
+  overflow = overflow || __builtin_mul_overflow(numValues, times, &numValues);
+
+  if (overflow || numValues > maxValues)
+  {
+    throw Fmi::Exception(BCP,
+                         "Too much data requested (" +
+                             (overflow ? std::string("too many") : Fmi::to_string(numValues)) +
+                             " values, max " + Fmi::to_string(maxValues) +
+                             "); adjust area/grid and/or number of parameters, levels and times");
+  }
+}
+
 void DataStreamer::checkRequestDataSize() const
 {
-  auto gs = (itsCropping.crop ? itsCropping.gridSizeX * itsCropping.gridSizeY
-                              : itsReqGridSizeX * itsReqGridSizeY);
-  unsigned long numValues =
-      itsDataParams.size() * itsDataLevels.size() * itsDataTimes.size() * gs;
+  const unsigned long gs =
+      (itsCropping.crop ? static_cast<unsigned long>(itsCropping.gridSizeX) * itsCropping.gridSizeY
+                        : static_cast<unsigned long>(itsReqGridSizeX) * itsReqGridSizeY);
 
-  if (numValues > itsCfg.getMaxRequestDataValues())
-  {
-    throw Fmi::Exception(
-        BCP,
-        "Too much data requested (" + Fmi::to_string(numValues) + " values, max " +
-            Fmi::to_string(itsCfg.getMaxRequestDataValues()) +
-            "); adjust area/grid and/or number of parameters, levels and times");
-  }
+  checkRequestDataSize(gs, itsDataParams.size(), itsDataLevels.size(), itsDataTimes.size());
+
+  const unsigned long numValues =
+      itsDataParams.size() * itsDataLevels.size() * itsDataTimes.size() * gs;
 
   auto logValues = itsCfg.getLogRequestDataValues();
 
@@ -4152,6 +4169,16 @@ bool DataStreamer::getAreaAndGrid(const Engine::Querydata::Q& q,
         size_t gridSizeY = ((itsReqParams.outputFormat == QD) && itsCropping.cropped)
                                ? itsCropping.gridSizeY
                                : itsReqGridSizeY;
+
+        // Check the size before creating the grid. The cropped size is not known yet,
+        // so for cropped requests only the grid itself is checked here.
+        if (itsCropping.crop)
+          checkRequestDataSize(gridSizeX * gridSizeY, 1, 1, 1);
+        else
+          checkRequestDataSize(gridSizeX * gridSizeY,
+                               itsDataParams.size(),
+                               itsDataLevels.size(),
+                               itsDataTimes.size());
 
         createGrid(**area, gridSizeX, gridSizeY, interpolation);
       }

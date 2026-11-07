@@ -306,6 +306,10 @@ class DataStreamer : public Spine::HTTP::ContentStreamer
                       const NFmiArea **area,
                       NFmiGrid **grid);
   void checkRequestDataSize() const;
+  void checkRequestDataSize(std::size_t gridCells,
+                            std::size_t params,
+                            std::size_t levels,
+                            std::size_t times) const;
 
   NFmiLevelBag makeRequestedLevelBag(const Engine::Querydata::Q& q,
                                      bool levelInterpolation) const;
