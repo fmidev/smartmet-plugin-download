@@ -88,7 +88,7 @@ void Plugin::init()
 {
   try
   {
-    /* Dont't let the NetCDF library crash the server */
+    /* Don't let the NetCDF library crash the server */
     ncopts = NC_VERBOSE;
 
     /* QEngine */

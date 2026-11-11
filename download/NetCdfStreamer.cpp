@@ -198,7 +198,7 @@ void NetCdfStreamer::loadFile()
   // Then outputting the file/data in chunks
   //
   // Unset NcFile pointer has caused crashes when calling close(); (possible) reason is
-  // that when query initialization (hasRequestedData(), checking atleast some requested
+  // that when query initialization (hasRequestedData(), checking at least some requested
   // data is available) has succeeded and then 1'st call to extractData has for any reason
   // returned an empty result (denoting end of data), NcFile object has not been created.
   //
@@ -1205,7 +1205,7 @@ void NetCdfStreamer::setRotatedLatlonGeometry(const NcVar &crsVar)
 {
   try
   {
-    // Note: grid north pole longitude (0 +) 180 works for longitude 0 atleast
+    // Note: grid north pole longitude (0 +) 180 works for longitude 0 at least
 
     crsVar.putAtt("grid_mapping_name", "rotated_latitude_longitude");
     crsVar.putAtt("grid_north_pole_latitude", NcType::nc_DOUBLE, 0 - itsGridMetaData.southernPoleLat);
@@ -1601,7 +1601,7 @@ void NetCdfStreamer::storeProjectedCoordinates(const NFmiGrid* grid,
   // variables lat(yc,xc) and lon(yc,xc) which are identified by the coordinates attribute.
   //
   // Note that coordinate variables are also defined for the xc and yc dimensions. This
-  // faciliates processing of this data by generic applications that don't recognize the
+  // facilitates processing of this data by generic applications that don't recognize the
   // multidimensional latitude and longitude coordinates."
 
   NFmiPoint p0 =
@@ -1816,7 +1816,7 @@ void NetCdfStreamer::storeProjectedGridCoordinates(const T::Coordinate_vec& coor
   //	  attribute.
   //
   //	  Note that coordinate variables are also defined for the xc and yc dimensions. This
-  //	  faciliates processing of this data by generic applications that don't recognize
+  //	  facilitates processing of this data by generic applications that don't recognize
   //	  the multidimensional latitude and longitude coordinates."
 
   OGRSpatialReference llSRS;
@@ -2684,7 +2684,7 @@ void NetCdfStreamer::paramChanged(size_t nextParamOffset)
 {
   try
   {
-    // Note: Netcdf varibles are created when first nonmissing querydata parameter is encountered
+    // Note: Netcdf variables are created when first nonmissing querydata parameter is encountered
 
     if (!itsDataVars.empty())
     {

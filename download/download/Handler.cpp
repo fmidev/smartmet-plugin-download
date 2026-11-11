@@ -255,7 +255,7 @@ void parseDataSource(const Spine::HTTP::Request &req,
   }
 }
 
-// Parse the producer. Producer is speficied using 'model' or 'producer' keyword.
+// Parse the producer. Producer is specified using 'model' or 'producer' keyword.
 void parseProducer(const Spine::HTTP::Request &req,
                    ReqParams &reqParams,
                    const Config &config)
@@ -531,7 +531,7 @@ const Producer &getRequestParams(const Spine::HTTP::Request &req,
     static Producer dummyProducer;
     parseDataSource(req, dummyProducer, reqParams, gridEngine);
 
-    // Producer is speficied using 'model' or 'producer' keyword.
+    // Producer is specified using 'model' or 'producer' keyword.
 
     parseProducer(req, reqParams, config);
 

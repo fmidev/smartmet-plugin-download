@@ -474,7 +474,7 @@ void GribStreamer::setRotatedLatlonGeometryToGrib(const NFmiArea *area)
  * gridType = "polar_stereographic"
  * bitmapPresent = 0
  *
- * HOWEVER: GRIB1 has a fixed true latitude of 60 degrees, atleast if you
+ * HOWEVER: GRIB1 has a fixed true latitude of 60 degrees, at least if you
  * look at /usr/share/grib_api/definitions/grib1/grid_definition_5.def
  */
 // ----------------------------------------------------------------------
@@ -710,8 +710,8 @@ void GribStreamer::setLambertConformalGeometryToGrib(const NFmiArea *area) const
     gset(itsGribHandle, "Latin1InDegrees", latin1);
     gset(itsGribHandle, "Latin2InDegrees", latin2);
 
-    // Error with grib1 if setting LaDInDegrees (meps: to latin1) atleast if projection
-    // truely is SP1 (latin2 == latin1)
+    // Error with grib1 if setting LaDInDegrees (meps: to latin1) at least if projection
+    // truly is SP1 (latin2 == latin1)
 
     if ((!itsGrib1Flag) && (lon_0 < 0))
       lon_0 += 360;
@@ -1893,7 +1893,7 @@ string GribStreamer::getGribMessage(const Engine::Querydata::Q& q,
     std::size_t mesg_len = 0;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
 
-    // BRAINSTORM-3378; kludge for setting packing needed atleast with old eccodes (2.27.1)
+    // BRAINSTORM-3378; kludge for setting packing needed at least with old eccodes (2.27.1)
     //
     // grid_second_order results 1'st message to have 0 as referenceValue, binaryScaleFactor and
     // decimalScaleFactor and the data is corrupt.
@@ -1901,7 +1901,7 @@ string GribStreamer::getGribMessage(const Engine::Querydata::Q& q,
     // grid_simple results to test error "Detected a size mismatch, Section 7" if bitsPerValue is
     // not 24 (the default).
     //
-    // Build first message twice getting it inbetween to get correct results
+    // Build first message twice getting it in between to get correct results
 
     if (firstMessage && (! itsReqParams.packing.empty()))
     {

@@ -572,7 +572,7 @@ const Producer& Config::getProducer(const string& name) const
     if (p != itsProducers.end())
       return p->second;
 
-    // Unnamed producer "mathces" at this point; the producer will be searched against
+    // Unnamed producer "matches" at this point; the producer will be searched against
     // querydata's configuration
 
     if (defaultProducerName().empty())
@@ -592,7 +592,7 @@ const Producer& Config::getProducer(string& name, const Engine::Querydata::Engin
   {
     auto p = (name.empty() ? itsProducers.end() : itsProducers.find(name));
     if ((p == itsProducers.end()) && (defaultProducerName().empty()))
-      // Unnamed producer "mathces" at this point; the producer will be searched against
+      // Unnamed producer "matches" at this point; the producer will be searched against
       // querydata's configuration
       //
       p = itsProducers.begin();
@@ -644,7 +644,7 @@ std::string Config::packingErrorMessage(const std::string& thePackingType) const
   if (itsEnabledPackingTypes.empty())
     return {};
 
-  // Must be one of the explicity enabled then
+  // Must be one of the explicitly enabled then
   if (itsEnabledPackingTypes.find(thePackingType) == itsEnabledPackingTypes.end())
     return itsPackingWarningMessage;
 

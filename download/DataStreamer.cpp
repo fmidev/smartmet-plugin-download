@@ -3136,7 +3136,7 @@ bool DataStreamer::isPastLevel(float nativeLevel, int requestedLevel) const
 // ----------------------------------------------------------------------
 /*!
  * \brief Advance to the next requested level, and further past the requested levels
- *        preceeding the native level if it is not a requested level
+ *        preceding the native level if it is not a requested level
  */
 // ----------------------------------------------------------------------
 
@@ -3240,7 +3240,7 @@ NFmiLevelBag DataStreamer::makeNativeLevelBag(const Engine::Querydata::Q& q,
 
     if (!(isNativeLevel || isInterpolatedLevel))
     {
-      // Skip native levels preceeding first requested level
+      // Skip native levels preceding first requested level
 
       prevNativeLevel = q->level();
       continue;
@@ -3253,7 +3253,7 @@ NFmiLevelBag DataStreamer::makeNativeLevelBag(const Engine::Querydata::Q& q,
     else
       prevNativeLevel = q->level();
 
-    // Skip requested levels preceeding current native level
+    // Skip requested levels preceding current native level
 
     skipPrecedingRequestedLevels(reqLevel, q->levelValue(), isNativeLevel);
   }
@@ -3858,10 +3858,10 @@ void DataStreamer::selectNativeGridUsage(const Engine::Querydata::Q& q,
 
     if (itsUseNativeBBox)
     {
-      // In WGS84 mode or with rotlat area transform source grid egde projected coordinates to
+      // In WGS84 mode or with rotlat area transform source grid edge projected coordinates to
       // projected target coordinates and then projected target corners to latlon.
       //
-      // bbox produced by rotlat grid egde to latlon transformation (getRegLLBBoxStr(q),
+      // bbox produced by rotlat grid edge to latlon transformation (getRegLLBBoxStr(q),
       // q->latLon()) has resulted flipped target area and output data has not been valid.
 
       if (itsCfg.getLegacyMode() &&
@@ -4558,7 +4558,7 @@ void DataStreamer::extractData(string& chunk)
 
         bool nonNativeGrid = getAreaAndGrid(q, !exactLevel, &area, &grid);
 
-        // Heigth level data with negative levels ?
+        // Height level data with negative levels ?
 
         if ((itsLevelType == kFmiDepth) && (itsNativeLevelType == kFmiHeight))
           level = 0 - level;
@@ -5817,7 +5817,7 @@ void DataStreamer::getGridOrigo(const QueryServer::Query& gridQuery)
 
     if ((!rXAttr) || ((rXAttr->mValue != "0") && (rXAttr->mValue != "1")))
       throw Fmi::Exception::Trace(BCP,
-                                  "grid.original.reverseXDirection is missing or has unkown value");
+                                  "grid.original.reverseXDirection is missing or has unknown value");
 
     auto* rYAttr = gridQuery.mAttributeList.getAttribute("grid.original.reverseYDirection");
 
@@ -5972,7 +5972,7 @@ void DataStreamer::getGridQuerySize(const QueryServer::Query& gridQuery, std::si
 
 // ----------------------------------------------------------------------
 /*!
- * \brief Get query result grid infomation (projection, grid size etc).
+ * \brief Get query result grid information (projection, grid size etc).
  *        Return false on empty result (missing data assumed),
  *        throw on errors
  *
@@ -6046,7 +6046,7 @@ bool DataStreamer::getGridQueryInfo(const QueryServer::Query& gridQuery)
 
     // Adjust resolution by grid step
     //
-    // TODO: bbox should also be adjusted if axis dimension is not multipe of step
+    // TODO: bbox should also be adjusted if axis dimension is not multiple of step
 
     size_t xStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].first : 1);
     size_t yStep = (itsReqParams.gridStepXY ? (*(itsReqParams.gridStepXY))[0].second : 1);
@@ -6205,7 +6205,7 @@ void DataStreamer::extractGridData(string& chunk)
 
       // Unfortunately no usable status is returned by gridengine query.
       //
-      // If no data was returned getGridQueryInfo returs false, assuming the data is just
+      // If no data was returned getGridQueryInfo returns false, assuming the data is just
       // missing because it got cleaned. Otherwise if the returned grid e.g. does not match
       // requested grid size etc, an error is thrown
 

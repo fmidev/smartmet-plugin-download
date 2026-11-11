@@ -325,7 +325,7 @@ void Query::parseParameterLevelAndForecastNumberRanges(
   // Both listed/single values (e.g. 1;11, range start and end are set to the same value) and
   // range start/end values (e.g 5-8) are set to levelRanges and forecastNumberRanges.
   //
-  // Heigth level value can be negative. Forecast number can have negative value (-1) for
+  // Height level value can be negative. Forecast number can have negative value (-1) for
   // deterministic forecast
 
   parseRadonParameterName(paramDef, paramParts, param, funcParamDef);
