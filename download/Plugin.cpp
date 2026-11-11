@@ -117,16 +117,15 @@ void Plugin::init()
 
     if (!itsReactor->addContentHandler(
             this,
-            "/download",
+            Spine::Reactor::HandlerOptions("/download"),
             boost::bind(&Plugin::callRequestHandler, this, ph::_1, ph::_2, ph::_3)))
       throw Fmi::Exception(BCP, "Failed to register download content handler");
 
+    // Prefix match: /coverages/collections/{id}/coverage etc.
     if (!itsReactor->addContentHandler(
             this,
-            "/coverages",
-            boost::bind(&Plugin::coveragesRequestHandler, this, ph::_1, ph::_2, ph::_3),
-            {},
-            true))  // handlesUriPrefix: /coverages/collections/{id}/coverage etc.
+            Spine::Reactor::HandlerOptions("/coverages").IsPrefix(),
+            boost::bind(&Plugin::coveragesRequestHandler, this, ph::_1, ph::_2, ph::_3)))
       throw Fmi::Exception(BCP, "Failed to register coverages content handler");
   }
   catch (...)
