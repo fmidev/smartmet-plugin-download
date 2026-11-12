@@ -8,10 +8,7 @@
 #include "../Config.h"
 #include "../DataStreamer.h"
 #include "../Datum.h"
-#include "../Query.h"
-#include "../StreamerFactory.h"
 #include "../Tools.h"
-#include "Handler.h"
 #include "Query.h"
 #include "StreamerFactory.h"
 #include <boost/algorithm/string.hpp>
