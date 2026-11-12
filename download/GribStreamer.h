@@ -54,6 +54,7 @@ class GribStreamer : public DataStreamer
   std::vector<double> itsValueArray;
   Fmi::DateTime itsGribOriginTime;
   bool itsGrib1Flag;
+  bool itsMinuteSteps = false;  // Set when a step is not whole hours; steps are then in minutes
 
   void scanningDirections(long& iNegative, long& jPositive) const;
 

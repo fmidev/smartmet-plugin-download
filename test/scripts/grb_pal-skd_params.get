@@ -1,0 +1,6 @@
+#/bin/bash
+#
+# Parameter table and number, level type and value, and time range of each message as
+# numbers, so that the result does not depend on the parameter tables of wgrib
+
+$(dirname $(readlink -f "$0"))/grb_defdumper $1 -f3- -s -PDS10
