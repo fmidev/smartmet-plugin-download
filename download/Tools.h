@@ -2,18 +2,24 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
-#include <optional>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/querydata/Q.h>
 #include <grid-files/grid/Typedefs.h>
-#include <ogr_spatialref.h>
+#include <macgyver/Exception.h>
 #include <newbase/NFmiLevelType.h>
 #include <newbase/NFmiPoint.h>
-#include <macgyver/Exception.h>
+#include <cstddef>
 #include <list>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
-#include <grid-content/contentServer/definition/GenerationInfo.h>
+
+class OGRSpatialReference;
+namespace SmartMet::T
+{
+class GenerationInfo;
+}  // namespace SmartMet::T
 
 using Scaling = std::list<std::pair<float, float>>;
 

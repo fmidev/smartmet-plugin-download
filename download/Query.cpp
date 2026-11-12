@@ -5,17 +5,27 @@
 // ======================================================================
 
 #include "Query.h"
-#include "Config.h"
+#include "Tools.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <grid-content/contentServer/definition/ContentInfo.h>
+#include <grid-content/contentServer/definition/GenerationInfoList.h>
+#include <grid-content/contentServer/definition/ServiceInterface.h>
+#include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
-#include <newbase/NFmiPoint.h>
+#include <macgyver/TimeParser.h>
+#include <newbase/NFmiLevelType.h>
+#include <newbase/NFmiParameterName.h>
 #include <spine/Convenience.h>
+#include <spine/HTTP.h>
+#include <spine/Parameter.h>
 #include <timeseries/OptionParsers.h>
+#include <cstring>
+#include <iostream>
+#include <iterator>
 
-#include <macgyver/DateTime.h>
 using Fmi::DateTime;
 
 using namespace std;

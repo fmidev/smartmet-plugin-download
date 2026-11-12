@@ -1,7 +1,11 @@
 #include "ApiDefinition.h"
 #include "../Config.h"
+#include "../Query.h"
+#include <json/value.h>
 #include <macgyver/Exception.h>
 #include <cctype>
+#include <cstddef>
+#include <initializer_list>
 #include <set>
 
 namespace SmartMet

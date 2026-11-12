@@ -5,14 +5,11 @@
 // ======================================================================
 
 #include "GribTools.h"
-#include <macgyver/Exception.h>
-#include <newbase/NFmiCommentStripper.h>
-#include <cmath>
-
 #include <boost/lexical_cast.hpp>
-
+#include <macgyver/Exception.h>
+#include <cmath>
+#include <cstring>
 #include <iostream>
-#include <stdexcept>
 
 // ----------------------------------------------------------------------
 // Dump the given namespace attributes

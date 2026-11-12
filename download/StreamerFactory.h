@@ -6,16 +6,35 @@
 
 #pragma once
 
-#include "Config.h"
 #include "DataStreamer.h"
+#include "ParamConfig.h"
 #include "Query.h"
 #include "Tools.h"
-#include <engines/geonames/Engine.h>
-#include <engines/grid/Engine.h>
-#include <engines/querydata/Engine.h>
 #include <macgyver/DateTime.h>
-#include <spine/HTTP.h>
+#include <timeseries/OptionParsers.h>
+#include <memory>
 #include <string>
+
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
+namespace SmartMet::Plugin::Download
+{
+class Config;
+}  // namespace SmartMet::Plugin::Download
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace SmartMet
 {

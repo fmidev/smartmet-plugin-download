@@ -8,10 +8,15 @@
 
 #include "ParamConfig.h"
 #include "Query.h"
-#include <boost/utility.hpp>
-#include <spine/Reactor.h>
 #include <libconfig.h++>
+#include <set>
 #include <string>
+#include <utility>
+
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
 
 namespace SmartMet
 {

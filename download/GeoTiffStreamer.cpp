@@ -5,16 +5,37 @@
 // ======================================================================
 
 #include "GeoTiffStreamer.h"
+#include "Datum.h"
+#include "Query.h"
+#include "Resources.h"
+#include "Tools.h"
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
+#include <gis/CoordinateMatrix.h>
 #include <gis/SpatialReference.h>
+#include <grid-content/queryServer/definition/ParameterValues.h>
+#include <grid-content/queryServer/definition/Query.h>
+#include <grid-content/queryServer/definition/QueryParameter.h>
+#include <grid-files/common/Coordinate.h>
+#include <grid-files/grid/Typedefs.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
+#include <newbase/NFmiArea.h>
+#include <newbase/NFmiDataMatrix.h>
+#include <newbase/NFmiGrid.h>
 #include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiPoint.h>
+#include <newbase/NFmiSaveBaseFactory.h>
+#include <spine/HTTP.h>
+#include <spine/Parameter.h>
 #include <spine/Thread.h>
-#include <cpl_conv.h>
-#include <gdal_priv.h>
 #include <cmath>
+#include <gdal_priv.h>
+#include <iostream>
+#include <list>
+#include <memory>
 #include <unistd.h>
+#include <utility>
 
 namespace
 {

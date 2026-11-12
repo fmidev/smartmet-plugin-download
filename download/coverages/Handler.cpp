@@ -10,34 +10,64 @@
 // ======================================================================
 
 #include "coverages/Handler.h"
+#include "../Config.h"
+#include "../DataStreamer.h"
+#include "../Datum.h"
+#include "../ParamConfig.h"
+#include "../Query.h"
+#include "../StreamerFactory.h"
+#include "../Tools.h"
+#include "ApiDefinition.h"
+#include "Handler.h"
 #include "ParamConfig.h"
 #include "Query.h"
 #include "StreamerFactory.h"
 #include "coverages/ApiDefinition.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <engines/grid/Engine.h>
+#include <engines/grid/MetaData.h>
+#include <engines/querydata/Engine.h>
+#include <engines/querydata/Envelope.h>
+#include <engines/querydata/MetaData.h>
 #include <engines/querydata/MetaQueryOptions.h>
 #include <gis/ProjInfo.h>
+#include <grid-files/common/Coordinate.h>
 #include <json/version.h>
-#include <json/writer.h>
 #include <macgyver/CharsetTools.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
 #include <macgyver/TimeParser.h>
+#include <newbase/NFmiParam.h>
+#include <newbase/NFmiString.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <spine/HTTP.h>
 #include <spine/HostInfo.h>
+#include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <algorithm>
 #include <cmath>
-#include <cpl_conv.h>
+#include <cstddef>
+#include <initializer_list>
 #include <limits>
+#include <list>
 #include <memory>
 #include <ogr_spatialref.h>
 #include <optional>
 #include <set>
+#include <utility>
 #include <vector>
+
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Spine
+{
+class Reactor;
+}  // namespace SmartMet::Spine
 
 using namespace std;
 

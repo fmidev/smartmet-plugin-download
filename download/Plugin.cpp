@@ -11,10 +11,20 @@
 #include "Plugin.h"
 #include "NetCdfStreamer.h"
 #include <boost/bind/bind.hpp>
+#include <engines/geonames/Engine.h>
+#include <engines/grid/Engine.h>
+#include <engines/querydata/Engine.h>
 #include <macgyver/Exception.h>
+#include <spine/Reactor.h>
 #include <spine/SmartMet.h>
 #include <iostream>
 #include <netcdf.h>
+
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+class Response;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace ph = boost::placeholders;
 

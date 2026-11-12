@@ -5,16 +5,18 @@
 // ======================================================================
 
 #include "ParamConfig.h"
-
 #include <boost/algorithm/string.hpp>
-#include <filesystem>
-#include <macgyver/StringConversion.h>
-#include <macgyver/Exception.h>
-
-#include <fstream>
-
 #include <json/json.h>
-#include <json/reader.h>
+#include <macgyver/Exception.h>
+#include <macgyver/StringConversion.h>
+#include <newbase/NFmiGlobals.h>
+#include <newbase/NFmiLevel.h>
+#include <newbase/NFmiString.h>
+#include <sys/types.h>
+#include <filesystem>
+#include <fstream>
+#include <iterator>
+#include <memory>
 
 namespace SmartMet
 {

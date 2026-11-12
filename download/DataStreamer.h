@@ -10,22 +10,63 @@
 #include "Query.h"
 #include "Resources.h"
 #include "Tools.h"
-#include <engines/geonames/Engine.h>
-#include <engines/grid/Engine.h>
-#include <engines/querydata/Model.h>
+#include <engines/grid/ParameterDetails.h>
+#include <engines/querydata/Q.h>
 #include <engines/querydata/ValidTimeList.h>
 #include <gis/CoordinateMatrix.h>
-#include <gis/SpatialReference.h>
-#include <grid-content/contentServer/corba/server/ServerInterface.h>
 #include <grid-content/queryServer/definition/ParameterValues.h>
+#include <grid-content/queryServer/definition/Query.h>
+#include <grid-content/queryServer/definition/QueryParameter.h>
 #include <grid-files/grid/Typedefs.h>
 #include <macgyver/DateTime.h>
-#include <newbase/NFmiGrid.h>
+#include <newbase/NFmiDataMatrix.h>
+#include <newbase/NFmiGlobals.h>
+#include <newbase/NFmiLevelBag.h>
+#include <newbase/NFmiLevelType.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiParamDescriptor.h>
+#include <newbase/NFmiParameterName.h>
+#include <newbase/NFmiTimeDescriptor.h>
+#include <newbase/NFmiVPlaceDescriptor.h>
 #include <spine/HTTP.h>
+#include <timeseries/OptionParsers.h>
 #include <timeseries/TimeSeriesGenerator.h>
-#include <ogr_spatialref.h>
-
+#include <cstddef>
+#include <list>
+#include <map>
+#include <memory>
+#include <optional>
+#include <set>
+#include <string>
 #include <utility>
+
+class NFmiArea;
+class NFmiGrid;
+class NFmiLocationCache;
+class NFmiQueryData;
+class NFmiTimeCache;
+class OGRCoordinateTransformation;
+class OGRSpatialReference;
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
+namespace SmartMet::QueryServer
+{
+class ParameterMapping;
+}  // namespace SmartMet::QueryServer
+namespace SmartMet::T
+{
+class Attribute;
+}  // namespace SmartMet::T
 
 namespace SmartMet
 {

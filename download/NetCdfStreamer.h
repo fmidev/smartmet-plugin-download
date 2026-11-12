@@ -6,13 +6,46 @@
 
 #pragma once
 
+#include "Config.h"
 #include "DataStreamer.h"
+#include <engines/querydata/Q.h>
+#include <grid-files/grid/Typedefs.h>
+#include <newbase/NFmiLevelType.h>
+#include <newbase/NFmiPoint.h>
+#include <cstddef>
+#include <fstream>
+#include <list>
+#include <map>
 #include <memory>
-#include <type_traits>
-#include <typeindex>
 #include <ncDim.h>
-#include <ncFile.h>
+#include <ncType.h>
 #include <ncVar.h>
+#include <set>
+#include <string>
+#include <vector>
+
+class NFmiArea;
+class NFmiGrid;
+class OGRSpatialReference;
+namespace SmartMet::Plugin::Download
+{
+class Query;
+struct ParamChangeItem;
+struct Producer;
+struct ReqParams;
+}  // namespace SmartMet::Plugin::Download
+namespace SmartMet::QueryServer
+{
+class Query;
+}  // namespace SmartMet::QueryServer
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
+namespace netCDF
+{
+class NcFile;
+}  // namespace netCDF
 
 namespace SmartMet
 {

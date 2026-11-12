@@ -9,13 +9,31 @@
 
 #pragma once
 
-#include "Config.h"
-#include "DataStreamer.h"
-#include <engines/geonames/Engine.h>
-#include <engines/grid/Engine.h>
-#include <engines/querydata/Engine.h>
-#include <spine/HTTP.h>
-#include <spine/Reactor.h>
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
+namespace SmartMet::Plugin::Download
+{
+class Config;
+}  // namespace SmartMet::Plugin::Download
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+class Response;
+}  // namespace SmartMet::Spine::HTTP
+namespace SmartMet::Spine
+{
+class Reactor;
+}  // namespace SmartMet::Spine
 
 namespace SmartMet
 {

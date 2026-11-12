@@ -6,7 +6,26 @@
 
 #pragma once
 
+#include "Config.h"
 #include "DataStreamer.h"
+#include <engines/querydata/Q.h>
+#include <cstddef>
+#include <iosfwd>
+#include <list>
+#include <string>
+
+namespace SmartMet::Plugin::Download
+{
+class Query;
+struct Producer;
+struct ReqParams;
+}  // namespace SmartMet::Plugin::Download
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
+template <class T>
+class NFmiDataMatrix;
 
 namespace SmartMet
 {

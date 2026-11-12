@@ -6,22 +6,45 @@
 
 #include "GribStreamer.h"
 #include "Datum.h"
-#include "Plugin.h"
+#include "GribTools.h"
+#include "Query.h"
+#include "Resources.h"
+#include "Tools.h"
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
-#include <boost/interprocess/sync/scoped_lock.hpp>
-#include <fmt/format.h>
 #include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
+#include <gis/SpatialReference.h>
+#include <grid-content/queryServer/definition/ParameterValues.h>
+#include <grid-files/grid/Typedefs.h>
 #include <macgyver/Exception.h>
-#include <macgyver/StringConversion.h>
-#include <newbase/NFmiEnumConverter.h>
-#include <newbase/NFmiQueryData.h>
-#include <newbase/NFmiQueryDataUtil.h>
-#include <newbase/NFmiTimeList.h>
-#include <sys/types.h>
+#include <newbase/NFmiArea.h>
+#include <newbase/NFmiDataIdent.h>
+#include <newbase/NFmiDataMatrix.h>
+#include <newbase/NFmiGlobals.h>
+#include <newbase/NFmiLevel.h>
+#include <newbase/NFmiParam.h>
+#include <newbase/NFmiPoint.h>
+#include <newbase/NFmiSaveBaseFactory.h>
+#include <newbase/NFmiString.h>
+#include <spine/HTTP.h>
+#include <spine/Parameter.h>
 #include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <ogr_spatialref.h>
+#include <optional>
+#include <sstream>
 #include <string>
-#include <unistd.h>
+#include <utility>
+
+namespace SmartMet::QueryServer
+{
+class Query;
+}  // namespace SmartMet::QueryServer
 
 using namespace std;
 

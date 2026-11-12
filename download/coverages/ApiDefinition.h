@@ -8,6 +8,7 @@
 
 #include <spine/OpenApi.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace SmartMet

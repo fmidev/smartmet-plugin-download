@@ -1,12 +1,14 @@
 #pragma once
 
-#include <memory>
-#include <newbase/NFmiArea.h>
-#include <newbase/NFmiGrid.h>
-#include <newbase/NFmiPoint.h>
+#include <cstddef>
 #include <list>
-#include <ogr_spatialref.h>
+#include <memory>
 #include <string>
+
+class NFmiArea;
+class NFmiGrid;
+class OGRCoordinateTransformation;
+class OGRSpatialReference;
 
 // Resource management
 //

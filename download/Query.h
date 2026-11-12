@@ -8,25 +8,33 @@
 #pragma once
 
 #include "Datum.h"
-#include "Tools.h"
-
-#include <optional>
-#include <memory>
-#include <engines/querydata/Engine.h>
+#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/grid/Engine.h>
-#include <macgyver/TimeFormatter.h>
-#include <newbase/NFmiPoint.h>
-#include <spine/HTTP.h>
-#include <spine/Location.h>
-#include <spine/Parameter.h>
+#include <grid-content/contentServer/definition/ContentInfoList.h>
+#include <grid-content/contentServer/definition/GenerationInfo.h>
+#include <grid-files/common/Typedefs.h>
+#include <grid-files/grid/Typedefs.h>
+#include <macgyver/DateTime.h>
+#include <newbase/NFmiSaveBaseFactory.h>
 #include <timeseries/OptionParsers.h>
 #include <timeseries/TimeSeriesGeneratorOptions.h>
+#include <cstddef>
 #include <list>
-#include <locale>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
+
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
+namespace SmartMet::T
+{
+class GenerationInfoList;
+}  // namespace SmartMet::T
 
 // Currently used only for storing configured value for originating centre (setting 'centre = 98;');
 // format (grib (for both 1 and 2), grib1, grib2 and netcdf) and value type (to be converted to) are

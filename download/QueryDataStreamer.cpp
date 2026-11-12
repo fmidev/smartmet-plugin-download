@@ -6,8 +6,22 @@
 
 #include "QueryDataStreamer.h"
 #include <macgyver/Exception.h>
+#include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiQueryData.h>
+#include <newbase/NFmiQueryInfo.h>
+#include <spine/HTTP.h>
+#include <iostream>
+#include <memory>
+#include <sstream>
 #include <string>
+#include <vector>
+
+namespace SmartMet::Plugin::Download
+{
+class Query;
+struct Producer;
+struct ReqParams;
+}  // namespace SmartMet::Plugin::Download
 
 using namespace std;
 

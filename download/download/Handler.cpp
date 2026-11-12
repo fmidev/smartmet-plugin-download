@@ -5,20 +5,48 @@
 // ======================================================================
 
 #include "download/Handler.h"
+#include "../Config.h"
+#include "../DataStreamer.h"
+#include "../Datum.h"
+#include "../Query.h"
+#include "../StreamerFactory.h"
+#include "../Tools.h"
+#include "Handler.h"
 #include "Query.h"
 #include "StreamerFactory.h"
 #include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
+#include <engines/grid/Engine.h>
+#include <grid-files/common/Typedefs.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeFormatter.h>
 #include <spine/Convenience.h>
 #include <spine/FmiApiKey.h>
+#include <spine/HTTP.h>
 #include <spine/HostInfo.h>
-#include <cpl_conv.h>
+#include <timeseries/TimeSeriesGeneratorOptions.h>
+#include <cstring>
+#include <memory>
+#include <ogr_spatialref.h>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
+namespace SmartMet::Spine
+{
+class Reactor;
+}  // namespace SmartMet::Spine
 
 using namespace std;
 

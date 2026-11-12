@@ -6,10 +6,38 @@
 
 #pragma once
 
+#include "Config.h"
 #include "DataStreamer.h"
-#include "GribTools.h"
+#include "ParamConfig.h"
+#include <engines/querydata/Q.h>
 #include <macgyver/DateTime.h>
-#include <boost/thread.hpp>
+#include <newbase/NFmiLevelType.h>
+#include <newbase/NFmiMetTime.h>
+#include <cstddef>
+#include <grib_api.h>
+#include <map>
+#include <string>
+#include <vector>
+
+class NFmiArea;
+class NFmiLevel;
+class NFmiParam;
+namespace SmartMet::Plugin::Download
+{
+class Query;
+struct Producer;
+struct ReqParams;
+}  // namespace SmartMet::Plugin::Download
+namespace SmartMet::QueryServer
+{
+class Query;
+}  // namespace SmartMet::QueryServer
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
+template <class T>
+class NFmiDataMatrix;
 
 namespace SmartMet
 {

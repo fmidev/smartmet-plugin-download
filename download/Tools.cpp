@@ -1,5 +1,9 @@
 #include "Tools.h"
+#include <grid-content/contentServer/definition/GenerationInfo.h>
 #include <macgyver/StringConversion.h>
+#include <cmath>
+#include <ctime>
+#include <ogr_spatialref.h>
 
 using namespace std;
 

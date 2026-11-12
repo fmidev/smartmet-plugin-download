@@ -5,20 +5,17 @@
 // ======================================================================
 
 #include "Datum.h"
-
-#include <newbase/NFmiArea.h>
-
-#include <macgyver/HelmertTransformation.h>
-#include <macgyver/StringConversion.h>
-#include <macgyver/Exception.h>
-
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
-
+#include <macgyver/Exception.h>
+#include <macgyver/HelmertTransformation.h>
+#include <macgyver/StringConversion.h>
+#include <newbase/NFmiArea.h>
+#include <newbase/NFmiPoint.h>
+#include <cmath>
 #include <ogr_spatialref.h>
-
 #include <vector>
 
 using namespace std;

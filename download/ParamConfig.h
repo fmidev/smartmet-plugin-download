@@ -6,14 +6,13 @@
 
 #pragma once
 
-#include <newbase/NFmiLevel.h>
 #include <newbase/NFmiParam.h>
-
 #include <filesystem>
 #include <optional>
-
 #include <string>
 #include <vector>
+
+class NFmiLevel;
 
 namespace SmartMet
 {

@@ -5,15 +5,38 @@
 // ======================================================================
 
 #include "StreamerFactory.h"
+#include "Config.h"
 #include "GeoTiffStreamer.h"
 #include "GribStreamer.h"
 #include "NetCdfStreamer.h"
 #include "QueryDataStreamer.h"
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/numeric/conversion/cast.hpp>
+#include <engines/querydata/Engine.h>
+#include <engines/querydata/Producer.h>
+#include <engines/querydata/Q.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <macgyver/TimeParser.h>
+#include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiParam.h>
+#include <spine/Parameter.h>
+#include <cstddef>
+#include <list>
+#include <vector>
+
+namespace SmartMet::Engine::Geonames
+{
+class Engine;
+}  // namespace SmartMet::Engine::Geonames
+namespace SmartMet::Engine::Grid
+{
+class Engine;
+}  // namespace SmartMet::Engine::Grid
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
 
 using namespace std;
 

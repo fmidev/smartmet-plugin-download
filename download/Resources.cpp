@@ -1,8 +1,10 @@
 #include "Resources.h"
-#include <boost/stacktrace.hpp>
 #include <macgyver/Exception.h>
+#include <newbase/NFmiArea.h>
 #include <newbase/NFmiAreaFactory.h>
+#include <newbase/NFmiGrid.h>
 #include <memory>
+#include <ogr_spatialref.h>
 
 namespace SmartMet
 {

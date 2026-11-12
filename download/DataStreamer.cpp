@@ -6,30 +6,74 @@
 
 #include "DataStreamer.h"
 #include "Datum.h"
-#include "Plugin.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/lexical_cast.hpp>
+#include <engines/geonames/Engine.h>
+#include <engines/grid/Engine.h>
+#include <engines/grid/MappingDetails.h>
+#include <engines/querydata/Model.h>
 #include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>
 #include <gis/SpatialReference.h>
+#include <grid-content/contentServer/definition/ContentInfo.h>
+#include <grid-content/contentServer/definition/ContentInfoList.h>
+#include <grid-content/contentServer/definition/GenerationInfo.h>
+#include <grid-content/queryServer/definition/ParameterMapping.h>
+#include <grid-content/queryServer/definition/ServiceResults.h>
+#include <grid-files/common/Attribute.h>
+#include <grid-files/common/AttributeList.h>
+#include <grid-files/common/Coordinate.h>
+#include <grid-files/common/GeneralFunctions.h>
+#include <grid-files/common/Typedefs.h>
+#include <grid-files/grib2/GridDefinition.h>
 #include <grid-files/identification/GridDef.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
+#include <macgyver/LocalDateTime.h>
 #include <macgyver/StringConversion.h>
-#include <newbase/NFmiAreaFactory.h>
-#include <newbase/NFmiEnumConverter.h>
+#include <macgyver/TimeZones.h>
+#include <newbase/NFmiAngle.h>
+#include <newbase/NFmiArea.h>
+#include <newbase/NFmiFastQueryInfo.h>
+#include <newbase/NFmiGrid.h>
+#include <newbase/NFmiHPlaceDescriptor.h>
+#include <newbase/NFmiLevel.h>
 #include <newbase/NFmiMetTime.h>
+#include <newbase/NFmiParamBag.h>
+#include <newbase/NFmiPoint.h>
 #include <newbase/NFmiQueryData.h>
 #include <newbase/NFmiQueryDataUtil.h>
+#include <newbase/NFmiQueryInfo.h>
+#include <newbase/NFmiRect.h>
+#include <newbase/NFmiSaveBaseFactory.h>
+#include <newbase/NFmiTime.h>
 #include <newbase/NFmiTimeList.h>
+#include <spine/Parameter.h>
 #include <sys/types.h>
+#include <timeseries/TimeSeriesGeneratorOptions.h>
 #include <algorithm>
+#include <climits>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <functional>
+#include <initializer_list>
+#include <iomanip>
+#include <iterator>
 #include <ogr_geometry.h>
+#include <sstream>
 #include <string>
-#include <unistd.h>
+#include <strings.h>
 #include <unordered_set>
 #include <utility>
+#include <vector>
+
+namespace SmartMet::Engine::Querydata
+{
+class Engine;
+}  // namespace SmartMet::Engine::Querydata
 
 static const uint minChunkLengthInBytes = 256 * 256;    // Min length of data chunk to return
 static const uint maxChunkLengthInBytes = 2048 * 2048;  // Max length of data chunk to return

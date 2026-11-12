@@ -11,10 +11,31 @@
 
 #pragma once
 
+#include "Config.h"
 #include "DataStreamer.h"
+#include <engines/querydata/Q.h>
+#include <newbase/NFmiGlobals.h>
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <vector>
+
+class NFmiArea;
+class NFmiGrid;
+namespace SmartMet::Plugin::Download
+{
+class Query;
+struct Producer;
+struct ReqParams;
+}  // namespace SmartMet::Plugin::Download
+namespace SmartMet::QueryServer
+{
+class Query;
+}  // namespace SmartMet::QueryServer
+namespace SmartMet::Spine::HTTP
+{
+class Request;
+}  // namespace SmartMet::Spine::HTTP
 
 namespace SmartMet
 {
