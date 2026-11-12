@@ -10,7 +10,6 @@
 #include "Query.h"
 #include "Resources.h"
 #include "Tools.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/lock_options.hpp>
 #include <gis/OGRSpatialReferenceFactory.h>
 #include <gis/ProjInfo.h>

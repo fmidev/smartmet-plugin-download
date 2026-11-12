@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Datum.h"
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <engines/grid/Engine.h>
 #include <grid-content/contentServer/definition/ContentInfoList.h>
 #include <grid-content/contentServer/definition/GenerationInfo.h>
