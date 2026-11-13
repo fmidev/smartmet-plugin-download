@@ -22,7 +22,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildRequires: %{smartmet_boost}-devel
 BuildRequires: gcc-c++
 BuildRequires: gdal312-devel
-BuildRequires: eccodes-devel <= 2.31.1
+BuildRequires: eccodes-devel >= 2.48.0
 BuildRequires: jsoncpp-devel >= 1.8.4
 BuildRequires: libconfig17 >= 1.7.3
 BuildRequires: smartmet-library-spine-devel >= 26.11.11
@@ -39,7 +39,7 @@ BuildRequires: netcdf-cxx4-devel
 BuildRequires: bzip2-devel
 BuildRequires: jasper-devel
 Requires: gdal312-libs
-Requires: eccodes <= 2.31.1
+Requires: eccodes >= 2.48.0
 Requires: jsoncpp >= 1.8.4
 Requires: libconfig17 >= 1.7.3
 Requires: jasper-libs
@@ -62,7 +62,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin < 16.11.1
 Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: %{smartmet_boost}-devel
 #TestRequires: bzip2-devel
-#TestRequires: eccodes <= 2.31.1
+#TestRequires: eccodes >= 2.48.0
 #TestRequires: redis
 #TestRequires: gcc-c++
 #TestRequires: libconfig17-devel

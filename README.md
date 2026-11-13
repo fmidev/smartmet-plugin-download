@@ -282,7 +282,7 @@ Configuration file grib.json contains a list of elements and each element repres
 
 Each mapping_node contains key-value-pairs where the key can be any of the following:
 
-gribid, newbaseid, name, offset, divisor, leveltype, levelvalue, centre, templatenumber, aggregatetype, aggregatelength
+gribid, newbaseid, name, offset, divisor, leveltype, levelvalue, centre, templatenumber, aggregatetype, aggregatelength, grib1, grib2
 
 #### gribid
 GRIB-API edition independent paramId
@@ -304,7 +304,7 @@ Parameter value scaling divisor. Default: 1
 out_value = ( in_value + offset ) / divisor
 
 #### leveltype
-GRIB-API level type
+GRIB-API level type name (typeOfLevel), for example surface, heightAboveGround or entireAtmosphere. The name must be known to eccodes: eccodes versions up to 2.31 silently ignored an unknown name, newer versions fail the request.
 
 #### levelvalue
 Level value
@@ -323,6 +323,9 @@ GRIB-API method of aggregate
 #### aggregatelength
 Duration of aggregation in minutes
 For example, for 00-24 UTC maximum temperature at 2 meters, which has a gribid of 51 and newbaseid 358, has an aggregate length of 1440 minutes, i.e., 24 hours * 60 minutes.
+
+#### grib1, grib2
+Parameter identification to use for the edition instead of gribid; grib1 with table2version and parameternumber, grib2 with discipline, category and parameternumber (see the grid data parameter mapping below). Which paramIds eccodes can encode depends on the eccodes version, on the edition and on local definition patches; these settings do not.
 
 #### Grib to QueryData parameter configuration example
 

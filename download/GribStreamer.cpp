@@ -30,7 +30,11 @@ using namespace boost::interprocess;
 namespace {
   // "typeOfLevel": grib_ls -n vertical somegrib.grb2
   //
-  const string GroundLevel("groundOrWaterSurface");
+  // Note: eccodes has no level type named "groundOrWaterSurface"; the name of the ground or
+  // water surface level (grib1 level type 1, grib2 fixed surface type 1) is "surface". Up to
+  // eccodes 2.31 setting an unknown level type was silently ignored, with newer eccodes it fails.
+  //
+  const string GroundLevel("surface");
   const string PressureLevel("isobaricInhPa");
   const string HybridLevel("hybrid");
   const string EntireAtmosphere("entireAtmosphere");
@@ -1311,6 +1315,16 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     if (!centre.empty())
       gset(itsGribHandle, "centre", centre);
 
+    // Reset the step left by the previous message before the product definition template is
+    // changed; step type, template number and paramId can all change it. If the forecast time
+    // is stored in minutes, eccodes 2.48 fails to change the template when the time is whole
+    // hours and eccodes 2.31 when it is not. eccodes 2.48 does not even report the failure,
+    // the data would be stored with the template and step of an instantaneous parameter.
+
+    gset(itsGribHandle, "stepUnits", "h");
+    gset(itsGribHandle, "startStep", 0L);
+    gset(itsGribHandle, "endStep", 0L);
+
     // Cannot set template number 0 unless stepType has been set
     //
     // Note: Comment above is weird because templateNumber is tested to be nonzero ?
@@ -1509,9 +1523,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 {
   try
   {
-    // stepUnits always 'minute' to keep it simple
+    // The steps are calculated in minutes
 
-    string stepUnits = "m";
     string stepType;
     Fmi::TimeDuration fromOriginTime(validTime - itsGribOriginTime);
     long step = (fromOriginTime.hours() * 60) + fromOriginTime.minutes();
@@ -1598,11 +1611,21 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     if (setOriginTime)
       setGribDateAndTime(itsGribHandle, itsGribOriginTime);
 
-    // Set time step and unit
+    // Set time step and unit.
+    //
+    // The steps are stored in hours until a step which is not whole hours is met, and in minutes
+    // from there on. This is what eccodes 2.31 did when the steps were always set in minutes;
+    // eccodes 2.48 stores the steps in the unit they are set in. Selecting the unit here gives
+    // the same grib regardless of the eccodes version.
 
-    gset(itsGribHandle, "stepUnits", stepUnits);
-    gset(itsGribHandle, "startStep", startStep);
-    gset(itsGribHandle, "endStep", endStep);
+    const long minutesInHour = 60;
+
+    if ((startStep % minutesInHour != 0) || (endStep % minutesInHour != 0))
+      itsMinuteSteps = true;
+
+    gset(itsGribHandle, "stepUnits", itsMinuteSteps ? "m" : "h");
+    gset(itsGribHandle, "startStep", itsMinuteSteps ? startStep : (startStep / minutesInHour));
+    gset(itsGribHandle, "endStep", itsMinuteSteps ? endStep : (endStep / minutesInHour));
   }
   catch (...)
   {
