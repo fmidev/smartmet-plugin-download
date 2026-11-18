@@ -116,6 +116,7 @@ class GribStreamer : public DataStreamer
                        const NFmiDataMatrix<float>& dataValues,
                        float scale,
                        float offset);
+  void setValuesToGrib();
   std::string getGribMessage(const Engine::Querydata::Q& q,
                              int level,
                              const NFmiMetTime& mt,

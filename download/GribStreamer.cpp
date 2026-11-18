@@ -1761,16 +1761,67 @@ void GribStreamer::addValuesToGrib(const Engine::Querydata::Q& q,
           itsValueArray[i] = gribMissingValue;
       }
 
-    grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
+    setValuesToGrib();
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
-    // At least with older eccodes (2.27.1) it seems number of bits and packing type needs
-    // to be set after values is set
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set values (itsValueArray) to grib with requested packing
+ *
+ * Setting bitsPerValue does not repack the values already set to the
+ * handle, and setting packingType to its current value does nothing.
+ * If bitsPerValue was changed after setting the values, the message would
+ * have the new bitsPerValue with data packed using the old one, resulting
+ * either to "Data section size mismatch" error or silently wrong values
+ * when decoding. Since eccodes uses bitsPerValue 0 for constant fields,
+ * this would happen not only for the first message but also for each
+ * message following a constant field (and for constant fields themselves).
+ *
+ * Packing type and bitsPerValue are not set before the values, since then
+ * the first message gets grid_simple packing when grid_second_order is
+ * requested (BRAINSTORM-3378; eccodes 2.27.1 - 2.48.0).
+ * Instead, if packing type or bitsPerValue differ from the requested ones
+ * after setting the values, they are changed and the values are set again.
+ * Note that eccodes itself switches to grid_simple packing and bitsPerValue 0
+ * for constant fields; that is not changed here.
+ */
+// ----------------------------------------------------------------------
 
-    if (itsReqParams.bitsPerValue >= 0)
+void GribStreamer::setValuesToGrib()
+{
+  try
+  {
+    grib_set_double_array(itsGribHandle, "values", itsValueArray.data(), itsValueArray.size());
+
+    bool changed = false;
+
+    if (itsReqParams.bitsPerValue >= 0 &&
+        get_long(itsGribHandle, "bitsPerValue") != itsReqParams.bitsPerValue)
+    {
       gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
+      changed = true;
+    }
 
     if (!itsReqParams.packing.empty())
-      gset(itsGribHandle, "packingType", itsReqParams.packing);
+    {
+      char packingType[100] = "";
+      std::size_t len = sizeof(packingType);
+
+      if (grib_get_string(itsGribHandle, "packingType", packingType, &len) != 0 ||
+          itsReqParams.packing != packingType)
+      {
+        gset(itsGribHandle, "packingType", itsReqParams.packing);
+        changed = true;
+      }
+    }
+
+    if (changed)
+      grib_set_double_array(itsGribHandle, "values", itsValueArray.data(), itsValueArray.size());
   }
   catch (...)
   {
@@ -1875,16 +1926,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
         itsValueArray[i] = gribValue((*vVec)[j], scaled, scale, offset, gribMissingValue);
     }
 
-    grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
-
-    // At least with older eccodes (2.27.1) it seems number of bits and packing type needs
-    // to be set after values is set
-
-    if (itsReqParams.bitsPerValue >= 0)
-      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
-
-    if (!itsReqParams.packing.empty())
-      gset(itsGribHandle, "packingType", itsReqParams.packing);
+    setValuesToGrib();
   }
   catch (...)
   {
@@ -1907,29 +1949,11 @@ string GribStreamer::getGribMessage(const Engine::Querydata::Q& q,
 {
   try
   {
-    auto firstMessage = itsOriginTime.is_not_a_date_time();
-
     addValuesToGrib(q, mt, level, values, scale, offset);
 
     const void* mesg = nullptr;
     std::size_t mesg_len = 0;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
-
-    // BRAINSTORM-3378; kludge for setting packing needed at least with old eccodes (2.27.1)
-    //
-    // grid_second_order results 1'st message to have 0 as referenceValue, binaryScaleFactor and
-    // decimalScaleFactor and the data is corrupt.
-    //
-    // grid_simple results to test error "Detected a size mismatch, Section 7" if bitsPerValue is
-    // not 24 (the default).
-    //
-    // Build first message twice getting it in between to get correct results
-
-    if (firstMessage && (! itsReqParams.packing.empty()))
-    {
-      addValuesToGrib(q, mt, level, values, scale, offset);
-      grib_get_message(itsGribHandle, &mesg, &mesg_len);
-    }
 
     if (mesg_len == 0)
       throw Fmi::Exception(BCP, "Empty grib message returned");

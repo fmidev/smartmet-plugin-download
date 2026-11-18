@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# Check that every message decodes, and dump its packing and value statistics.
+# A message whose bitsPerValue does not match its packed data fails to decode
+# or decodes to wrong values.
+
+if [ $# -ne 1 ] || [ ! -s "$1" ]; then
+  echo "$0: args: file expected"
+  exit 1
+fi
+
+grib_get -F '%.2f' -p validityDate,validityTime,packingType,bitsPerValue,numberOfValues,min,max,average "$1" 2>&1

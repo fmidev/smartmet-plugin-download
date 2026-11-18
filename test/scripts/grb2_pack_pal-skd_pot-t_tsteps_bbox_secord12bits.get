@@ -1,0 +1,4 @@
+#/bin/bash
+#
+
+$(dirname $(readlink -f "$0"))/def_dumper $1
