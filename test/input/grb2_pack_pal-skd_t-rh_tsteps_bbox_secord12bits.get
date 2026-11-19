@@ -1,0 +1,1 @@
+GET	/download?param=4,13&producer=pal_skandinavia&format=grib2&starttime=200808071500&timesteps=4&bbox=22.3,61.15,22.75,61.35&packing=grid_second_order&bitspervalue=12 HTTP/1.0

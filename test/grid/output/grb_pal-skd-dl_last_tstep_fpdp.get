@@ -1,16 +1,16 @@
-d=08080505:VTMP:0 mb:1hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:4hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:7hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:10hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:13hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:16hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:19hr fcst:type=analysis:NAve=0
-d=08080505:VTMP:0 mb:22hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:1hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:4hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:7hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:10hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:13hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:16hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:19hr fcst:type=analysis:NAve=0
-d=08080505:TMP:0 mb:22hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:1hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:4hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:7hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:10hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:13hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:16hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:19hr fcst:type=analysis:NAve=0
+d=08080505:VTMP:sfc:22hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:1hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:4hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:7hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:10hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:13hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:16hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:19hr fcst:type=analysis:NAve=0
+d=08080505:TMP:sfc:22hr fcst:type=analysis:NAve=0

@@ -139,7 +139,13 @@
     {
 	"gribid" : 201187,
 	"newbaseid" : 466,
-	"name" : "HourlyMaximumWindSpeed"
+	"name" : "HourlyMaximumWindSpeed",
+	"grib2" :
+	{
+		"discipline" : 192,
+		"category" : 201,
+		"parameternumber" : 187
+	}
     },
     // 10m Wind Direction (dd_10m)
     {
@@ -147,27 +153,45 @@
 	"newbaseid" : 20,
 	"name" : "mdwi",
 	"leveltype" : "heightAboveGround",
-	"levelvalue" : 10
+	"levelvalue" : 10,
+	"grib2" :
+	{
+		"discipline" : 192,
+		"category" : 140,
+		"parameternumber" : 242
+	}
     },
     // Gusts
     {
 	"gribid" : 49,
 	"newbaseid" : 417,
 	"name" : "WindGust",
-	"leveltype" : "105",
+	"leveltype" : "surface",
 	"levelvalue" : 10
     },
     {
 	"gribid" : 260064,
 	"newbaseid" : 467,
-	"name" : "HourlyMaximumGust"
+	"name" : "HourlyMaximumGust",
+	"grib2" :
+	{
+		"discipline" : 0,
+		"category" : 2,
+		"parameternumber" : 21
+	}
     },
     {
 	"gribid" : 201187,
 	"newbaseid" : 416,
 	"name" : "MaximumWind",
 	"leveltype" : "heightAboveGround",
-	"levelvalue" : 10
+	"levelvalue" : 10,
+	"grib2" :
+	{
+		"discipline" : 192,
+		"category" : 201,
+		"parameternumber" : 187
+	}
     },
     // Cat:0 004 Maximum Temperature K TMAX
     {
@@ -176,7 +200,13 @@
 	"name" : "TMax",
 	"offset" : 273.15,
 	"leveltype" : "heightAboveGround",
-	"levelvalue" : 2
+	"levelvalue" : 2,
+	"grib2" :
+	{
+		"discipline" : 0,
+		"category" : 0,
+		"parameternumber" : 4
+	}
     },
     {
 	"gribid" : 50015,
@@ -193,7 +223,13 @@
 	"name" : "TMin",
 	"offset" : 273.15,
 	"leveltype" : "heightAboveGround",
-	"levelvalue" : 2
+	"levelvalue" : 2,
+	"grib2" :
+	{
+		"discipline" : 0,
+		"category" : 0,
+		"parameternumber" : 5
+	}
     },
     // 00-24 UTC maximum temperature at 2 m
     {
@@ -254,7 +290,13 @@
     {
 	"gribid" : 3008,
 	"newbaseid" : 3,
-	"name" : "h"
+	"name" : "h",
+	"grib2" :
+	{
+		"discipline" : 0,
+		"category" : 3,
+		"parameternumber" : 6
+	}
     },
     // Fog: QD: 327 FogIntensity
     // GRIB: 201055 fog
@@ -284,28 +326,28 @@
 	"newbaseid" : 272,
 	"name" : "Cc",
 	"divisor" : 100,
-	"leveltype" : "244"
+	"leveltype" : "surface"
     },
     {
 	"gribid" : 186,
 	"newbaseid" : 273,
 	"name" : "Cl",
 	"divisor" : 100,
-	"leveltype" : "214"
+	"leveltype" : "surface"
     },
     {
 	"gribid" : 187,
 	"newbaseid" : 274,
 	"name" : "Cm",
 	"divisor" : 100,
-	"leveltype" : "224"
+	"leveltype" : "surface"
     },
     {
 	"gribid" : 188,
 	"newbaseid" : 275,
 	"name" : "Ch",
 	"divisor" : 100,
-	"leveltype" : "234"
+	"leveltype" : "surface"
     },
     // MiddleAndLowCloudCover -> Cloud amount
     {
@@ -318,7 +360,13 @@
     {
 	"gribid" : 260107,
 	"newbaseid" : 500,
-	"name" : "cbh"
+	"name" : "cbh",
+	"grib2" :
+	{
+		"discipline" : 0,
+		"category" : 6,
+		"parameternumber" : 11
+	}
     },
     // GRIB: 3060 Thunderstorm probability %
     // QD: 260 ProbabilityThunderstorm %
@@ -366,7 +414,7 @@
 	"gribid" : 3059,
 	"newbaseid" : 434,
 	"name" : "MonthlyPrecipitation",
-	"leveltype" : "entireAtmohsphere"
+	"leveltype" : "surface"
     },
     // Precipitation type
     {
@@ -519,7 +567,7 @@
 	"gribid" : 150129,
 	"newbaseid" : 61,
 	"name" : "ocpt",
-	"leveltype" : "heightAboveGroundes",
+	"leveltype" : "surface",
 	"levelvalue" : 0
     },
     //Sea Level
@@ -538,13 +586,35 @@
     {
 	"gribid" : 3049,
 	"newbaseid" : 1146,
-	"name" : "ucurr"
+	"name" : "ucurr",
+	"grib1" :
+	{
+		"table2version" : 3,
+		"parameternumber" : 49
+	},
+	"grib2" :
+	{
+		"discipline" : 10,
+		"category" : 1,
+		"parameternumber" : 2
+	}
     },
     // Current V
     {
 	"gribid" : 3050,
 	"newbaseid" : 1147,
-	"name" : "vcurr"
+	"name" : "vcurr",
+	"grib1" :
+	{
+		"table2version" : 3,
+		"parameternumber" : 50
+	},
+	"grib2" :
+	{
+		"discipline" : 10,
+		"category" : 1,
+		"parameternumber" : 3
+	}
     },
     // Current Direction
     {
@@ -562,7 +632,13 @@
     {
 	"gribid" : 3105,
 	"newbaseid" : 181,
-	"name" : "swell"
+	"name" : "swell",
+	"grib2" :
+	{
+		"discipline" : 10,
+		"category" : 0,
+		"parameternumber" : 8
+	}
     },
     // Pseudo-adiabatic potential temperature (K)
     {

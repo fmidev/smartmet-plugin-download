@@ -1,0 +1,1 @@
+GET	/download?param=POT-PRCNT:PAL_SKANDINAVIA:5900:0:0:0,T-K:PAL_SKANDINAVIA:5900:0:0:0&format=grib2&origintime=20080805T030000&starttime=data&timesteps=3&bbox=20,60,30,66&source=grid&packing=grid_second_order&bitspervalue=12 HTTP/1.0

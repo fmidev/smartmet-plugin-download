@@ -1,0 +1,6 @@
+#/bin/bash
+#
+# Parameter, level and forecast time of each message as numbers, so that the result
+# does not depend on the parameter tables of wgrib2
+
+$(dirname $(readlink -f "$0"))/grb2_defdumper $1 -f3- -varX -lev -ftime

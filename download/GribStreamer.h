@@ -82,6 +82,7 @@ class GribStreamer : public DataStreamer
   std::vector<double> itsValueArray;
   Fmi::DateTime itsGribOriginTime;
   bool itsGrib1Flag;
+  bool itsMinuteSteps = false;  // Set when a step is not whole hours; steps are then in minutes
 
   void scanningDirections(long& iNegative, long& jPositive) const;
 
@@ -116,6 +117,7 @@ class GribStreamer : public DataStreamer
                        const NFmiDataMatrix<float>& dataValues,
                        float scale,
                        float offset);
+  void setValuesToGrib();
   std::string getGribMessage(const Engine::Querydata::Q& q,
                              int level,
                              const NFmiMetTime& mt,

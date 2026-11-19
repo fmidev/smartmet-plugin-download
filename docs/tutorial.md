@@ -290,7 +290,10 @@ message. Per slice, `addValuesToGrib`:
    edition-specific `table2Version`/`indicatorOfParameter` or
    `discipline`/`parameterCategory`/`parameterNumber`, plus `typeOfLevel`;
 4. sets `startStep`/`endStep` and the statistical processing type for accumulated or
-   averaged parameters;
+   averaged parameters. The steps are stored in hours until a step which is not whole
+   hours is met and in minutes from there on, and the step is reset before the
+   parameter is changed; both keep the output independent of the eccodes version
+   (2.31 and 2.48 differ in how they store steps set in minutes);
 5. copies the values applying `(value + offset) / scale` and writing `9999` for missing
    data with a bitmap;
 6. sets `bitsPerValue` and `packingType` **after** the values, an eccodes ordering

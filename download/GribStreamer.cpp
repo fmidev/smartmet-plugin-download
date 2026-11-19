@@ -52,7 +52,11 @@ using namespace boost::interprocess;
 namespace {
   // "typeOfLevel": grib_ls -n vertical somegrib.grb2
   //
-  const string GroundLevel("groundOrWaterSurface");
+  // Note: eccodes has no level type named "groundOrWaterSurface"; the name of the ground or
+  // water surface level (grib1 level type 1, grib2 fixed surface type 1) is "surface". Up to
+  // eccodes 2.31 setting an unknown level type was silently ignored, with newer eccodes it fails.
+  //
+  const string GroundLevel("surface");
   const string PressureLevel("isobaricInhPa");
   const string HybridLevel("hybrid");
   const string EntireAtmosphere("entireAtmosphere");
@@ -1333,6 +1337,16 @@ void GribStreamer::setLevelAndParameterToGrib(int level,
     if (!centre.empty())
       gset(itsGribHandle, "centre", centre);
 
+    // Reset the step left by the previous message before the product definition template is
+    // changed; step type, template number and paramId can all change it. If the forecast time
+    // is stored in minutes, eccodes 2.48 fails to change the template when the time is whole
+    // hours and eccodes 2.31 when it is not. eccodes 2.48 does not even report the failure,
+    // the data would be stored with the template and step of an instantaneous parameter.
+
+    gset(itsGribHandle, "stepUnits", "h");
+    gset(itsGribHandle, "startStep", 0L);
+    gset(itsGribHandle, "endStep", 0L);
+
     // Cannot set template number 0 unless stepType has been set
     //
     // Note: Comment above is weird because templateNumber is tested to be nonzero ?
@@ -1531,9 +1545,8 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
 {
   try
   {
-    // stepUnits always 'minute' to keep it simple
+    // The steps are calculated in minutes
 
-    string stepUnits = "m";
     string stepType;
     Fmi::TimeDuration fromOriginTime(validTime - itsGribOriginTime);
     long step = (fromOriginTime.hours() * 60) + fromOriginTime.minutes();
@@ -1620,11 +1633,21 @@ void GribStreamer::setStepToGrib(const ParamChangeTable &pTable,
     if (setOriginTime)
       setGribDateAndTime(itsGribHandle, itsGribOriginTime);
 
-    // Set time step and unit
+    // Set time step and unit.
+    //
+    // The steps are stored in hours until a step which is not whole hours is met, and in minutes
+    // from there on. This is what eccodes 2.31 did when the steps were always set in minutes;
+    // eccodes 2.48 stores the steps in the unit they are set in. Selecting the unit here gives
+    // the same grib regardless of the eccodes version.
 
-    gset(itsGribHandle, "stepUnits", stepUnits);
-    gset(itsGribHandle, "startStep", startStep);
-    gset(itsGribHandle, "endStep", endStep);
+    const long minutesInHour = 60;
+
+    if ((startStep % minutesInHour != 0) || (endStep % minutesInHour != 0))
+      itsMinuteSteps = true;
+
+    gset(itsGribHandle, "stepUnits", itsMinuteSteps ? "m" : "h");
+    gset(itsGribHandle, "startStep", itsMinuteSteps ? startStep : (startStep / minutesInHour));
+    gset(itsGribHandle, "endStep", itsMinuteSteps ? endStep : (endStep / minutesInHour));
   }
   catch (...)
   {
@@ -1761,16 +1784,67 @@ void GribStreamer::addValuesToGrib(const Engine::Querydata::Q& q,
           itsValueArray[i] = gribMissingValue;
       }
 
-    grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
+    setValuesToGrib();
+  }
+  catch (...)
+  {
+    throw Fmi::Exception::Trace(BCP, "Operation failed!");
+  }
+}
 
-    // At least with older eccodes (2.27.1) it seems number of bits and packing type needs
-    // to be set after values is set
+// ----------------------------------------------------------------------
+/*!
+ * \brief Set values (itsValueArray) to grib with requested packing
+ *
+ * Setting bitsPerValue does not repack the values already set to the
+ * handle, and setting packingType to its current value does nothing.
+ * If bitsPerValue was changed after setting the values, the message would
+ * have the new bitsPerValue with data packed using the old one, resulting
+ * either to "Data section size mismatch" error or silently wrong values
+ * when decoding. Since eccodes uses bitsPerValue 0 for constant fields,
+ * this would happen not only for the first message but also for each
+ * message following a constant field (and for constant fields themselves).
+ *
+ * Packing type and bitsPerValue are not set before the values, since then
+ * the first message gets grid_simple packing when grid_second_order is
+ * requested (BRAINSTORM-3378; eccodes 2.27.1 - 2.48.0).
+ * Instead, if packing type or bitsPerValue differ from the requested ones
+ * after setting the values, they are changed and the values are set again.
+ * Note that eccodes itself switches to grid_simple packing and bitsPerValue 0
+ * for constant fields; that is not changed here.
+ */
+// ----------------------------------------------------------------------
 
-    if (itsReqParams.bitsPerValue >= 0)
+void GribStreamer::setValuesToGrib()
+{
+  try
+  {
+    grib_set_double_array(itsGribHandle, "values", itsValueArray.data(), itsValueArray.size());
+
+    bool changed = false;
+
+    if (itsReqParams.bitsPerValue >= 0 &&
+        get_long(itsGribHandle, "bitsPerValue") != itsReqParams.bitsPerValue)
+    {
       gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
+      changed = true;
+    }
 
     if (!itsReqParams.packing.empty())
-      gset(itsGribHandle, "packingType", itsReqParams.packing);
+    {
+      char packingType[100] = "";
+      std::size_t len = sizeof(packingType);
+
+      if (grib_get_string(itsGribHandle, "packingType", packingType, &len) != 0 ||
+          itsReqParams.packing != packingType)
+      {
+        gset(itsGribHandle, "packingType", itsReqParams.packing);
+        changed = true;
+      }
+    }
+
+    if (changed)
+      grib_set_double_array(itsGribHandle, "values", itsValueArray.data(), itsValueArray.size());
   }
   catch (...)
   {
@@ -1875,16 +1949,7 @@ void GribStreamer::addGridValuesToGrib(const QueryServer::Query &gridQuery,
         itsValueArray[i] = gribValue((*vVec)[j], scaled, scale, offset, gribMissingValue);
     }
 
-    grib_set_double_array(itsGribHandle, "values", &itsValueArray[0], itsValueArray.size());
-
-    // At least with older eccodes (2.27.1) it seems number of bits and packing type needs
-    // to be set after values is set
-
-    if (itsReqParams.bitsPerValue >= 0)
-      gset(itsGribHandle, "bitsPerValue", itsReqParams.bitsPerValue);
-
-    if (!itsReqParams.packing.empty())
-      gset(itsGribHandle, "packingType", itsReqParams.packing);
+    setValuesToGrib();
   }
   catch (...)
   {
@@ -1907,29 +1972,11 @@ string GribStreamer::getGribMessage(const Engine::Querydata::Q& q,
 {
   try
   {
-    auto firstMessage = itsOriginTime.is_not_a_date_time();
-
     addValuesToGrib(q, mt, level, values, scale, offset);
 
     const void* mesg = nullptr;
     std::size_t mesg_len = 0;
     grib_get_message(itsGribHandle, &mesg, &mesg_len);
-
-    // BRAINSTORM-3378; kludge for setting packing needed at least with old eccodes (2.27.1)
-    //
-    // grid_second_order results 1'st message to have 0 as referenceValue, binaryScaleFactor and
-    // decimalScaleFactor and the data is corrupt.
-    //
-    // grid_simple results to test error "Detected a size mismatch, Section 7" if bitsPerValue is
-    // not 24 (the default).
-    //
-    // Build first message twice getting it in between to get correct results
-
-    if (firstMessage && (! itsReqParams.packing.empty()))
-    {
-      addValuesToGrib(q, mt, level, values, scale, offset);
-      grib_get_message(itsGribHandle, &mesg, &mesg_len);
-    }
 
     if (mesg_len == 0)
       throw Fmi::Exception(BCP, "Empty grib message returned");
