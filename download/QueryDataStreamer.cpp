@@ -5,6 +5,7 @@
 // ======================================================================
 
 #include "QueryDataStreamer.h"
+#include <macgyver/Cancellation.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiDataMatrix.h>
 #include <newbase/NFmiQueryData.h>
@@ -67,6 +68,8 @@ bool QDStreamer::loadParamGrids()
 
     while (!itsDoneFlag)
     {
+      Fmi::check_cancelled();
+
       extractData(chunk);
 
       // To handle missing/skipped parameters
@@ -201,16 +204,18 @@ std::string QDStreamer::getChunk()
     }
     catch (...)
     {
+      setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
+      itsDoneFlag = true;
+      itsLoadedFlag = false;
+
+      // The server ends a cancelled response
+      Fmi::rethrow_if_cancelled();
+
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsURI);
 
       std::cerr << exception.getStackTrace();
     }
-
-    setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
-
-    itsDoneFlag = true;
-    itsLoadedFlag = false;
 
     return "";
   }

@@ -16,6 +16,7 @@
 #include <gis/SpatialReference.h>
 #include <grid-content/queryServer/definition/ParameterValues.h>
 #include <grid-files/grid/Typedefs.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/Exception.h>
 #include <newbase/NFmiArea.h>
 #include <newbase/NFmiDataIdent.h>
@@ -2040,6 +2041,8 @@ std::string GribStreamer::getChunk()
 
       while (!itsDoneFlag)
       {
+        Fmi::check_cancelled();
+
         // Get next chunk e.g. next param/level/validtime grid
         //
         extractData(chunk);
@@ -2074,15 +2077,18 @@ std::string GribStreamer::getChunk()
     }
     catch (...)
     {
+      setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
+      itsDoneFlag = true;
+
+      // The server ends a cancelled response
+      Fmi::rethrow_if_cancelled();
+
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsURI);
 
       std::cerr << exception.getStackTrace();
     }
 
-    setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
-
-    itsDoneFlag = true;
     return "";
   }
   catch (...)

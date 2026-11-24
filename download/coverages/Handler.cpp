@@ -29,6 +29,7 @@
 #include <gis/ProjInfo.h>
 #include <grid-files/common/Coordinate.h>
 #include <json/version.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/CharsetTools.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
@@ -1169,6 +1170,9 @@ void CoveragesHandler::requestHandler(const Spine::Reactor& /* theReactor */,
     }
     catch (...)
     {
+      // The server answers a cancelled request
+      Fmi::rethrow_if_cancelled();
+
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", theRequest.getURI());
       exception.addParameter("ClientIP", theRequest.getClientIP());
@@ -1579,6 +1583,7 @@ Json::Value CoveragesHandler::extent(const std::string& collectionId) const
   }
   catch (...)
   {
+    Fmi::rethrow_if_cancelled();
     // Missing metadata must not break the collection listing
     return {};
   }
@@ -1672,6 +1677,7 @@ std::map<std::string, CoveragesHandler::ParameterInfo> CoveragesHandler::paramet
   }
   catch (...)
   {
+    Fmi::rethrow_if_cancelled();
     // Missing metadata must not break the schema
   }
   return ret;

@@ -22,6 +22,7 @@
 #include <grid-content/queryServer/definition/Query.h>
 #include <grid-content/queryServer/definition/QueryParameter.h>
 #include <grid-files/common/Coordinate.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/LocalDateTime.h>
@@ -219,6 +220,9 @@ void NetCdfStreamer::loadFile()
   //
   for (bool more = true; more; more = !itsLoadedFlag)
   {
+    // The temporary file is removed and the NetCDF file closed by the destructor
+    Fmi::check_cancelled();
+
     extractData(chunk);
 
     if (chunk.empty())
@@ -286,15 +290,18 @@ std::string NetCdfStreamer::getChunk()
     }
     catch (...)
     {
+      setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
+      itsDoneFlag = true;
+
+      // The server ends a cancelled response
+      Fmi::rethrow_if_cancelled();
+
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsURI);
 
       std::cerr << exception.getStackTrace();
     }
 
-    setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
-
-    itsDoneFlag = true;
     return "";
   }
   catch (...)
