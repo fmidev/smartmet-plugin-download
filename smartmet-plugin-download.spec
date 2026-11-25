@@ -74,6 +74,7 @@ Obsoletes: smartmet-brainstorm-dlsplugin-debuginfo < 16.11.1
 #TestRequires: smartmet-library-spine-plugin-test >= 26.11.11
 #TestRequires: smartmet-library-newbase-devel >= 26.10.16
 #TestRequires: smartmet-qdtools >= 26.10.17
+#TestRequires: smartmet-qdtools-test-data >= 26.11.3
 #TestRequires: smartmet-test-data >= 26.10.17-1
 #TestRequires: smartmet-test-db >= 26.5.8
 #TestRequires: smartmet-library-grid-files-test >= 26.10.20-1

@@ -46,7 +46,7 @@ ifdef CI
   GEONAMES_HOST_EDIT := sed -e 's|"smartmet-test"|"$(TEST_DB_DIR)"|g'
   TEST_PREPARE_TARGETS += start-geonames-db
   TEST_FINISH_TARGETS += stop-geonames-db
-  TEST_TARGETS := test-qd test-coverages
+  TEST_TARGETS := test-qd test-coverages test-grid
 else
   ifdef LOCAL_TESTS_ONLY
     TEST_TARGETS := test-qd test-coverages

@@ -719,7 +719,7 @@ Content-Type: application/json
               ],
               "topleft" : 
               [
-                32.967381225827943,
+                32.96738122582795,
                 72.644934639672087
               ],
               "topright" : 
@@ -947,6 +947,107 @@ Content-Type: application/json
         "application/x-fmi-querydata"
       ],
       "title" : "MEPS_ML"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer PAL_ENSEMBLE",
+      "extent" : 
+      {
+        "spatial" : 
+        {
+          "bbox" : 
+          [
+            [
+              -9.1163845586004602,
+              51.299999999999997,
+              49.046318417340181,
+              70.205383570663528
+            ]
+          ],
+          "crs" : "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+        },
+        "temporal" : 
+        {
+          "grid" : 
+          {
+            "cellsCount" : 3,
+            "resolution" : "PT1H"
+          },
+          "interval" : 
+          [
+            [
+              "2008-08-05T05:00:00Z",
+              "2008-08-05T07:00:00Z"
+            ]
+          ],
+          "trs" : "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian",
+          "x-smartmet-origintime" : "2008-08-05T05:00:00Z"
+        },
+        "x-smartmet-grids" : 
+        [
+          {
+            "corners" : 
+            {
+              "bottomleft" : 
+              [
+                6.0000000000000009,
+                51.299999999999997
+              ],
+              "bottomright" : 
+              [
+                33.961329746914544,
+                51.306019265005048
+              ],
+              "topleft" : 
+              [
+                -9.1163845586004602,
+                70.192182698764498
+              ],
+              "topright" : 
+              [
+                49.046318417340181,
+                70.205383570663528
+              ]
+            },
+            "geometry" : 5900,
+            "height" : 150,
+            "projection" : "PolarStereographic",
+            "width" : 135,
+            "wkt" : "PROJCS[\"unnamed\",GEOGCS[\"UNKNOWN\",DATUM[\"UNKNOWN\",SPHEROID[\"UNKNOWN\",6367470,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]]],PROJECTION[\"Polar_Stereographic\"],PARAMETER[\"latitude_of_origin\",60],PARAMETER[\"central_meridian\",20],PARAMETER[\"false_easting\",0],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1],AXIS[\"Easting\",SOUTH],AXIS[\"Northing\",SOUTH]]"
+          }
+        ]
+      },
+      "id" : "PAL_ENSEMBLE",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/PAL_ENSEMBLE",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/PAL_ENSEMBLE/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/PAL_ENSEMBLE/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "PAL_ENSEMBLE"
     },
     {
       "crs" : 
@@ -1818,7 +1919,7 @@ Content-Type: application/json
             {
               "bottomleft" : 
               [
-                -18.27041309195814,
+                -18.270413091958137,
                 29.50466236505882
               ],
               "bottomright" : 
@@ -2328,6 +2429,42 @@ Content-Type: application/json
         "application/x-fmi-querydata"
       ],
       "title" : "ecmwf_skandinavia_painepinta"
+    },
+    {
+      "crs" : 
+      [
+        "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+      ],
+      "description" : "Coverage collection for producer laea_europe",
+      "extent" : {},
+      "id" : "laea_europe",
+      "links" : 
+      [
+        {
+          "href" : "/coverages/collections/laea_europe",
+          "rel" : "self",
+          "type" : "application/json"
+        },
+        {
+          "href" : "/coverages/collections/laea_europe/coverage",
+          "rel" : "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+          "type" : "application/netcdf"
+        },
+        {
+          "href" : "/coverages/collections/laea_europe/schema",
+          "rel" : "describedby",
+          "type" : "application/json"
+        }
+      ],
+      "outputFormats" : 
+      [
+        "application/x-grib2",
+        "application/x-grib",
+        "application/netcdf",
+        "image/tiff",
+        "application/x-fmi-querydata"
+      ],
+      "title" : "laea_europe"
     },
     {
       "crs" : 
