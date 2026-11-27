@@ -61,8 +61,8 @@ else
   endif
 endif
 
-TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf --num-threads 8 --timeout $(TEST_TIMEOUT)
-TESTER_PARAM_COV := --handler=/coverages --reactor-config=cnf/reactor.conf --input-dir=input-coverages --num-threads 8 --timeout $(TEST_TIMEOUT)
+TESTER_PARAM := --handler=/download --reactor-config=cnf/reactor.conf --num-threads 4 --timeout $(TEST_TIMEOUT)
+TESTER_PARAM_COV := --handler=/coverages --reactor-config=cnf/reactor.conf --input-dir=input-coverages --num-threads 4 --timeout $(TEST_TIMEOUT)
 
 # Each test target stops the databases when it finishes, so run the targets
 # in separate make invocations to get a fresh prepare/finish cycle for each

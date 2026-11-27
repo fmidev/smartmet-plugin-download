@@ -49,6 +49,7 @@ test-impl:
 		--handler /coverages \
 		--reactor-config cnf/reactor.conf \
 		--input-dir input-coverages \
+		--num-threads 4 \
 		--timeout $(TEST_TIMEOUT) || ok=false; \
 	$$ok
 
