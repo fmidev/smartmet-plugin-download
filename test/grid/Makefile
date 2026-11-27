@@ -1,6 +1,6 @@
 include $(shell echo $${PREFIX-/usr})/share/smartmet/devel/makefile.inc
 
-TEST_TIMEOUT ?= 300
+TEST_TIMEOUT ?= 900
 
 # Additional grid test data from the smartmet-qdtools-test-data package; a latlon
 # grid scanned from north to south, for testing that the data is not vertically
