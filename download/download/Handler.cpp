@@ -15,6 +15,7 @@
 #include <boost/lexical_cast.hpp>
 #include <engines/grid/Engine.h>
 #include <grid-files/common/Typedefs.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/DateTime.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
@@ -718,6 +719,9 @@ void DownloadHandler::requestHandler(const Spine::Reactor& /* theReactor */,
     }
     catch (...)
     {
+      // The server answers a cancelled request
+      Fmi::rethrow_if_cancelled();
+
       // Catching all exceptions
 
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);

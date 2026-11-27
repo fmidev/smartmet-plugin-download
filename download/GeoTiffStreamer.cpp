@@ -18,6 +18,7 @@
 #include <grid-content/queryServer/definition/QueryParameter.h>
 #include <grid-files/common/Coordinate.h>
 #include <grid-files/grid/Typedefs.h>
+#include <macgyver/Cancellation.h>
 #include <macgyver/Exception.h>
 #include <macgyver/StringConversion.h>
 #include <newbase/NFmiArea.h>
@@ -105,6 +106,8 @@ void GeoTiffStreamer::loadFile()
 
   for (bool more = true; more; more = !itsLoadedFlag)
   {
+    Fmi::check_cancelled();
+
     extractData(chunk);
 
     if (chunk.empty())
@@ -160,15 +163,18 @@ std::string GeoTiffStreamer::getChunk()
     }
     catch (...)
     {
+      setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
+      itsDoneFlag = true;
+
+      // The server ends a cancelled response
+      Fmi::rethrow_if_cancelled();
+
       Fmi::Exception exception(BCP, "Request processing exception!", nullptr);
       exception.addParameter("URI", itsURI);
 
       std::cerr << exception.getStackTrace();
     }
 
-    setStatus(ContentStreamer::StreamerStatus::EXIT_ERROR);
-
-    itsDoneFlag = true;
     return "";
   }
   catch (...)
@@ -512,6 +518,9 @@ void GeoTiffStreamer::writeFile()
 
       for (const auto& band : itsBands)
       {
+        // The dataset is closed below and the temporary file removed by the destructor
+        Fmi::check_cancelled();
+
         GDALRasterBand* rb = ds->GetRasterBand(bandNumber++);
 
         rb->SetNoDataValue(itsMissingValue);
